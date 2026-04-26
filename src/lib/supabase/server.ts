@@ -6,9 +6,11 @@ import { env } from "../env";
 /**
  * Server client tied to the user's session via Next.js cookies.
  * Use inside Server Components, Route Handlers, and Server Actions.
+ *
+ * In Next 15 `cookies()` is async, so this helper is async too.
  */
-export function createSupabaseServerClient() {
-  const cookieStore = cookies();
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
   return createServerClient(env.supabase.url, env.supabase.anonKey, {
     cookies: {
       get(name: string) {

@@ -9,15 +9,16 @@ export const runtime = "nodejs";
  * GET /api/reports/[id]
  * Returns the compiled report. Locked sections are stripped if not paid.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createSupabaseServerClient();
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: row, error } = await supabase
     .from("reports")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .single();
 

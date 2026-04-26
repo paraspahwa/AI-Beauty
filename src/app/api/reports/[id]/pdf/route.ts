@@ -10,18 +10,19 @@ export const runtime = "nodejs";
  * In production this would be piped through a headless browser (e.g. @sparticuz/chromium + puppeteer-core).
  * To keep the scaffold dependency-light we return printable HTML the browser can save as PDF.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!env.flags.pdfEnabled) {
     return NextResponse.json({ error: "PDF disabled" }, { status: 403 });
   }
-  const supabase = createSupabaseServerClient();
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: row } = await supabase
     .from("reports")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .single();
 
