@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html, body {
+    @apply bg-cream text-ink font-sans antialiased;
+    background-color: #FAF7F2;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif tracking-tight;
+  }
+}
+
+@layer components {
+  .card-soft {
+    @apply rounded-2xl bg-white/70 backdrop-blur-sm shadow-card border border-cream-200 p-5;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full bg-cream-200 text-ink-soft text-xs font-medium px-2.5 py-1;
+  }
+  .divider-stars::before,
+  .divider-stars::after {
+    content: "✦";
+    @apply text-accent mx-3 text-sm align-middle;
+  }
+}
