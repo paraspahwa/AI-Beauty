@@ -1,28 +1,82 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ImageUploader } from "@/components/ImageUploader";
+import { CheckCircle2 } from "lucide-react";
+import { fadeUp, staggerContainer } from "@/lib/animations";
+
+const TIPS = [
+  "Look straight into the camera, hair off your forehead",
+  "Use natural light if possible — avoid heavy filters",
+  "One face per photo gives the most accurate report",
+];
 
 export default function UploadPage() {
   const router = useRouter();
 
   return (
-    <main className="container max-w-3xl py-16 sm:py-24">
-      <header className="mb-10 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-accent-deep">Step 1 of 2</p>
-        <h1 className="mt-2 text-4xl text-ink sm:text-5xl">Upload your selfie</h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-ink-soft">
-          A clear, well-lit, front-facing photo gives the best results. Your image is private.
-        </p>
-      </header>
+    <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.header variants={fadeUp} className="mb-12 text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-terracotta font-medium mb-3">
+            Step 1 of 2
+          </p>
+          <h1 className="text-4xl sm:text-5xl text-ink mb-4">
+            Upload your selfie
+          </h1>
+          <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
+            A clear, well-lit, front-facing photo gives the best results. Your image is private
+            and secure.
+          </p>
+        </motion.header>
 
-      <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
+        <motion.div variants={fadeUp}>
+          <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
+        </motion.div>
 
-      <ul className="mx-auto mt-10 max-w-md space-y-1.5 text-xs text-ink-muted">
-        <li>• Look straight into the camera, hair off your forehead.</li>
-        <li>• Use natural light if possible. Avoid heavy filters.</li>
-        <li>• One face per photo gives the most accurate report.</li>
-      </ul>
+        <motion.div
+          variants={staggerContainer}
+          className="mx-auto mt-12 max-w-md"
+        >
+          <motion.h3
+            variants={fadeUp}
+            className="text-center text-sm font-medium text-ink mb-4 uppercase tracking-widest"
+          >
+            Tips for best results
+          </motion.h3>
+          <motion.ul className="space-y-3">
+            {TIPS.map((tip, index) => (
+              <motion.li
+                key={index}
+                variants={fadeUp}
+                className="flex items-start gap-3 text-sm text-ink-stone"
+              >
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-sage mt-0.5" />
+                <span>{tip}</span>
+              </motion.li>
+            ))}
+          </motion.ul>
+        </motion.div>
+
+        {/* Privacy reassurance */}
+        <motion.div
+          variants={fadeUp}
+          className="mx-auto mt-12 max-w-md rounded-2xl bg-gradient-to-br from-sage/5 to-olive/5 border border-sage/20 p-6 text-center"
+        >
+          <p className="text-xs uppercase tracking-widest text-sage font-medium mb-2">
+            Your Privacy Matters
+          </p>
+          <p className="text-sm text-ink-stone leading-relaxed">
+            Your photo is encrypted and stored securely. Only you can access your report. We never
+            share your data with third parties.
+          </p>
+        </motion.div>
+      </motion.div>
     </main>
   );
 }
