@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye } from "lucide-react";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
 
 const FEATURES = [
@@ -26,7 +26,7 @@ export default function AuthPage() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {

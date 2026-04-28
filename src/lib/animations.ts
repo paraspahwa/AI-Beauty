@@ -2,66 +2,74 @@
  * Reusable animation variants for Framer Motion
  * Provides consistent animation patterns across the app
  */
+import type { Variants } from "framer-motion";
 
-export const fadeUp = {
+export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
-    }
+      ease: "easeOut" as const,
+    },
   },
 };
 
-export const fadeIn = {
+export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
-    }
+      ease: "easeOut" as const,
+    },
   },
 };
 
-export const staggerContainer = {
+export const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
-      delayChildren: 0.05
+      delayChildren: 0.05,
     },
   },
 };
 
-export const scaleIn = {
+export const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: {
     opacity: 1,
     scale: 1,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
-    }
+      ease: "easeOut" as const,
+    },
   },
 };
 
-export const slideIn = (direction: "left" | "right" | "up" | "down" = "left") => {
-  const axis = direction === "left" || direction === "right" ? "x" : "y";
+export const slideIn = (direction: "left" | "right" | "up" | "down" = "left"): Variants => {
+  const isX = direction === "left" || direction === "right";
   const distance = direction === "left" || direction === "up" ? -30 : 30;
 
+  if (isX) {
+    return {
+      hidden: { opacity: 0, x: distance },
+      visible: {
+        opacity: 1,
+        x: 0,
+        transition: { duration: 0.3, ease: "easeOut" as const },
+      },
+    };
+  }
   return {
-    hidden: { opacity: 0, [axis]: distance },
+    hidden: { opacity: 0, y: distance },
     visible: {
       opacity: 1,
-      [axis]: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut"
-      }
+      y: 0,
+      transition: { duration: 0.3, ease: "easeOut" as const },
     },
   };
 };
@@ -71,24 +79,26 @@ export const hoverLift = {
   y: -4,
   transition: {
     duration: 0.3,
-    ease: "easeOut"
-  }
+    ease: "easeOut" as const,
+  },
 };
 
 export const hoverScale = {
-  scale: 1.1,
-  transition: {
-    duration: 0.2,
-    ease: "easeOut"
-  }
+  hover: {
+    scale: 1.1,
+    transition: {
+      duration: 0.2,
+      ease: "easeOut" as const,
+    },
+  },
 };
 
 export const tapScale = {
   scale: 0.95,
   transition: {
     duration: 0.1,
-    ease: "easeOut"
-  }
+    ease: "easeOut" as const,
+  },
 };
 
 export const progressBar = {
@@ -97,16 +107,16 @@ export const progressBar = {
     scaleX: 1,
     transition: {
       duration: 0.5,
-      ease: "easeInOut"
-    }
-  }
+      ease: "easeInOut" as const,
+    },
+  },
 };
 
-export const modalVariants = {
+export const modalVariants: Variants = {
   hidden: {
     opacity: 0,
     scale: 0.95,
-    y: 20
+    y: 20,
   },
   visible: {
     opacity: 1,
@@ -114,8 +124,8 @@ export const modalVariants = {
     y: 0,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
-    }
+      ease: "easeOut" as const,
+    },
   },
   exit: {
     opacity: 0,
@@ -123,25 +133,25 @@ export const modalVariants = {
     y: 20,
     transition: {
       duration: 0.2,
-      ease: "easeIn"
-    }
-  }
+      ease: "easeIn" as const,
+    },
+  },
 };
 
-export const backdropVariants = {
+export const backdropVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.2
-    }
+      duration: 0.2,
+    },
   },
   exit: {
     opacity: 0,
     transition: {
-      duration: 0.2
-    }
-  }
+      duration: 0.2,
+    },
+  },
 };
 
 export const pageTransition = {
@@ -151,35 +161,35 @@ export const pageTransition = {
     x: 0,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
-    }
+      ease: "easeOut" as const,
+    },
   },
   exit: {
     opacity: 0,
     x: 20,
     transition: {
       duration: 0.2,
-      ease: "easeIn"
-    }
-  }
+      ease: "easeIn" as const,
+    },
+  },
 };
 
-export const tabContent = {
+export const tabContent: Variants = {
   hidden: { opacity: 0, x: -10 },
   visible: {
     opacity: 1,
     x: 0,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
-    }
+      ease: "easeOut" as const,
+    },
   },
   exit: {
     opacity: 0,
     x: 10,
     transition: {
       duration: 0.2,
-      ease: "easeIn"
-    }
-  }
+      ease: "easeIn" as const,
+    },
+  },
 };
