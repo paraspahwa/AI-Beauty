@@ -190,7 +190,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
 
                   <motion.div variants={fadeUp}>
                     <DialogDescription className="text-center text-base">
-                      You're seeing the free preview. Unlock all sections plus PDF.
+                      You&apos;re seeing the free preview. Unlock all sections plus PDF.
                     </DialogDescription>
                   </motion.div>
                 </DialogHeader>
