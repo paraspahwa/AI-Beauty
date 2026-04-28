@@ -54,7 +54,13 @@ export async function POST(req: NextRequest) {
     const { error: upErr } = await admin.storage
       .from(env.supabase.bucket)
       .upload(imagePath, buffer, { contentType: "image/jpeg", upsert: true });
-    if (upErr) throw upErr;
+    if (upErr) {
+      // Mark report failed so the UI doesn't spin forever on a broken row
+      await admin.from("reports")
+        .update({ status: "failed", error: upErr.message })
+        .eq("id", report.id);
+      throw upErr;
+    }
 
     await admin.from("reports").update({ image_path: imagePath }).eq("id", report.id);
 

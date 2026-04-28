@@ -4,6 +4,7 @@ import { verifyCheckoutSignature } from "@/lib/payments/razorpay";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 const Body = z.object({
   reportId: z.string().uuid(),
@@ -45,14 +46,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment mismatch" }, { status: 400 });
     }
 
-    await admin.from("payments").update({
-      status: "paid",
-      provider_payment_id: body.razorpay_payment_id,
-      provider_signature: body.razorpay_signature,
-    }).eq("id", payment.id);
-
-    await admin.from("reports").update({ is_paid: true }).eq("id", body.reportId);
-    await admin.from("profiles").update({ is_paid: true }).eq("id", user.id);
+    // Atomically mark payment paid, unlock the report, and update the profile
+    // using a single DB transaction so partial failures are impossible.
+    const { error: rpcErr } = await admin.rpc("complete_payment", {
+      p_payment_row_id: payment.id,
+      p_report_id: body.reportId,
+      p_user_id: user.id,
+      p_provider_payment_id: body.razorpay_payment_id,
+      p_provider_signature: body.razorpay_signature,
+    });
+    if (rpcErr) throw rpcErr;
 
     return NextResponse.json({ ok: true });
   } catch (err) {

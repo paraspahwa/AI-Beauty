@@ -36,13 +36,13 @@ export interface PipelineResult {
  * Run the full analysis pipeline on a raw image buffer.
  * Order:
  *  1. AWS Rekognition DetectFaces (landmarks)
- *  2. GPT-5 Mini Vision  → face shape
- *  3. GPT-5 Vision       → color analysis
- *  4. GPT-5 Vision       → skin analysis
- *  5. GPT-5 Mini         → eyes/nose/lips/cheeks (parallel-ready, single call here)
- *  6. GPT-5 Mini         → glasses (uses face shape)
- *  7. GPT-5 Mini         → hairstyle (uses face shape)
- *  8. GPT-5 Mini         → compile final summary
+ *  2. GPT-4o-mini Vision  → face shape
+ *  3. GPT-4o Vision       → color analysis
+ *  4. GPT-4o Vision       → skin analysis
+ *  5. GPT-4o-mini         → eyes/nose/lips/cheeks (parallel-ready, single call here)
+ *  6. GPT-4o-mini         → glasses (uses face shape)
+ *  7. GPT-4o-mini         → hairstyle (uses face shape)
+ *  8. GPT-4o-mini         → compile final summary
  */
 export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineResult> {
   const compressed = await compressForAI(rawImage, 512);

@@ -21,9 +21,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   if (!row) notFound();
 
   const admin = createSupabaseAdminClient();
-  const { data: signed } = await admin.storage
+  const { data: signed, error: signErr } = await admin.storage
     .from(env.supabase.bucket)
     .createSignedUrl(row.image_path, 60 * 30);
+
+  if (signErr) {
+    console.warn("[report/page] Failed to generate signed URL for", row.image_path, signErr.message);
+  }
 
   const isPaid = !!row.is_paid;
   const report: CompiledReport = {

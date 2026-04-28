@@ -87,7 +87,11 @@ export function ReportLayout({ report: initial }: Props) {
           </Button>
           {isPaid ? (
             <Button asChild variant="accent">
-              <a href={`/api/reports/${report.id}/pdf`} target="_blank" rel="noopener">
+              <a
+                href={`/api/reports/${report.id}/pdf`}
+                download={`styleai-report-${report.id}.html`}
+                rel="noopener"
+              >
                 <Download className="h-4 w-4" /> Download PDF
               </a>
             </Button>

@@ -38,8 +38,14 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
 }
 
 function safeEqual(a: string, b: string): boolean {
-  const ab = Buffer.from(a);
-  const bb = Buffer.from(b);
-  if (ab.length !== bb.length) return false;
+  // Decode hex → fixed 32-byte buffers (SHA-256 HMAC digests are always 64 hex chars).
+  // Always run timingSafeEqual even when lengths differ so we don't leak length info
+  // via a short-circuit return that would be measurably faster.
+  const ab = Buffer.from(a, "hex");
+  const bb = Buffer.from(b, "hex");
+  if (ab.length !== bb.length) {
+    timingSafeEqual(ab, ab); // dummy comparison to normalise timing
+    return false;
+  }
   return timingSafeEqual(ab, bb);
 }

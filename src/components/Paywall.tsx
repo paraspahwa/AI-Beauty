@@ -17,6 +17,13 @@ import { env } from "@/lib/env";
 import { formatCurrency } from "@/lib/utils";
 import { modalVariants, backdropVariants, fadeUp, staggerContainer } from "@/lib/animations";
 
+/** Subset of the Razorpay Checkout success response we actually use. */
+interface RazorpayPaymentResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
 declare global {
   interface Window {
     Razorpay?: new (opts: Record<string, unknown>) => { open: () => void };
@@ -91,7 +98,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
         name: "StyleAI",
         description: "Full Beauty Report",
         theme: { color: "#C17A5F" },
-        handler: async (response: Record<string, string>) => {
+        handler: async (response: RazorpayPaymentResponse) => {
           const verify = await fetch("/api/payments/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

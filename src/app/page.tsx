@@ -13,7 +13,8 @@ import {
   Star,
   CheckCircle2,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Lock,
 } from "lucide-react";
 import { useState } from "react";
 import { staggerContainer, fadeUp, slideIn, scaleIn } from "@/lib/animations";
@@ -81,11 +82,118 @@ const FAQS = [
   },
 ];
 
+// Mock colour palette for the hero preview card
+const MOCK_PALETTE = [
+  { hex: "#C17A5F", label: "Terracotta" },
+  { hex: "#C4A882", label: "Camel" },
+  { hex: "#9CAF88", label: "Sage" },
+  { hex: "#7A8450", label: "Olive" },
+  { hex: "#D9C8A8", label: "Linen" },
+  { hex: "#A85E47", label: "Rust" },
+];
+
+function MockReportCard() {
+  return (
+    <div className="relative rounded-4xl bg-white shadow-premium p-6 border-2 border-cream-200 overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-terracotta/3 via-transparent to-sage/3 pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white">
+            <Sparkles className="h-3 w-3" />
+          </div>
+          <span className="font-serif text-sm text-ink">StyleAI Report</span>
+        </div>
+        <span className="text-xs rounded-full bg-terracotta/10 text-terracotta px-3 py-1 font-medium">
+          Soft Autumn
+        </span>
+      </div>
+
+      {/* Photo + face shape */}
+      <div className="flex items-center gap-4 mb-5">
+        <div className="relative shrink-0">
+          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-camel/50 via-terracotta/30 to-sage/40 flex items-center justify-center border-4 border-white shadow-card">
+            <Camera className="h-7 w-7 text-terracotta/60" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 bg-sage text-white rounded-full p-1 shadow-card border-2 border-white">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-ink mb-1">Face shape</p>
+          <div className="flex flex-wrap gap-1.5">
+            {["Oval", "Balanced", "Symmetrical"].map((t) => (
+              <span key={t} className="pill text-xs">{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Colour palette */}
+      <div className="mb-5">
+        <p className="text-xs uppercase tracking-widest text-ink-mist font-medium mb-2.5">
+          Your colour palette
+        </p>
+        <div className="flex gap-2">
+          {MOCK_PALETTE.map((c) => (
+            <motion.div
+              key={c.hex}
+              whileHover={{ y: -4, scale: 1.1 }}
+              transition={{ duration: 0.2 }}
+              title={c.label}
+              className="flex-1 aspect-square rounded-xl shadow-card border-2 border-white/80"
+              style={{ backgroundColor: c.hex }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Locked premium sections */}
+      <div className="space-y-2">
+        {["Skin Analysis", "Spectacles Guide", "Hairstyle Guide"].map((section) => (
+          <div
+            key={section}
+            className="flex items-center justify-between rounded-xl bg-cream-100 px-4 py-2.5 border border-cream-200"
+          >
+            <span className="text-sm text-ink-stone">{section}</span>
+            <Lock className="h-3.5 w-3.5 text-terracotta" />
+          </div>
+        ))}
+      </div>
+
+      {/* Unlock hint */}
+      <div className="mt-4 rounded-xl bg-gradient-to-r from-terracotta/10 to-camel/10 border border-terracotta/20 px-4 py-3 text-center">
+        <p className="text-xs text-terracotta font-medium">✦ Unlock the full report for $9.99</p>
+      </div>
+
+      {/* Floating stat badges */}
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -right-4 top-1/4 bg-white rounded-2xl shadow-premium border border-cream-200 px-3 py-2 text-center min-w-[80px]"
+      >
+        <p className="font-bold text-terracotta text-lg leading-none">50k+</p>
+        <p className="text-ink-mist text-xs mt-0.5">Analyses</p>
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 6, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute -left-4 bottom-1/4 bg-white rounded-2xl shadow-premium border border-cream-200 px-3 py-2 text-center min-w-[72px]"
+      >
+        <p className="font-bold text-sage text-lg leading-none">4.9★</p>
+        <p className="text-ink-mist text-xs mt-0.5">Rating</p>
+      </motion.div>
+    </div>
+  );
+}
+
 function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="container max-w-3xl py-24">
+    <section id="faq" className="container max-w-3xl py-24">
       <motion.div
         initial="hidden"
         whileInView="visible"
@@ -154,7 +262,7 @@ export default function HomePage() {
           }}
         />
         <motion.div
-          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full opacity-15"
+          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full opacity-10"
           style={{
             background: "radial-gradient(circle, #9CAF88 0%, transparent 70%)",
           }}
@@ -168,10 +276,24 @@ export default function HomePage() {
             ease: "easeInOut",
           }}
         />
+        <motion.div
+          className="absolute bottom-0 right-1/3 w-80 h-80 rounded-full opacity-10"
+          style={{
+            background: "radial-gradient(circle, #C4A882 0%, transparent 70%)",
+          }}
+          animate={{
+            y: [0, -20, 0],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
       </div>
 
-      {/* Hero Section - Split Layout */}
-      <section className="container max-w-6xl pt-12 pb-16 sm:pt-20 sm:pb-24">
+      {/* ── Hero Section ── */}
+      <section className="container max-w-6xl pt-10 pb-16 sm:pt-16 sm:pb-24">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           {/* Left: Headline + Value Prop */}
           <motion.div
@@ -240,45 +362,23 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
 
-          {/* Right: Upload Card Preview */}
+          {/* Right: Mock Report Preview */}
           <motion.div
             variants={slideIn("right")}
             initial="hidden"
             animate="visible"
-            className="relative"
+            className="relative px-8 lg:px-4"
           >
-            <div className="relative rounded-4xl bg-white shadow-premium p-8 border-2 border-cream-200">
-              <div className="aspect-square rounded-3xl bg-gradient-to-br from-sage/20 via-camel/20 to-terracotta/20 flex items-center justify-center">
-                <div className="text-center">
-                  <Camera className="h-16 w-16 text-terracotta mx-auto mb-4" />
-                  <p className="text-ink-stone font-medium">Your beauty analysis</p>
-                  <p className="text-sm text-ink-mist mt-1">starts here</p>
-                </div>
-              </div>
-              <div className="mt-6 text-center">
-                <p className="text-xs text-ink-mist">
-                  Clear, front-facing photo • Natural lighting • One face
-                </p>
-              </div>
-            </div>
-
-            {/* Floating accent elements */}
-            <motion.div
-              className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-terracotta/10 blur-2xl"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 4, repeat: Infinity }}
-            />
-            <motion.div
-              className="absolute -bottom-4 -left-4 w-32 h-32 rounded-full bg-sage/10 blur-2xl"
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ duration: 5, repeat: Infinity }}
-            />
+            <MockReportCard />
+            {/* Decorative blur glows */}
+            <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-terracotta/15 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-6 -left-6 w-40 h-40 rounded-full bg-sage/15 blur-2xl pointer-events-none" />
           </motion.div>
         </div>
       </section>
 
-      {/* How it Works */}
-      <section id="how" className="container max-w-6xl py-20 bg-gradient-to-b from-transparent via-cream-50 to-transparent">
+      {/* ── How it Works ── */}
+      <section id="how" className="container max-w-6xl py-20 scroll-mt-16">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -326,17 +426,20 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Features Grid */}
-      <section className="container max-w-6xl py-20">
+      {/* ── Features Grid ── */}
+      <section id="features" className="container max-w-6xl py-20 scroll-mt-16">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
         >
-          <motion.h2 variants={fadeUp} className="text-center text-3xl sm:text-4xl text-ink mb-12">
+          <motion.h2 variants={fadeUp} className="text-center text-3xl sm:text-4xl text-ink mb-4">
             Everything you need to look your best
           </motion.h2>
+          <motion.p variants={fadeUp} className="text-center text-ink-stone mb-12 max-w-xl mx-auto">
+            One selfie. A complete style blueprint personalised to your unique features.
+          </motion.p>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((feature, i) => (
@@ -357,7 +460,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Testimonials */}
+      {/* ── Testimonials ── */}
       <section className="container max-w-6xl py-20">
         <motion.div
           initial="hidden"
@@ -382,10 +485,12 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-sm text-ink-stone leading-relaxed mb-4">
-                  "{testimonial.quote}"
+                  &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sage to-camel" />
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sage to-camel flex items-center justify-center text-white text-sm font-bold">
+                    {testimonial.name[0]}
+                  </div>
                   <div>
                     <p className="font-medium text-ink text-sm">{testimonial.name}</p>
                     <p className="text-xs text-ink-mist">{testimonial.season}</p>
@@ -397,8 +502,8 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Pricing */}
-      <section className="container max-w-4xl py-20">
+      {/* ── Pricing ── */}
+      <section id="pricing" className="container max-w-4xl py-20 scroll-mt-16">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -409,7 +514,7 @@ export default function HomePage() {
             Simple, honest pricing
           </motion.h2>
           <motion.p variants={fadeUp} className="text-center text-ink-stone mb-12">
-            Try it free, upgrade when you're ready
+            Try it free, upgrade when you&apos;re ready
           </motion.p>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -417,19 +522,16 @@ export default function HomePage() {
               <p className="text-xs uppercase tracking-widest text-ink-mist mb-2">Free preview</p>
               <p className="font-serif text-5xl text-ink mb-6">$0</p>
               <ul className="space-y-3 text-sm text-ink-stone mb-6">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Color season + custom palette
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Face shape identification
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Personalized introduction
-                </li>
+                {["Color season + custom palette", "Face shape identification", "Personalized introduction"].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
               </ul>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link href="/upload">Try for free</Link>
+              </Button>
             </motion.div>
 
             <motion.div
@@ -445,26 +547,18 @@ export default function HomePage() {
                 <p className="text-sm text-ink-mist line-through">$29.99</p>
               </div>
               <ul className="space-y-3 text-sm text-ink-stone mb-6">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Everything in Free, plus:
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Skin analysis & custom routine
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Spectacles guide
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Hairstyle recommendations
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
-                  Downloadable PDF report
-                </li>
+                {[
+                  "Everything in Free, plus:",
+                  "Skin analysis & custom routine",
+                  "Spectacles guide",
+                  "Hairstyle recommendations",
+                  "Downloadable PDF report",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
               </ul>
               <Button asChild variant="accent" size="lg" className="w-full">
                 <Link href="/upload">Get my full report</Link>
@@ -482,10 +576,10 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* FAQ */}
+      {/* ── FAQ ── */}
       <FAQ />
 
-      {/* Final CTA */}
+      {/* ── Final CTA ── */}
       <section className="container max-w-3xl py-20">
         <motion.div
           initial="hidden"
@@ -498,24 +592,81 @@ export default function HomePage() {
             Ready to discover your style?
           </motion.h2>
           <motion.p variants={fadeUp} className="text-ink-stone mb-8 max-w-xl mx-auto">
-            Join thousands who've already unlocked their perfect colors, styles, and confidence.
+            Join thousands who&apos;ve already unlocked their perfect colors, styles, and confidence.
           </motion.p>
           <motion.div variants={fadeUp}>
-            <Button asChild size="lg" variant="accent" className="text-lg px-10 h-14">
+            <Button asChild size="lg" variant="accent" className="text-lg px-10 h-14 group">
               <Link href="/upload">
                 <Camera className="h-5 w-5" />
                 Start your free analysis
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="container max-w-6xl py-12 text-center border-t border-cream-200">
-        <p className="text-sm text-ink-mist">
-          © {new Date().getFullYear()} StyleAI · Crafted with care
-        </p>
+      {/* ── Footer ── */}
+      <footer className="border-t border-cream-200 bg-white/50">
+        <div className="container max-w-6xl py-12">
+          <div className="grid gap-8 md:grid-cols-4 mb-10">
+            {/* Brand */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white">
+                  <Sparkles className="h-3.5 w-3.5" />
+                </div>
+                <span className="font-serif text-lg text-ink">StyleAI</span>
+              </div>
+              <p className="text-sm text-ink-stone leading-relaxed max-w-xs">
+                Your AI-powered personal stylist. Discover the colors, cuts, and styles that make
+                you look and feel your best.
+              </p>
+            </div>
+
+            {/* Product links */}
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink-mist font-medium mb-4">Product</p>
+              <ul className="space-y-2.5 text-sm text-ink-stone">
+                {[
+                  { href: "/#how", label: "How it works" },
+                  { href: "/#features", label: "Features" },
+                  { href: "/#pricing", label: "Pricing" },
+                  { href: "/upload", label: "Get started" },
+                ].map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="hover:text-ink transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Legal links */}
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink-mist font-medium mb-4">Legal</p>
+              <ul className="space-y-2.5 text-sm text-ink-stone">
+                {[
+                  { href: "#", label: "Privacy Policy" },
+                  { href: "#", label: "Terms of Service" },
+                  { href: "#", label: "Refund Policy" },
+                ].map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="hover:text-ink transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-cream-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-mist">
+            <p>© {new Date().getFullYear()} StyleAI. All rights reserved.</p>
+            <p>Crafted with care · Powered by GPT-4o &amp; AWS Rekognition</p>
+          </div>
+        </div>
       </footer>
     </main>
   );

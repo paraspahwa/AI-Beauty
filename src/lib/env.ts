@@ -25,8 +25,8 @@ export const env = {
   },
   openai: {
     apiKey: optional(process.env.OPENAI_API_KEY),
-    visionModel: optional(process.env.OPENAI_VISION_MODEL, "gpt-5-vision"),
-    miniModel: optional(process.env.OPENAI_MINI_MODEL, "gpt-5-mini"),
+    visionModel: optional(process.env.OPENAI_VISION_MODEL, "gpt-4o"),
+    miniModel: optional(process.env.OPENAI_MINI_MODEL, "gpt-4o-mini"),
   },
   aws: {
     region: optional(process.env.AWS_REGION, "us-east-1"),

@@ -5,6 +5,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 const Body = z.object({ reportId: z.string().uuid() });
 

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const payment = event.payload?.payment?.entity;
   const orderId = payment?.order_id as string | undefined;
-  if (!orderId) return NextResponse.json({ ok: true }); // ignore non-payment events
+  if (!orderId) return NextResponse.json({ ok: true }, { status: 202 }); // ignore non-payment events
 
   const admin = createSupabaseAdminClient();
   const { data: row } = await admin
@@ -34,24 +34,31 @@ export async function POST(req: NextRequest) {
     .select("id,user_id,report_id,status")
     .eq("provider_order_id", orderId)
     .single();
-  if (!row) return NextResponse.json({ ok: true });
+  if (!row) return NextResponse.json({ ok: true }, { status: 202 });
 
   if (event.event === "payment.captured") {
     if (row.status !== "paid") {
-      await admin.from("payments").update({
-        status: "paid",
-        provider_payment_id: payment?.id as string,
-        raw: payment as object,
-      }).eq("id", row.id);
-
       if (row.report_id) {
-        await admin.from("reports").update({ is_paid: true }).eq("id", row.report_id);
+        // Atomically update payments, report and profile in one transaction
+        await admin.rpc("complete_webhook_payment", {
+          p_payment_row_id: row.id,
+          p_report_id: row.report_id,
+          p_user_id: row.user_id,
+          p_provider_payment_id: payment?.id as string,
+          p_raw: payment as object,
+        });
+      } else {
+        await admin.from("payments").update({
+          status: "paid",
+          provider_payment_id: payment?.id as string,
+          raw: payment as object,
+        }).eq("id", row.id);
+        await admin.from("profiles").update({ is_paid: true }).eq("id", row.user_id);
       }
-      await admin.from("profiles").update({ is_paid: true }).eq("id", row.user_id);
     }
   } else if (event.event === "payment.failed") {
     await admin.from("payments").update({ status: "failed", raw: payment as object }).eq("id", row.id);
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { status: 202 });
 }
