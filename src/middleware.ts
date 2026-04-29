@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
     // Check session using the already-refreshed cookies on the response
     const supabase = createServerClient(env.supabase.url, env.supabase.anonKey, {
       cookies: {
-        get: (name) => request.cookies.get(name)?.value,
+        get: (name: string) => request.cookies.get(name)?.value,
         set: () => {},
         remove: () => {},
       },
