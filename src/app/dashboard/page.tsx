@@ -93,7 +93,7 @@ export default async function DashboardPage() {
                     )}
                   </div>
                 </div>
-                <Button asChild variant={report.status === "complete" ? "outline" : "outline"} size="sm" className="shrink-0">
+                <Button asChild variant={report.status === "ready" ? "accent" : "outline"} size="sm" className="shrink-0">
                   <Link href={`/report/${report.id}`}>View report</Link>
                 </Button>
               </div>

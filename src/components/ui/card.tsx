@@ -22,7 +22,7 @@ export const CardTitle = ({ className, ...p }: React.HTMLAttributes<HTMLHeadingE
   <h3 className={cn("font-serif text-2xl text-ink", className)} {...p} />
 );
 export const CardDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p className={cn("text-sm text-ink-muted mt-1", className)} {...p} />
+  <p className={cn("text-sm text-ink-mist mt-1", className)} {...p} />
 );
 export const CardContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("p-6 pt-4", className)} {...p} />

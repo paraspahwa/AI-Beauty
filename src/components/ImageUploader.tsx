@@ -68,7 +68,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error ?? `Upload failed (${res.status})`);
       }
-      const json = (await res.json()) as { reportId: string };
+      const json = (await res.json()) as { reportId?: string };
+      if (!json.reportId) throw new Error("Analysis started but no report ID was returned.");
       onUploaded(json.reportId);
     } catch (err) {
       setError((err as Error).message);

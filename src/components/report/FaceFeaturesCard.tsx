@@ -36,9 +36,9 @@ export function FaceFeaturesCard({ faceShape, features }: Props) {
             <div key={key} className="rounded-2xl bg-cream-100 border border-cream-200 p-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-serif text-lg text-ink">{label}</h4>
-                <Badge tone="accent">{features[key].shape}</Badge>
+                <Badge tone="accent">{features[key]?.shape ?? "—"}</Badge>
               </div>
-              <p className="mt-2 text-sm text-ink-stone leading-relaxed">{features[key].notes}</p>
+              <p className="mt-2 text-sm text-ink-stone leading-relaxed">{features[key]?.notes ?? ""}</p>
             </div>
           ))}
         </div>

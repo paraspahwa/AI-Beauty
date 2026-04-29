@@ -25,7 +25,7 @@ export const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 text-ink-muted hover:text-ink">
+      <DialogPrimitive.Close className="absolute right-4 top-4 text-ink-mist hover:text-ink">
         <X className="h-4 w-4" />
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
@@ -40,5 +40,5 @@ export const DialogTitle = ({ className, ...p }: React.HTMLAttributes<HTMLHeadin
   <h2 className={cn("font-serif text-2xl text-ink", className)} {...p} />
 );
 export const DialogDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p className={cn("text-sm text-ink-muted", className)} {...p} />
+  <p className={cn("text-sm text-ink-mist", className)} {...p} />
 );

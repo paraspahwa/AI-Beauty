@@ -7,7 +7,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 export function Badge({ className, tone = "default", ...props }: BadgeProps) {
   const tones: Record<NonNullable<BadgeProps["tone"]>, string> = {
-    default: "bg-cream-200 text-ink-soft",
+    default: "bg-cream-200 text-ink-stone",
     accent:  "bg-accent/15 text-accent-deep",
     success: "bg-green-100 text-green-800",
     danger:  "bg-red-100 text-red-800",
