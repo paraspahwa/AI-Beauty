@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,13 @@ const PERKS = [
   "Downloadable PDF to keep forever",
 ];
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [countdown, setCountdown] = useState(8);
+
+  const reportId = searchParams.get("reportId");
+  const reportHref = reportId ? `/report/${reportId}` : "/dashboard";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,8 +35,8 @@ export default function SuccessPage() {
   }, []);
 
   useEffect(() => {
-    if (countdown === 0) router.push("/upload");
-  }, [countdown, router]);
+    if (countdown === 0) router.push(reportHref);
+  }, [countdown, router, reportHref]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6 bg-gradient-to-br from-cream via-cream-100 to-sage/10">
@@ -83,7 +87,7 @@ export default function SuccessPage() {
 
         <motion.div variants={fadeUp} className="space-y-4">
           <Button asChild variant="accent" size="lg" className="w-full group">
-            <Link href="/report">
+            <Link href={reportHref}>
               <FileText className="h-4 w-4" />
               View my full report
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -97,5 +101,13 @@ export default function SuccessPage() {
         </motion.div>
       </motion.div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense>
+      <SuccessContent />
+    </Suspense>
   );
 }

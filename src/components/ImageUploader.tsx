@@ -6,8 +6,8 @@ import { useDropzone } from "react-dropzone";
 import { Upload, ImageIcon, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { fadeUp, scaleIn, staggerContainer } from "@/lib/animations";
+import { AnalysisLoading } from "@/components/AnalysisLoading";
+import { fadeUp, staggerContainer } from "@/lib/animations";
 
 export interface ImageUploaderProps {
   onUploaded: (reportId: string) => void;
@@ -24,6 +24,9 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
   const [progress, setProgress] = React.useState(0);
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Derived step for AnalysisLoading (4 steps, equally spaced across 0-100%)
+  const currentStep = Math.min(3, Math.floor(progress / 25));
 
   const onDrop = React.useCallback((accepted: File[]) => {
     const f = accepted[0];
@@ -81,6 +84,12 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       initial="hidden"
       animate="visible"
     >
+      {/* Full-screen analysis overlay when submitting */}
+      <AnimatePresence>
+        {submitting && (
+          <AnalysisLoading currentStep={currentStep} progress={progress} />
+        )}
+      </AnimatePresence>
       <motion.div variants={fadeUp}>
         <div
           {...getRootProps()}
@@ -223,15 +232,6 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
             exit={{ opacity: 0, y: 20 }}
             className="mt-6 space-y-4"
           >
-            {submitting && (
-              <motion.div variants={scaleIn} className="space-y-2">
-                <Progress value={progress} className="h-2" />
-                <p className="text-center text-sm text-ink-stone">
-                  Analyzing your photo... {progress}%
-                </p>
-              </motion.div>
-            )}
-
             {error && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}

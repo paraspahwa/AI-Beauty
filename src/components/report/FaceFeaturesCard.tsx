@@ -18,13 +18,13 @@ export function FaceFeaturesCard({ faceShape, features }: Props) {
   return (
     <Card className="p-2">
       <CardHeader>
-        <p className="text-xs uppercase tracking-widest text-ink-muted">Your face shape</p>
+        <p className="text-xs uppercase tracking-widest text-ink-mist">Your face shape</p>
         <CardTitle>{faceShape.shape}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <ul className="space-y-1.5">
           {faceShape.traits.map((trait) => (
-            <li key={trait} className="flex items-start gap-2 text-sm text-ink-soft">
+            <li key={trait} className="flex items-start gap-2 text-sm text-ink-stone">
               <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
               {trait}
             </li>
@@ -38,12 +38,12 @@ export function FaceFeaturesCard({ faceShape, features }: Props) {
                 <h4 className="font-serif text-lg text-ink">{label}</h4>
                 <Badge tone="accent">{features[key].shape}</Badge>
               </div>
-              <p className="mt-2 text-sm text-ink-muted leading-relaxed">{features[key].notes}</p>
+              <p className="mt-2 text-sm text-ink-stone leading-relaxed">{features[key].notes}</p>
             </div>
           ))}
         </div>
 
-        <p className="text-xs text-ink-muted">
+        <p className="text-xs text-ink-stone">
           Confidence: {(faceShape.confidence * 100).toFixed(0)}%
         </p>
       </CardContent>
