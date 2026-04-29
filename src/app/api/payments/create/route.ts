@@ -15,11 +15,17 @@ const Body = z.object({ reportId: z.string().uuid() });
  */
 export async function POST(req: NextRequest) {
   try {
+    env.assertServer();
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = Body.parse(await req.json());
+    let body: z.infer<typeof Body>;
+    try {
+      body = Body.parse(await req.json());
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
 
     // Confirm the report belongs to this user
     const { data: report } = await supabase
@@ -61,6 +67,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[POST /api/payments/create]", err);
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

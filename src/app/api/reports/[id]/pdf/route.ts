@@ -45,8 +45,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return new Response(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      // attachment triggers a Save-As dialog; the browser's Print-to-PDF then works from there
+      // attachment + nosniff prevents the browser from rendering this as an active page
       "Content-Disposition": `attachment; filename="styleai-report-${row.id}.html"`,
+      "X-Content-Type-Options": "nosniff",
+      // Tight CSP: no scripts, no external resources — it's a print document
+      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none';",
+      "X-Frame-Options": "DENY",
     },
   });
 }
@@ -64,7 +68,14 @@ type ReportRow = {
 };
 
 function esc(s: string): string {
-  return s.replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]!));
+  return s.replace(/[<>&"'`]/g, (c) => ({
+    "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;", "`": "&#96;",
+  }[c]!));
+}
+
+/** Validate and sanitize a hex color string. Returns a safe fallback if invalid. */
+function safeHex(hex: string, fallback = "#888888"): string {
+  return /^#[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{3})?$/.test(hex) ? hex : fallback;
 }
 
 function section(title: string, body: string): string {
@@ -72,11 +83,11 @@ function section(title: string, body: string): string {
 }
 
 function pill(text: string, bg = "#C17A5F", color = "#fff"): string {
-  return `<span class="pill" style="background:${bg};color:${color}">${esc(text)}</span>`;
+  return `<span class="pill" style="background:${safeHex(bg)};color:${safeHex(color, "#ffffff")}">${esc(text)}</span>`;
 }
 
 function swatch(hex: string, name: string): string {
-  return `<span class="swatch-wrap"><span class="swatch" style="background:${esc(hex)}"></span>${esc(name)}</span>`;
+  return `<span class="swatch-wrap"><span class="swatch" style="background:${safeHex(hex)}"></span>${esc(name)}</span>`;
 }
 
 function renderHtml(r: ReportRow): string {

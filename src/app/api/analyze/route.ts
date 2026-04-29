@@ -6,6 +6,29 @@ import { env } from "@/lib/env";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+/** Accepted MIME types for uploaded selfies. */
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * Check the first 12 bytes of a buffer to confirm it is a real JPEG, PNG, or WEBP.
+ * This prevents an attacker from spoofing Content-Type by renaming a file.
+ */
+function validateMagicBytes(buf: Buffer): boolean {
+  // JPEG: FF D8 FF
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return true;
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 &&
+    buf[4] === 0x0d && buf[5] === 0x0a && buf[6] === 0x1a && buf[7] === 0x0a
+  ) return true;
+  // WEBP: RIFF????WEBP
+  if (
+    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+    buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50
+  ) return true;
+  return false;
+}
+
 /**
  * POST /api/analyze
  * Body: multipart/form-data with field `image`
@@ -13,10 +36,11 @@ export const maxDuration = 60;
  *
  * Flow:
  *  1. Authenticate user via Supabase session.
- *  2. Persist the original image to private storage (`<userId>/<reportId>.jpg`).
- *  3. Insert a `processing` report row.
- *  4. Run the analysis pipeline.
- *  5. Update the row with results (status='ready') or the error (status='failed').
+ *  2. Validate file MIME type and magic bytes.
+ *  3. Enforce max-1-in-flight per user (anti-abuse).
+ *  4. Persist the original image to private storage.
+ *  5. Run the analysis pipeline.
+ *  6. Update the row with results or the error.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -31,14 +55,43 @@ export async function POST(req: NextRequest) {
     if (!(file instanceof Blob)) {
       return NextResponse.json({ error: "Missing image" }, { status: 400 });
     }
+
+    // ── MIME type allowlist check ─────────────────────────────────────────────
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { error: "Only JPEG, PNG, and WEBP images are accepted" },
+        { status: 415 },
+      );
+    }
+
     if (file.size > 8 * 1024 * 1024) {
-      return NextResponse.json({ error: "Image too large (max 8MB)" }, { status: 413 });
+      return NextResponse.json({ error: "Image too large (max 8 MB)" }, { status: 413 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Use admin client for writes — RLS still checked via user_id ownership semantics.
+    // ── Magic-bytes validation ────────────────────────────────────────────────
+    if (!validateMagicBytes(buffer)) {
+      return NextResponse.json(
+        { error: "File content does not match a valid image format" },
+        { status: 415 },
+      );
+    }
+
     const admin = createSupabaseAdminClient();
+
+    // ── Rate-limit: max 1 in-flight analysis per user ────────────────────────
+    const { count } = await admin
+      .from("reports")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("status", "processing");
+    if ((count ?? 0) >= 1) {
+      return NextResponse.json(
+        { error: "An analysis is already in progress. Please wait for it to complete." },
+        { status: 429 },
+      );
+    }
 
     // 1) Insert pending report to get an id
     const { data: report, error: insertErr } = await admin
@@ -55,7 +108,6 @@ export async function POST(req: NextRequest) {
       .from(env.supabase.bucket)
       .upload(imagePath, buffer, { contentType: "image/jpeg", upsert: true });
     if (upErr) {
-      // Mark report failed so the UI doesn't spin forever on a broken row
       await admin.from("reports")
         .update({ status: "failed", error: upErr.message })
         .eq("id", report.id);
@@ -64,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     await admin.from("reports").update({ image_path: imagePath }).eq("id", report.id);
 
-    // 3) Run pipeline (synchronous within request — Vercel allows up to maxDuration)
+    // 3) Run pipeline
     try {
       const result = await runAnalysisPipeline(buffer);
 
@@ -80,7 +132,6 @@ export async function POST(req: NextRequest) {
         summary: result.summary,
       }).eq("id", report.id);
 
-      // Flatten a couple of recommendations for sharing/search
       await admin.from("recommendations").insert([
         { report_id: report.id, category: "color", title: result.colorAnalysis.season, description: result.colorAnalysis.description, data: result.colorAnalysis },
         { report_id: report.id, category: "glasses", title: "Spectacles guide", data: result.glasses },
@@ -92,12 +143,14 @@ export async function POST(req: NextRequest) {
         status: "failed",
         error: (pipelineErr as Error).message?.slice(0, 500),
       }).eq("id", report.id);
-      return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
+      // Return a generic message — do NOT expose internal pipeline errors to the client
+      return NextResponse.json({ error: "Analysis failed. Please try again." }, { status: 500 });
     }
 
     return NextResponse.json({ reportId: report.id });
   } catch (err) {
     console.error("[POST /api/analyze]", err);
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    // Never expose raw error messages to the client
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

@@ -45,8 +45,12 @@ export const env = {
   },
   /** Throws if any required server-side secret is missing. Call from server code. */
   assertServer() {
-    required("SUPABASE_SERVICE_ROLE_KEY", this.supabase.serviceRoleKey);
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);
+    required("SUPABASE_SERVICE_ROLE_KEY", this.supabase.serviceRoleKey);
     required("OPENAI_API_KEY", this.openai.apiKey);
+    required("RAZORPAY_KEY_SECRET", this.razorpay.keySecret);
+    required("RAZORPAY_WEBHOOK_SECRET", this.razorpay.webhookSecret);
+    required("AWS_ACCESS_KEY_ID", this.aws.accessKeyId);
+    required("AWS_SECRET_ACCESS_KEY", this.aws.secretAccessKey);
   },
 };

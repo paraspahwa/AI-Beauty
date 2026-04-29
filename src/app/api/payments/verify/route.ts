@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { verifyCheckoutSignature } from "@/lib/payments/razorpay";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -21,11 +22,17 @@ const Body = z.object({
  */
 export async function POST(req: NextRequest) {
   try {
+    env.assertServer();
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = Body.parse(await req.json());
+    let body: z.infer<typeof Body>;
+    try {
+      body = Body.parse(await req.json());
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
 
     const ok = verifyCheckoutSignature({
       orderId: body.razorpay_order_id,
@@ -60,6 +67,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[POST /api/payments/verify]", err);
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

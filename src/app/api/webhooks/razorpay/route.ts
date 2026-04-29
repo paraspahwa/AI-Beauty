@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyWebhookSignature } from "@/lib/payments/razorpay";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,12 @@ export const runtime = "nodejs";
  * Signature validation is mandatory — never trust the body without it.
  */
 export async function POST(req: NextRequest) {
+  // Validate secrets are configured before touching any payload
+  if (!env.razorpay.webhookSecret) {
+    console.error("[webhook/razorpay] RAZORPAY_WEBHOOK_SECRET is not set");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  }
+
   const signature = req.headers.get("x-razorpay-signature") ?? "";
   const raw = await req.text();
   if (!verifyWebhookSignature(raw, signature)) {
