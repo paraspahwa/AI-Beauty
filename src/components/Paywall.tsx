@@ -262,7 +262,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                   >
                     <motion.div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)" }}
+                      style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)", backgroundSize: "200% 100%" }}
                       animate={{
                         backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                       }}
@@ -271,7 +271,6 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                         repeat: Infinity,
                         ease: "linear",
                       }}
-                      style={{ backgroundSize: "200% 100%" }}
                     />
                     <span className="relative flex items-center gap-2">
                       {loading ? (
