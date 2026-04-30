@@ -88,7 +88,7 @@ export function ColorAnalysisCard({ data }: { data: ColorAnalysisResult }) {
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="bg-white rounded-full p-1.5"
+                          className="rounded-full p-1.5" style={{ background: "#0A0A0F" }}
                         >
                           <Check className="h-4 w-4 text-sage" />
                         </motion.div>
@@ -194,7 +194,7 @@ export function ColorAnalysisCard({ data }: { data: ColorAnalysisResult }) {
                 <Badge
                   key={metal}
                   tone="default"
-                  className="bg-white/80 text-ink-stone border-cream-300"
+                  className="text-ink-stone" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
                   {metal}
                 </Badge>

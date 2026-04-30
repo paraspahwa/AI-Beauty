@@ -29,12 +29,22 @@ interface Props {
 export function ReportLayout({ report: initial }: Props) {
   const [report, setReport] = React.useState(initial);
   const [activeTab, setActiveTab] = React.useState("face");
+  const [copied, setCopied] = React.useState(false);
   const isPaid = report.isPaid;
+  const isProcessing = report.status === "processing" || report.status === "pending";
 
   async function refresh() {
     const res = await fetch(`/api/reports/${report.id}`, { cache: "no-store" });
     if (res.ok) setReport(await res.json());
   }
+
+  // Poll while the report is still processing
+  React.useEffect(() => {
+    if (!isProcessing) return;
+    const interval = setInterval(refresh, 4000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProcessing, report.id]);
 
   async function share() {
     const url = `${window.location.origin}/report/${report.id}`;
@@ -43,7 +53,8 @@ export function ReportLayout({ report: initial }: Props) {
         await navigator.share({ title: "My StyleAI report", url });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied!");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       }
     } catch {
       /* user cancelled */
@@ -60,13 +71,14 @@ export function ReportLayout({ report: initial }: Props) {
       >
         <motion.p
           variants={fadeUp}
-          className="text-xs uppercase tracking-[0.3em] text-terracotta font-medium"
+          className="text-xs uppercase tracking-[0.3em] font-medium"
+          style={{ color: "#C9956B" }}
         >
           Your StyleAI report
         </motion.p>
         <motion.h1
           variants={fadeUp}
-          className="mt-3 text-4xl sm:text-5xl text-ink divider-stars"
+          className="mt-3 text-4xl sm:text-5xl text-ink"
         >
           Personal Beauty Profile
         </motion.h1>
@@ -83,7 +95,7 @@ export function ReportLayout({ report: initial }: Props) {
           className="mt-6 flex flex-wrap justify-center gap-3"
         >
           <Button variant="outline" onClick={share} className="min-w-[120px]">
-            <Share2 className="h-4 w-4" /> Share
+            <Share2 className="h-4 w-4" /> {copied ? "Copied ✨" : "Share"}
           </Button>
           {isPaid ? (
             <Button asChild variant="accent">
@@ -108,7 +120,10 @@ export function ReportLayout({ report: initial }: Props) {
       >
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-center mb-8">
-            <TabsList className="glass border border-cream-200 shadow-card">
+            <TabsList
+              className="backdrop-blur-md"
+              style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}
+            >
               {TABS.map((t) => {
                 const isLocked =
                   !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair");
@@ -117,24 +132,12 @@ export function ReportLayout({ report: initial }: Props) {
                   <TabsTrigger
                     key={t.value}
                     value={t.value}
-                    className="relative data-[state=active]:bg-white data-[state=active]:shadow-card"
+                    className="relative data-[state=active]:text-obsidian data-[state=active]:shadow-glow data-[state=active]:bg-[linear-gradient(135deg,#C9956B,#E8C990)]"
                   >
                     {isLocked && (
-                      <Lock className="h-3 w-3 mr-1.5 text-terracotta animate-pulse-slow" />
+                      <Lock className="h-3 w-3 mr-1.5 animate-pulse-slow" style={{ color: "#C9956B" }} />
                     )}
                     {t.label}
-                    {activeTab === t.value && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute -bottom-px left-0 right-0 h-0.5 bg-gradient-to-r from-terracotta via-camel to-terracotta"
-                        initial={false}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                        }}
-                      />
-                    )}
                   </TabsTrigger>
                 );
               })}
@@ -255,9 +258,10 @@ function Empty() {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="rounded-3xl border-2 border-dashed border-cream-300 bg-cream-50 p-12 text-center"
+      className="rounded-3xl p-12 text-center"
+      style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.8), rgba(26,26,38,0.6))", border: "1px dashed rgba(255,255,255,0.1)" }}
     >
-      <Sparkles className="h-10 w-10 text-ink-mist mx-auto mb-3" />
+      <Sparkles className="h-10 w-10 mx-auto mb-3" style={{ color: "rgba(240,232,216,0.2)" }} />
       <p className="text-sm text-ink-stone font-medium mb-1">Analysis is still processing</p>
       <p className="text-xs text-ink-mist">Refresh in a moment to see your results</p>
     </motion.div>
@@ -277,11 +281,13 @@ function Locked({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="rounded-4xl border-2 border-cream-200 bg-gradient-to-br from-cream-100 via-cream-50 to-cream-100 p-12 sm:p-16 text-center relative overflow-hidden"
+      className="rounded-4xl p-12 sm:p-16 text-center relative overflow-hidden"
+      style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(201,149,107,0.18)" }}
     >
       {/* Decorative background elements */}
       <motion.div
-        className="absolute top-0 right-0 w-48 h-48 rounded-full bg-terracotta/5 blur-3xl"
+        className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl"
+        style={{ background: "rgba(201,149,107,0.08)" }}
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -293,7 +299,8 @@ function Locked({
         }}
       />
       <motion.div
-        className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-sage/5 blur-3xl"
+        className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl"
+        style={{ background: "rgba(123,110,158,0.08)" }}
         animate={{
           scale: [1, 1.3, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -327,9 +334,10 @@ function Locked({
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute inset-0 rounded-full bg-terracotta/20 blur-xl"
+            className="absolute inset-0 rounded-full blur-xl"
+            style={{ background: "rgba(201,149,107,0.25)" }}
           />
-          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full bg-gradient-to-br from-terracotta to-camel text-white shadow-premium">
+          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
             <Lock className="h-8 w-8" />
           </div>
         </motion.div>

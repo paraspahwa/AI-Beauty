@@ -26,7 +26,7 @@ export function HairstyleCard({ data }: { data: HairstyleResult }) {
           <h4 className="mb-3 text-xs uppercase tracking-widest text-ink-stone">Length guide</h4>
           <div className="grid gap-3 sm:grid-cols-3">
             {data.lengths.map((l) => (
-              <div key={l.name} className="rounded-2xl border border-cream-200 bg-white/70 p-4 text-center">
+              <div key={l.name} className="rounded-2xl p-4 text-center" style={{ background: "rgba(26,26,38,0.7)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p className="font-serif text-base text-ink">{l.name}</p>
                 <p className="mt-1 text-xs text-ink-stone">{l.description}</p>
               </div>

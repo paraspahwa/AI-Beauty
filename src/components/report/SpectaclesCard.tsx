@@ -17,7 +17,7 @@ export function SpectaclesCard({ data }: { data: GlassesResult }) {
             const Icon = GOAL_ICONS[i % GOAL_ICONS.length];
             return (
               <div key={g} className="flex items-center gap-3 rounded-2xl border border-cream-200 bg-cream-100 p-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-accent-deep shadow-card">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="text-sm font-medium text-ink">{g}</span>
@@ -30,7 +30,7 @@ export function SpectaclesCard({ data }: { data: GlassesResult }) {
           <h4 className="mb-4 text-center font-serif text-xl text-ink divider-stars">Try-On: Flattering Styles</h4>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {data.recommended.map((r) => (
-              <div key={r.style} className="rounded-2xl border border-cream-200 bg-white/80 p-3 text-center">
+              <div key={r.style} className="rounded-2xl p-3 text-center" style={{ background: "rgba(26,26,38,0.7)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <p className="text-[11px] uppercase tracking-widest text-ink-stone">{r.style}</p>
                 <p className="mt-2 text-xs text-ink-mist leading-snug">{r.reason}</p>
               </div>

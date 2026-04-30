@@ -36,8 +36,8 @@ const config: Config = {
         // Legacy aliases — keeps all existing components working
         ink: {
           DEFAULT: "#F0E8D8",
-          stone: "#B8AE9C",
-          mist: "#5A5068",
+          stone: "#A89E8A",
+          mist: "#867E70",
         },
         cream: {
           DEFAULT: "#0A0A0F",
