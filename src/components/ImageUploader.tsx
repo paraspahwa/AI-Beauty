@@ -96,14 +96,27 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           {...getRootProps()}
           className={cn(
             "relative flex flex-col items-center justify-center gap-4 rounded-4xl border-2 transition-all",
-            "bg-white shadow-card px-8 py-16 text-center cursor-pointer",
-            "hover:shadow-premium hover:scale-[1.02]",
+            "px-8 py-16 text-center cursor-pointer",
+            "hover:scale-[1.02]",
             isDragActive
-              ? "border-terracotta bg-terracotta/5 border-solid scale-[1.02]"
+              ? "border-solid scale-[1.02]"
               : file
-              ? "border-sage border-solid"
-              : "border-dashed border-cream-300 hover:border-terracotta/50"
+              ? "border-solid"
+              : "border-dashed"
           )}
+          style={{
+            background: isDragActive
+              ? "rgba(201,149,107,0.05)"
+              : "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))",
+            borderColor: isDragActive
+              ? "#C9956B"
+              : file
+              ? "rgba(123,110,158,0.6)"
+              : "rgba(255,255,255,0.08)",
+            boxShadow: isDragActive
+              ? "0 0 40px rgba(201,149,107,0.15), inset 0 1px 0 rgba(255,255,255,0.05)"
+              : "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+          }}
         >
           <input {...getInputProps()} />
 
@@ -120,13 +133,15 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                 <img
                   src={preview}
                   alt="Preview"
-                  className="h-56 w-56 rounded-3xl object-cover shadow-premium border-4 border-white"
+                  className="h-56 w-56 rounded-3xl object-cover"
+                  style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)", border: "3px solid rgba(201,149,107,0.3)" }}
                 />
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
-                  className="absolute -top-2 -right-2 bg-sage text-white rounded-full p-2 shadow-card"
+                  className="absolute -top-2 -right-2 rounded-full p-2"
+                  style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)", color: "#0A0A0F", boxShadow: "0 4px 12px rgba(201,149,107,0.4)" }}
                 >
                   <CheckCircle2 className="h-5 w-5" />
                 </motion.div>
@@ -148,10 +163,14 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                   transition={{ duration: 0.5 }}
                   className={cn(
                     "flex h-20 w-20 items-center justify-center rounded-full transition-all",
-                    isDragActive
-                      ? "bg-terracotta text-white"
-                      : "bg-gradient-to-br from-terracotta/20 to-sage/20 text-terracotta"
                   )}
+                  style={{
+                    background: isDragActive
+                      ? "linear-gradient(135deg, #C9956B, #E8C990)"
+                      : "rgba(201,149,107,0.12)",
+                    color: isDragActive ? "#0A0A0F" : "#C9956B",
+                    boxShadow: isDragActive ? "0 0 30px rgba(201,149,107,0.3)" : "none",
+                  }}
                 >
                   <ImageIcon className="h-10 w-10" />
                 </motion.div>
@@ -167,7 +186,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                         repeat: Infinity,
                         ease: "easeOut",
                       }}
-                      className="absolute inset-0 rounded-full border-2 border-terracotta"
+                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#C9956B" }}
                     />
                     <motion.div
                       initial={{ scale: 1, opacity: 0.6 }}
@@ -178,7 +197,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                         ease: "easeOut",
                         delay: 0.3,
                       }}
-                      className="absolute inset-0 rounded-full border-2 border-terracotta"
+                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#C9956B" }}
                     />
                   </>
                 )}
@@ -237,7 +256,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-3 rounded-2xl bg-danger/10 border border-danger/20 p-4 text-sm text-danger"
+                className="flex items-center gap-3 rounded-2xl p-4 text-sm"
+                style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171" }}
               >
                 <XCircle className="h-5 w-5 shrink-0" />
                 <span>{error}</span>

@@ -23,7 +23,7 @@ export default function UploadPage() {
         animate="visible"
       >
         <motion.header variants={fadeUp} className="mb-12 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-terracotta font-medium mb-3">
+          <p className="text-xs uppercase tracking-[0.3em] font-medium mb-3" style={{ color: "#C9956B" }}>
             Step 1 of 2
           </p>
           <h1 className="text-4xl sm:text-5xl text-ink mb-4">
@@ -56,7 +56,7 @@ export default function UploadPage() {
                 variants={fadeUp}
                 className="flex items-start gap-3 text-sm text-ink-stone"
               >
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-sage mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#C9956B" }} />
                 <span>{tip}</span>
               </motion.li>
             ))}
@@ -66,9 +66,10 @@ export default function UploadPage() {
         {/* Privacy reassurance */}
         <motion.div
           variants={fadeUp}
-          className="mx-auto mt-12 max-w-md rounded-2xl bg-gradient-to-br from-sage/5 to-olive/5 border border-sage/20 p-6 text-center"
+          className="mx-auto mt-12 max-w-md rounded-2xl p-6 text-center"
+          style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)" }}
         >
-          <p className="text-xs uppercase tracking-widest text-sage font-medium mb-2">
+          <p className="text-xs uppercase tracking-widest font-medium mb-2" style={{ color: "#7B6E9E" }}>
             Your Privacy Matters
           </p>
           <p className="text-sm text-ink-stone leading-relaxed">

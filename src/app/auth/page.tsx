@@ -66,17 +66,18 @@ function AuthContent() {
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-terracotta via-camel/80 to-sage/60 text-white relative overflow-hidden"
+        className="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden"
+        style={{ background: "linear-gradient(145deg, #12121A 0%, #1A1A26 40%, #2A2040 100%)" }}
       >
-        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-2xl pointer-events-none" style={{ background: "rgba(201,149,107,0.12)" }} />
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(123,110,158,0.10)" }} />
 
         <motion.div variants={fadeUp}>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              <Sparkles className="h-4 w-4 text-white" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "rgba(201,149,107,0.2)", backdropFilter: "blur(8px)" }}>
+              <Sparkles className="h-4 w-4" style={{ color: "#C9956B" }} />
             </div>
-            <span className="font-serif text-xl text-white">StyleAI</span>
+            <span className="font-serif text-xl" style={{ color: "#F0E8D8" }}>StyleAI</span>
           </div>
         </motion.div>
 
@@ -94,16 +95,16 @@ function AuthContent() {
           <motion.ul variants={staggerContainer} className="space-y-4">
             {FEATURES.map((f) => (
               <motion.li key={f.text} variants={fadeUp} className="flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
-                  <f.icon className="h-4 w-4 text-white" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(201,149,107,0.15)" }}>
+                  <f.icon className="h-4 w-4" style={{ color: "#C9956B" }} />
                 </div>
-                <span className="text-white/90 text-sm">{f.text}</span>
+                <span className="text-sm" style={{ color: "rgba(240,232,216,0.85)" }}>{f.text}</span>
               </motion.li>
             ))}
           </motion.ul>
         </div>
 
-        <motion.div variants={fadeUp} className="text-white/60 text-sm">
+        <motion.div variants={fadeUp} className="text-sm" style={{ color: "rgba(240,232,216,0.5)" }}>
           Trusted by 50,000+ style enthusiasts
         </motion.div>
       </motion.div>
@@ -113,11 +114,12 @@ function AuthContent() {
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="flex items-center justify-center p-6 sm:p-12 bg-cream"
+        className="flex items-center justify-center p-6 sm:p-12"
+        style={{ background: "#0A0A0F" }}
       >
         <div className="w-full max-w-md space-y-8">
           <motion.div variants={fadeUp} className="flex items-center gap-2 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full text-obsidian" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
               <Sparkles className="h-4 w-4" />
             </div>
             <span className="font-serif text-xl text-ink">StyleAI</span>
@@ -129,8 +131,8 @@ function AuthContent() {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center space-y-4"
             >
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sage/10">
-                <CheckCircle2 className="h-8 w-8 text-sage" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
+                <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
               </div>
               <h1 className="font-serif text-2xl text-ink">Check your inbox</h1>
               <p className="text-ink-stone leading-relaxed">
@@ -165,12 +167,20 @@ function AuthContent() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
                       required
-                      className="w-full rounded-xl border border-cream-200 bg-white pl-10 pr-4 py-3 text-sm text-ink placeholder:text-ink-mist focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:border-terracotta transition-all"
+                      className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 transition-all"
+                      style={{
+                        background: "rgba(26,26,38,0.9)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        color: "#F0E8D8",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                      }}
                     />
                   </div>
                 </div>
 
-                {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+                {error && (
+                  <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>
+                )}
 
                 <Button type="submit" variant="accent" size="lg" disabled={loading || !email} className="w-full group">
                   {loading ? (
@@ -195,7 +205,7 @@ function AuthContent() {
                   <Link href="#" className="underline hover:text-ink transition-colors">Privacy Policy</Link>.
                 </p>
                 <div className="flex items-center justify-center gap-2 text-xs text-ink-mist">
-                  <Shield className="h-3.5 w-3.5 text-sage" />
+                  <Shield className="h-3.5 w-3.5" style={{ color: "#7B6E9E" }} />
                   No password. No spam. Cancel anytime.
                 </div>
               </motion.div>

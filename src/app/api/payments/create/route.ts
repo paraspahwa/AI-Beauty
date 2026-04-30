@@ -39,6 +39,42 @@ export async function POST(req: NextRequest) {
 
     const amountMinor = Math.round(env.razorpay.priceINR * 100); // INR paise
     const currency = "INR";
+    const admin = createSupabaseAdminClient();
+
+    // Idempotent reuse: if we already created an order for this report, return it.
+    const { data: existingCreated, error: existingErr } = await admin
+      .from("payments")
+      .select("provider_order_id,amount,currency")
+      .eq("user_id", user.id)
+      .eq("report_id", body.reportId)
+      .eq("status", "created")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingErr) throw existingErr;
+    if (existingCreated) {
+      return NextResponse.json({
+        orderId: existingCreated.provider_order_id,
+        amount: existingCreated.amount,
+        currency: existingCreated.currency,
+        keyId: env.razorpay.keyId,
+      });
+    }
+
+    // Basic abuse guard: limit new order creation attempts per user per hour.
+    const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count: recentCreateCount, error: throttleErr } = await admin
+      .from("payments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", oneHourAgoIso);
+    if (throttleErr) throw throttleErr;
+    if ((recentCreateCount ?? 0) >= 20) {
+      return NextResponse.json(
+        { error: "Too many payment create attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
 
     const order = await getRazorpay().orders.create({
       amount: amountMinor,
@@ -47,8 +83,7 @@ export async function POST(req: NextRequest) {
       notes: { user_id: user.id, report_id: body.reportId },
     });
 
-    const admin = createSupabaseAdminClient();
-    await admin.from("payments").insert({
+    const { error: insertErr } = await admin.from("payments").insert({
       user_id: user.id,
       report_id: body.reportId,
       provider: "razorpay",
@@ -58,6 +93,29 @@ export async function POST(req: NextRequest) {
       status: "created",
       raw: order as unknown as object,
     });
+    if (insertErr) {
+      // Handle race between two create calls by re-reading existing created row.
+      const { data: racedCreated } = await admin
+        .from("payments")
+        .select("provider_order_id,amount,currency")
+        .eq("user_id", user.id)
+        .eq("report_id", body.reportId)
+        .eq("status", "created")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (racedCreated) {
+        return NextResponse.json({
+          orderId: racedCreated.provider_order_id,
+          amount: racedCreated.amount,
+          currency: racedCreated.currency,
+          keyId: env.razorpay.keyId,
+        });
+      }
+
+      throw insertErr;
+    }
 
     return NextResponse.json({
       orderId: order.id,

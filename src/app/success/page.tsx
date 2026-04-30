@@ -39,7 +39,7 @@ function SuccessContent() {
   }, [countdown, router, reportHref]);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6 bg-gradient-to-br from-cream via-cream-100 to-sage/10">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6" style={{ background: "linear-gradient(145deg, #0A0A0F 0%, #12121A 50%, #1A1226 100%)" }}>
       <motion.div
         initial="hidden"
         animate="visible"
@@ -49,14 +49,16 @@ function SuccessContent() {
         <motion.div variants={scaleIn} className="mx-auto mb-8">
           <div className="relative inline-block">
             <motion.div
-              className="w-24 h-24 rounded-full bg-gradient-to-br from-terracotta to-camel flex items-center justify-center mx-auto shadow-premium"
+              className="w-24 h-24 rounded-full flex items-center justify-center mx-auto"
+              style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)", boxShadow: "0 0 40px rgba(201,149,107,0.4), 0 0 80px rgba(201,149,107,0.15)" }}
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <CheckCircle2 className="h-12 w-12 text-white" />
+              <CheckCircle2 className="h-12 w-12 text-obsidian" />
             </motion.div>
             <motion.div
-              className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-sage flex items-center justify-center shadow-card"
+              className="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(123,110,158,0.9)", boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
               animate={{ rotate: [0, 20, -20, 0] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
@@ -77,9 +79,10 @@ function SuccessContent() {
             <motion.li
               key={i}
               variants={fadeUp}
-              className="flex items-start gap-3 bg-white/70 backdrop-blur-sm rounded-2xl px-5 py-3.5 border border-cream-200"
+              className="flex items-start gap-3 rounded-2xl px-5 py-3.5"
+              style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)" }}
             >
-              <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#C9956B" }} />
               <span className="text-sm text-ink-stone">{perk}</span>
             </motion.li>
           ))}
@@ -95,7 +98,7 @@ function SuccessContent() {
           </Button>
           {countdown > 0 && (
             <p className="text-sm text-ink-mist">
-              Redirecting in <span className="font-medium text-terracotta">{countdown}s</span>…
+              Redirecting in <span className="font-medium" style={{ color: "#C9956B" }}>{countdown}s</span>…
             </p>
           )}
         </motion.div>

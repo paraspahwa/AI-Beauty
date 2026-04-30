@@ -51,7 +51,8 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-cream/95 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md"
+      style={{ background: "rgba(10,10,15,0.97)" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -89,21 +90,35 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
                   variants={fadeUp}
                   className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${
                     isActive
-                      ? "bg-white shadow-card scale-105"
-                      : isComplete
-                      ? "bg-sage/10"
-                      : "bg-cream-100"
+                      ? "scale-105"
+                      : ""
                   }`}
+                  style={{
+                    background: isActive
+                      ? "linear-gradient(145deg, rgba(26,26,38,0.98), rgba(36,36,52,0.95))"
+                      : isComplete
+                      ? "rgba(123,110,158,0.08)"
+                      : "rgba(18,18,26,0.6)",
+                    border: isActive
+                      ? "1px solid rgba(201,149,107,0.2)"
+                      : "1px solid rgba(255,255,255,0.04)",
+                    boxShadow: isActive ? "0 4px 24px rgba(0,0,0,0.4)" : "none",
+                  }}
                 >
                   {/* Icon */}
                   <div
                     className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all ${
-                      isComplete
-                        ? "bg-sage text-white"
-                        : isActive
-                        ? "bg-terracotta text-white animate-pulse-slow"
-                        : "bg-cream-200 text-ink-mist"
+                      isActive ? "animate-pulse-slow" : ""
                     }`}
+                    style={{
+                      background: isComplete
+                        ? "rgba(123,110,158,0.8)"
+                        : isActive
+                        ? "linear-gradient(135deg, #C9956B, #E8C990)"
+                        : "rgba(255,255,255,0.05)",
+                      color: isComplete || isActive ? "#0A0A0F" : "rgba(255,255,255,0.3)",
+                      boxShadow: isActive ? "0 0 20px rgba(201,149,107,0.3)" : "none",
+                    }}
                   >
                     {isComplete ? (
                       <motion.div
@@ -144,9 +159,10 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
           {/* Fun fact */}
           <motion.div
             variants={scaleIn}
-            className="rounded-2xl bg-white/60 backdrop-blur-sm border border-cream-200 p-6"
+            className="rounded-2xl p-6 backdrop-blur-sm"
+            style={{ background: "rgba(18,18,26,0.8)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
-            <p className="text-xs uppercase tracking-widest text-terracotta mb-2">
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#C9956B" }}>
               Did you know?
             </p>
             <motion.p

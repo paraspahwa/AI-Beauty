@@ -36,35 +36,62 @@ export async function POST(req: NextRequest) {
   if (!orderId) return NextResponse.json({ ok: true }, { status: 202 }); // ignore non-payment events
 
   const admin = createSupabaseAdminClient();
-  const { data: row } = await admin
+  const { data: row, error: rowErr } = await admin
     .from("payments")
     .select("id,user_id,report_id,status")
     .eq("provider_order_id", orderId)
     .single();
+  if (rowErr) {
+    console.error("[webhook/razorpay] failed to load payment row", rowErr);
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
+  }
   if (!row) return NextResponse.json({ ok: true }, { status: 202 });
 
   if (event.event === "payment.captured") {
-    if (row.status !== "paid") {
-      if (row.report_id) {
-        // Atomically update payments, report and profile in one transaction
-        await admin.rpc("complete_webhook_payment", {
-          p_payment_row_id: row.id,
-          p_report_id: row.report_id,
-          p_user_id: row.user_id,
-          p_provider_payment_id: payment?.id as string,
-          p_raw: payment as object,
-        });
-      } else {
-        await admin.from("payments").update({
-          status: "paid",
-          provider_payment_id: payment?.id as string,
-          raw: payment as object,
-        }).eq("id", row.id);
-        await admin.from("profiles").update({ is_paid: true }).eq("id", row.user_id);
+    if (row.report_id) {
+      // Always reconcile via RPC when report_id exists; function is idempotent.
+      const { error: rpcErr } = await admin.rpc("complete_webhook_payment", {
+        p_payment_row_id: row.id,
+        p_report_id: row.report_id,
+        p_user_id: row.user_id,
+        p_provider_payment_id: payment?.id as string,
+        p_raw: payment as object,
+      });
+      if (rpcErr) {
+        console.error("[webhook/razorpay] complete_webhook_payment failed", rpcErr);
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
+      }
+    } else if (row.status !== "paid") {
+      const { error: payErr } = await admin.from("payments").update({
+        status: "paid",
+        provider_payment_id: payment?.id as string,
+        raw: payment as object,
+      }).eq("id", row.id);
+      if (payErr) {
+        console.error("[webhook/razorpay] payment update failed", payErr);
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
+      }
+
+      const { error: profileErr } = await admin
+        .from("profiles")
+        .update({ is_paid: true })
+        .eq("id", row.user_id);
+      if (profileErr) {
+        console.error("[webhook/razorpay] profile update failed", profileErr);
+        return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
     }
   } else if (event.event === "payment.failed") {
-    await admin.from("payments").update({ status: "failed", raw: payment as object }).eq("id", row.id);
+    // Never regress paid -> failed.
+    const { error: failErr } = await admin
+      .from("payments")
+      .update({ status: "failed", raw: payment as object })
+      .eq("id", row.id)
+      .neq("status", "paid");
+    if (failErr) {
+      console.error("[webhook/razorpay] failed-event update failed", failErr);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true }, { status: 202 });

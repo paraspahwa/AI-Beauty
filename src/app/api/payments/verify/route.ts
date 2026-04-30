@@ -16,9 +16,10 @@ const Body = z.object({
 
 /**
  * POST /api/payments/verify
- * Verifies the signature returned by Razorpay Checkout, marks the payment paid,
- * and unlocks the report. Webhooks (`/api/webhooks/razorpay`) provide a redundant
- * server-side path so users never get stuck if the browser drops the response.
+ * Verifies the signature returned by Razorpay Checkout.
+ *
+ * IMPORTANT: this endpoint does not unlock report/profile or mark payments paid.
+ * `payment.captured` webhook handling is the source of truth for unlock state.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -46,25 +47,27 @@ export async function POST(req: NextRequest) {
     // Update payment row (must belong to this user via order_id lookup)
     const { data: payment } = await admin
       .from("payments")
-      .select("id,user_id,report_id")
+      .select("id,user_id,report_id,status")
       .eq("provider_order_id", body.razorpay_order_id)
       .single();
     if (!payment || payment.user_id !== user.id || payment.report_id !== body.reportId) {
       return NextResponse.json({ error: "Payment mismatch" }, { status: 400 });
     }
 
-    // Atomically mark payment paid, unlock the report, and update the profile
-    // using a single DB transaction so partial failures are impossible.
-    const { error: rpcErr } = await admin.rpc("complete_payment", {
-      p_payment_row_id: payment.id,
-      p_report_id: body.reportId,
-      p_user_id: user.id,
-      p_provider_payment_id: body.razorpay_payment_id,
-      p_provider_signature: body.razorpay_signature,
-    });
-    if (rpcErr) throw rpcErr;
+    // Best-effort audit write. Ignore already-paid rows to keep this endpoint idempotent.
+    if (payment.status !== "paid") {
+      const { error: updErr } = await admin
+        .from("payments")
+        .update({
+          provider_payment_id: body.razorpay_payment_id,
+          provider_signature: body.razorpay_signature,
+        })
+        .eq("id", payment.id)
+        .neq("status", "paid");
+      if (updErr) throw updErr;
+    }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, awaitingWebhook: payment.status !== "paid" });
   } catch (err) {
     console.error("[POST /api/payments/verify]", err);
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });

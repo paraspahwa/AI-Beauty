@@ -94,9 +94,12 @@ const MOCK_PALETTE = [
 
 function MockReportCard() {
   return (
-    <div className="relative rounded-4xl bg-white shadow-premium p-6 border-2 border-cream-200 overflow-hidden">
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-terracotta/3 via-transparent to-sage/3 pointer-events-none" />
+    <div
+      className="relative rounded-4xl p-6 overflow-hidden chrome-border"
+      style={{ background: "linear-gradient(145deg, #12121A, #1A1A26)" }}
+    >
+      {/* Subtle background shimmer */}
+      <div className="absolute inset-0 bg-[linear-gradient(105deg,transparent_40%,rgba(255,255,255,0.03)_50%,transparent_60%)] pointer-events-none" />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -106,18 +109,20 @@ function MockReportCard() {
           </div>
           <span className="font-serif text-sm text-ink">StyleAI Report</span>
         </div>
-        <span className="text-xs rounded-full bg-terracotta/10 text-terracotta px-3 py-1 font-medium">
+          <span className="text-xs rounded-full px-3 py-1 font-medium" style={{ background: "rgba(201,149,107,0.15)", color: "#E8C990", border: "1px solid rgba(201,149,107,0.25)" }}>
           Soft Autumn
-        </span>
+          </span>
       </div>
 
       {/* Photo + face shape */}
       <div className="flex items-center gap-4 mb-5">
         <div className="relative shrink-0">
-          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-camel/50 via-terracotta/30 to-sage/40 flex items-center justify-center border-4 border-white shadow-card">
-            <Camera className="h-7 w-7 text-terracotta/60" />
+          <div className="h-20 w-20 rounded-full flex items-center justify-center border-2 shadow-card"
+               style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.3), rgba(123,110,158,0.2))", borderColor: "rgba(255,255,255,0.08)" }}
+          >
+            <Camera className="h-7 w-7" style={{ color: "#C9956B" }} />
           </div>
-          <div className="absolute -bottom-1 -right-1 bg-sage text-white rounded-full p-1 shadow-card border-2 border-white">
+          <div className="absolute -bottom-1 -right-1 rounded-full p-1 shadow-card border-2" style={{ background: "#7B6E9E", borderColor: "rgba(26,26,38,1)" }}>
             <CheckCircle2 className="h-3.5 w-3.5" />
           </div>
         </div>
@@ -155,34 +160,37 @@ function MockReportCard() {
         {["Skin Analysis", "Spectacles Guide", "Hairstyle Guide"].map((section) => (
           <div
             key={section}
-            className="flex items-center justify-between rounded-xl bg-cream-100 px-4 py-2.5 border border-cream-200"
+            className="flex items-center justify-between rounded-xl px-4 py-2.5"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
             <span className="text-sm text-ink-stone">{section}</span>
-            <Lock className="h-3.5 w-3.5 text-terracotta" />
+            <Lock className="h-3.5 w-3.5" style={{ color: "#C9956B" }} />
           </div>
         ))}
       </div>
 
       {/* Unlock hint */}
-      <div className="mt-4 rounded-xl bg-gradient-to-r from-terracotta/10 to-camel/10 border border-terracotta/20 px-4 py-3 text-center">
-        <p className="text-xs text-terracotta font-medium">✦ Unlock the full report for $9.99</p>
+      <div className="mt-4 rounded-xl px-4 py-3 text-center" style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.1), rgba(232,201,144,0.08))", border: "1px solid rgba(201,149,107,0.2)" }}>
+        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock the full report for $9.99</p>
       </div>
 
       {/* Floating stat badges */}
       <motion.div
         animate={{ y: [0, -6, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -right-4 top-1/4 bg-white rounded-2xl shadow-premium border border-cream-200 px-3 py-2 text-center min-w-[80px]"
+        className="absolute -right-4 top-1/4 rounded-2xl shadow-premium px-3 py-2 text-center min-w-[80px]"
+        style={{ background: "linear-gradient(145deg, #1A1A26, #12121A)", border: "1px solid rgba(255,255,255,0.08)" }}
       >
-        <p className="font-bold text-terracotta text-lg leading-none">50k+</p>
+        <p className="font-bold text-lg leading-none" style={{ color: "#C9956B" }}>50k+</p>
         <p className="text-ink-mist text-xs mt-0.5">Analyses</p>
       </motion.div>
       <motion.div
         animate={{ y: [0, 6, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute -left-4 bottom-1/4 bg-white rounded-2xl shadow-premium border border-cream-200 px-3 py-2 text-center min-w-[72px]"
+        className="absolute -left-4 bottom-1/4 rounded-2xl shadow-premium px-3 py-2 text-center min-w-[72px]"
+        style={{ background: "linear-gradient(145deg, #1A1A26, #12121A)", border: "1px solid rgba(255,255,255,0.08)" }}
       >
-        <p className="font-bold text-sage text-lg leading-none">4.9★</p>
+        <p className="font-bold text-lg leading-none" style={{ color: "#B8C4CC" }}>4.9★</p>
         <p className="text-ink-mist text-xs mt-0.5">Rating</p>
       </motion.div>
     </div>
@@ -209,11 +217,12 @@ function FAQ() {
             <motion.div
               key={index}
               variants={fadeUp}
-              className="rounded-2xl bg-white/80 backdrop-blur-sm border border-cream-200 overflow-hidden"
+              className="rounded-2xl overflow-hidden"
+              style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)" }}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-cream-50 transition-colors"
+                className="w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-colors"
               >
                 <span className="font-medium text-ink pr-4">{faq.q}</span>
                 <ChevronDown
@@ -244,50 +253,32 @@ function FAQ() {
 export default function HomePage() {
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Animated gradient background blobs */}
+      {/* Animated gradient background — obsidian with chrome/iris orbs */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-20"
-          style={{
-            background: "radial-gradient(circle, #D9A08A 0%, transparent 70%)",
-          }}
-          animate={{
-            y: [0, 30, 0],
-            x: [0, -20, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+          className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-25"
+          style={{ background: "radial-gradient(circle, #C9956B 0%, transparent 60%)" }}
+          animate={{ y: [0, 30, 0], x: [0, -20, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full opacity-10"
-          style={{
-            background: "radial-gradient(circle, #9CAF88 0%, transparent 70%)",
-          }}
-          animate={{
-            y: [0, -40, 0],
-            x: [0, 30, 0],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #7B6E9E 0%, transparent 70%)" }}
+          animate={{ y: [0, -40, 0], x: [0, 30, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-0 right-1/3 w-80 h-80 rounded-full opacity-10"
+          className="absolute bottom-0 right-1/3 w-80 h-80 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, #E8C990 0%, transparent 70%)" }}
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Subtle grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.025]"
           style={{
-            background: "radial-gradient(circle, #C4A882 0%, transparent 70%)",
-          }}
-          animate={{
-            y: [0, -20, 0],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
           }}
         />
       </div>
@@ -304,7 +295,8 @@ export default function HomePage() {
           >
             <motion.span
               variants={fadeUp}
-              className="inline-flex items-center gap-2 rounded-full bg-terracotta/10 px-4 py-2 text-xs uppercase tracking-widest text-terracotta font-medium"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-widest font-medium chrome-border"
+              style={{ color: "#E8C990", background: "rgba(201,149,107,0.08)" }}
             >
               <Sparkles className="h-3.5 w-3.5" /> AI Personal Stylist
             </motion.span>
@@ -346,17 +338,17 @@ export default function HomePage() {
               <div className="flex items-center gap-2">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-terracotta text-terracotta" />
+                    <Star key={i} className="h-4 w-4" style={{ fill: "#E8C990", color: "#E8C990" }} />
                   ))}
                 </div>
                 <span className="text-ink-stone">4.9/5 rating</span>
               </div>
               <div className="flex items-center gap-2 text-ink-stone">
-                <CheckCircle2 className="h-4 w-4 text-sage" />
+                <CheckCircle2 className="h-4 w-4" style={{ color: "#B8C4CC" }} />
                 50,000+ analyses
               </div>
               <div className="flex items-center gap-2 text-ink-stone">
-                <ShieldCheck className="h-4 w-4 text-sage" />
+                <ShieldCheck className="h-4 w-4" style={{ color: "#B8C4CC" }} />
                 30-day guarantee
               </div>
             </motion.div>
@@ -405,10 +397,14 @@ export default function HomePage() {
               >
                 <div className="card-soft hover:shadow-premium transition-all duration-300 group-hover:-translate-y-2">
                   <div className="mb-6 relative">
-                    <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-terracotta to-camel flex items-center justify-center text-white shadow-card">
-                      <item.icon className="h-8 w-8" />
-                    </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white shadow-card flex items-center justify-center text-terracotta font-bold text-sm">
+                  <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-obsidian shadow-glow"
+                    style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}
+                  >
+                    <item.icon className="h-8 w-8" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-card"
+                    style={{ background: "#1A1A26", border: "1px solid rgba(201,149,107,0.3)", color: "#C9956B" }}
+                  >
                       {item.step}
                     </div>
                   </div>
@@ -449,7 +445,10 @@ export default function HomePage() {
                 whileHover={{ y: -8, transition: { duration: 0.3 } }}
                 className="card-soft text-center cursor-pointer group"
               >
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-terracotta/20 to-sage/20 text-terracotta group-hover:scale-110 transition-transform">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full group-hover:scale-110 transition-transform"
+                  style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.15), rgba(123,110,158,0.15))", color: "#C9956B" }}
+                >
                   <feature.icon className="h-7 w-7" />
                 </div>
                 <h3 className="font-serif text-xl text-ink mb-2">{feature.title}</h3>
@@ -481,14 +480,17 @@ export default function HomePage() {
               >
                 <div className="flex gap-1 mb-3">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-terracotta text-terracotta" />
+                    <Star key={i} className="h-4 w-4" style={{ fill: "#E8C990", color: "#E8C990" }} />
                   ))}
                 </div>
                 <p className="text-sm text-ink-stone leading-relaxed mb-4">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sage to-camel flex items-center justify-center text-white text-sm font-bold">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-obsidian text-sm font-bold"
+                    style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}
+                  >
                     {testimonial.name[0]}
                   </div>
                   <div>
@@ -536,9 +538,9 @@ export default function HomePage() {
 
             <motion.div
               variants={scaleIn}
-              className="card-soft border-2 border-terracotta/40 bg-white relative overflow-hidden"
+              className="card-soft border-0 relative overflow-hidden chrome-border"
             >
-              <div className="absolute top-4 right-4 bg-terracotta text-white text-xs font-bold px-3 py-1 rounded-full">
+              <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)", color: "#0A0A0F" }}>
                 BEST VALUE
               </div>
               <p className="text-xs uppercase tracking-widest text-terracotta mb-2">Full report</p>
@@ -586,7 +588,8 @@ export default function HomePage() {
           whileInView="visible"
           viewport={{ once: true }}
           variants={staggerContainer}
-          className="text-center rounded-4xl bg-gradient-to-br from-terracotta/10 via-camel/10 to-sage/10 p-12 border border-cream-200"
+          className="text-center rounded-4xl p-12 chrome-border"
+          style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.98), rgba(26,26,38,0.95))" }}
         >
           <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl text-ink mb-4">
             Ready to discover your style?

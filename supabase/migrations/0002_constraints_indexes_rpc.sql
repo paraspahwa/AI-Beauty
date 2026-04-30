@@ -9,13 +9,19 @@
 -- ------------------------------------------------------------
 -- CHECK constraints on status columns
 -- ------------------------------------------------------------
-alter table public.reports
-  add constraint if not exists reports_status_check
-    check (status in ('pending', 'processing', 'ready', 'failed'));
+do $$ begin
+  alter table public.reports
+    add constraint reports_status_check
+      check (status in ('pending', 'processing', 'ready', 'failed'));
+exception when duplicate_object then null;
+end $$;
 
-alter table public.payments
-  add constraint if not exists payments_status_check
-    check (status in ('created', 'paid', 'failed'));
+do $$ begin
+  alter table public.payments
+    add constraint payments_status_check
+      check (status in ('created', 'paid', 'failed'));
+exception when duplicate_object then null;
+end $$;
 
 -- ------------------------------------------------------------
 -- Additional indexes

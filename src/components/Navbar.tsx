@@ -56,8 +56,9 @@ export function Navbar() {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled || !isHome
-          ? "border-b border-cream-200/80 bg-cream/95 backdrop-blur-xl shadow-soft"
-          : "bg-cream/80 backdrop-blur-sm",
+          ? "border-b border-white/5 backdrop-blur-xl shadow-premium"
+          : "backdrop-blur-sm",
+        "bg-obsidian-50/90",
       )}
     >
       <div className="container max-w-6xl flex h-16 items-center justify-between gap-6">
@@ -66,11 +67,12 @@ export function Navbar() {
           <motion.div
             whileHover={{ rotate: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white shadow-card"
+            className="flex h-8 w-8 items-center justify-center rounded-full shadow-glow"
+            style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)" }}
           >
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4 text-obsidian" />
           </motion.div>
-          <span className="font-serif text-xl text-ink group-hover:text-terracotta transition-colors">
+          <span className="font-serif text-xl text-ink group-hover:text-chrome transition-colors">
             StyleAI
           </span>
         </Link>
@@ -82,7 +84,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="relative px-4 py-2 text-sm text-ink-stone hover:text-ink transition-colors rounded-full hover:bg-cream-200 group"
+                className="relative px-4 py-2 text-sm text-ink-stone hover:text-ink transition-colors rounded-full hover:bg-white/5 group"
               >
                 {link.label}
               </Link>
@@ -155,7 +157,7 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="md:hidden overflow-hidden border-t border-cream-200 bg-cream/98 backdrop-blur-xl"
+            className="md:hidden overflow-hidden border-t border-white/5 backdrop-blur-xl surface-deep"
           >
             <div className="container py-4 space-y-1">
               {isHome &&
@@ -164,12 +166,12 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 text-sm text-ink-stone hover:text-ink hover:bg-cream-200 rounded-xl transition-colors"
+                    className="block px-4 py-3 text-sm text-ink-stone hover:text-ink hover:bg-white/5 rounded-xl transition-colors"
                   >
                     {link.label}
                   </Link>
                 ))}
-              <div className="pt-3 flex flex-col gap-2 border-t border-cream-200">
+              <div className="pt-3 flex flex-col gap-2 border-t border-white/5">
                 {user ? (
                   <>
                     <Button asChild variant="outline" className="w-full">

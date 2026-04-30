@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import sharp from "sharp";
 import { runAnalysisPipeline } from "@/lib/ai/pipeline";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
@@ -8,6 +9,9 @@ export const maxDuration = 60;
 
 /** Accepted MIME types for uploaded selfies. */
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MIN_IMAGE_DIMENSION = 256;
+const MAX_IMAGE_DIMENSION = 4096;
+const DAILY_ANALYSIS_QUOTA = 10;
 
 /**
  * Check the first 12 bytes of a buffer to confirm it is a real JPEG, PNG, or WEBP.
@@ -78,28 +82,56 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const metadata = await sharp(buffer).metadata();
+    const width = metadata.width ?? 0;
+    const height = metadata.height ?? 0;
+    if (width < MIN_IMAGE_DIMENSION || height < MIN_IMAGE_DIMENSION) {
+      return NextResponse.json(
+        { error: `Image too small (minimum ${MIN_IMAGE_DIMENSION}x${MIN_IMAGE_DIMENSION})` },
+        { status: 400 },
+      );
+    }
+    if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+      return NextResponse.json(
+        { error: `Image too large in dimensions (maximum ${MAX_IMAGE_DIMENSION}x${MAX_IMAGE_DIMENSION})` },
+        { status: 400 },
+      );
+    }
+
     const admin = createSupabaseAdminClient();
 
-    // ── Rate-limit: max 1 in-flight analysis per user ────────────────────────
-    const { count } = await admin
+    // Basic per-user quota to reduce abuse and runaway costs.
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: dailyCount, error: dailyCountErr } = await admin
       .from("reports")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .eq("status", "processing");
-    if ((count ?? 0) >= 1) {
+      .gte("created_at", since);
+    if (dailyCountErr) throw dailyCountErr;
+    if ((dailyCount ?? 0) >= DAILY_ANALYSIS_QUOTA) {
       return NextResponse.json(
-        { error: "An analysis is already in progress. Please wait for it to complete." },
+        { error: "Daily analysis limit reached. Please try again later." },
         { status: 429 },
       );
     }
 
-    // 1) Insert pending report to get an id
+    // 1) Insert pending report to get an id.
+    // Atomic in-flight control is enforced by DB unique partial index.
     const { data: report, error: insertErr } = await admin
       .from("reports")
       .insert({ user_id: user.id, image_path: "pending", status: "processing" })
       .select("id")
       .single();
-    if (insertErr || !report) throw insertErr ?? new Error("Failed to create report");
+    if (insertErr) {
+      if (insertErr.code === "23505" && insertErr.message.includes("reports_one_processing_per_user_idx")) {
+        return NextResponse.json(
+          { error: "An analysis is already in progress. Please wait for it to complete." },
+          { status: 429 },
+        );
+      }
+      throw insertErr;
+    }
+    if (!report) throw new Error("Failed to create report");
 
     const imagePath = `${user.id}/${report.id}.jpg`;
 

@@ -157,7 +157,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
 
         <AnimatePresence>
           {open && (
-            <DialogContent className="glass border-2 border-white/20 shadow-premium max-w-lg">
+            <DialogContent className="max-w-lg" style={{ background: "linear-gradient(145deg, #12121A, #1A1A26)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
               <motion.div variants={staggerContainer} initial="hidden" animate="visible">
                 <DialogHeader>
                   {/* Animated lock icon with pulse */}
@@ -175,9 +175,10 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
-                      className="absolute inset-0 rounded-full bg-terracotta/30 blur-xl"
+                      className="absolute inset-0 rounded-full blur-xl"
+                      style={{ background: "rgba(201,149,107,0.25)" }}
                     />
-                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white shadow-premium">
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
                       <Lock className="h-8 w-8" />
                     </div>
                   </motion.div>
@@ -198,15 +199,16 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                 {/* Pricing */}
                 <motion.div
                   variants={fadeUp}
-                  className="my-6 text-center rounded-2xl bg-gradient-to-br from-terracotta/10 via-camel/10 to-sage/10 p-6 border border-cream-200"
+                  className="my-6 text-center rounded-2xl p-6"
+                  style={{ background: "rgba(201,149,107,0.06)", border: "1px solid rgba(201,149,107,0.15)" }}
                 >
                   <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="font-serif text-5xl text-ink">
+                    <span className="font-serif text-5xl" style={{ color: "#F0E8D8" }}>
                       {formatCurrency(env.razorpay.priceINR * 100, "INR")}
                     </span>
                     <div className="flex flex-col items-start">
                       <span className="text-sm text-ink-mist line-through">$29.99</span>
-                      <span className="inline-block bg-terracotta text-white text-xs font-bold px-2 py-0.5 rounded">
+                      <span className="inline-block text-obsidian text-xs font-bold px-2 py-0.5 rounded" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
                         67% OFF
                       </span>
                     </div>
@@ -231,7 +233,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                         transition={{ delay: 0.1 * index, type: "spring" }}
                         className="shrink-0"
                       >
-                        <Check className="h-5 w-5 text-sage" />
+                        <Check className="h-5 w-5" style={{ color: "#C9956B" }} />
                       </motion.div>
                       <span>{perk.text}</span>
                     </motion.li>
@@ -242,7 +244,8 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 text-center text-sm text-danger bg-danger/10 rounded-lg p-3"
+                    className="mb-4 text-center text-sm rounded-lg p-3"
+                    style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}
                   >
                     {error}
                   </motion.p>
@@ -258,7 +261,8 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                     disabled={loading}
                   >
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-terracotta-dark via-terracotta to-terracotta-dark opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)" }}
                       animate={{
                         backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                       }}
@@ -297,7 +301,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                 >
                   {SOCIAL_PROOF.map((item, index) => (
                     <div key={index} className="flex items-center gap-1.5">
-                      <item.icon className="h-3.5 w-3.5 text-terracotta" />
+                      <item.icon className="h-3.5 w-3.5" style={{ color: "#C9956B" }} />
                       {item.text}
                     </div>
                   ))}
@@ -311,7 +315,8 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                   {TRUST_BADGES.map((badge, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-1.5 text-xs text-ink-mist bg-cream-100 rounded-full px-3 py-1"
+                      className="flex items-center gap-1.5 text-xs text-ink-mist rounded-full px-3 py-1"
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
                     >
                       <Shield className="h-3 w-3" />
                       {badge}
