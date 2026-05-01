@@ -430,8 +430,6 @@ function AuthContent() {
               </motion.div>
 
             ) : tab === "email" && signupDone ? (
-
-            {/* ── SIGNUP CONFIRM ────────────────────────────────────────────── */}
               <motion.div key="signup-done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
                   <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
