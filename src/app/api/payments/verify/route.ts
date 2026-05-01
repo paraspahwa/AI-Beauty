@@ -35,12 +35,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    const ok = verifyCheckoutSignature({
-      orderId: body.razorpay_order_id,
-      paymentId: body.razorpay_payment_id,
-      signature: body.razorpay_signature,
-    });
-    if (!ok) return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    const razorpayConfigured = env.razorpay.isConfigured;
+    const allowTestMode =
+      env.flags.paymentTestMode &&
+      (process.env.NODE_ENV !== "production" || env.flags.paymentTestAllowInProd);
+
+    if (!razorpayConfigured && !allowTestMode) {
+      return NextResponse.json(
+        {
+          error: "Payments are not configured in this environment",
+          code: "PAYMENT_NOT_CONFIGURED",
+          awaitingWebhook: false,
+        },
+        { status: 503 },
+      );
+    }
 
     const admin = createSupabaseAdminClient();
 
@@ -49,25 +58,51 @@ export async function POST(req: NextRequest) {
       .from("payments")
       .select("id,user_id,report_id,status")
       .eq("provider_order_id", body.razorpay_order_id)
-      .single();
+      .maybeSingle();
     if (!payment || payment.user_id !== user.id || payment.report_id !== body.reportId) {
       return NextResponse.json({ error: "Payment mismatch" }, { status: 400 });
     }
 
-    // Best-effort audit write. Ignore already-paid rows to keep this endpoint idempotent.
-    if (payment.status !== "paid") {
-      const { error: updErr } = await admin
-        .from("payments")
-        .update({
-          provider_payment_id: body.razorpay_payment_id,
-          provider_signature: body.razorpay_signature,
-        })
-        .eq("id", payment.id)
-        .neq("status", "paid");
-      if (updErr) throw updErr;
+    if (razorpayConfigured) {
+      const ok = verifyCheckoutSignature({
+        orderId: body.razorpay_order_id,
+        paymentId: body.razorpay_payment_id,
+        signature: body.razorpay_signature,
+      });
+      if (!ok) return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+
+      // Best-effort audit write. Ignore already-paid rows to keep this endpoint idempotent.
+      if (payment.status !== "paid") {
+        const { error: updErr } = await admin
+          .from("payments")
+          .update({
+            provider_payment_id: body.razorpay_payment_id,
+            provider_signature: body.razorpay_signature,
+          })
+          .eq("id", payment.id)
+          .neq("status", "paid");
+        if (updErr) throw updErr;
+      }
+
+      return NextResponse.json({ ok: true, mode: "real", awaitingWebhook: payment.status !== "paid" });
     }
 
-    return NextResponse.json({ ok: true, awaitingWebhook: payment.status !== "paid" });
+    if (!body.razorpay_order_id.startsWith("test_order_")) {
+      return NextResponse.json({ error: "Invalid test order" }, { status: 400 });
+    }
+
+    if (payment.status !== "paid") {
+      const { error: rpcErr } = await admin.rpc("complete_payment", {
+        p_payment_row_id: payment.id,
+        p_report_id: body.reportId,
+        p_user_id: user.id,
+        p_provider_payment_id: body.razorpay_payment_id,
+        p_provider_signature: body.razorpay_signature,
+      });
+      if (rpcErr) throw rpcErr;
+    }
+
+    return NextResponse.json({ ok: true, mode: "test", awaitingWebhook: false, unlocked: true });
   } catch (err) {
     console.error("[POST /api/payments/verify]", err);
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });

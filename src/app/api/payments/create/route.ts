@@ -37,6 +37,22 @@ export async function POST(req: NextRequest) {
     if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     if (report.is_paid) return NextResponse.json({ error: "Already unlocked" }, { status: 400 });
 
+    const allowTestMode =
+      env.flags.paymentTestMode &&
+      (process.env.NODE_ENV !== "production" || env.flags.paymentTestAllowInProd);
+    const razorpayConfigured = env.razorpay.isConfigured;
+
+    if (!razorpayConfigured && !allowTestMode) {
+      return NextResponse.json(
+        {
+          error: "Payments are not configured in this environment",
+          code: "PAYMENT_NOT_CONFIGURED",
+          retryable: false,
+        },
+        { status: 503 },
+      );
+    }
+
     const amountMinor = Math.round(env.razorpay.priceINR * 100); // INR paise
     const currency = "INR";
     const admin = createSupabaseAdminClient();
@@ -54,10 +70,12 @@ export async function POST(req: NextRequest) {
     if (existingErr) throw existingErr;
     if (existingCreated) {
       return NextResponse.json({
+        mode: existingCreated.provider_order_id.startsWith("test_order_") ? "test" : "real",
+        requiresRealCheckout: !existingCreated.provider_order_id.startsWith("test_order_"),
         orderId: existingCreated.provider_order_id,
         amount: existingCreated.amount,
         currency: existingCreated.currency,
-        keyId: env.razorpay.keyId,
+        keyId: existingCreated.provider_order_id.startsWith("test_order_") ? null : env.razorpay.keyId,
       });
     }
 
@@ -74,6 +92,59 @@ export async function POST(req: NextRequest) {
         { error: "Too many payment create attempts. Please try again later." },
         { status: 429 }
       );
+    }
+
+    if (!razorpayConfigured && allowTestMode) {
+      const testOrderId = `test_order_${body.reportId.replace(/-/g, "")}`;
+
+      const { error: testInsertErr } = await admin.from("payments").insert({
+        user_id: user.id,
+        report_id: body.reportId,
+        provider: "razorpay",
+        provider_order_id: testOrderId,
+        amount: amountMinor,
+        currency,
+        status: "created",
+        raw: {
+          test_mode: true,
+          created_via: "api/payments/create",
+          created_at: new Date().toISOString(),
+        },
+      });
+
+      if (testInsertErr) {
+        const { data: racedCreated } = await admin
+          .from("payments")
+          .select("provider_order_id,amount,currency")
+          .eq("user_id", user.id)
+          .eq("report_id", body.reportId)
+          .eq("status", "created")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (racedCreated) {
+          return NextResponse.json({
+            mode: racedCreated.provider_order_id.startsWith("test_order_") ? "test" : "real",
+            requiresRealCheckout: !racedCreated.provider_order_id.startsWith("test_order_"),
+            orderId: racedCreated.provider_order_id,
+            amount: racedCreated.amount,
+            currency: racedCreated.currency,
+            keyId: racedCreated.provider_order_id.startsWith("test_order_") ? null : env.razorpay.keyId,
+          });
+        }
+
+        throw testInsertErr;
+      }
+
+      return NextResponse.json({
+        mode: "test",
+        requiresRealCheckout: false,
+        orderId: testOrderId,
+        amount: amountMinor,
+        currency,
+        keyId: null,
+      });
     }
 
     const order = await getRazorpay().orders.create({
@@ -118,6 +189,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
+      mode: "real",
+      requiresRealCheckout: true,
       orderId: order.id,
       amount: amountMinor,
       currency,

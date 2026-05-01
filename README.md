@@ -143,6 +143,12 @@ RAZORPAY_WEBHOOK_SECRET=your-webhook-secret
 NEXT_PUBLIC_PAID_PRICE_USD=9.99
 NEXT_PUBLIC_PAID_PRICE_INR=829
 
+# Optional local/dev fallback when you do not have Razorpay keys yet.
+# In this mode, checkout is skipped and unlock is completed through a
+# server-side test path (disabled in production unless explicitly allowed).
+PAYMENT_TEST_MODE=false
+PAYMENT_TEST_ALLOW_IN_PROD=false
+
 # ── Feature Flags ─────────────────────────────────────────────────────────────
 NEXT_PUBLIC_ENABLE_PDF=true
 ```

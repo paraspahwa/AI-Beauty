@@ -24,6 +24,15 @@ interface RazorpayPaymentResponse {
   razorpay_signature: string;
 }
 
+interface CreatePaymentResponse {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string | null;
+  mode?: "real" | "test";
+  requiresRealCheckout?: boolean;
+}
+
 declare global {
   interface Window {
     Razorpay?: new (opts: Record<string, unknown>) => { open: () => void };
@@ -85,10 +94,37 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Failed to create order");
-      const { orderId, amount, currency, keyId } = await res.json();
+      const payload = await res.json();
+      if (!res.ok) {
+        const message = payload.code === "PAYMENT_NOT_CONFIGURED"
+          ? "Payments are disabled in this environment. Set PAYMENT_TEST_MODE=true to test unlock flow without Razorpay keys."
+          : payload.error ?? "Failed to create order";
+        throw new Error(message);
+      }
 
-      if (!window.Razorpay) throw new Error("Razorpay SDK not loaded");
+      const { orderId, amount, currency, keyId, mode, requiresRealCheckout } = payload as CreatePaymentResponse;
+
+      if (mode === "test" || requiresRealCheckout === false) {
+        const verify = await fetch("/api/payments/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reportId,
+            razorpay_order_id: orderId,
+            razorpay_payment_id: `test_pay_${Date.now()}`,
+            razorpay_signature: "test_signature",
+          }),
+        });
+
+        const verifyPayload = await verify.json().catch(() => ({}));
+        if (!verify.ok) throw new Error(verifyPayload.error ?? "Payment verification failed");
+
+        setOpen(false);
+        onUnlocked?.();
+        return;
+      }
+
+      if (!window.Razorpay || !keyId) throw new Error("Razorpay checkout is not available right now");
 
       const rz = new window.Razorpay({
         key: keyId,
