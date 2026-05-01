@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { env } from "@/lib/env";
+import { publicEnv } from "@/lib/public-env";
 import { formatCurrency } from "@/lib/utils";
 import { modalVariants, backdropVariants, fadeUp, staggerContainer } from "@/lib/animations";
 
@@ -185,7 +185,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
             />
             <span className="relative flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Unlock Full Report — {formatCurrency(env.razorpay.priceINR * 100, "INR")}
+              Unlock Full Report — {formatCurrency(publicEnv.razorpay.priceINR * 100, "INR")}
               <Zap className="h-4 w-4 animate-pulse-slow" />
             </span>
           </Button>
@@ -240,7 +240,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                 >
                   <div className="flex items-center justify-center gap-3 mb-2">
                     <span className="font-serif text-5xl" style={{ color: "#F0E8D8" }}>
-                      {formatCurrency(env.razorpay.priceINR * 100, "INR")}
+                      {formatCurrency(publicEnv.razorpay.priceINR * 100, "INR")}
                     </span>
                     <div className="flex flex-col items-start">
                       <span className="text-sm text-ink-mist line-through">$29.99</span>
@@ -322,7 +322,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                       ) : (
                         <>
                           <Sparkles className="h-5 w-5" />
-                          Unlock Full Report — {formatCurrency(env.razorpay.priceINR * 100, "INR")}
+                          Unlock Full Report — {formatCurrency(publicEnv.razorpay.priceINR * 100, "INR")}
                         </>
                       )}
                     </span>
