@@ -29,6 +29,7 @@ function AuthContent() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
   const searchParams = useSearchParams();
 
   // Show error if redirected back from /auth/callback with ?error=auth_failed
@@ -38,8 +39,16 @@ function AuthContent() {
     }
   }, [searchParams]);
 
+  // Count-down timer so users cannot spam the send button
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (cooldown > 0) return;
     setLoading(true);
     setError(null);
 
@@ -53,8 +62,15 @@ function AuthContent() {
 
     setLoading(false);
     if (error) {
-      setError(error.message);
+      const msg = error.message.toLowerCase();
+      if (msg.includes("rate limit") || msg.includes("too many") || msg.includes("email rate")) {
+        setError("Too many sign-in emails sent. Please wait a few minutes before trying again, or check your inbox — the link may already be there.");
+      } else {
+        setError(error.message);
+      }
+      setCooldown(60);
     } else {
+      setCooldown(60);
       setSent(true);
     }
   }
@@ -141,8 +157,12 @@ function AuthContent() {
               </p>
               <p className="text-xs text-ink-mist">
                 {"Didn't receive it? Check spam or "}
-                <button className="underline hover:text-ink transition-colors" onClick={() => setSent(false)}>
-                  try again
+                <button
+                  className="underline hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={() => setSent(false)}
+                  disabled={cooldown > 0}
+                >
+                  {cooldown > 0 ? `try again in ${cooldown}s` : "try again"}
                 </button>.
               </p>
             </motion.div>
@@ -182,12 +202,14 @@ function AuthContent() {
                   <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>
                 )}
 
-                <Button type="submit" variant="accent" size="lg" disabled={loading || !email} className="w-full group">
+                <Button type="submit" variant="accent" size="lg" disabled={loading || !email || cooldown > 0} className="w-full group">
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                       Sending link…
                     </span>
+                  ) : cooldown > 0 ? (
+                    <span>Resend in {cooldown}s</span>
                   ) : (
                     <span className="flex items-center gap-2">
                       Continue with email
