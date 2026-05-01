@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -97,21 +98,31 @@ export function ReportLayout({ report: initial }: Props) {
           >
             {report.visualAssets?.assets.landmarkOverlay?.signedUrl && (
               <div className="overflow-hidden rounded-2xl" style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <img
+                <div className="relative h-52 w-full">
+                <Image
                   src={report.visualAssets.assets.landmarkOverlay.signedUrl}
                   alt="Face landmark overlay"
-                  className="h-52 w-full object-cover"
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-cover"
                 />
+                </div>
                 <p className="px-3 py-2 text-xs text-ink-stone">Face landmark map</p>
               </div>
             )}
             {report.visualAssets?.assets.paletteBoard?.signedUrl && (
               <div className="overflow-hidden rounded-2xl" style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <img
+                <div className="relative h-52 w-full">
+                <Image
                   src={report.visualAssets.assets.paletteBoard.signedUrl}
                   alt="Color palette board"
-                  className="h-52 w-full object-cover"
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-cover"
                 />
+                </div>
                 <p className="px-3 py-2 text-xs text-ink-stone">Personal color board</p>
               </div>
             )}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X } from "lucide-react";
 import type { HairstyleResult } from "@/types/report";
@@ -30,9 +31,12 @@ export function HairstyleCard({
                   className="overflow-hidden rounded-2xl"
                   style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  <img
+                  <Image
                     src={url}
                     alt={`Try-on: ${labels[i] ?? `style ${i + 1}`}`}
+                    width={1024}
+                    height={1024}
+                    unoptimized
                     className="w-full object-cover"
                     style={{ maxHeight: 360 }}
                   />

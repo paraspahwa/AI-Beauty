@@ -2,6 +2,20 @@ import { toFile } from "openai";
 import sharp from "sharp";
 import { getOpenAI } from "./openai";
 
+type ImageEditCompatRequest = {
+  model: string;
+  image: Awaited<ReturnType<typeof toFile>>;
+  prompt: string;
+  n: number;
+  size: string;
+};
+
+type ImageEditCompatResponse = {
+  data?: Array<{
+    b64_json?: string;
+  }>;
+};
+
 /** Resize + orient to a square PNG suitable for image editing APIs. */
 async function toSquarePng(buf: Buffer, size: number): Promise<Buffer> {
   return sharp(buf)
@@ -69,10 +83,11 @@ export async function generateTryOnImage(
     const squarePng = await toSquarePng(selfieBuf, 1024);
     const imageFile = await toFile(squarePng, "selfie.png", { type: "image/png" });
 
-    // Cast to any because the SDK types only list "dall-e-2" for images.edit,
-    // but gpt-image-1 also accepts the same endpoint.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (client.images.edit as (...args: any[]) => Promise<any>)({
+    const editCompat = client.images.edit as unknown as (
+      request: ImageEditCompatRequest,
+    ) => Promise<ImageEditCompatResponse>;
+
+    const response = await editCompat({
       model: "gpt-image-1",
       image: imageFile,
       prompt,
