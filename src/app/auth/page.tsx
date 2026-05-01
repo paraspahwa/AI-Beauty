@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft } from "lucide-react";
+import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft, Lock, Eye as EyeIcon, EyeOff } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -160,10 +160,14 @@ function OtpBoxes({
 
 function AuthContent() {
   const [tab, setTab] = useState<"email" | "phone">("email");
+  const [emailMode, setEmailMode] = useState<"signin" | "signup">("signin");
 
-  // Email state
+  // Email+password state
   const [email, setEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailSent, setEmailSent] = useState(false); // for magic link fallback
+  const [signupDone, setSignupDone] = useState(false);
 
   // Phone state
   const [phone, setPhone] = useState("");
@@ -205,12 +209,60 @@ function AuthContent() {
     setSentE164("");
     setOtpSent(false);
     setEmailSent(false);
+    setSignupDone(false);
+    setPassword("");
   }
 
-  // ── Email magic link ──────────────────────────────────────────────────────
-  async function handleEmailSubmit(e: React.FormEvent) {
+  // ── Email + password ─────────────────────────────────────────────────────
+  async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (cooldown > 0) return;
+    setLoading(true);
+    setError(null);
+
+    const supabase = createSupabaseBrowserClient();
+
+    if (emailMode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("invalid login") || msg.includes("invalid credentials")) {
+          setError("Incorrect email or password. Please try again.");
+        } else if (msg.includes("email not confirmed")) {
+          setError("Please confirm your email first. Check your inbox for a confirmation link.");
+        } else {
+          setError(error.message);
+        }
+      } else {
+        const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+        router.push(safe);
+      }
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      setLoading(false);
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("already registered") || msg.includes("user already")) {
+          setError("An account with this email already exists. Sign in instead.");
+        } else if (msg.includes("password")) {
+          setError("Password must be at least 6 characters.");
+        } else {
+          setError(error.message);
+        }
+      } else if (data.user && !data.session) {
+        // Supabase requires email confirmation
+        setSignupDone(true);
+      } else {
+        // Auto-confirmed (e.g. Supabase project has confirmations disabled)
+        const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+        router.push(safe);
+      }
+    }
+  }
+
+  // ── Email magic link (secondary / fallback) ───────────────────────────────
+  async function handleMagicLink() {
+    if (!email || cooldown > 0) return;
     setLoading(true);
     setError(null);
 
@@ -226,7 +278,7 @@ function AuthContent() {
     if (error) {
       const msg = error.message.toLowerCase();
       if (msg.includes("rate limit") || msg.includes("too many") || msg.includes("email rate")) {
-        setError("Too many sign-in emails sent. Please wait a few minutes, or check your inbox — the link may already be there.");
+        setError("Too many emails sent. Please wait a few minutes.");
       } else {
         setError(error.message);
       }
@@ -355,7 +407,7 @@ function AuthContent() {
 
           <AnimatePresence mode="wait">
 
-            {/* ── EMAIL SENT ─────────────────────────────────────────────── */}
+            {/* ── MAGIC LINK SENT ───────────────────────────────────────── */}
             {tab === "email" && emailSent ? (
               <motion.div key="email-sent" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
@@ -375,6 +427,25 @@ function AuthContent() {
                     {cooldown > 0 ? `try again in ${cooldown}s` : "try again"}
                   </button>.
                 </p>
+              </motion.div>
+
+            ) : tab === "email" && signupDone ? (
+
+            {/* ── SIGNUP CONFIRM ────────────────────────────────────────────── */}
+              <motion.div key="signup-done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
+                  <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
+                </div>
+                <h1 className="font-serif text-2xl text-ink">Confirm your email</h1>
+                <p className="text-ink-stone leading-relaxed">
+                  We sent a confirmation link to <span className="font-medium text-ink">{email}</span>. Click it to activate your account, then come back and sign in.
+                </p>
+                <button
+                  className="text-xs underline text-ink-mist hover:text-ink transition-colors"
+                  onClick={() => { setSignupDone(false); setEmailMode("signin"); }}
+                >
+                  Back to sign in
+                </button>
               </motion.div>
 
             ) : tab === "phone" && otpSent ? (
@@ -453,11 +524,27 @@ function AuthContent() {
                   ))}
                 </div>
 
+                {/* Sign in / Sign up toggle (email tab only) */}
+                {tab === "email" && (
+                  <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
+                    {(["signin", "signup"] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => { setEmailMode(m); setError(null); }}
+                        className="flex-1 py-2 text-xs font-medium transition-all"
+                        style={emailMode === m ? { background: "rgba(201,149,107,0.15)", color: "#C9956B" } : { color: "rgba(240,232,216,0.35)" }}
+                      >
+                        {m === "signin" ? "Sign in" : "Create account"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <AnimatePresence mode="wait">
                   {tab === "email" ? (
 
-                    /* Email form */
-                    <motion.form key="email-form" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} onSubmit={handleEmailSubmit} className="space-y-4">
+                    /* Email + password form */
+                    <motion.form key={`email-${emailMode}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} onSubmit={handlePasswordSubmit} className="space-y-4">
                       <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium text-ink">Email address</label>
                         <div className="relative">
@@ -474,16 +561,54 @@ function AuthContent() {
                           />
                         </div>
                       </div>
+                      <div className="space-y-2">
+                        <label htmlFor="password" className="text-sm font-medium text-ink">Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-mist" />
+                          <input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder={emailMode === "signup" ? "Min 6 characters" : "Your password"}
+                            required
+                            minLength={6}
+                            className="w-full rounded-xl pl-10 pr-10 py-3 text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 transition-all"
+                            style={inputStyle}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((v) => !v)}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-mist hover:text-ink transition-colors"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
                       {error && <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>}
-                      <Button type="submit" variant="accent" size="lg" disabled={loading || !email || cooldown > 0} className="w-full group">
+                      <Button type="submit" variant="accent" size="lg" disabled={loading || !email || !password} className="w-full group">
                         {loading ? (
-                          <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Sending link…</span>
-                        ) : cooldown > 0 ? (
-                          <span>Resend in {cooldown}s</span>
+                          <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />{emailMode === "signin" ? "Signing in…" : "Creating account…"}</span>
                         ) : (
-                          <span className="flex items-center gap-2">Continue with email<ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" /></span>
+                          <span className="flex items-center gap-2">
+                            {emailMode === "signin" ? "Sign in" : "Create account"}
+                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                          </span>
                         )}
                       </Button>
+                      {/* Magic link fallback */}
+                      <p className="text-xs text-center text-ink-mist">
+                        Prefer a link?{" "}
+                        <button
+                          type="button"
+                          onClick={handleMagicLink}
+                          disabled={!email || loading || cooldown > 0}
+                          className="underline hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {cooldown > 0 ? `Send magic link (${cooldown}s)` : "Send me a magic link"}
+                        </button>
+                      </p>
                     </motion.form>
 
                   ) : (
