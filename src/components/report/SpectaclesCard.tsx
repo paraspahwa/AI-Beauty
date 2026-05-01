@@ -4,7 +4,15 @@ import type { GlassesResult } from "@/types/report";
 
 const GOAL_ICONS = [Scale, Glasses, Eye];
 
-export function SpectaclesCard({ data }: { data: GlassesResult }) {
+export function SpectaclesCard({
+  data,
+  previewUrls,
+}: {
+  data: GlassesResult;
+  previewUrls?: string[];
+}) {
+  const labels = data.recommended.slice(0, 2).map((r) => r.style);
+
   return (
     <Card>
       <CardHeader>
@@ -26,17 +34,44 @@ export function SpectaclesCard({ data }: { data: GlassesResult }) {
           })}
         </section>
 
-        <section>
-          <h4 className="mb-4 text-center font-serif text-xl text-ink divider-stars">Try-On: Flattering Styles</h4>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-            {data.recommended.map((r) => (
-              <div key={r.style} className="rounded-2xl p-3 text-center" style={{ background: "rgba(26,26,38,0.7)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p className="text-[11px] uppercase tracking-widest text-ink-stone">{r.style}</p>
-                <p className="mt-2 text-xs text-ink-mist leading-snug">{r.reason}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        {previewUrls && previewUrls.length > 0 ? (
+          <section>
+            <h4 className="mb-4 text-center font-serif text-xl text-ink divider-stars">
+              AI Try-On Previews
+            </h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {previewUrls.map((url, i) => (
+                <div
+                  key={url}
+                  className="overflow-hidden rounded-2xl"
+                  style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <img
+                    src={url}
+                    alt={`Try-on: ${labels[i] ?? `style ${i + 1}`}`}
+                    className="w-full object-cover"
+                    style={{ maxHeight: 360 }}
+                  />
+                  {labels[i] && (
+                    <p className="px-4 py-2 text-xs text-ink-stone">{labels[i]}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section>
+            <h4 className="mb-4 text-center font-serif text-xl text-ink divider-stars">Try-On: Flattering Styles</h4>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {data.recommended.map((r) => (
+                <div key={r.style} className="rounded-2xl p-3 text-center" style={{ background: "rgba(26,26,38,0.7)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-[11px] uppercase tracking-widest text-ink-stone">{r.style}</p>
+                  <p className="mt-2 text-xs text-ink-mist leading-snug">{r.reason}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-cream-200 bg-cream-100 p-5">

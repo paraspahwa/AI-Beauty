@@ -2,7 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X } from "lucide-react";
 import type { HairstyleResult } from "@/types/report";
 
-export function HairstyleCard({ data }: { data: HairstyleResult }) {
+export function HairstyleCard({
+  data,
+  previewUrls,
+}: {
+  data: HairstyleResult;
+  previewUrls?: string[];
+}) {
+  const labels = data.styles.slice(0, 2).map((s) => s.name);
+
   return (
     <Card>
       <CardHeader>
@@ -10,6 +18,33 @@ export function HairstyleCard({ data }: { data: HairstyleResult }) {
         <CardTitle>Cuts &amp; colors made for you</CardTitle>
       </CardHeader>
       <CardContent className="space-y-8">
+        {previewUrls && previewUrls.length > 0 && (
+          <section>
+            <h4 className="mb-4 text-center font-serif text-xl text-ink divider-stars">
+              AI Try-On Previews
+            </h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {previewUrls.map((url, i) => (
+                <div
+                  key={url}
+                  className="overflow-hidden rounded-2xl"
+                  style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <img
+                    src={url}
+                    alt={`Try-on: ${labels[i] ?? `style ${i + 1}`}`}
+                    className="w-full object-cover"
+                    style={{ maxHeight: 360 }}
+                  />
+                  {labels[i] && (
+                    <p className="px-4 py-2 text-xs text-ink-stone">{labels[i]}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section>
           <h4 className="mb-3 text-xs uppercase tracking-widest text-ink-stone">Recommended styles</h4>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

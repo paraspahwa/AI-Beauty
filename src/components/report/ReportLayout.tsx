@@ -90,6 +90,34 @@ export function ReportLayout({ report: initial }: Props) {
             {report.summary}
           </motion.p>
         )}
+        {(report.visualAssets?.assets.landmarkOverlay?.signedUrl || report.visualAssets?.assets.paletteBoard?.signedUrl) && (
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-6 grid w-full max-w-4xl gap-4 sm:grid-cols-2"
+          >
+            {report.visualAssets?.assets.landmarkOverlay?.signedUrl && (
+              <div className="overflow-hidden rounded-2xl" style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <img
+                  src={report.visualAssets.assets.landmarkOverlay.signedUrl}
+                  alt="Face landmark overlay"
+                  className="h-52 w-full object-cover"
+                />
+                <p className="px-3 py-2 text-xs text-ink-stone">Face landmark map</p>
+              </div>
+            )}
+            {report.visualAssets?.assets.paletteBoard?.signedUrl && (
+              <div className="overflow-hidden rounded-2xl" style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <img
+                  src={report.visualAssets.assets.paletteBoard.signedUrl}
+                  alt="Color palette board"
+                  className="h-52 w-full object-cover"
+                />
+                <p className="px-3 py-2 text-xs text-ink-stone">Personal color board</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         <motion.div
           variants={fadeUp}
           className="mt-6 flex flex-wrap justify-center gap-3"
@@ -213,7 +241,14 @@ export function ReportLayout({ report: initial }: Props) {
                   exit="exit"
                 >
                   {isPaid && report.glasses ? (
-                    <SpectaclesCard data={report.glasses} />
+                    <SpectaclesCard
+                      data={report.glasses}
+                      previewUrls={
+                        report.visualAssets?.assets.glassesPreviews
+                          ?.filter((a) => a.status === "ready" && a.signedUrl)
+                          .map((a) => a.signedUrl!)
+                      }
+                    />
                   ) : (
                     <Locked
                       reportId={report.id}
@@ -235,7 +270,14 @@ export function ReportLayout({ report: initial }: Props) {
                   exit="exit"
                 >
                   {isPaid && report.hairstyle ? (
-                    <HairstyleCard data={report.hairstyle} />
+                    <HairstyleCard
+                      data={report.hairstyle}
+                      previewUrls={
+                        report.visualAssets?.assets.hairstylePreviews
+                          ?.filter((a) => a.status === "ready" && a.signedUrl)
+                          .map((a) => a.signedUrl!)
+                      }
+                    />
                   ) : (
                     <Locked
                       reportId={report.id}

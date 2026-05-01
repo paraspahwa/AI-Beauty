@@ -1,11 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 import sharp from "sharp";
 import { runAnalysisPipeline } from "@/lib/ai/pipeline";
+import { PipelineStageError } from "@/lib/ai/resilience";
+import {
+  createVisualAssetsSkeleton,
+  generateLandmarkOverlay,
+  generatePaletteBoard,
+  generateGlassesPreviews,
+  generateHairstylePreviews,
+} from "@/lib/ai/visuals";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 /** Accepted MIME types for uploaded selfies. */
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -151,8 +159,101 @@ export async function POST(req: NextRequest) {
     // 3) Run pipeline
     try {
       const result = await runAnalysisPipeline(buffer);
+      const visualAssets = createVisualAssetsSkeleton(user.id, report.id, env.supabase.bucket);
 
-      await admin.from("reports").update({
+      try {
+        const overlay = await generateLandmarkOverlay(buffer, result.rekognition);
+        if (overlay) {
+          const { error: overlayErr } = await admin.storage
+            .from(env.supabase.bucket)
+            .upload(visualAssets.assets.landmarkOverlay!.path, overlay.buffer, {
+              contentType: "image/png",
+              upsert: true,
+            });
+          if (overlayErr) {
+            visualAssets.assets.landmarkOverlay!.status = "failed";
+            visualAssets.assets.landmarkOverlay!.error = overlayErr.message;
+          } else {
+            visualAssets.assets.landmarkOverlay!.status = "ready";
+            visualAssets.assets.landmarkOverlay!.width = overlay.width;
+            visualAssets.assets.landmarkOverlay!.height = overlay.height;
+          }
+        }
+      } catch (err) {
+        visualAssets.assets.landmarkOverlay!.status = "failed";
+        visualAssets.assets.landmarkOverlay!.error = (err as Error).message;
+      }
+
+      try {
+        const paletteBoard = await generatePaletteBoard(result.colorAnalysis);
+        const { error: paletteErr } = await admin.storage
+          .from(env.supabase.bucket)
+          .upload(visualAssets.assets.paletteBoard!.path, paletteBoard.buffer, {
+            contentType: "image/png",
+            upsert: true,
+          });
+        if (paletteErr) {
+          visualAssets.assets.paletteBoard!.status = "failed";
+          visualAssets.assets.paletteBoard!.error = paletteErr.message;
+        } else {
+          visualAssets.assets.paletteBoard!.status = "ready";
+          visualAssets.assets.paletteBoard!.width = paletteBoard.width;
+          visualAssets.assets.paletteBoard!.height = paletteBoard.height;
+        }
+      } catch (err) {
+        visualAssets.assets.paletteBoard!.status = "failed";
+        visualAssets.assets.paletteBoard!.error = (err as Error).message;
+      }
+      // ── Photoreal try-on previews: glasses + hairstyle (parallel) ────────────
+      visualAssets.assets.glassesPreviews = result.glasses.recommended
+        .slice(0, 2)
+        .map((_, i) => ({
+          path: `${visualAssets.basePath}glasses-${i}.png`,
+          status: "missing" as const,
+          mime: "image/png",
+          error: null,
+        }));
+      visualAssets.assets.hairstylePreviews = result.hairstyle.styles
+        .slice(0, 2)
+        .map((_, i) => ({
+          path: `${visualAssets.basePath}hairstyle-${i}.png`,
+          status: "missing" as const,
+          mime: "image/png",
+          error: null,
+        }));
+
+      const [glassesPrevResults, hairstylePrevResults] = await Promise.all([
+        generateGlassesPreviews(buffer, result.glasses).catch((err) => {
+          console.warn("[analyze] glasses previews batch failed:", (err as Error).message);
+          return [] as { index: number; buffer: Buffer }[];
+        }),
+        generateHairstylePreviews(buffer, result.hairstyle).catch((err) => {
+          console.warn("[analyze] hairstyle previews batch failed:", (err as Error).message);
+          return [] as { index: number; buffer: Buffer }[];
+        }),
+      ]);
+
+      for (const { index, buffer: imgBuf } of glassesPrevResults) {
+        const asset = visualAssets.assets.glassesPreviews[index];
+        if (!asset) continue;
+        const { error: prevUpErr } = await admin.storage
+          .from(env.supabase.bucket)
+          .upload(asset.path, imgBuf, { contentType: "image/png", upsert: true });
+        asset.status = prevUpErr ? "failed" : "ready";
+        if (prevUpErr) asset.error = prevUpErr.message;
+      }
+
+      for (const { index, buffer: imgBuf } of hairstylePrevResults) {
+        const asset = visualAssets.assets.hairstylePreviews[index];
+        if (!asset) continue;
+        const { error: prevUpErr } = await admin.storage
+          .from(env.supabase.bucket)
+          .upload(asset.path, imgBuf, { contentType: "image/png", upsert: true });
+        asset.status = prevUpErr ? "failed" : "ready";
+        if (prevUpErr) asset.error = prevUpErr.message;
+      }
+      // ─────────────────────────────────────────────────────────────────────
+      const reportUpdatePayload = {
         status: "ready",
         rekognition: result.rekognition as object,
         face_shape: result.faceShape,
@@ -162,7 +263,43 @@ export async function POST(req: NextRequest) {
         glasses: result.glasses,
         hairstyle: result.hairstyle,
         summary: result.summary,
-      }).eq("id", report.id);
+        visual_assets: visualAssets,
+      };
+
+      const { error: reportUpdateErr } = await admin
+        .from("reports")
+        .update(reportUpdatePayload)
+        .eq("id", report.id);
+
+      if (reportUpdateErr) {
+        // Backward compatibility for environments where visual_assets column is not migrated yet.
+        if (reportUpdateErr.code === "42703") {
+          const { error: legacyUpdateErr } = await admin
+            .from("reports")
+            .update({
+              status: "ready",
+              rekognition: result.rekognition as object,
+              face_shape: result.faceShape,
+              color_analysis: result.colorAnalysis,
+              skin_analysis: result.skinAnalysis,
+              features: result.features,
+              glasses: result.glasses,
+              hairstyle: result.hairstyle,
+              summary: result.summary,
+            })
+            .eq("id", report.id);
+          if (legacyUpdateErr) throw legacyUpdateErr;
+
+          await admin.from("recommendations").insert({
+            report_id: report.id,
+            category: "visual_assets",
+            title: "Generated visual assets",
+            data: visualAssets,
+          });
+        } else {
+          throw reportUpdateErr;
+        }
+      }
 
       await admin.from("recommendations").insert([
         { report_id: report.id, category: "color", title: result.colorAnalysis.season, description: result.colorAnalysis.description, data: result.colorAnalysis },
@@ -171,9 +308,12 @@ export async function POST(req: NextRequest) {
       ]);
     } catch (pipelineErr) {
       console.error("[analyze] pipeline failed:", pipelineErr);
+      const internalError = pipelineErr instanceof PipelineStageError
+        ? `${pipelineErr.stage}:${pipelineErr.kind}:${pipelineErr.message}`
+        : (pipelineErr as Error).message;
       await admin.from("reports").update({
         status: "failed",
-        error: (pipelineErr as Error).message?.slice(0, 500),
+        error: internalError?.slice(0, 500),
       }).eq("id", report.id);
       // Return a generic message — do NOT expose internal pipeline errors to the client
       return NextResponse.json({ error: "Analysis failed. Please try again." }, { status: 500 });

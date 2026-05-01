@@ -71,6 +71,28 @@ export interface HairstyleResult {
   avoid: string[];
 }
 
+export interface ReportVisualAsset {
+  path: string;
+  status: "ready" | "failed" | "missing";
+  mime: string;
+  width?: number;
+  height?: number;
+  error?: string | null;
+  signedUrl?: string;
+}
+
+export interface ReportVisualAssets {
+  version: number;
+  bucket: string;
+  basePath: string;
+  assets: {
+    landmarkOverlay?: ReportVisualAsset;
+    paletteBoard?: ReportVisualAsset;
+    glassesPreviews?: ReportVisualAsset[];
+    hairstylePreviews?: ReportVisualAsset[];
+  };
+}
+
 export interface CompiledReport {
   id: string;
   userId: string;
@@ -83,6 +105,7 @@ export interface CompiledReport {
   features?: FeatureBreakdown;
   glasses?: GlassesResult;
   hairstyle?: HairstyleResult;
+  visualAssets?: ReportVisualAssets;
   summary?: string;
   createdAt: string;
 }

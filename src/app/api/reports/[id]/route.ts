@@ -1,9 +1,93 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
-import type { CompiledReport } from "@/types/report";
+import { hasPremiumAccess } from "@/lib/auth/access";
+import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
+
+function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  return value as ReportVisualAssets;
+}
+
+async function resolveVisualAssets(
+  row: Record<string, unknown>,
+  reportId: string,
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+): Promise<ReportVisualAssets | undefined> {
+  const direct = parseVisualAssets(row.visual_assets);
+  let visualAssets = direct;
+
+  if (!visualAssets) {
+    const { data: rec } = await admin
+      .from("recommendations")
+      .select("data")
+      .eq("report_id", reportId)
+      .eq("category", "visual_assets")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    visualAssets = parseVisualAssets(rec?.data);
+  }
+
+  if (!visualAssets) return undefined;
+
+  const out: ReportVisualAssets = {
+    ...visualAssets,
+    assets: {
+      ...visualAssets.assets,
+      landmarkOverlay: visualAssets.assets.landmarkOverlay
+        ? { ...visualAssets.assets.landmarkOverlay }
+        : undefined,
+      paletteBoard: visualAssets.assets.paletteBoard
+        ? { ...visualAssets.assets.paletteBoard }
+        : undefined,
+      glassesPreviews: visualAssets.assets.glassesPreviews
+        ? [...visualAssets.assets.glassesPreviews]
+        : undefined,
+      hairstylePreviews: visualAssets.assets.hairstylePreviews
+        ? [...visualAssets.assets.hairstylePreviews]
+        : undefined,
+    },
+  };
+
+  if (out.assets.landmarkOverlay?.path && out.assets.landmarkOverlay.status === "ready") {
+    const { data } = await admin.storage.from(out.bucket).createSignedUrl(out.assets.landmarkOverlay.path, 60 * 30);
+    out.assets.landmarkOverlay.signedUrl = data?.signedUrl;
+  }
+
+  if (out.assets.paletteBoard?.path && out.assets.paletteBoard.status === "ready") {
+    const { data } = await admin.storage.from(out.bucket).createSignedUrl(out.assets.paletteBoard.path, 60 * 30);
+    out.assets.paletteBoard.signedUrl = data?.signedUrl;
+  }
+
+  if (out.assets.glassesPreviews) {
+    out.assets.glassesPreviews = await Promise.all(
+      out.assets.glassesPreviews.map(async (asset) => {
+        if (asset.path && asset.status === "ready") {
+          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
+          return { ...asset, signedUrl: data?.signedUrl };
+        }
+        return asset;
+      }),
+    );
+  }
+
+  if (out.assets.hairstylePreviews) {
+    out.assets.hairstylePreviews = await Promise.all(
+      out.assets.hairstylePreviews.map(async (asset) => {
+        if (asset.path && asset.status === "ready") {
+          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
+          return { ...asset, signedUrl: data?.signedUrl };
+        }
+        return asset;
+      }),
+    );
+  }
+
+  return out;
+}
 
 /**
  * GET /api/reports/[id]
@@ -32,21 +116,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     .from(env.supabase.bucket)
     .createSignedUrl(row.image_path, 60 * 30);
 
-  const isPaid = !!row.is_paid;
+  const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
+  const visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
 
   const report: CompiledReport = {
     id: row.id,
     userId: row.user_id,
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
-    isPaid,
+    isPaid: hasPremium,
     faceShape: row.face_shape ?? undefined,
     colorAnalysis: row.color_analysis ?? undefined,
     // Free preview shows ONLY face shape + color analysis
-    skinAnalysis: isPaid ? row.skin_analysis ?? undefined : undefined,
-    features:     isPaid ? row.features      ?? undefined : undefined,
-    glasses:      isPaid ? row.glasses       ?? undefined : undefined,
-    hairstyle:    isPaid ? row.hairstyle     ?? undefined : undefined,
+    skinAnalysis: hasPremium ? row.skin_analysis ?? undefined : undefined,
+    features:     hasPremium ? row.features      ?? undefined : undefined,
+    glasses:      hasPremium ? row.glasses       ?? undefined : undefined,
+    hairstyle:    hasPremium ? row.hairstyle     ?? undefined : undefined,
+    visualAssets,
     summary:      row.summary ?? undefined,
     createdAt:    row.created_at,
   };
