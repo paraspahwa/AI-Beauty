@@ -199,8 +199,19 @@ In **Storage → New bucket**:
 ### 5. Configure Auth
 
 In **Authentication → URL Configuration**:
-- **Site URL**: `http://localhost:3000`
-- **Redirect URLs**: `http://localhost:3000/auth/callback`
+- **Site URL (development)**: `http://localhost:3000`
+- **Redirect URLs (development)**: `http://localhost:3000/auth/callback`
+
+For production, update the same section so magic links never fall back to localhost:
+- **Site URL (production)**: `https://your-domain.com`
+- **Redirect URLs (production)**: `https://your-domain.com/auth/callback`
+- If you deploy previews, also add preview callback URLs (for example Vercel):
+   - `https://*-your-project.vercel.app/auth/callback`
+
+Important:
+- Keep `/auth/callback` in every allowed redirect URL.
+- If `emailRedirectTo` is not on the allow-list, Supabase falls back to **Site URL**.
+- If your production project still has `http://localhost:3000` as Site URL, users can receive localhost magic links.
 
 In **Authentication → Providers → Email**:
 - Make sure **Enable Email provider** is ON
