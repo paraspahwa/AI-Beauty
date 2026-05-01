@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft } from "lucide-react";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
@@ -33,6 +33,69 @@ const inputStyle: React.CSSProperties = {
 };
 
 const OTP_LENGTH = 6;
+
+type CountryOption = {
+  iso: string;
+  name: string;
+  dial: string;
+};
+
+const COUNTRY_OPTIONS: CountryOption[] = [
+  { iso: "IN", name: "India", dial: "+91" },
+  { iso: "US", name: "United States", dial: "+1" },
+  { iso: "GB", name: "United Kingdom", dial: "+44" },
+  { iso: "CA", name: "Canada", dial: "+1" },
+  { iso: "AE", name: "UAE", dial: "+971" },
+  { iso: "AU", name: "Australia", dial: "+61" },
+  { iso: "SG", name: "Singapore", dial: "+65" },
+];
+
+function detectDefaultCountry(): CountryOption {
+  const locale = typeof navigator !== "undefined" ? navigator.language : "en-IN";
+  const region = locale.split("-")[1]?.toUpperCase();
+  return COUNTRY_OPTIONS.find((c) => c.iso === region) ?? COUNTRY_OPTIONS[0];
+}
+
+function toE164(phoneInput: string, countryDial: string): string {
+  const trimmed = phoneInput.trim();
+  const digitsOnly = trimmed.replace(/\D/g, "");
+
+  if (trimmed.startsWith("+")) {
+    return `+${digitsOnly}`;
+  }
+
+  const local = digitsOnly.replace(/^0+/, "");
+  return `${countryDial}${local}`;
+}
+
+function mapPhoneSendError(message: string): string {
+  const msg = message.toLowerCase();
+
+  if (msg.includes("rate limit") || msg.includes("too many")) {
+    return "Too many OTP attempts. Please wait a minute and try again.";
+  }
+  if (msg.includes("sms has not been enabled") || msg.includes("sms provider")) {
+    return "SMS login is not configured yet. Please use email sign in for now.";
+  }
+  if (msg.includes("trial") || msg.includes("21608") || msg.includes("verified") || msg.includes("permission to send")) {
+    return "SMS provider blocked this destination. In Twilio trial, only verified numbers can receive OTP.";
+  }
+  if (msg.includes("invalid") && msg.includes("phone")) {
+    return "Phone number looks invalid. Check the country and number format.";
+  }
+
+  return "Could not send OTP right now. Please try again or use email sign in.";
+}
+
+function mapPhoneVerifyError(message: string): string {
+  const msg = message.toLowerCase();
+
+  if (msg.includes("expired")) return "OTP expired. Please request a new code.";
+  if (msg.includes("invalid") || msg.includes("token")) return "Invalid code. Please check the SMS and retry.";
+  if (msg.includes("rate limit") || msg.includes("too many")) return "Too many verification attempts. Wait a minute and retry.";
+
+  return "Could not verify OTP. Please request a new code.";
+}
 
 function OtpBoxes({
   value,
@@ -104,6 +167,8 @@ function AuthContent() {
 
   // Phone state
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<CountryOption>(COUNTRY_OPTIONS[0]);
+  const [sentE164, setSentE164] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
 
@@ -115,6 +180,7 @@ function AuthContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const nextPath = searchParams.get("redirect") ?? "/upload";
+  const phoneCountryLabel = useMemo(() => `${phoneCountry.iso} ${phoneCountry.dial}`, [phoneCountry]);
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -128,10 +194,15 @@ function AuthContent() {
     return () => clearTimeout(id);
   }, [cooldown]);
 
+  useEffect(() => {
+    setPhoneCountry(detectDefaultCountry());
+  }, []);
+
   function switchTab(next: "email" | "phone") {
     setTab(next);
     setError(null);
     setOtp("");
+    setSentE164("");
     setOtpSent(false);
     setEmailSent(false);
   }
@@ -173,23 +244,22 @@ function AuthContent() {
     setLoading(true);
     setError(null);
 
-    // Normalise to E.164: strip spaces/dashes, ensure leading +
-    const normalised = phone.trim().replace(/[\s\-()]/g, "");
-    const e164 = normalised.startsWith("+") ? normalised : `+${normalised}`;
+    const e164 = toE164(phone, phoneCountry.dial);
+    if (!/^\+[1-9]\d{6,14}$/.test(e164)) {
+      setLoading(false);
+      setError("Enter a valid phone number.");
+      return;
+    }
 
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
 
     setLoading(false);
     if (error) {
-      const msg = error.message.toLowerCase();
-      if (msg.includes("rate limit") || msg.includes("too many")) {
-        setError("Too many attempts. Please wait a few minutes before trying again.");
-      } else {
-        setError(error.message);
-      }
+      setError(mapPhoneSendError(error.message));
       setCooldown(60);
     } else {
+      setSentE164(e164);
       setCooldown(60);
       setOtpSent(true);
     }
@@ -202,8 +272,7 @@ function AuthContent() {
     setLoading(true);
     setError(null);
 
-    const normalised = phone.trim().replace(/[\s\-()]/g, "");
-    const e164 = normalised.startsWith("+") ? normalised : `+${normalised}`;
+    const e164 = sentE164 || toE164(phone, phoneCountry.dial);
 
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.verifyOtp({
@@ -214,7 +283,7 @@ function AuthContent() {
 
     setLoading(false);
     if (error) {
-      setError("Invalid code. Please check and try again.");
+      setError(mapPhoneVerifyError(error.message));
       setOtp("");
     } else {
       const safe = nextPath.startsWith("/") ? nextPath : "/upload";
@@ -318,7 +387,7 @@ function AuthContent() {
                   </button>
                   <h1 className="font-serif text-3xl text-ink mb-2">Enter the code</h1>
                   <p className="text-ink-stone text-sm">
-                    We sent a {OTP_LENGTH}-digit code to <span className="font-medium text-ink">{phone}</span>
+                    We sent a {OTP_LENGTH}-digit code to <span className="font-medium text-ink">{sentE164 || phone}</span>
                   </p>
                 </div>
 
@@ -423,20 +492,38 @@ function AuthContent() {
                     <motion.form key="phone-form" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }} onSubmit={handlePhoneSend} className="space-y-4">
                       <div className="space-y-2">
                         <label htmlFor="phone" className="text-sm font-medium text-ink">Phone number</label>
-                        <div className="relative">
-                          <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-mist" />
+                        <div className="flex gap-2">
+                          <select
+                            aria-label="Country code"
+                            value={phoneCountry.iso}
+                            onChange={(e) => {
+                              const selected = COUNTRY_OPTIONS.find((c) => c.iso === e.target.value);
+                              if (selected) setPhoneCountry(selected);
+                            }}
+                            className="rounded-xl px-3 text-sm focus:outline-none focus:ring-2"
+                            style={{ ...inputStyle, minWidth: "7.25rem" }}
+                          >
+                            {COUNTRY_OPTIONS.map((c) => (
+                              <option key={c.iso} value={c.iso}>
+                                {c.iso} {c.dial}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="relative flex-1">
+                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-mist" />
                           <input
                             id="phone"
                             type="tel"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            placeholder="+91 98765 43210"
+                            placeholder="98765 43210"
                             required
                             className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 transition-all"
                             style={inputStyle}
                           />
+                          </div>
                         </div>
-                        <p className="text-xs text-ink-mist">Include country code, e.g. +91 for India, +1 for US</p>
+                        <p className="text-xs text-ink-mist">Detected country: {phoneCountryLabel}. You can change it from the dropdown.</p>
                       </div>
                       {error && <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>}
                       <Button type="submit" variant="accent" size="lg" disabled={loading || !phone || cooldown > 0} className="w-full group">
