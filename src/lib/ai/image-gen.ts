@@ -121,7 +121,7 @@ export async function generateTryOnImage(
     response_format: "b64_json",
   });
 
-  const b64 = fallback.data[0]?.b64_json;
+  const b64 = fallback.data?.[0]?.b64_json;
   if (!b64) throw new Error("Empty b64_json from DALL-E 2 fallback");
   return Buffer.from(b64, "base64");
 }
