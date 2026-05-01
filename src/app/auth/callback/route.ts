@@ -1,5 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const ALLOWED_OTP_TYPES = new Set<EmailOtpType>([
+  "magiclink",
+  "recovery",
+  "invite",
+  "email",
+  "email_change",
+]);
+
+function safeNextPath(rawPath: string | null): string {
+  const candidate = rawPath ?? "/upload";
+  return candidate.startsWith("/") ? candidate : "/upload";
+}
 
 /**
  * GET /auth/callback
@@ -10,15 +24,26 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/upload";
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
+  const next = safeNextPath(searchParams.get("next") ?? searchParams.get("redirect"));
+
+  const supabase = await createSupabaseServerClient();
 
   if (code) {
-    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Ensure we only redirect to relative paths (security: prevent open redirect)
-      const safeNext = next.startsWith("/") ? next : "/upload";
-      return NextResponse.redirect(`${origin}${safeNext}`);
+      return NextResponse.redirect(`${origin}${next}`);
+    }
+  }
+
+  if (tokenHash && type && ALLOWED_OTP_TYPES.has(type as EmailOtpType)) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: type as EmailOtpType,
+    });
+    if (!error) {
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
