@@ -17,6 +17,16 @@ function bool(value: string | undefined, fallback = false): boolean {
   return value === "true";
 }
 
+function csv(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => entry.length > 0);
+}
+
+  const DEFAULT_ADMIN_EMAIL_ALLOWLIST = ["paraspahwa5@gmail.com"];
+
 export const env = {
   app: {
     url: optional(process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"),
@@ -53,6 +63,12 @@ export const env = {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",
     paymentTestMode: bool(process.env.PAYMENT_TEST_MODE, false),
     paymentTestAllowInProd: bool(process.env.PAYMENT_TEST_ALLOW_IN_PROD, false),
+  },
+  auth: {
+    adminEmailAllowlist: Array.from(new Set([
+      ...DEFAULT_ADMIN_EMAIL_ALLOWLIST,
+      ...csv(process.env.ADMIN_EMAIL_ALLOWLIST),
+    ])),
   },
   /** Throws if any required server-side secret is missing. Call from server code. */
   assertServer() {

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
+import { hasPremiumAccess } from "@/lib/auth/access";
 import type {
   ColorAnalysisResult,
   FaceShapeResult,
@@ -37,7 +38,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     .eq("user_id", user.id)
     .single();
 
-  if (!row || !row.is_paid) {
+  const hasPremium = !!row && hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
+  if (!row || !hasPremium) {
     return NextResponse.json({ error: "Locked" }, { status: 403 });
   }
 

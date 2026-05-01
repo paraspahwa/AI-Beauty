@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hasPremiumAccess } from "@/lib/auth/access";
 import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false });
 
   const rows = (reports ?? []) as ReportRow[];
+  const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
 
   return (
     <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
@@ -80,7 +82,7 @@ export default async function DashboardPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <StatusBadge status={report.status} />
-                      {!report.is_paid && (
+                      {!report.is_paid && !isAdminPremium && (
                         <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}>
                           <Lock className="h-3 w-3 mr-1" />Free preview
                         </Badge>

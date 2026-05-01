@@ -1,6 +1,17 @@
 import { detectFaceDetails } from "./rekognition";
 import { chatJSON } from "./openai";
 import { compressForAI } from "./image";
+import {
+  normalizeColorAnalysis,
+  normalizeFaceShape,
+  normalizeFeatures,
+  normalizeGlasses,
+  normalizeHairstyle,
+  normalizeSkinAnalysis,
+  normalizeSummary,
+} from "./contracts";
+import { GENERIC_FACE_SHAPE_LABEL, shouldUseShapeConditioning } from "./confidence";
+import { PipelineStageError, classifyStageError, withRetry } from "./resilience";
 import { env } from "../env";
 import {
   COLOR_ANALYSIS_PROMPT,
@@ -55,63 +66,150 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     return null;
   });
 
+  async function runNormalizedStage<T>(
+    stage: string,
+    call: () => Promise<unknown>,
+    normalize: (input: unknown) => T,
+    fallbackValue: unknown,
+  ): Promise<T> {
+    try {
+      const raw = await withRetry(stage, call, 2);
+      return normalize(raw);
+    } catch (err) {
+      const kind = classifyStageError(err);
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(`[pipeline:${stage}] degraded with fallback (${kind}): ${message}`);
+      return normalize(fallbackValue);
+    }
+  }
+
   // 2) Face shape — Mini Vision
-  const faceShape = await chatJSON<FaceShapeResult>({
-    model: env.openai.miniModel,
-    system: SYSTEM_BASE,
-    user: FACE_SHAPE_PROMPT,
-    imageBase64,
-  });
+  const faceShape = await runNormalizedStage(
+    "face_shape",
+    () =>
+      chatJSON<unknown>({
+        model: env.openai.miniModel,
+        system: SYSTEM_BASE,
+        user: FACE_SHAPE_PROMPT,
+        imageBase64,
+      }),
+    normalizeFaceShape,
+    { shape: "Soft Oval", traits: ["Balanced proportions", "Natural harmony", "Soft structural features"], confidence: 0.55 },
+  );
 
   // 3) + 4) Color & skin in parallel — these are the two highest-quality calls
   const [colorAnalysis, skinAnalysis] = await Promise.all([
-    chatJSON<ColorAnalysisResult>({
-      model: env.openai.visionModel,
-      system: SYSTEM_BASE,
-      user: COLOR_ANALYSIS_PROMPT,
-      imageBase64,
-    }),
-    chatJSON<SkinAnalysisResult>({
-      model: env.openai.visionModel,
-      system: SYSTEM_BASE,
-      user: SKIN_ANALYSIS_PROMPT,
-      imageBase64,
-    }),
+    runNormalizedStage(
+      "color_analysis",
+      () =>
+        chatJSON<unknown>({
+          model: env.openai.visionModel,
+          system: SYSTEM_BASE,
+          user: COLOR_ANALYSIS_PROMPT,
+          imageBase64,
+        }),
+      normalizeColorAnalysis,
+      {},
+    ),
+    runNormalizedStage(
+      "skin_analysis",
+      () =>
+        chatJSON<unknown>({
+          model: env.openai.visionModel,
+          system: SYSTEM_BASE,
+          user: SKIN_ANALYSIS_PROMPT,
+          imageBase64,
+        }),
+      normalizeSkinAnalysis,
+      {},
+    ),
   ]);
+
+  const shapeForStyling = shouldUseShapeConditioning(faceShape.confidence)
+    ? faceShape.shape
+    : GENERIC_FACE_SHAPE_LABEL;
+  if (shapeForStyling === GENERIC_FACE_SHAPE_LABEL) {
+    console.warn(
+      "[pipeline] Low face-shape confidence; using generic styling prompts",
+      faceShape.confidence,
+    );
+  }
 
   // 5) Features, 6) Glasses, 7) Hairstyle in parallel (Mini)
   const [features, glasses, hairstyle] = await Promise.all([
-    chatJSON<FeatureBreakdown>({
-      model: env.openai.miniModel,
-      system: SYSTEM_BASE,
-      user: FEATURES_PROMPT,
-      imageBase64,
-    }),
-    chatJSON<GlassesResult>({
-      model: env.openai.miniModel,
-      system: SYSTEM_BASE,
-      user: GLASSES_PROMPT(faceShape.shape),
-    }),
-    chatJSON<HairstyleResult>({
-      model: env.openai.miniModel,
-      system: SYSTEM_BASE,
-      user: HAIRSTYLE_PROMPT(faceShape.shape),
-    }),
+    runNormalizedStage(
+      "features",
+      () =>
+        chatJSON<unknown>({
+          model: env.openai.miniModel,
+          system: SYSTEM_BASE,
+          user: FEATURES_PROMPT,
+          imageBase64,
+        }),
+      normalizeFeatures,
+      {},
+    ),
+    runNormalizedStage(
+      "glasses",
+      () =>
+        chatJSON<unknown>({
+          model: env.openai.miniModel,
+          system: SYSTEM_BASE,
+          user: GLASSES_PROMPT(shapeForStyling),
+        }),
+      normalizeGlasses,
+      {},
+    ),
+    runNormalizedStage(
+      "hairstyle",
+      () =>
+        chatJSON<unknown>({
+          model: env.openai.miniModel,
+          system: SYSTEM_BASE,
+          user: HAIRSTYLE_PROMPT(shapeForStyling),
+        }),
+      normalizeHairstyle,
+      {},
+    ),
   ]);
 
   // 8) Compile summary (Mini, no image)
-  const compiled = await chatJSON<{ summary: string }>({
-    model: env.openai.miniModel,
-    system: SYSTEM_BASE,
-    user: `${COMPILE_PROMPT}\n\nResults:\n${JSON.stringify({
-      faceShape,
-      colorAnalysis,
-      skinAnalysis,
-      features,
-      glasses,
-      hairstyle,
-    })}`,
-  });
+  let summary: string;
+  try {
+    const compiledRaw = await withRetry(
+      "summary",
+      () =>
+        chatJSON<unknown>({
+          model: env.openai.miniModel,
+          system: SYSTEM_BASE,
+          user: `${COMPILE_PROMPT}\n\nResults:\n${JSON.stringify({
+            faceShape,
+            colorAnalysis,
+            skinAnalysis,
+            features,
+            glasses,
+            hairstyle,
+          })}`,
+        }),
+      2,
+    );
+    summary = normalizeSummary(compiledRaw);
+  } catch (err) {
+    const kind = classifyStageError(err);
+    console.warn(`[pipeline:summary] degraded with fallback (${kind})`);
+    summary = normalizeSummary({
+      summary:
+        "Your personalized analysis is ready. Explore each section for recommendations tailored to your facial features, color profile, and style goals.",
+    });
+  }
+
+  if (!faceShape.shape || !colorAnalysis.season || !skinAnalysis.type) {
+    throw new PipelineStageError(
+      "pipeline_core",
+      "validation",
+      "Core analysis outputs are incomplete after normalization",
+    );
+  }
 
   return {
     rekognition,
@@ -121,6 +219,6 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     features,
     glasses,
     hairstyle,
-    summary: compiled.summary,
+    summary,
   };
 }

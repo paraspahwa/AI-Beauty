@@ -7,14 +7,15 @@ export const SYSTEM_BASE = `You are StyleAI, a precise, kind, and inclusive pers
 - Always respond with strict JSON. No prose, no markdown, no code fences.
 - Never invent demographic attributes (age, ethnicity, gender) beyond what's
   needed for the analysis. Phrase observations respectfully.
-- Use realistic, professional stylist vocabulary.`;
+- Use realistic, professional stylist vocabulary.
+- If uncertain, keep language conservative and set lower confidence instead of guessing.`;
 
 export const FACE_SHAPE_PROMPT = `Classify the face shape from the photo.
 Return JSON of shape:
 {
   "shape": "Oval" | "Soft Oval" | "Round" | "Square" | "Heart" | "Diamond" | "Oblong" | "Triangle",
   "traits": string[3..5],   // short bullet phrases like "Balanced proportions"
-  "confidence": number      // 0..1
+  "confidence": number      // 0..1 (use values below 0.65 when uncertain)
 }`;
 
 export const COLOR_ANALYSIS_PROMPT = `Perform a 12-season color analysis.
