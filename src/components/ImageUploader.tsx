@@ -96,8 +96,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           {...getRootProps()}
           className={cn(
             "relative flex flex-col items-center justify-center gap-4 rounded-4xl border-2 transition-all",
-            "px-8 py-16 text-center cursor-pointer",
-            "hover:scale-[1.02]",
+            file ? "px-8 py-8 text-center cursor-default" : "px-8 py-16 text-center cursor-pointer",
+            "hover:scale-[1.01]",
             isDragActive
               ? "border-solid scale-[1.02]"
               : file
@@ -219,9 +219,52 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
             <p className="text-sm text-ink-stone max-w-md">
               {isDragActive
                 ? "Release to upload"
+                : file
+                ? "Looking good! Hit Analyze to get your results."
                 : "JPG, PNG or WEBP • up to 8 MB • clear, well-lit, front-facing"}
             </p>
           </div>
+
+          {/* Inline action buttons — visible immediately when file is chosen */}
+          {file && !isDragActive && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                variant="outline"
+                onClick={() => { setFile(null); setPreview(null); setError(null); }}
+                disabled={submitting}
+                className="w-full sm:w-auto min-w-[130px]"
+              >
+                Choose another
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                variant="accent"
+                size="lg"
+                className="w-full sm:flex-1 relative overflow-hidden group"
+              >
+                {submitting && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+                <span className="relative flex items-center justify-center gap-2">
+                  {submitting ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Analyzing…</>
+                  ) : (
+                    <><Upload className="h-4 w-4" />Analyze my photo</>
+                  )}
+                </span>
+              </Button>
+            </motion.div>
+          )}
 
           {/* Decorative gradient border animation */}
           {isDragActive && (
@@ -245,80 +288,21 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       </motion.div>
 
       <AnimatePresence>
-        {file && (
+        {file && error && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="mt-6 space-y-4"
+            className="mt-4"
           >
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-3 rounded-2xl p-4 text-sm"
-                style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171" }}
-              >
-                <XCircle className="h-5 w-5 shrink-0" />
-                <span>{error}</span>
-              </motion.div>
-            )}
-
             <motion.div
-              variants={staggerContainer}
-              className="flex justify-center gap-3"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 rounded-2xl p-4 text-sm"
+              style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", color: "#F87171" }}
             >
-              <motion.div variants={fadeUp}>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setFile(null);
-                    setPreview(null);
-                    setError(null);
-                  }}
-                  disabled={submitting}
-                  className="min-w-[140px]"
-                >
-                  Choose another
-                </Button>
-              </motion.div>
-
-              <motion.div variants={fadeUp}>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  variant="accent"
-                  size="lg"
-                  className="min-w-[180px] relative overflow-hidden group"
-                >
-                  {submitting && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                      animate={{
-                        x: ["-100%", "100%"],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    />
-                  )}
-                  <span className="relative flex items-center gap-2">
-                    {submitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Analyzing…
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4" />
-                        Analyze my photo
-                      </>
-                    )}
-                  </span>
-                </Button>
-              </motion.div>
+              <XCircle className="h-5 w-5 shrink-0" />
+              <span>{error}</span>
             </motion.div>
           </motion.div>
         )}
