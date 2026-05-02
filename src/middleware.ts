@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /** Routes that require a valid Supabase session */
-const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success"];
+const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/admin"];
 
 const SUPABASE_AUTH_QUERY_KEYS = [
   "code",

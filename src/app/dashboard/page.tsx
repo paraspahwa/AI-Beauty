@@ -5,6 +5,7 @@ import { hasPremiumAccess } from "@/lib/auth/access";
 import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DeleteReportButton } from "@/components/DeleteReportButton";
 
 type ReportRow = {
   id: string;
@@ -18,7 +19,7 @@ type ReportRow = {
 function StatusBadge({ status }: { status: string }) {
   if (status === "ready") return <Badge style={{ background: "rgba(123,110,158,0.15)", color: "#A69CC4", border: "1px solid rgba(123,110,158,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
   if (status === "processing") return <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
-  if (status === "error") return <Badge style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}><AlertCircle className="h-3 w-3 mr-1" />Error</Badge>;
+  if (status === "failed" || status === "error") return <Badge style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}><AlertCircle className="h-3 w-3 mr-1" />Failed</Badge>;
   return <Badge style={{ background: "rgba(255,255,255,0.06)", color: "rgba(240,232,216,0.5)", border: "1px solid rgba(255,255,255,0.08)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
 }
 
@@ -96,9 +97,12 @@ export default async function DashboardPage() {
                     )}
                   </div>
                 </div>
-                <Button asChild variant={report.status === "ready" ? "accent" : "outline"} size="sm" className="shrink-0">
-                  <Link href={`/report/${report.id}`}>View report</Link>
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button asChild variant={report.status === "ready" ? "accent" : "outline"} size="sm">
+                    <Link href={`/report/${report.id}`}>View report</Link>
+                  </Button>
+                  <DeleteReportButton reportId={report.id} />
+                </div>
               </div>
             );
           })}

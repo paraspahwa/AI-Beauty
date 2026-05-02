@@ -36,6 +36,27 @@ export async function POST(req: NextRequest) {
   if (!orderId) return NextResponse.json({ ok: true }, { status: 202 }); // ignore non-payment events
 
   const admin = createSupabaseAdminClient();
+
+  // Idempotency guard: skip duplicate event deliveries using provider_event_id.
+  // record_webhook_event returns true on first insert, false on duplicate.
+  const eventId = (event as Record<string, unknown>).id as string | undefined;
+  if (eventId) {
+    const { data: isNew, error: idempErr } = await admin.rpc("record_webhook_event", {
+      p_provider: "razorpay",
+      p_provider_event_id: eventId,
+      p_event_type: event.event ?? "unknown",
+      p_raw: event as unknown as Record<string, unknown>,
+    });
+    if (idempErr) {
+      // Non-fatal if table doesn't exist yet (migration not applied)
+      if (idempErr.code !== "42P01") {
+        console.error("[webhook/razorpay] idempotency check failed", idempErr);
+      }
+    } else if (isNew === false) {
+      // Already processed — acknowledge without re-processing
+      return NextResponse.json({ ok: true, duplicate: true }, { status: 202 });
+    }
+  }
   const { data: row, error: rowErr } = await admin
     .from("payments")
     .select("id,user_id,report_id,status")
