@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const next = request.nextUrl.searchParams.get("next") ?? request.nextUrl.searchParams.get("redirect") ?? buildSafeNextFromCurrent(request);
-    if (next?.startsWith("/")) {
+    if (next && /^\/[^/]/.test(next)) {
       callbackUrl.searchParams.set("next", next);
     }
 

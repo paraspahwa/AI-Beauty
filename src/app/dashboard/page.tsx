@@ -16,7 +16,7 @@ type ReportRow = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === "complete") return <Badge style={{ background: "rgba(123,110,158,0.15)", color: "#A69CC4", border: "1px solid rgba(123,110,158,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
+  if (status === "ready") return <Badge style={{ background: "rgba(123,110,158,0.15)", color: "#A69CC4", border: "1px solid rgba(123,110,158,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
   if (status === "processing") return <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
   if (status === "error") return <Badge style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}><AlertCircle className="h-3 w-3 mr-1" />Error</Badge>;
   return <Badge style={{ background: "rgba(255,255,255,0.06)", color: "rgba(240,232,216,0.5)", border: "1px solid rgba(255,255,255,0.08)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;

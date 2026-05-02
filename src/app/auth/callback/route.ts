@@ -12,7 +12,8 @@ const ALLOWED_OTP_TYPES = new Set<EmailOtpType>([
 
 function safeNextPath(rawPath: string | null): string {
   const candidate = rawPath ?? "/upload";
-  return candidate.startsWith("/") ? candidate : "/upload";
+  // Guard against open redirect via paths like //evil.com (starts with / but is protocol-relative)
+  return /^\/[^/]/.test(candidate) ? candidate : "/upload";
 }
 
 /**

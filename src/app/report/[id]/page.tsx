@@ -44,6 +44,12 @@ async function resolveVisualAssets(
       paletteBoard: visualAssets.assets.paletteBoard
         ? { ...visualAssets.assets.paletteBoard }
         : undefined,
+      glassesPreviews: visualAssets.assets.glassesPreviews
+        ? [...visualAssets.assets.glassesPreviews]
+        : undefined,
+      hairstylePreviews: visualAssets.assets.hairstylePreviews
+        ? [...visualAssets.assets.hairstylePreviews]
+        : undefined,
     },
   };
 
@@ -55,6 +61,30 @@ async function resolveVisualAssets(
   if (out.assets.paletteBoard?.path && out.assets.paletteBoard.status === "ready") {
     const { data } = await admin.storage.from(out.bucket).createSignedUrl(out.assets.paletteBoard.path, 60 * 30);
     out.assets.paletteBoard.signedUrl = data?.signedUrl;
+  }
+
+  if (out.assets.glassesPreviews) {
+    out.assets.glassesPreviews = await Promise.all(
+      out.assets.glassesPreviews.map(async (asset) => {
+        if (asset.path && asset.status === "ready") {
+          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
+          return { ...asset, signedUrl: data?.signedUrl };
+        }
+        return asset;
+      }),
+    );
+  }
+
+  if (out.assets.hairstylePreviews) {
+    out.assets.hairstylePreviews = await Promise.all(
+      out.assets.hairstylePreviews.map(async (asset) => {
+        if (asset.path && asset.status === "ready") {
+          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
+          return { ...asset, signedUrl: data?.signedUrl };
+        }
+        return asset;
+      }),
+    );
   }
 
   return out;

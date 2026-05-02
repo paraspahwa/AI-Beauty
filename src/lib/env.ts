@@ -25,7 +25,7 @@ function csv(value: string | undefined): string[] {
     .filter((entry) => entry.length > 0);
 }
 
-  const DEFAULT_ADMIN_EMAIL_ALLOWLIST = ["paraspahwa5@gmail.com"];
+const DEFAULT_ADMIN_EMAIL_ALLOWLIST = ["paraspahwa5@gmail.com"];
 
 export const env = {
   app: {
