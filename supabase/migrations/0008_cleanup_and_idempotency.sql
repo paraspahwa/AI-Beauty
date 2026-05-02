@@ -64,6 +64,7 @@ create unique index if not exists webhook_events_provider_event_id_idx
 alter table public.webhook_events enable row level security;
 
 -- Deny all access from anon/authenticated — only service_role bypasses RLS
+drop policy if exists "webhook_events_deny_all" on public.webhook_events;
 create policy "webhook_events_deny_all"
   on public.webhook_events
   using (false);
