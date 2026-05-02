@@ -2,18 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import sharp from "sharp";
 import { runAnalysisPipeline } from "@/lib/ai/pipeline";
 import { PipelineStageError } from "@/lib/ai/resilience";
-import {
-  createVisualAssetsSkeleton,
-  generateLandmarkOverlay,
-  generatePaletteBoard,
-  generateGlassesPreviews,
-  generateHairstylePreviews,
-} from "@/lib/ai/visuals";
+import { persistStylePrefs } from "@/lib/ai/memory";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 /** Accepted MIME types for uploaded selfies. */
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -44,15 +38,21 @@ function validateMagicBytes(buf: Buffer): boolean {
 /**
  * POST /api/analyze
  * Body: multipart/form-data with field `image`
- * Returns: { reportId }
+ * Returns: { reportId, visualsPending: true }
  *
  * Flow:
  *  1. Authenticate user via Supabase session.
  *  2. Validate file MIME type and magic bytes.
  *  3. Enforce max-1-in-flight per user (anti-abuse).
  *  4. Persist the original image to private storage.
- *  5. Run the analysis pipeline.
- *  6. Update the row with results or the error.
+ *  5. Run the text analysis pipeline (~30-50 s).
+ *  6. Persist style prefs for the memory loop (fire-and-forget).
+ *  7. Mark report ready and return.
+ *
+ * Visual asset generation (landmark overlay, palette board, try-on previews)
+ * is intentionally omitted here. The client calls POST /api/reports/[id]/visuals
+ * immediately after receiving reportId, which runs in its own 120 s function.
+ * This keeps this route under 60 s and well within Vercel hobby limits.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -156,103 +156,11 @@ export async function POST(req: NextRequest) {
 
     await admin.from("reports").update({ image_path: imagePath }).eq("id", report.id);
 
-    // 3) Run pipeline
+    // 3) Run text analysis pipeline (Rekognition + all GPT stages)
+    //    Pass user.id so the pipeline can inject personalized style context.
     try {
-      const result = await runAnalysisPipeline(buffer);
-      const visualAssets = createVisualAssetsSkeleton(user.id, report.id, env.supabase.bucket);
+      const result = await runAnalysisPipeline(buffer, user.id);
 
-      try {
-        const overlay = await generateLandmarkOverlay(buffer, result.rekognition);
-        if (overlay) {
-          const { error: overlayErr } = await admin.storage
-            .from(env.supabase.bucket)
-            .upload(visualAssets.assets.landmarkOverlay!.path, overlay.buffer, {
-              contentType: "image/png",
-              upsert: true,
-            });
-          if (overlayErr) {
-            visualAssets.assets.landmarkOverlay!.status = "failed";
-            visualAssets.assets.landmarkOverlay!.error = overlayErr.message;
-          } else {
-            visualAssets.assets.landmarkOverlay!.status = "ready";
-            visualAssets.assets.landmarkOverlay!.width = overlay.width;
-            visualAssets.assets.landmarkOverlay!.height = overlay.height;
-          }
-        }
-      } catch (err) {
-        visualAssets.assets.landmarkOverlay!.status = "failed";
-        visualAssets.assets.landmarkOverlay!.error = (err as Error).message;
-      }
-
-      try {
-        const paletteBoard = await generatePaletteBoard(result.colorAnalysis);
-        const { error: paletteErr } = await admin.storage
-          .from(env.supabase.bucket)
-          .upload(visualAssets.assets.paletteBoard!.path, paletteBoard.buffer, {
-            contentType: "image/png",
-            upsert: true,
-          });
-        if (paletteErr) {
-          visualAssets.assets.paletteBoard!.status = "failed";
-          visualAssets.assets.paletteBoard!.error = paletteErr.message;
-        } else {
-          visualAssets.assets.paletteBoard!.status = "ready";
-          visualAssets.assets.paletteBoard!.width = paletteBoard.width;
-          visualAssets.assets.paletteBoard!.height = paletteBoard.height;
-        }
-      } catch (err) {
-        visualAssets.assets.paletteBoard!.status = "failed";
-        visualAssets.assets.paletteBoard!.error = (err as Error).message;
-      }
-      // ── Photoreal try-on previews: glasses + hairstyle (parallel) ────────────
-      visualAssets.assets.glassesPreviews = result.glasses.recommended
-        .slice(0, 2)
-        .map((_, i) => ({
-          path: `${visualAssets.basePath}glasses-${i}.png`,
-          status: "missing" as const,
-          mime: "image/png",
-          error: null,
-        }));
-      visualAssets.assets.hairstylePreviews = result.hairstyle.styles
-        .slice(0, 2)
-        .map((_, i) => ({
-          path: `${visualAssets.basePath}hairstyle-${i}.png`,
-          status: "missing" as const,
-          mime: "image/png",
-          error: null,
-        }));
-
-      const [glassesPrevResults, hairstylePrevResults] = await Promise.all([
-        generateGlassesPreviews(buffer, result.glasses).catch((err) => {
-          console.warn("[analyze] glasses previews batch failed:", (err as Error).message);
-          return [] as { index: number; buffer: Buffer }[];
-        }),
-        generateHairstylePreviews(buffer, result.hairstyle).catch((err) => {
-          console.warn("[analyze] hairstyle previews batch failed:", (err as Error).message);
-          return [] as { index: number; buffer: Buffer }[];
-        }),
-      ]);
-
-      for (const { index, buffer: imgBuf } of glassesPrevResults) {
-        const asset = visualAssets.assets.glassesPreviews[index];
-        if (!asset) continue;
-        const { error: prevUpErr } = await admin.storage
-          .from(env.supabase.bucket)
-          .upload(asset.path, imgBuf, { contentType: "image/png", upsert: true });
-        asset.status = prevUpErr ? "failed" : "ready";
-        if (prevUpErr) asset.error = prevUpErr.message;
-      }
-
-      for (const { index, buffer: imgBuf } of hairstylePrevResults) {
-        const asset = visualAssets.assets.hairstylePreviews[index];
-        if (!asset) continue;
-        const { error: prevUpErr } = await admin.storage
-          .from(env.supabase.bucket)
-          .upload(asset.path, imgBuf, { contentType: "image/png", upsert: true });
-        asset.status = prevUpErr ? "failed" : "ready";
-        if (prevUpErr) asset.error = prevUpErr.message;
-      }
-      // ─────────────────────────────────────────────────────────────────────
       const reportUpdatePayload = {
         status: "ready",
         rekognition: result.rekognition as object,
@@ -263,7 +171,6 @@ export async function POST(req: NextRequest) {
         glasses: result.glasses,
         hairstyle: result.hairstyle,
         summary: result.summary,
-        visual_assets: visualAssets,
         pipeline_meta: result.meta,
       };
 
@@ -273,7 +180,7 @@ export async function POST(req: NextRequest) {
         .eq("id", report.id);
 
       if (reportUpdateErr) {
-        // Backward compatibility for environments where visual_assets column is not migrated yet.
+        // Backward compatibility for environments without pipeline_meta column
         if (reportUpdateErr.code === "42703") {
           const { error: legacyUpdateErr } = await admin
             .from("reports")
@@ -291,20 +198,12 @@ export async function POST(req: NextRequest) {
             .eq("id", report.id);
           if (legacyUpdateErr) throw legacyUpdateErr;
 
-          await admin.from("recommendations").insert([
-            {
-              report_id: report.id,
-              category: "visual_assets",
-              title: "Generated visual assets",
-              data: visualAssets,
-            },
-            {
-              report_id: report.id,
-              category: "pipeline_meta",
-              title: "Pipeline diagnostics",
-              data: result.meta,
-            },
-          ]);
+          await admin.from("recommendations").insert({
+            report_id: report.id,
+            category: "pipeline_meta",
+            title: "Pipeline diagnostics",
+            data: result.meta,
+          });
         } else {
           throw reportUpdateErr;
         }
@@ -315,6 +214,11 @@ export async function POST(req: NextRequest) {
         { report_id: report.id, category: "glasses", title: "Spectacles guide", data: result.glasses },
         { report_id: report.id, category: "hair", title: "Hairstyle guide", data: result.hairstyle },
       ]);
+
+      // 4) Persist style prefs for memory loop (fire-and-forget — never blocks response)
+      persistStylePrefs(user.id, result.faceShape, result.colorAnalysis, result.skinAnalysis).catch(() => {
+        // Already logged inside persistStylePrefs
+      });
     } catch (pipelineErr) {
       console.error("[analyze] pipeline failed:", pipelineErr);
       const internalError = pipelineErr instanceof PipelineStageError
@@ -324,14 +228,13 @@ export async function POST(req: NextRequest) {
         status: "failed",
         error: internalError?.slice(0, 500),
       }).eq("id", report.id);
-      // Return a generic message — do NOT expose internal pipeline errors to the client
       return NextResponse.json({ error: "Analysis failed. Please try again." }, { status: 500 });
     }
 
-    return NextResponse.json({ reportId: report.id });
+    // visualsPending tells the client to immediately fire POST /api/reports/[id]/visuals
+    return NextResponse.json({ reportId: report.id, visualsPending: true });
   } catch (err) {
     console.error("[POST /api/analyze]", err);
-    // Never expose raw error messages to the client
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

@@ -12,17 +12,10 @@ import {
 } from "./contracts";
 import { GENERIC_FACE_SHAPE_LABEL, shouldUseShapeConditioning, blendConfidence } from "./confidence";
 import { PipelineStageError, classifyStageError, withRetry } from "./resilience";
+import { pickVariant } from "./canary";
+import { buildPersonalizedSystemBase } from "./memory";
 import { env } from "../env";
-import {
-  COLOR_ANALYSIS_PROMPT,
-  COMPILE_PROMPT,
-  FACE_SHAPE_PROMPT,
-  FEATURES_PROMPT,
-  GLASSES_PROMPT,
-  HAIRSTYLE_PROMPT,
-  SKIN_ANALYSIS_PROMPT,
-  SYSTEM_BASE,
-} from "@/prompts";
+import { SYSTEM_BASE, COMPILE_PROMPT } from "@/prompts";
 import type {
   ColorAnalysisResult,
   FaceShapeResult,
@@ -36,6 +29,7 @@ export interface PipelineStageMeta {
   stage: string;
   durationMs: number;
   degraded: boolean;
+  variantId?: string;
 }
 
 export interface PipelineMeta {
@@ -69,13 +63,23 @@ export interface PipelineResult {
  *  6. GPT-4o-mini         → glasses (uses face shape)
  *  7. GPT-4o-mini         → hairstyle (uses face shape)
  *  8. GPT-4o-mini         → compile final summary
+ *
+ * @param rawImage - raw image buffer (JPEG/PNG/WEBP)
+ * @param userId   - optional Supabase user id; when provided the pipeline
+ *                   fetches stored style prefs and injects them as soft
+ *                   prior context into the LLM system prompt.
  */
-export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineResult> {
+export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Promise<PipelineResult> {
   const pipelineStart = Date.now();
   const stageMetas: PipelineStageMeta[] = [];
 
   const compressed = await compressForAI(rawImage, 512);
   const imageBase64 = compressed.toString("base64");
+
+  // Personalized system base: fetches prior prefs from DB (soft prior for repeat users)
+  const effectiveSystemBase = userId
+    ? await buildPersonalizedSystemBase(userId, SYSTEM_BASE)
+    : SYSTEM_BASE;
 
   // 1) Rekognition for landmarks (uses original bytes — better signal)
   const rekStart = Date.now();
@@ -92,35 +96,38 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     call: () => Promise<unknown>,
     normalize: (input: unknown) => T,
     fallbackValue: unknown,
+    variantId?: string,
   ): Promise<T> {
     const t0 = Date.now();
     let degraded = false;
     try {
       const raw = await withRetry(stage, call, 2);
-      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded });
+      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded, variantId });
       return normalize(raw);
     } catch (err) {
       degraded = true;
       const kind = classifyStageError(err);
       const message = err instanceof Error ? err.message : String(err);
       console.warn(`[pipeline:${stage}] degraded with fallback (${kind}): ${message}`);
-      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded });
+      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded, variantId });
       return normalize(fallbackValue);
     }
   }
 
   // 2) Face shape — Mini Vision
+  const faceShapeVariant = pickVariant("face_shape");
   let faceShape = await runNormalizedStage(
     "face_shape",
     () =>
       chatJSON<unknown>({
         model: env.openai.miniModel,
-        system: SYSTEM_BASE,
-        user: FACE_SHAPE_PROMPT,
+        system: effectiveSystemBase,
+        user: faceShapeVariant.prompt as string,
         imageBase64,
       }),
     normalizeFaceShape,
     { shape: "Soft Oval", traits: ["Balanced proportions", "Natural harmony", "Soft structural features"], confidence: 0.55 },
+    faceShapeVariant.id,
   );
 
   // P1-2: Blend GPT confidence with Rekognition detection confidence
@@ -130,30 +137,34 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
   faceShape = { ...faceShape, confidence: blendedConfidence };
 
   // 3) + 4) Color & skin in parallel — these are the two highest-quality calls
+  const colorVariant = pickVariant("color_analysis");
+  const skinVariant = pickVariant("skin_analysis");
   const [colorAnalysis, skinAnalysis] = await Promise.all([
     runNormalizedStage(
       "color_analysis",
       () =>
         chatJSON<unknown>({
           model: env.openai.visionModel,
-          system: SYSTEM_BASE,
-          user: COLOR_ANALYSIS_PROMPT,
+          system: effectiveSystemBase,
+          user: colorVariant.prompt as string,
           imageBase64,
         }),
       normalizeColorAnalysis,
       {},
+      colorVariant.id,
     ),
     runNormalizedStage(
       "skin_analysis",
       () =>
         chatJSON<unknown>({
           model: env.openai.visionModel,
-          system: SYSTEM_BASE,
-          user: SKIN_ANALYSIS_PROMPT,
+          system: effectiveSystemBase,
+          user: skinVariant.prompt as string,
           imageBase64,
         }),
       normalizeSkinAnalysis,
       {},
+      skinVariant.id,
     ),
   ]);
 
@@ -168,53 +179,61 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
   }
 
   // 5) Features, 6) Glasses, 7) Hairstyle in parallel (Mini)
+  const featuresVariant = pickVariant("features");
+  const glassesVariant = pickVariant("glasses");
+  const hairstyleVariant = pickVariant("hairstyle");
   const [features, glasses, hairstyle] = await Promise.all([
     runNormalizedStage(
       "features",
       () =>
         chatJSON<unknown>({
           model: env.openai.miniModel,
-          system: SYSTEM_BASE,
-          user: FEATURES_PROMPT,
+          system: effectiveSystemBase,
+          user: featuresVariant.prompt as string,
           imageBase64,
         }),
       normalizeFeatures,
       {},
+      featuresVariant.id,
     ),
     runNormalizedStage(
       "glasses",
       () =>
         chatJSON<unknown>({
           model: env.openai.miniModel,
-          system: SYSTEM_BASE,
-          user: GLASSES_PROMPT(shapeForStyling),
+          system: effectiveSystemBase,
+          user: (glassesVariant.prompt as (s: string) => string)(shapeForStyling),
         }),
       normalizeGlasses,
       {},
+      glassesVariant.id,
     ),
     runNormalizedStage(
       "hairstyle",
       () =>
         chatJSON<unknown>({
           model: env.openai.miniModel,
-          system: SYSTEM_BASE,
-          user: HAIRSTYLE_PROMPT(shapeForStyling),
+          system: effectiveSystemBase,
+          user: (hairstyleVariant.prompt as (s: string) => string)(shapeForStyling),
         }),
       normalizeHairstyle,
       {},
+      hairstyleVariant.id,
     ),
   ]);
 
   // 8) Compile summary (Mini, no image)
+  const summaryVariant = pickVariant("summary");
   let summary: string;
+  const summaryT0 = Date.now();
   try {
     const compiledRaw = await withRetry(
       "summary",
       () =>
         chatJSON<unknown>({
           model: env.openai.miniModel,
-          system: SYSTEM_BASE,
-          user: `${COMPILE_PROMPT}\n\nResults:\n${JSON.stringify({
+          system: effectiveSystemBase,
+          user: `${summaryVariant.prompt}\n\nResults:\n${JSON.stringify({
             faceShape,
             colorAnalysis,
             skinAnalysis,
@@ -225,9 +244,11 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
         }),
       2,
     );
+    stageMetas.push({ stage: "summary", durationMs: Date.now() - summaryT0, degraded: false, variantId: summaryVariant.id });
     summary = normalizeSummary(compiledRaw);
   } catch (err) {
     const kind = classifyStageError(err);
+    stageMetas.push({ stage: "summary", durationMs: Date.now() - summaryT0, degraded: true, variantId: summaryVariant.id });
     console.warn(`[pipeline:summary] degraded with fallback (${kind})`);
     summary = normalizeSummary({
       summary:

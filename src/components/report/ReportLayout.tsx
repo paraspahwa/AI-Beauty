@@ -31,6 +31,7 @@ export function ReportLayout({ report: initial }: Props) {
   const [report, setReport] = React.useState(initial);
   const [activeTab, setActiveTab] = React.useState("face");
   const [copied, setCopied] = React.useState(false);
+  const [visualsLoading, setVisualsLoading] = React.useState(false);
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
 
@@ -46,6 +47,20 @@ export function ReportLayout({ report: initial }: Props) {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessing, report.id]);
+
+  // When the report is ready but visuals haven't been generated yet, trigger
+  // the async visuals route and refresh once it finishes.
+  React.useEffect(() => {
+    if (report.status !== "ready") return;
+    const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
+    if (hasVisuals || visualsLoading) return;
+    setVisualsLoading(true);
+    fetch(`/api/reports/${report.id}/visuals`, { method: "POST" })
+      .then((res) => { if (res.ok) return refresh(); })
+      .catch(() => { /* non-critical */ })
+      .finally(() => setVisualsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report.status, report.id]);
 
   async function share() {
     const url = `${window.location.origin}/report/${report.id}`;

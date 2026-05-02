@@ -55,21 +55,31 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       const form = new FormData();
       form.append("image", file);
 
-      // Simple fake progress while the analysis runs
+      // Fake progress while the text pipeline runs (~30-50 s)
       const ticker = setInterval(() => {
-        setProgress((p) => (p < 90 ? p + 4 : p));
-      }, 400);
+        setProgress((p) => (p < 85 ? p + 3 : p));
+      }, 600);
 
       const res = await fetch("/api/analyze", { method: "POST", body: form });
       clearInterval(ticker);
-      setProgress(100);
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error ?? `Upload failed (${res.status})`);
       }
-      const json = (await res.json()) as { reportId?: string };
+      const json = (await res.json()) as { reportId?: string; visualsPending?: boolean };
       if (!json.reportId) throw new Error("Analysis started but no report ID was returned.");
+
+      setProgress(90);
+
+      // Fire visual generation in the background — don't await, navigate immediately
+      if (json.visualsPending) {
+        fetch(`/api/reports/${json.reportId}/visuals`, { method: "POST" }).catch(() => {
+          // Non-critical: report page polls for visuals separately
+        });
+      }
+
+      setProgress(100);
       onUploaded(json.reportId);
     } catch (err) {
       setError((err as Error).message);
