@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
@@ -7,6 +8,57 @@ import { ReportLayout } from "@/components/report/ReportLayout";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const dynamic = "force-dynamic";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Rich OG metadata so shared links look great on social */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  if (!UUID_RE.test(token)) return {};
+
+  const admin = createSupabaseAdminClient();
+  const { data: row } = await admin
+    .from("reports")
+    .select("face_shape, color_analysis, summary")
+    .eq("share_token", token)
+    .eq("status", "ready")
+    .single();
+
+  if (!row) return {};
+
+  const faceShape = (row.face_shape as { shape?: string } | null)?.shape;
+  const season = (row.color_analysis as { season?: string } | null)?.season;
+  const title = [faceShape ? `${faceShape} Face` : null, season ?? null]
+    .filter(Boolean)
+    .join(" · ") || "Beauty Profile";
+
+  const description =
+    (row.summary as string | null) ??
+    "A personalized AI beauty analysis — face shape, color season, skincare, hairstyle & spectacles.";
+
+  const imageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/og/${token}`;
+
+  return {
+    title: `${title} — StyleAI`,
+    description,
+    openGraph: {
+      title: `${title} — StyleAI`,
+      description,
+      type: "website",
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: "StyleAI beauty report" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} — StyleAI`,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
   if (!value || typeof value !== "object") return undefined;
@@ -19,9 +71,6 @@ export default async function PublicReportPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-
-  // UUID format guard — prevent DB call for obviously invalid tokens
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!UUID_RE.test(token)) notFound();
 
   const admin = createSupabaseAdminClient();

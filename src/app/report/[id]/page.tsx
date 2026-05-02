@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
@@ -6,6 +7,35 @@ import { ReportLayout } from "@/components/report/ReportLayout";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return {};
+
+  const admin = createSupabaseAdminClient();
+  const { data: row } = await admin
+    .from("reports")
+    .select("face_shape, color_analysis, status")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!row || row.status !== "ready") return { title: "Beauty Report — StyleAI" };
+
+  const faceShape = (row.face_shape as { shape?: string } | null)?.shape;
+  const season = (row.color_analysis as { season?: string } | null)?.season;
+  const title = [faceShape ? `${faceShape} Face` : null, season ?? null]
+    .filter(Boolean)
+    .join(" · ") || "Beauty Report";
+
+  return { title: `${title} — StyleAI` };
+}
 
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
   if (!value || typeof value !== "object") return undefined;

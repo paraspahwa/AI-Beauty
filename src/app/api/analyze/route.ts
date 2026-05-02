@@ -108,6 +108,21 @@ export async function POST(req: NextRequest) {
 
     const admin = createSupabaseAdminClient();
 
+    // ── Per-minute burst guard (max 2 submissions per 60 s per user) ────────
+    const burstSince = new Date(Date.now() - 60 * 1000).toISOString();
+    const { count: burstCount } = await admin
+      .from("reports")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", burstSince);
+    if ((burstCount ?? 0) >= 2) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment before trying again." },
+        { status: 429 },
+      );
+    }
+
+    // ── Daily quota (max 10 per 24 h per user) ────────────────────────────────
     // Basic per-user quota to reduce abuse and runaway costs.
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count: dailyCount, error: dailyCountErr } = await admin
