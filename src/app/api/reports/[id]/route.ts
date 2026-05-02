@@ -119,6 +119,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
   const visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
 
+  // Resolve pipeline_meta: prefer direct column, fall back to recommendations row
+  let pipelineMeta = (row.pipeline_meta as CompiledReport["pipelineMeta"]) ?? undefined;
+  if (!pipelineMeta) {
+    const { data: metaRec } = await admin
+      .from("recommendations")
+      .select("data")
+      .eq("report_id", id)
+      .eq("category", "pipeline_meta")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (metaRec?.data && typeof metaRec.data === "object") {
+      pipelineMeta = metaRec.data as CompiledReport["pipelineMeta"];
+    }
+  }
+
   const report: CompiledReport = {
     id: row.id,
     userId: row.user_id,
@@ -134,6 +150,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     hairstyle:    hasPremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
     summary:      row.summary ?? undefined,
+    pipelineMeta,
     createdAt:    row.created_at,
   };
 

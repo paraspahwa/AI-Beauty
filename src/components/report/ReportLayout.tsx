@@ -194,7 +194,7 @@ export function ReportLayout({ report: initial }: Props) {
                   exit="exit"
                 >
                   {report.faceShape && report.features ? (
-                    <FaceFeaturesCard faceShape={report.faceShape} features={report.features} />
+                    <FaceFeaturesCard faceShape={report.faceShape} features={report.features} blendedConfidence={report.pipelineMeta?.blendedConfidence} />
                   ) : (
                     <Empty />
                   )}

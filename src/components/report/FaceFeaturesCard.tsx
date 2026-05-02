@@ -5,9 +5,34 @@ import type { FaceShapeResult, FeatureBreakdown } from "@/types/report";
 interface Props {
   faceShape: FaceShapeResult;
   features: FeatureBreakdown;
+  blendedConfidence?: number;
 }
 
-export function FaceFeaturesCard({ faceShape, features }: Props) {
+function ConfidenceBadge({ confidence }: { confidence: number }) {
+  const pct = Math.round(confidence * 100);
+  if (pct >= 80) {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(123,210,158,0.15)", color: "#6ECF9B", border: "1px solid rgba(110,207,155,0.25)" }}>
+        High confidence · {pct}%
+      </span>
+    );
+  }
+  if (pct >= 65) {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,149,107,0.15)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}>
+        Good confidence · {pct}%
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}>
+      Low confidence · {pct}% — shape advice is generalised
+    </span>
+  );
+}
+
+export function FaceFeaturesCard({ faceShape, features, blendedConfidence }: Props) {
+  const displayConfidence = blendedConfidence ?? faceShape.confidence;
   const items: { key: keyof FeatureBreakdown; label: string }[] = [
     { key: "eyes",   label: "Eyes" },
     { key: "nose",   label: "Nose" },
@@ -44,7 +69,7 @@ export function FaceFeaturesCard({ faceShape, features }: Props) {
         </div>
 
         <p className="text-xs text-ink-stone">
-          Confidence: {(faceShape.confidence * 100).toFixed(0)}%
+          <ConfidenceBadge confidence={displayConfidence} />
         </p>
       </CardContent>
     </Card>

@@ -10,7 +10,7 @@ import {
   normalizeSkinAnalysis,
   normalizeSummary,
 } from "./contracts";
-import { GENERIC_FACE_SHAPE_LABEL, shouldUseShapeConditioning } from "./confidence";
+import { GENERIC_FACE_SHAPE_LABEL, shouldUseShapeConditioning, blendConfidence } from "./confidence";
 import { PipelineStageError, classifyStageError, withRetry } from "./resilience";
 import { env } from "../env";
 import {
@@ -32,6 +32,20 @@ import type {
   SkinAnalysisResult,
 } from "@/types/report";
 
+export interface PipelineStageMeta {
+  stage: string;
+  durationMs: number;
+  degraded: boolean;
+}
+
+export interface PipelineMeta {
+  totalDurationMs: number;
+  stages: PipelineStageMeta[];
+  rekognitionAvailable: boolean;
+  blendedConfidence: number;
+  gptRawConfidence: number;
+}
+
 export interface PipelineResult {
   rekognition: unknown;
   faceShape: FaceShapeResult;
@@ -41,6 +55,7 @@ export interface PipelineResult {
   glasses: GlassesResult;
   hairstyle: HairstyleResult;
   summary: string;
+  meta: PipelineMeta;
 }
 
 /**
@@ -56,35 +71,46 @@ export interface PipelineResult {
  *  8. GPT-4o-mini         → compile final summary
  */
 export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineResult> {
+  const pipelineStart = Date.now();
+  const stageMetas: PipelineStageMeta[] = [];
+
   const compressed = await compressForAI(rawImage, 512);
   const imageBase64 = compressed.toString("base64");
 
   // 1) Rekognition for landmarks (uses original bytes — better signal)
+  const rekStart = Date.now();
   const rekognition = await detectFaceDetails(rawImage).catch((err) => {
     // We don't fail the pipeline if Rekognition is unavailable.
     console.warn("[pipeline] Rekognition failed:", err);
     return null;
   });
+  stageMetas.push({ stage: "rekognition", durationMs: Date.now() - rekStart, degraded: rekognition === null });
 
+  // P1-4: Timed + degradation-tracked stage runner
   async function runNormalizedStage<T>(
     stage: string,
     call: () => Promise<unknown>,
     normalize: (input: unknown) => T,
     fallbackValue: unknown,
   ): Promise<T> {
+    const t0 = Date.now();
+    let degraded = false;
     try {
       const raw = await withRetry(stage, call, 2);
+      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded });
       return normalize(raw);
     } catch (err) {
+      degraded = true;
       const kind = classifyStageError(err);
       const message = err instanceof Error ? err.message : String(err);
       console.warn(`[pipeline:${stage}] degraded with fallback (${kind}): ${message}`);
+      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded });
       return normalize(fallbackValue);
     }
   }
 
   // 2) Face shape — Mini Vision
-  const faceShape = await runNormalizedStage(
+  let faceShape = await runNormalizedStage(
     "face_shape",
     () =>
       chatJSON<unknown>({
@@ -96,6 +122,12 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     normalizeFaceShape,
     { shape: "Soft Oval", traits: ["Balanced proportions", "Natural harmony", "Soft structural features"], confidence: 0.55 },
   );
+
+  // P1-2: Blend GPT confidence with Rekognition detection confidence
+  const gptRawConfidence = faceShape.confidence;
+  const blendedConfidence = blendConfidence(gptRawConfidence, rekognition);
+  // Mutate faceShape so downstream code (shapeForStyling, UI) sees the blended value
+  faceShape = { ...faceShape, confidence: blendedConfidence };
 
   // 3) + 4) Color & skin in parallel — these are the two highest-quality calls
   const [colorAnalysis, skinAnalysis] = await Promise.all([
@@ -125,13 +157,13 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     ),
   ]);
 
-  const shapeForStyling = shouldUseShapeConditioning(faceShape.confidence)
+  const shapeForStyling = shouldUseShapeConditioning(blendedConfidence)
     ? faceShape.shape
     : GENERIC_FACE_SHAPE_LABEL;
   if (shapeForStyling === GENERIC_FACE_SHAPE_LABEL) {
     console.warn(
-      "[pipeline] Low face-shape confidence; using generic styling prompts",
-      faceShape.confidence,
+      "[pipeline] Low blended face-shape confidence; using generic styling prompts",
+      { gptRawConfidence, blendedConfidence },
     );
   }
 
@@ -211,6 +243,18 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     );
   }
 
+  const totalDurationMs = Date.now() - pipelineStart;
+  // P1-4: Log stage timing summary
+  console.info(
+    "[pipeline] completed",
+    JSON.stringify({
+      totalDurationMs,
+      blendedConfidence: blendedConfidence.toFixed(3),
+      gptRawConfidence: gptRawConfidence.toFixed(3),
+      stages: stageMetas.map((s) => `${s.stage}:${s.durationMs}ms${s.degraded ? "(degraded)" : ""}`),
+    }),
+  );
+
   return {
     rekognition,
     faceShape,
@@ -220,5 +264,12 @@ export async function runAnalysisPipeline(rawImage: Buffer): Promise<PipelineRes
     glasses,
     hairstyle,
     summary,
+    meta: {
+      totalDurationMs,
+      stages: stageMetas,
+      rekognitionAvailable: rekognition !== null,
+      blendedConfidence,
+      gptRawConfidence,
+    },
   };
 }

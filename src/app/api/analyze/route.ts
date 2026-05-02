@@ -264,6 +264,7 @@ export async function POST(req: NextRequest) {
         hairstyle: result.hairstyle,
         summary: result.summary,
         visual_assets: visualAssets,
+        pipeline_meta: result.meta,
       };
 
       const { error: reportUpdateErr } = await admin
@@ -290,12 +291,20 @@ export async function POST(req: NextRequest) {
             .eq("id", report.id);
           if (legacyUpdateErr) throw legacyUpdateErr;
 
-          await admin.from("recommendations").insert({
-            report_id: report.id,
-            category: "visual_assets",
-            title: "Generated visual assets",
-            data: visualAssets,
-          });
+          await admin.from("recommendations").insert([
+            {
+              report_id: report.id,
+              category: "visual_assets",
+              title: "Generated visual assets",
+              data: visualAssets,
+            },
+            {
+              report_id: report.id,
+              category: "pipeline_meta",
+              title: "Pipeline diagnostics",
+              data: result.meta,
+            },
+          ]);
         } else {
           throw reportUpdateErr;
         }

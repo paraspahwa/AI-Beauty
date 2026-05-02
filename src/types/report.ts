@@ -93,6 +93,14 @@ export interface ReportVisualAssets {
   };
 }
 
+export interface PipelineMeta {
+  totalDurationMs: number;
+  rekognitionAvailable: boolean;
+  blendedConfidence: number;
+  gptRawConfidence: number;
+  stages: { stage: string; durationMs: number; degraded: boolean }[];
+}
+
 export interface CompiledReport {
   id: string;
   userId: string;
@@ -107,5 +115,6 @@ export interface CompiledReport {
   hairstyle?: HairstyleResult;
   visualAssets?: ReportVisualAssets;
   summary?: string;
+  pipelineMeta?: PipelineMeta;
   createdAt: string;
 }
