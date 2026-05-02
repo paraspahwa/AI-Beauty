@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
@@ -117,9 +118,9 @@ export default async function PublicReportPage({
         style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
       >
         This is a shared StyleAI beauty report.{" "}
-        <a href="/" className="underline underline-offset-2 hover:opacity-80">
+        <Link href="/" className="underline underline-offset-2 hover:opacity-80">
           Get your own →
-        </a>
+        </Link>
       </div>
       <ReportLayout report={report} isReadOnly />
     </main>
