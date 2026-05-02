@@ -107,6 +107,7 @@ export interface CompiledReport {
   imageUrl: string;
   status: ReportStatus;
   isPaid: boolean;
+  shareToken?: string | null;
   faceShape?: FaceShapeResult;
   colorAnalysis?: ColorAnalysisResult;
   skinAnalysis?: SkinAnalysisResult;

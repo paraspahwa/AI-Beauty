@@ -5,7 +5,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, Sparkles, Lock, Loader2 } from "lucide-react";
+import { Download, Share2, Sparkles, Lock, Loader2, LinkIcon, X } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
 import { ColorAnalysisCard } from "./ColorAnalysisCard";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
@@ -25,12 +25,16 @@ const TABS = [
 
 interface Props {
   report: CompiledReport;
+  /** True on the public /r/[token] page — disables auth-gated features */
+  isReadOnly?: boolean;
 }
 
-export function ReportLayout({ report: initial }: Props) {
+export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   const [report, setReport] = React.useState(initial);
   const [activeTab, setActiveTab] = React.useState("face");
   const [copied, setCopied] = React.useState(false);
+  const [shareLoading, setShareLoading] = React.useState(false);
+  const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
   const isPaid = report.isPaid;
@@ -43,21 +47,21 @@ export function ReportLayout({ report: initial }: Props) {
 
   // Poll while the report is still processing
   React.useEffect(() => {
-    if (!isProcessing) return;
+    if (isReadOnly || !isProcessing) return;
     const interval = setInterval(refresh, 4000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isProcessing, report.id]);
+  }, [isProcessing, report.id, isReadOnly]);
 
   // When the report is ready but visuals haven't been generated yet, trigger
   // the async visuals route and refresh once it finishes.
   React.useEffect(() => {
-    if (report.status !== "ready") return;
+    if (isReadOnly || report.status !== "ready") return;
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
     if (hasVisuals || visualsLoading) return;
     triggerVisuals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report.status, report.id]);
+  }, [report.status, report.id, isReadOnly]);
 
   async function triggerVisuals() {
     setVisualsLoading(true);
@@ -74,18 +78,33 @@ export function ReportLayout({ report: initial }: Props) {
   }
 
   async function share() {
-    const url = `${window.location.origin}/report/${report.id}`;
+    setShareLoading(true);
     try {
-      if (navigator.share) {
-        await navigator.share({ title: "My StyleAI report", url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+      let token = shareToken;
+      if (!token) {
+        const res = await fetch(`/api/reports/${report.id}/share`, { method: "POST" });
+        if (res.ok) {
+          const data = await res.json() as { shareToken: string; shareUrl: string };
+          token = data.shareToken;
+          setShareToken(token);
+        }
       }
+      const url = token
+        ? `${window.location.origin}/r/${token}`
+        : `${window.location.origin}/report/${report.id}`;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     } catch {
-      /* user cancelled */
+      /* user cancelled / clipboard unavailable */
+    } finally {
+      setShareLoading(false);
     }
+  }
+
+  async function revokeShare() {
+    await fetch(`/api/reports/${report.id}/share`, { method: "DELETE" });
+    setShareToken(null);
   }
 
   return (
@@ -195,10 +214,32 @@ export function ReportLayout({ report: initial }: Props) {
           variants={fadeUp}
           className="mt-6 flex flex-wrap justify-center gap-3"
         >
-          <Button variant="outline" onClick={share} className="min-w-[120px]">
-            <Share2 className="h-4 w-4" /> {copied ? "Copied ✨" : "Share"}
-          </Button>
-          {isPaid ? (
+          {!isReadOnly && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={share}
+                disabled={shareLoading}
+                className="min-w-[140px]"
+              >
+                {shareLoading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <LinkIcon className="h-4 w-4" />}
+                {copied ? "Copied ✨" : shareToken ? "Copy public link" : "Share"}
+              </Button>
+              {shareToken && !copied && (
+                <button
+                  onClick={revokeShare}
+                  title="Revoke public link"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:opacity-80"
+                  style={{ background: "rgba(248,113,113,0.1)", color: "#F87171" }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+          {!isReadOnly && isPaid ? (
             <Button asChild variant="accent">
               <a
                 href={`/api/reports/${report.id}/pdf`}
@@ -208,7 +249,7 @@ export function ReportLayout({ report: initial }: Props) {
                 <Download className="h-4 w-4" /> Download PDF
               </a>
             </Button>
-          ) : (
+          ) : !isReadOnly && (
             <Paywall reportId={report.id} onUnlocked={refresh} />
           )}
         </motion.div>

@@ -138,6 +138,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
     isPaid: hasPremium,
+    shareToken: (row as Record<string, unknown>).share_token as string | null ?? null,
     faceShape: row.face_shape ?? undefined,
     colorAnalysis: row.color_analysis ?? undefined,
     skinAnalysis: hasPremium ? row.skin_analysis ?? undefined : undefined,
