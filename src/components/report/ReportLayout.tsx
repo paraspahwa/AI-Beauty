@@ -5,7 +5,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Download, Share2, Sparkles, Lock } from "lucide-react";
+import { Download, Share2, Sparkles, Lock, Loader2 } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
 import { ColorAnalysisCard } from "./ColorAnalysisCard";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
@@ -32,6 +32,7 @@ export function ReportLayout({ report: initial }: Props) {
   const [activeTab, setActiveTab] = React.useState("face");
   const [copied, setCopied] = React.useState(false);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
+  const [visualsFailed, setVisualsFailed] = React.useState(false);
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
 
@@ -54,13 +55,23 @@ export function ReportLayout({ report: initial }: Props) {
     if (report.status !== "ready") return;
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
     if (hasVisuals || visualsLoading) return;
-    setVisualsLoading(true);
-    fetch(`/api/reports/${report.id}/visuals`, { method: "POST" })
-      .then((res) => { if (res.ok) return refresh(); })
-      .catch(() => { /* non-critical */ })
-      .finally(() => setVisualsLoading(false));
+    triggerVisuals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.status, report.id]);
+
+  async function triggerVisuals() {
+    setVisualsLoading(true);
+    setVisualsFailed(false);
+    try {
+      const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
+      if (res.ok) await refresh();
+      else setVisualsFailed(true);
+    } catch {
+      setVisualsFailed(true);
+    } finally {
+      setVisualsLoading(false);
+    }
+  }
 
   async function share() {
     const url = `${window.location.origin}/report/${report.id}`;
@@ -141,6 +152,42 @@ export function ReportLayout({ report: initial }: Props) {
                 <p className="px-3 py-2 text-xs text-ink-stone">Personal color board</p>
               </div>
             )}
+          </motion.div>
+        )}
+        {/* Visuals generating banner — shows while async /visuals endpoint is running */}
+        {visualsLoading && !report.visualAssets?.assets?.paletteBoard && (
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-6 flex max-w-md items-center gap-3 rounded-2xl px-5 py-3 text-sm"
+            style={{
+              background: "rgba(201,149,107,0.08)",
+              border: "1px solid rgba(201,149,107,0.25)",
+              color: "#C9956B",
+            }}
+          >
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            <span>Generating your visual style board — this takes ~30 seconds…</span>
+          </motion.div>
+        )}
+        {/* Visuals failed banner with retry */}
+        {visualsFailed && !visualsLoading && !report.visualAssets?.assets?.paletteBoard && (
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-6 flex max-w-md items-center justify-between gap-3 rounded-2xl px-5 py-3 text-sm"
+            style={{
+              background: "rgba(239,68,68,0.07)",
+              border: "1px solid rgba(239,68,68,0.2)",
+              color: "#fca5a5",
+            }}
+          >
+            <span>Visual style board failed to generate.</span>
+            <button
+              onClick={triggerVisuals}
+              className="shrink-0 rounded-lg px-3 py-1 text-xs font-medium transition-colors hover:opacity-80"
+              style={{ background: "rgba(239,68,68,0.15)", color: "#fca5a5" }}
+            >
+              Retry
+            </button>
           </motion.div>
         )}
 
