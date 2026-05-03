@@ -174,11 +174,17 @@ export function SkinAnalysisCard({
 
           {zoneRows.map((z) => (
             <div key={z.key} className="flex items-center gap-5 px-6 py-4" style={{ borderColor: "#E8DDD0" }}>
-              {/* Close-up circle placeholder */}
+              {/* Zone circle: real photo or gradient fallback */}
               <div
-                className="shrink-0 h-16 w-16 rounded-full shadow-md overflow-hidden"
-                style={{ background: "linear-gradient(135deg,#DFD0BE,#C8B09A)", border: "2px solid #fff" }}
-              />
+                className="shrink-0 h-16 w-16 rounded-full shadow-md overflow-hidden relative"
+                style={{ border: "2px solid #fff" }}
+              >
+                {photoUrl ? (
+                  <Image src={photoUrl} alt={z.label} fill unoptimized className="object-cover object-center" />
+                ) : (
+                  <div className="w-full h-full" style={{ background: "linear-gradient(135deg,#DFD0BE,#C8B09A)" }} />
+                )}
+              </div>
               {/* Label + observation + oil level */}
               <div className="flex-1">
                 <p className="text-[11px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: "#3D2B1F" }}>
@@ -232,23 +238,28 @@ export function SkinAnalysisCard({
                   </span>
                 </div>
 
-                {/* Photo placeholder */}
-                <div
-                  className="w-full flex items-center justify-center"
-                  style={{
-                    aspectRatio: "3/4",
-                    background: isMatch
-                      ? "linear-gradient(160deg,#DFD0BE,#C8B09A)"
-                      : "linear-gradient(160deg,#E8E0D8,#D0C4B4)",
-                    position: "relative",
-                  }}
-                >
+                {/* Photo: real photo with optional overlay */}
+                <div className="w-full relative" style={{ aspectRatio: "3/4" }}>
+                  {photoUrl ? (
+                    <>
+                      <Image src={photoUrl} alt={type} fill unoptimized className="object-cover object-center" />
+                      {/* desaturate non-match cards slightly */}
+                      {!isMatch && (
+                        <div className="absolute inset-0" style={{ background: "rgba(232,224,216,0.45)" }} />
+                      )}
+                    </>
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: isMatch ? "linear-gradient(160deg,#DFD0BE,#C8B09A)" : "linear-gradient(160deg,#E8E0D8,#D0C4B4)" }}
+                    />
+                  )}
                   {isMatch && (
                     <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 130" preserveAspectRatio="xMidYMid meet">
-                      <rect x="35" y="12" width="30" height="18" rx="8" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.7" />
-                      <rect x="43" y="28" width="14" height="30" rx="5" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.7" />
-                      <ellipse cx="28" cy="68" rx="12" ry="10" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.7" />
-                      <ellipse cx="72" cy="68" rx="12" ry="10" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.7" />
+                      <rect x="35" y="12" width="30" height="18" rx="8" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.8" />
+                      <rect x="43" y="28" width="14" height="30" rx="5" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.8" />
+                      <ellipse cx="28" cy="68" rx="12" ry="10" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.8" />
+                      <ellipse cx="72" cy="68" rx="12" ry="10" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.8" />
                     </svg>
                   )}
                 </div>
