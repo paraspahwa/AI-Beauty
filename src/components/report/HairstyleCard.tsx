@@ -79,16 +79,41 @@ function IconSparkle() {
   );
 }
 
+// ── Colour helpers ───────────────────────────────────────────────────────────
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  if (h.length !== 6) return `rgba(28,14,4,${alpha})`;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Per-style accent colour for card header band ──────────────────────────────
+function styleAccentFromStyle(name: string): { band: string; text: string } {
+  const s = name.toLowerCase();
+  if (s.includes("long") || s.includes("layer"))           return { band: "#F0E6D3", text: "#8B5A2B" };
+  if (s.includes("bob") || s.includes("lob"))              return { band: "#E8EDF5", text: "#2B4B8B" };
+  if (s.includes("bang") || s.includes("fringe"))          return { band: "#EDE8F5", text: "#5A2B8B" };
+  if (s.includes("updo") || s.includes("bun") || s.includes("pony")) return { band: "#E8F5EC", text: "#2B7A4A" };
+  if (s.includes("wavy") || s.includes("wave"))            return { band: "#F5EDE8", text: "#8B5A2B" };
+  if (s.includes("curl") || s.includes("afro") || s.includes("coil")) return { band: "#F5E8F0", text: "#8B2B6A" };
+  if (s.includes("pixie") || s.includes("short"))          return { band: "#E8F5F5", text: "#2B7B8B" };
+  if (s.includes("straight") || s.includes("sleek"))       return { band: "#F5F0E8", text: "#8B7A2B" };
+  if (s.includes("textured") || s.includes("shag"))        return { band: "#EFF5E8", text: "#4A8B2B" };
+  return { band: "#F5EFE7", text: "#9C7D5B" };
+}
+
 // ── Per-style hairstyle SVG overlay ─────────────────────────────────────────
 // viewBox 0 0 100 140 — head oval: cx=50 cy=38 rx=18 ry=22
 // Crown y≈16, Chin y≈60, Ears x≈32/68 y≈38
 // Each style uses FILLED semi-transparent dark shapes so cards look visually distinct.
-function HairOverlay({ style, animate = false, delay = 0 }: { style: string; animate?: boolean; delay?: number }) {
+function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: string; animate?: boolean; delay?: number; hairColor?: string }) {
   const s = style.toLowerCase();
-  // Dark warm-brown fill — overlays on photo look like real hair mass
-  const fill    = "rgba(28,14,4,0.72)";
-  // Warm amber sheen strokes for hair gloss/texture
-  const sheen   = "rgba(190,140,75,0.55)";
+  // Use provided hair colour (from AI analysis) or fall back to dark warm-brown
+  const fill    = hairColor ? hexToRgba(hairColor, 0.76) : "rgba(28,14,4,0.72)";
+  // Sheen: lighter version of the hair colour for gloss highlights
+  const sheen   = hairColor ? hexToRgba(hairColor, 0.38) : "rgba(190,140,75,0.55)";
   const fillCls = animate ? "hair-fill" : "";
   const fillSty = animate ? ({ animationDelay: `${delay}s` } as React.CSSProperties) : {};
   const sheenCls = animate ? "hair-sheen" : "";
@@ -248,7 +273,7 @@ function HairOverlay({ style, animate = false, delay = 0 }: { style: string; ani
   );
 }
 
-// ── Hair texture inference ───────────────────────────────────────────────────
+// ── Hair texture inference ──────────────────────────────────────────────────
 function textureFromStyle(name: string): { label: string; color: string; bg: string } {
   const s = name.toLowerCase();
   if (s.includes("straight") || s.includes("sleek") || s.includes("pixie") ||
@@ -360,6 +385,8 @@ export function HairstyleCard({
 }) {
   const flatteningStyles  = data.styles.slice(0, 5);
   const considerStyles    = data.avoid.slice(0, 3);
+  // Hair colour from AI analysis — first recommended colour drives overlay tinting
+  const primaryHairColor  = data.colors[0]?.hex;
   const bestLength        = data.lengths[1]?.name ?? "Collarbone to Below Shoulder";
   const resolvedHairType  = hairType ?? "Wavy / Curly";
   const resolvedFaceShape = faceShape ?? "Oval";
@@ -448,7 +475,7 @@ export function HairstyleCard({
                 >
                   <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.08)" }} />
                   {flatteningStyles[0] && (
-                    <HairOverlay style={flatteningStyles[0].name} animate delay={0.15} />
+                    <HairOverlay style={flatteningStyles[0].name} animate delay={0.15} hairColor={primaryHairColor} />
                   )}
                 </div>
 
@@ -527,11 +554,11 @@ export function HairstyleCard({
                 <div
                   key={s.name}
                   className="style-card flex flex-col rounded-2xl overflow-hidden"
-                  style={{ border: "1px solid #E8DDD0", background: "#F5EFE7" }}
+                  style={{ border: `1.5px solid ${styleAccentFromStyle(s.name).band}`, background: "#F5EFE7" }}
                 >
-                  {/* name + texture badge row */}
-                  <div className="flex items-center justify-between gap-1 px-2 py-1.5" style={{ borderBottom: "1px solid #E8DDD0" }}>
-                    <p className="text-[9px] uppercase tracking-widest font-semibold truncate" style={{ color: "#3D2B1F" }}>{s.name}</p>
+                  {/* name + texture badge row — accent colour per style family */}
+                  <div className="flex items-center justify-between gap-1 px-2 py-1.5" style={{ background: styleAccentFromStyle(s.name).band, borderBottom: "1px solid #E8DDD0" }}>
+                    <p className="text-[9px] uppercase tracking-widest font-semibold truncate" style={{ color: styleAccentFromStyle(s.name).text }}>{s.name}</p>
                     <span
                       className="shrink-0 text-[8px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
                       style={{ background: tex.bg, color: tex.color }}
@@ -554,7 +581,7 @@ export function HairstyleCard({
                     ) : (
                       <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
                     )}
-                    <HairOverlay style={s.name} animate delay={i * 0.09} />
+                    <HairOverlay style={s.name} animate delay={i * 0.09} hairColor={primaryHairColor} />
                     {/* green check badge */}
                     <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#7BA05B" }}>
                       <Check className="h-3.5 w-3.5 text-white" />
@@ -609,7 +636,7 @@ export function HairstyleCard({
                     ) : (
                       <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#E8DDD0,#D0C0B0)" }} />
                     )}
-                    <HairOverlay style={a} />
+                    <HairOverlay style={a} hairColor={primaryHairColor} />
                     <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#C06B3E" }}>
                       <Minus className="h-3.5 w-3.5 text-white" />
                     </div>
