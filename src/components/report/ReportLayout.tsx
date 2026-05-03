@@ -337,7 +337,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   exit="exit"
                 >
                   {isPaid && report.skinAnalysis ? (
-                    <SkinAnalysisCard data={report.skinAnalysis} />
+                    <SkinAnalysisCard
+                      data={report.skinAnalysis}
+                      photoUrl={report.imageUrl}
+                    />
                   ) : (
                     <Locked
                       reportId={report.id}
