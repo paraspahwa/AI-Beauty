@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { Check, X, Shirt, Loader2, ZoomIn } from "lucide-react";
+import { Check, X, Shirt, Loader2 } from "lucide-react";
 import { useState, useCallback } from "react";
 import type { ColorAnalysisResult } from "@/types/report";
 
@@ -198,9 +198,13 @@ const MAKEUP_LABELS = ["Peachy\nBlush", "Warm Brown\nEyeshadow", "Coral Nude\nLi
 
 /* ─── Comparison photo card ─────────────────────────────────────────────── */
 /**
- * Renders the user's photo with a V-neck dress shape painted over
- * the lower clothing area in the given color — the face/hair are untouched.
- * "Try On" button triggers an AI-generated photorealistic recolor.
+ * Uses CSS mix-blend-mode:color + clip-path to recolor the clothing area.
+ * This preserves the actual fabric texture/folds/shadows from the photo
+ * while changing the hue — far more photorealistic than a solid SVG fill.
+ *
+ * clip-path polygon coordinates (% units):
+ *   Shoulder line ~65% down from top, shallow scoop-neck at 70% center.
+ *   All values are percentages of the element's own width/height.
  */
 function ColorSwatch({
   hex,
@@ -213,16 +217,35 @@ function ColorSwatch({
   photoUrl?: string;
   onTryOn?: () => void;
 }) {
-  // Build 4 shade variants for the strip
   const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
+
+  // Clothing region clip-path (percentage coords on the card image):
+  //   Left edge at 65% → peak shoulder at 58% (20% from left) →
+  //   neckline left at 62% (35%) → scoop bottom at 68% (50%) →
+  //   neckline right at 62% (65%) → peak shoulder at 58% (80%) →
+  //   right edge at 65% → bottom-right → bottom-left
+  const clothingClip = [
+    "0% 65%",
+    "20% 58%",
+    "35% 62%",
+    "50% 68%",
+    "65% 62%",
+    "80% 58%",
+    "100% 65%",
+    "100% 100%",
+    "0% 100%",
+  ].join(", ");
 
   return (
     <div
       className="flex flex-col overflow-hidden group"
       style={{ border: "1.5px solid #E8DDD0", borderRadius: 10, background: "#fff" }}
     >
-      {/* Photo + SVG dress overlay */}
-      <div className="relative w-full" style={{ aspectRatio: "3/4", overflow: "hidden" }}>
+      {/* Photo + blend-mode clothing overlay */}
+      <div
+        className="relative w-full"
+        style={{ aspectRatio: "3/4", overflow: "hidden", isolation: "isolate" }}
+      >
         {photoUrl ? (
           <>
             <Image
@@ -234,68 +257,36 @@ function ColorSwatch({
               style={{ objectPosition: "top center" }}
             />
             {/*
-              SVG clothing overlay — realistic top/blouse silhouette.
-              Viewbox 100×133 maps to the full card image.
-              Layout (portrait, head-to-chest crop):
-                0–60%  = face/hair area  → untouched
-                60–68% = neck + upper chest
-                68%+   = shoulder-to-bottom clothing region
-
-              Shape: wide shoulders from edges, shallow scoop-neck center,
-              fabric fills all the way to bottom.
-              A subtle linear gradient gives fabric depth.
+              mix-blend-mode: "color" keeps the photo's luminance (shadows, highlights,
+              fabric wrinkles) but replaces the hue+saturation with the palette color.
+              clip-path carves out only the clothing region — face/hair untouched.
             */}
-            <svg
-              viewBox="0 0 100 133"
-              preserveAspectRatio="none"
-              className="absolute inset-0 w-full h-full"
-              style={{ pointerEvents: "none" }}
-            >
-              <defs>
-                <linearGradient id={`dg-${hex.replace("#","")}`} x1="0.3" y1="0" x2="0.7" y2="1">
-                  <stop offset="0%" stopColor={hex} stopOpacity="0.75" />
-                  <stop offset="40%" stopColor={hex} stopOpacity="0.92" />
-                  <stop offset="100%" stopColor={hex} stopOpacity="0.96" />
-                </linearGradient>
-              </defs>
-              {/*
-                Clothing path:
-                - Starts at left edge y=72, right edge y=72 (shoulder line)
-                - Curves up slightly at outer shoulders (~y=69)
-                - Neckline: smooth shallow V from x=35,y=72 dipping to x=50,y=80 back to x=65,y=72
-                - Fills entire bottom of image
-              */}
-              <path
-                d={[
-                  "M0,76",          // left edge shoulder
-                  "L22,69",         // left shoulder peak
-                  "L35,72",         // left neckline start
-                  "Q50,84 65,72",   // shallow V-neck
-                  "L78,69",         // right shoulder peak
-                  "L100,76",        // right edge shoulder
-                  "L100,133",       // bottom right
-                  "L0,133",         // bottom left
-                  "Z"
-                ].join(" ")}
-                fill={`url(#dg-${hex.replace("#","")})`}
-              />
-              {/* subtle fabric sheen highlight on left chest */}
-              <path
-                d="M15,76 Q22,72 30,74 L28,133 L0,133 Z"
-                fill="#ffffff"
-                opacity="0.07"
-              />
-            </svg>
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundColor: hex,
+                mixBlendMode: "color",
+                opacity: 0.9,
+                clipPath: `polygon(${clothingClip})`,
+                pointerEvents: "none",
+              }}
+            />
           </>
         ) : (
-          <svg viewBox="0 0 100 133" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
-            <rect width="100" height="133" fill="#EDE3D8" />
-            <path
-              d="M0,76 L22,69 L35,72 Q50,84 65,72 L78,69 L100,76 L100,133 L0,133 Z"
-              fill={hex}
-              opacity="0.88"
+          /* No photo fallback — solid color block with clip shape */
+          <div style={{ position: "absolute", inset: 0, background: "#EDE3D8" }}>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundColor: hex,
+                opacity: 0.88,
+                clipPath: `polygon(${clothingClip})`,
+              }}
             />
-          </svg>
+          </div>
         )}
 
         {/* Color name label */}
