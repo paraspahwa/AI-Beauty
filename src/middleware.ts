@@ -52,6 +52,21 @@ function isRateLimited(ip: string): boolean {
 }
 
 
+// Admin emails that bypass IP rate limiting (must match env.auth.adminEmailAllowlist)
+// We read directly from process.env here because middleware runs at edge before
+// the full env module is available.
+const ADMIN_EMAIL_ALLOWLIST: string[] = (
+  process.env.ADMIN_EMAIL_ALLOWLIST ?? "paraspahwa5@gmail.com"
+)
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+// Always include the hardcoded owner email regardless of env
+if (!ADMIN_EMAIL_ALLOWLIST.includes("paraspahwa5@gmail.com")) {
+  ADMIN_EMAIL_ALLOWLIST.push("paraspahwa5@gmail.com");
+}
+
 const SUPABASE_AUTH_QUERY_KEYS = [
   "code",
   "token_hash",
@@ -88,19 +103,23 @@ export async function middleware(request: NextRequest) {
 
   // ── IP rate limiting for expensive API routes ──────────────────────────────
   if (RATE_LIMIT_ROUTES.some((r) => pathname.startsWith(r))) {
-    const ip = getClientIp(request);
-    if (isRateLimited(ip)) {
-      return NextResponse.json(
-        { error: "Too many requests. Please slow down." },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": "60",
-            "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
-            "X-RateLimit-Window": "60s",
+    const adminEmail = request.headers.get("x-admin-email")?.toLowerCase() ?? "";
+    const isAdmin = ADMIN_EMAIL_ALLOWLIST.includes(adminEmail);
+    if (!isAdmin) {
+      const ip = getClientIp(request);
+      if (isRateLimited(ip)) {
+        return NextResponse.json(
+          { error: "Too many requests. Please slow down." },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": "60",
+              "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
+              "X-RateLimit-Window": "60s",
+            },
           },
-        },
-      );
+        );
+      }
     }
   }
 
