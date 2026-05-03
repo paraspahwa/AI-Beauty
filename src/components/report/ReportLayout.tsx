@@ -4,8 +4,7 @@ import Image from "next/image";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Download, Share2, Sparkles, Lock, Loader2, LinkIcon, X } from "lucide-react";
+import { Download, Share2, Sparkles, Lock, Loader2, X } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
 import { ColorAnalysisCard } from "./ColorAnalysisCard";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
@@ -109,7 +108,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   }
 
   return (
-    <div className="container max-w-5xl py-8 sm:py-12">
+    <div className="min-h-screen" style={{ background: "#F5EFE7" }}>
+    <div className="container max-w-5xl py-10 sm:py-14">
       <motion.header
         variants={staggerContainer}
         initial="hidden"
@@ -118,21 +118,23 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       >
         <motion.p
           variants={fadeUp}
-          className="text-xs uppercase tracking-[0.3em] font-medium"
-          style={{ color: "#C9956B" }}
+          className="text-[10px] uppercase tracking-[0.35em] font-semibold"
+          style={{ color: "#C8A96E" }}
         >
-          Your StyleAI report
+          ✦ Your StyleAI Report ✦
         </motion.p>
         <motion.h1
           variants={fadeUp}
-          className="mt-3 text-4xl sm:text-5xl text-ink"
+          className="mt-3 font-serif text-4xl sm:text-5xl"
+          style={{ color: "#3D2B1F" }}
         >
           Personal Beauty Profile
         </motion.h1>
         {report.summary && (
           <motion.p
             variants={fadeUp}
-            className="mx-auto mt-4 max-w-2xl text-sm text-ink-stone leading-relaxed"
+            className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed"
+            style={{ color: "#6B5344" }}
           >
             {report.summary}
           </motion.p>
@@ -140,10 +142,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
         {(report.visualAssets?.assets.landmarkOverlay?.signedUrl || report.visualAssets?.assets.paletteBoard?.signedUrl) && (
           <motion.div
             variants={fadeUp}
-            className="mx-auto mt-6 grid w-full max-w-4xl gap-4 sm:grid-cols-2"
+            className="mx-auto mt-8 grid w-full max-w-2xl gap-4 sm:grid-cols-2"
           >
             {report.visualAssets?.assets.landmarkOverlay?.signedUrl && (
-              <div className="overflow-hidden rounded-2xl" style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="overflow-hidden rounded-2xl" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}>
                 <div className="relative h-52 w-full">
                 <Image
                   src={report.visualAssets.assets.landmarkOverlay.signedUrl}
@@ -154,11 +156,11 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   className="object-cover"
                 />
                 </div>
-                <p className="px-3 py-2 text-xs text-ink-stone">Face landmark map</p>
+                <p className="px-3 py-2 text-xs font-medium" style={{ color: "#9C7D5B" }}>Face landmark map</p>
               </div>
             )}
             {report.visualAssets?.assets.paletteBoard?.signedUrl && (
-              <div className="overflow-hidden rounded-2xl" style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="overflow-hidden rounded-2xl" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}>
                 <div className="relative h-52 w-full">
                 <Image
                   src={report.visualAssets.assets.paletteBoard.signedUrl}
@@ -169,42 +171,42 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   className="object-cover"
                 />
                 </div>
-                <p className="px-3 py-2 text-xs text-ink-stone">Personal color board</p>
+                <p className="px-3 py-2 text-xs font-medium" style={{ color: "#9C7D5B" }}>Personal color board</p>
               </div>
             )}
           </motion.div>
         )}
-        {/* Visuals generating banner — shows while async /visuals endpoint is running */}
+        {/* Visuals generating banner */}
         {visualsLoading && !report.visualAssets?.assets?.paletteBoard && (
           <motion.div
             variants={fadeUp}
             className="mx-auto mt-6 flex max-w-md items-center gap-3 rounded-2xl px-5 py-3 text-sm"
             style={{
-              background: "rgba(201,149,107,0.08)",
-              border: "1px solid rgba(201,149,107,0.25)",
-              color: "#C9956B",
+              background: "rgba(200,169,110,0.12)",
+              border: "1px solid rgba(200,169,110,0.35)",
+              color: "#9C7D5B",
             }}
           >
             <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
             <span>Generating your visual style board — this takes ~30 seconds…</span>
           </motion.div>
         )}
-        {/* Visuals failed banner with retry */}
+        {/* Visuals failed banner */}
         {visualsFailed && !visualsLoading && !report.visualAssets?.assets?.paletteBoard && (
           <motion.div
             variants={fadeUp}
             className="mx-auto mt-6 flex max-w-md items-center justify-between gap-3 rounded-2xl px-5 py-3 text-sm"
             style={{
-              background: "rgba(239,68,68,0.07)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              color: "#fca5a5",
+              background: "rgba(192,107,62,0.1)",
+              border: "1px solid rgba(192,107,62,0.3)",
+              color: "#C06B3E",
             }}
           >
             <span>Visual style board failed to generate.</span>
             <button
               onClick={triggerVisuals}
               className="shrink-0 rounded-lg px-3 py-1 text-xs font-medium transition-colors hover:opacity-80"
-              style={{ background: "rgba(239,68,68,0.15)", color: "#fca5a5" }}
+              style={{ background: "rgba(192,107,62,0.15)", color: "#C06B3E" }}
             >
               Retry
             </button>
@@ -213,27 +215,27 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
 
         <motion.div
           variants={fadeUp}
-          className="mt-6 flex flex-wrap justify-center gap-3"
+          className="mt-8 flex flex-wrap justify-center gap-3"
         >
           {!isReadOnly && (
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
+              <button
                 onClick={share}
                 disabled={shareLoading}
-                className="min-w-[140px]"
+                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50"
+                style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", color: "#3D2B1F", boxShadow: "0 2px 8px rgba(61,43,31,0.08)" }}
               >
                 {shareLoading
                   ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <LinkIcon className="h-4 w-4" />}
+                  : <Share2 className="h-4 w-4" style={{ color: "#9C7D5B" }} />}
                 {copied ? "Copied ✨" : shareToken ? "Copy public link" : "Share"}
-              </Button>
+              </button>
               {shareToken && !copied && (
                 <button
                   onClick={revokeShare}
                   title="Revoke public link"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:opacity-80"
-                  style={{ background: "rgba(248,113,113,0.1)", color: "#F87171" }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:opacity-80"
+                  style={{ background: "rgba(192,107,62,0.1)", color: "#C06B3E", border: "1px solid rgba(192,107,62,0.25)" }}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -241,15 +243,15 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
             </div>
           )}
           {!isReadOnly && isPaid ? (
-            <Button asChild variant="accent">
-              <a
-                href={`/api/reports/${report.id}/pdf`}
-                download={`styleai-report-${report.id}.html`}
-                rel="noopener"
-              >
-                <Download className="h-4 w-4" /> Download PDF
-              </a>
-            </Button>
+            <a
+              href={`/api/reports/${report.id}/pdf`}
+              download={`styleai-report-${report.id}.html`}
+              rel="noopener"
+              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+            >
+              <Download className="h-4 w-4" /> Download PDF
+            </a>
           ) : !isReadOnly && (
             <Paywall reportId={report.id} onUnlocked={refresh} />
           )}
@@ -264,8 +266,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-center mb-8">
             <TabsList
-              className="backdrop-blur-md"
-              style={{ background: "rgba(18,18,26,0.85)", border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}
+              className="backdrop-blur-sm rounded-2xl p-1.5 gap-1"
+              style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}
             >
               {TABS.map((t) => {
                 const isLocked =
@@ -275,10 +277,13 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   <TabsTrigger
                     key={t.value}
                     value={t.value}
-                    className="relative data-[state=active]:text-obsidian data-[state=active]:shadow-glow data-[state=active]:bg-[linear-gradient(135deg,#C9956B,#E8C990)]"
+                    className="relative rounded-xl text-[13px] font-medium px-4 py-2 transition-all data-[state=active]:shadow-sm"
+                    style={activeTab === t.value
+                      ? { background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F" }
+                      : { color: "#9C7D5B" }}
                   >
                     {isLocked && (
-                      <Lock className="h-3 w-3 mr-1.5 animate-pulse-slow" style={{ color: "#C9956B" }} />
+                      <Lock className="h-3 w-3 mr-1.5 animate-pulse-slow" style={{ color: "#C8A96E" }} />
                     )}
                     {t.label}
                   </TabsTrigger>
@@ -438,6 +443,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       {/* Style Consultant Chat — only for the authenticated owner */}
       {!isReadOnly && <StyleChatDrawer reportId={report.id} />}
     </div>
+    </div>
   );
 }
 
@@ -447,11 +453,11 @@ function Empty() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="rounded-3xl p-12 text-center"
-      style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.8), rgba(26,26,38,0.6))", border: "1px dashed rgba(255,255,255,0.1)" }}
+      style={{ background: "#FDFAF6", border: "1px dashed #E8DDD0" }}
     >
-      <Sparkles className="h-10 w-10 mx-auto mb-3" style={{ color: "rgba(240,232,216,0.2)" }} />
-      <p className="text-sm text-ink-stone font-medium mb-1">Analysis is still processing</p>
-      <p className="text-xs text-ink-mist">Refresh in a moment to see your results</p>
+      <Sparkles className="h-10 w-10 mx-auto mb-3" style={{ color: "#C8B89A" }} />
+      <p className="text-sm font-medium mb-1" style={{ color: "#3D2B1F" }}>Analysis is still processing</p>
+      <p className="text-xs" style={{ color: "#9C7D5B" }}>Refresh in a moment to see your results</p>
     </motion.div>
   );
 }
