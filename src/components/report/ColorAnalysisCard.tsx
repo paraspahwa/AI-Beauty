@@ -58,6 +58,32 @@ const PRINT_COLORS = ["#C8956B", "#6A8E7F", "#C8A96E"];
 const MAKEUP_LABELS = ["Peachy\nBlush", "Warm Brown\nEyeshadow", "Coral Nude\nLip"];
 
 // ── Main component ──────────────────────────────────────────────────────────
+function ColorSwatch({ hex, name, photoUrl }: { hex: string; name: string; photoUrl?: string }) {
+  return (
+    <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
+      <div className="w-full relative" style={{ aspectRatio: "3/4" }}>
+        {photoUrl ? (
+          <>
+            <Image src={photoUrl} alt={name} fill unoptimized className="object-cover object-center" />
+            {/* colour wash overlay */}
+            <div className="absolute inset-0" style={{ backgroundColor: hex, mixBlendMode: "multiply", opacity: 0.55 }} />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${hex}44 0%, ${hex}99 100%)` }} />
+        )}
+        <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: "rgba(0,0,0,0.28)" }}>
+          <span className="text-[9px] font-medium text-white truncate block">{name}</span>
+        </div>
+      </div>
+      <div className="flex h-3">
+        {[hex, hex + "CC", hex + "99", hex + "66"].map((h, i) => (
+          <div key={i} className="flex-1" style={{ backgroundColor: h }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ColorAnalysisCard({
   data,
   photoUrl,
@@ -216,28 +242,7 @@ export function ColorAnalysisCard({
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {bestSix.map((c) => (
-            <div key={c.hex} className="flex flex-col rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
-              {/* photo-like placeholder tinted with the colour */}
-              <div
-                className="w-full"
-                style={{
-                  aspectRatio: "3/4",
-                  background: `linear-gradient(160deg, ${c.hex}33 0%, ${c.hex}88 100%)`,
-                  position: "relative",
-                }}
-              >
-                {/* colour name overlay */}
-                <div className="absolute inset-0 flex items-end p-1">
-                  <span className="text-[9px] font-medium truncate" style={{ color: "#3D2B1F" }}>{c.name}</span>
-                </div>
-              </div>
-              {/* colour strip */}
-              <div className="flex h-3">
-                {[c.hex, c.hex + "CC", c.hex + "99", c.hex + "66"].map((h, i) => (
-                  <div key={i} className="flex-1" style={{ backgroundColor: h }} />
-                ))}
-              </div>
-            </div>
+            <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />
           ))}
         </div>
       </div>
@@ -255,25 +260,7 @@ export function ColorAnalysisCard({
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {avoidSix.map((c) => (
-            <div key={c.hex} className="flex flex-col rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
-              <div
-                className="w-full"
-                style={{
-                  aspectRatio: "3/4",
-                  background: `linear-gradient(160deg, ${c.hex}33 0%, ${c.hex}88 100%)`,
-                  position: "relative",
-                }}
-              >
-                <div className="absolute inset-0 flex items-end p-1">
-                  <span className="text-[9px] font-medium truncate" style={{ color: "#3D2B1F" }}>{c.name}</span>
-                </div>
-              </div>
-              <div className="flex h-3">
-                {[c.hex, c.hex + "CC", c.hex + "99", c.hex + "66"].map((h, i) => (
-                  <div key={i} className="flex-1" style={{ backgroundColor: h }} />
-                ))}
-              </div>
-            </div>
+            <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />
           ))}
         </div>
       </div>
