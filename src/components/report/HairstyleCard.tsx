@@ -455,11 +455,11 @@ export function HairstyleCard({
   // Hair colour from AI analysis — first recommended colour drives overlay tinting
   const primaryHairColor  = data.colors[0]?.hex;
   const bestLength        = data.lengths[1]?.name ?? "Collarbone to Below Shoulder";
-  const resolvedHairType  = hairType ?? "Wavy / Curly";
+  const resolvedHairType  = hairType ?? data.hairType ?? "Wavy / Curly";
   const resolvedFaceShape = faceShape ?? "Oval";
   const resolvedTraits    = (faceTraits ?? ["Full cheeks", "Soft jawline", "Balanced proportions"]).slice(0, 3);
   const resolvedFeatures  = (bestFeatures ?? ["Almond eyes", "Rounded cheeks", "Full lips"]).slice(0, 3);
-  const resolvedTips      = (stylingTips ?? data.avoid.slice(0, 3)).slice(0, 3);
+  const resolvedTips      = (stylingTips ?? data.stylingTips ?? ["Use light layers for movement", "Soft waves add texture", "Avoid heavy straight looks"]).slice(0, 3);
 
   const hairGoals = [
     { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5"><ellipse cx="12" cy="14" rx="8" ry="9" /><path d="M8 9 Q12 5 16 9" /></svg>, label: "Frame the face" },
@@ -624,13 +624,26 @@ export function HairstyleCard({
                 className="style-card flex flex-col rounded-2xl overflow-hidden"
                 style={{ border: "1px solid #E8DDD0", background: "#FFFFFF" }}
               >
-                {/* photo fills top, composited preview or base photo */}
+                {/* photo fills top, composited preview or photo + hair overlay */}
                 <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
                   {(() => {
                     const src = previewUrls?.[i] ?? photoUrl;
-                    return src ? (
-                      <Image src={src} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                    ) : (
+                    if (previewUrls?.[i]) {
+                      // Real AI-generated preview
+                      return (
+                        <Image src={previewUrls[i]} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                      );
+                    }
+                    if (src) {
+                      // Fallback: base photo + hair shape overlay for visual distinction
+                      return (
+                        <>
+                          <Image src={src} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                          <HairOverlay style={s.name} animate hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
+                        </>
+                      );
+                    }
+                    return (
                       <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
                     );
                   })()}
@@ -664,15 +677,22 @@ export function HairstyleCard({
                   <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
                     {(() => {
                       const avoidIdx = 5 + i;
-                      const src = previewUrls?.[avoidIdx] ?? photoUrl;
-                      return src ? (
-                        <>
-                          <Image src={src} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                          {!previewUrls?.[avoidIdx] && (
-                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.15)" }} />
-                          )}
-                        </>
-                      ) : (
+                      if (previewUrls?.[avoidIdx]) {
+                        return (
+                          <Image src={previewUrls[avoidIdx]} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                        );
+                      }
+                      if (photoUrl) {
+                        return (
+                          <>
+                            <Image src={photoUrl} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                            <HairOverlay style={a} animate hairColor={data.colors[(i + 2) % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
+                            {/* warm red-orange tint to signal "avoid" */}
+                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.12)" }} />
+                          </>
+                        );
+                      }
+                      return (
                         <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#E8DDD0,#D0C0B0)" }} />
                       );
                     })()}

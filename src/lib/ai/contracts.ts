@@ -437,19 +437,34 @@ export function normalizeHairstyle(input: unknown): HairstyleResult {
 
   const avoid = takeOrPad(
     uniqueStrings(asArray(obj.avoid).map((item) => asString(item, ""))),
-    3,
+    4,
     (index) => [
       "Overly blunt, heavy shapes without movement",
       "Extreme contrast color jumps",
       "Cuts that remove all face-framing softness",
+      "Very short pixie cuts that flatten volume",
     ][index],
-  ).slice(0, 5);
+  ).slice(0, 4);
+
+  const stylingTips = takeOrPad(
+    asArray(obj.stylingTips).map((item) => asString(item, "")),
+    3,
+    (index) => [
+      "Use light layers for movement",
+      "Soft waves add texture",
+      "Avoid heavy straight looks",
+    ][index],
+  ).slice(0, 3);
+
+  const hairType = asString(obj.hairType, "") || undefined;
 
   return {
     styles,
     lengths,
     colors,
     avoid,
+    stylingTips,
+    hairType,
   };
 }
 

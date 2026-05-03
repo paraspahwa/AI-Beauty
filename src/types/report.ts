@@ -75,6 +75,8 @@ export interface HairstyleResult {
   lengths: { name: string; description: string }[];
   colors: { name: string; hex: string; description: string }[];
   avoid: string[];
+  stylingTips?: string[];
+  hairType?: string;
 }
 
 export interface ReportVisualAsset {

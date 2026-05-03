@@ -423,8 +423,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                             ]
                           : undefined
                       }
-                      stylingTips={report.hairstyle.avoid.slice(0, 3)}
-                      hairType={undefined}
+                      stylingTips={report.hairstyle.stylingTips}
+                      hairType={report.hairstyle.hairType}
                     />
                   ) : (
                     <Locked

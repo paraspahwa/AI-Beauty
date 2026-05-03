@@ -126,10 +126,12 @@ Return JSON:
       prompt: (faceShape: string) => `Recommend hairstyles for a ${faceShape} face.
 Return JSON:
 {
-  "styles":  [{ "name": string, "description": string }],   // 5 styles
-  "lengths": [{ "name": string, "description": string }],   // 3 lengths (Short / Medium / Long variants)
-  "colors":  [{ "name": string, "hex": "#RRGGBB", "description": string }], // 5 colors
-  "avoid":   string[3..5]
+  "styles":      [{ "name": string, "description": string }],   // exactly 5 flattering styles
+  "lengths":     [{ "name": string, "description": string }],   // 3 lengths (Short / Collarbone / Below Shoulder)
+  "colors":      [{ "name": string, "hex": "#RRGGBB", "description": string }], // 5 hair colors
+  "avoid":       string[4],                                    // exactly 4 styles to avoid (short descriptive names)
+  "stylingTips": string[3],                                    // exactly 3 short actionable styling tips (e.g. "Use light layers for movement")
+  "hairType":    string                                        // detected/recommended hair type, e.g. "Wavy / Curly"
 }`,
     },
   ],

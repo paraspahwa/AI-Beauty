@@ -99,7 +99,7 @@ describe("contracts: missing arrays and object shape", () => {
     expect(out.styles).toHaveLength(5);
     expect(out.lengths).toHaveLength(3);
     expect(out.colors).toHaveLength(5);
-    expect(out.avoid).toHaveLength(3);
+    expect(out.avoid).toHaveLength(4);
   });
 
   it("provides stable defaults for skin routine", () => {
