@@ -3,69 +3,72 @@
 import Image from "next/image";
 import type { FaceShapeResult, FeatureBreakdown } from "@/types/report";
 
+// ── Confidence badge ──────────────────────────────────────────────────────────
 function ConfidenceBadge({ confidence }: { confidence: number }) {
   const pct    = Math.round(confidence * 100);
-  const bg     = pct >= 80 ? "rgba(123,210,158,0.15)" : pct >= 65 ? "rgba(201,149,107,0.15)" : "rgba(248,113,113,0.12)";
-  const color  = pct >= 80 ? "#6ECF9B"                : pct >= 65 ? "#C9956B"                : "#F87171";
-  const border = pct >= 80 ? "rgba(110,207,155,0.25)" : pct >= 65 ? "rgba(201,149,107,0.25)" : "rgba(248,113,113,0.25)";
-  const label  = pct >= 80 ? "High confidence"        : pct >= 65 ? "Good confidence"        : "Low confidence";
+  const bg     = pct >= 80 ? "rgba(123,210,158,0.12)" : pct >= 65 ? "rgba(201,149,107,0.12)" : "rgba(248,113,113,0.10)";
+  const color  = pct >= 80 ? "#5AB882"                 : pct >= 65 ? "#C9956B"                : "#F87171";
+  const border = pct >= 80 ? "rgba(90,184,130,0.30)"   : pct >= 65 ? "rgba(201,149,107,0.30)" : "rgba(248,113,113,0.30)";
+  const label  = pct >= 80 ? "High confidence"         : pct >= 65 ? "Good confidence"        : "Low confidence";
   return (
-    <span className="text-xs px-4 py-1.5 rounded-full font-medium" style={{ background: bg, color, border: `1px solid ${border}` }}>
+    <span
+      className="inline-flex items-center gap-1.5 text-[13px] px-5 py-2 rounded-full font-medium"
+      style={{ background: bg, color, border: `1px solid ${border}` }}
+    >
       {label} · {pct}%
     </span>
   );
 }
 
-// ── SVG icons (larger, bolder, matching reference style) ─────────────────────
+// ── Icons — thin, elegant line art exactly matching reference ─────────────────
 function IconFace() {
   return (
-    <svg viewBox="0 0 40 50" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-10 w-9">
-      <ellipse cx="20" cy="28" rx="15" ry="19" />
-      <path d="M12 23 Q20 19 28 23" strokeLinecap="round" />
-      <ellipse cx="14" cy="28" rx="2.8" ry="2" />
-      <ellipse cx="26" cy="28" rx="2.8" ry="2" />
-      <path d="M14 37 Q20 41 26 37" strokeLinecap="round" />
+    <svg viewBox="0 0 36 44" fill="none" stroke="currentColor" strokeWidth="1.3" className="h-9 w-8">
+      <ellipse cx="18" cy="25" rx="13" ry="17" />
+      <path d="M11 20 Q18 17 25 20" strokeLinecap="round" />
+      <ellipse cx="13" cy="24" rx="2.2" ry="1.6" />
+      <ellipse cx="23" cy="24" rx="2.2" ry="1.6" />
+      <path d="M13 32 Q18 36 23 32" strokeLinecap="round" />
     </svg>
   );
 }
 function IconEyebrow() {
   return (
-    <svg viewBox="0 0 52 24" fill="none" stroke="currentColor" strokeWidth="2.6" className="h-7 w-12">
-      <path d="M4 18 C10 6 24 3 38 7 C45 9 50 14 50 18" strokeLinecap="round" />
+    <svg viewBox="0 0 44 16" fill="none" stroke="currentColor" strokeWidth="2.0" className="h-5 w-10">
+      <path d="M3 13 C8 4 20 2 32 5 C38 7 42 11 42 13" strokeLinecap="round" />
     </svg>
   );
 }
 function IconEye() {
   return (
-    <svg viewBox="0 0 44 22" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-11">
+    <svg viewBox="0 0 44 22" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-6 w-10">
       <path d="M2 11 C9 2 35 2 42 11 C35 20 9 20 2 11Z" />
-      <circle cx="22" cy="11" r="5" />
-      <circle cx="22" cy="11" r="2.2" fill="currentColor" />
+      <circle cx="22" cy="11" r="4.5" />
+      <circle cx="22" cy="11" r="2" fill="currentColor" />
     </svg>
   );
 }
 function IconNose() {
   return (
-    <svg viewBox="0 0 28 38" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-10 w-8">
-      <path d="M14 3 L14 24" strokeLinecap="round" />
-      <path d="M14 24 C11 27 6 30 6 33 C6 36 9 37 14 37 C19 37 22 36 22 33 C22 30 17 27 14 24Z" />
+    <svg viewBox="0 0 28 40" fill="none" stroke="currentColor" strokeWidth="1.3" className="h-9 w-7">
+      <path d="M14 4 L14 26" strokeLinecap="round" />
+      <path d="M14 26 C11 29 5 31 5 35 C5 38 9 39 14 39 C19 39 23 38 23 35 C23 31 17 29 14 26Z" />
     </svg>
   );
 }
 function IconCheeks() {
   return (
-    <svg viewBox="0 0 48 26" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-7 w-12">
-      <ellipse cx="11" cy="13" rx="9" ry="7" strokeDasharray="2.5 1.5" />
-      <ellipse cx="37" cy="13" rx="9" ry="7" strokeDasharray="2.5 1.5" />
-      <line x1="20" y1="13" x2="28" y2="13" strokeWidth="1.2" />
+    <svg viewBox="0 0 48 26" fill="none" stroke="currentColor" strokeWidth="1.3" className="h-6 w-11">
+      <ellipse cx="11" cy="13" rx="8.5" ry="6.5" strokeDasharray="2 1.5" />
+      <ellipse cx="37" cy="13" rx="8.5" ry="6.5" strokeDasharray="2 1.5" />
     </svg>
   );
 }
 function IconLips() {
   return (
-    <svg viewBox="0 0 44 22" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-7 w-11">
-      <path d="M4 11 C9 3 16 2 22 6 C28 2 35 3 40 11 C35 20 28 21 22 17 C16 21 9 20 4 11Z" />
-      <path d="M11 11 C15 7 22 7 22 11" strokeWidth="1.2" />
+    <svg viewBox="0 0 44 24" fill="none" stroke="currentColor" strokeWidth="1.3" className="h-6 w-10">
+      <path d="M4 12 C8 4 16 2 22 7 C28 2 36 4 40 12 C36 22 28 23 22 18 C16 23 8 22 4 12Z" />
+      <path d="M10 12 C14 8 22 8 22 12" strokeWidth="1.0" />
     </svg>
   );
 }
@@ -79,25 +82,72 @@ const FEATURE_ICONS: Record<string, React.ReactNode> = {
   lips:      <IconLips />,
 };
 
-// ── Feature card ──────────────────────────────────────────────────────────────
-function FeatureBox({ featureKey, title, subtitle, notes }: { featureKey: string; title: string; subtitle: string; notes: string }) {
-  // Split on period or semicolon only — commas inside a note stay together
-  const bullets = notes.split(/[.;]/).map((s) => s.trim()).filter(Boolean).slice(0, 3);
+// ── Feature box ───────────────────────────────────────────────────────────────
+function FeatureBox({
+  featureKey,
+  title,
+  subtitle,
+  notes,
+}: {
+  featureKey: string;
+  title: string;
+  subtitle: string;
+  notes: string;
+}) {
+  // Split on period or semicolon — commas inside notes stay intact
+  const bullets = notes
+    .split(/[.;]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+    <div
+      className="rounded-2xl p-4 flex flex-col gap-2.5"
+      style={{
+        background: "#FFFFFF",
+        border: "1px solid rgba(200,185,168,0.35)",
+        boxShadow: "0 1px 4px rgba(61,43,31,0.04)",
+      }}
+    >
+      {/* Icon + label row */}
       <div className="flex items-center gap-3">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full" style={{ background: "#F0E8DC", color: "#9C7D5B" }}>
+        <span
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+          style={{ background: "#F2EAE0", color: "#9C7D5B" }}
+        >
           {FEATURE_ICONS[featureKey] ?? <IconFace />}
         </span>
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] font-bold leading-tight" style={{ color: "#3D2B1F" }}>{title}</p>
-          <p className="text-[17px] font-semibold leading-tight mt-0.5" style={{ color: "#3D2B1F", fontFamily: "Georgia, serif" }}>{subtitle}</p>
+          {/* ALL CAPS label — small, tracked */}
+          <p
+            className="text-[10.5px] uppercase tracking-[0.20em] font-bold leading-none"
+            style={{ color: "#5C3D2E" }}
+          >
+            {title}
+          </p>
+          {/* Subtitle — large regular-weight serif */}
+          <p
+            className="text-[18px] font-normal leading-snug mt-[3px]"
+            style={{ color: "#2C1A10", fontFamily: "'Georgia', 'Times New Roman', serif" }}
+          >
+            {subtitle}
+          </p>
         </div>
       </div>
-      <ul className="space-y-1.5 pl-1">
+
+      {/* Bullet list */}
+      <ul className="space-y-[5px] pl-0.5">
         {bullets.map((b, i) => (
-          <li key={i} className="flex items-start gap-2 text-[13px] leading-snug" style={{ color: "#6B5344" }}>
-            <span className="mt-[5px] h-[6px] w-[6px] rounded-full shrink-0" style={{ background: "#C8A96E" }} />
+          <li
+            key={i}
+            className="flex items-start gap-2 text-[13px] leading-snug"
+            style={{ color: "#3D2B1F" }}
+          >
+            <span
+              className="mt-[6px] shrink-0 rounded-full"
+              style={{ height: 5, width: 5, background: "#3D2B1F" }}
+            />
             {b}
           </li>
         ))}
@@ -106,39 +156,46 @@ function FeatureBox({ featureKey, title, subtitle, notes }: { featureKey: string
   );
 }
 
-// ── Pointer lines — fixed relative coords matching 3-left / 3-right grid ──────
-// ViewBox is 100×100 percentage units over the photo card.
-// Left panel features connect from right edge; right panel from left edge.
-// Dots are placed on recognizable face landmarks.
+// ── Pointer lines ─────────────────────────────────────────────────────────────
+// The photo has aspectRatio 3:4 = 0.75. ViewBox 0 0 100 133 matches (100/133≈0.75).
+// Coordinates are in viewBox units (0-100 wide, 0-133 tall).
+// Left features: lines start at dot on face, extend left to x=0 (photo edge).
+// Right features: lines start at dot on face, extend right to x=100 (photo edge).
 function PointerLines() {
-  // [dotX%, dotY%, lineEndX%, lineEndY%]  — dot is on the face, line exits to panel
-  const left: [number, number, number, number][] = [
-    [28, 47, 0, 35],   // face shape → forehead
-    [32, 61, 0, 62],   // eyes       → eye level
-    [44, 78, 0, 85],   // nose       → nose tip
+  // [faceX, faceY, edgeX, edgeY] in viewBox units
+  const lines: [number, number, number, number][] = [
+    // Left side — Face Shape (forehead/temple), Eyes, Nose
+    [33, 28,  0, 28],   // temple → face shape box (top)
+    [30, 52,  0, 58],   // eye level → eyes box (mid)
+    [42, 75,  0, 88],   // nose tip  → nose box (bottom)
+    // Right side — Eyebrows, Cheeks, Lips
+    [67, 24, 100, 22],  // brow      → eyebrows box (top)
+    [70, 52, 100, 58],  // cheekbone → cheeks box (mid)
+    [60, 72, 100, 85],  // mouth     → lips box (bottom)
   ];
-  const right: [number, number, number, number][] = [
-    [62, 30, 100, 20],  // eyebrows → brow level
-    [70, 52, 100, 52],  // cheeks   → cheek level
-    [58, 72, 100, 75],  // lips     → mouth level
-  ];
-  const all = [...left, ...right];
+
   return (
     <svg
       className="absolute inset-0 w-full h-full pointer-events-none"
       viewBox="0 0 100 133"
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
     >
-      {all.map(([dx, dy, lx, ly], i) => (
+      {lines.map(([fx, fy, ex, ey], i) => (
         <g key={i}>
-          <line x1={`${dx}%`} y1={`${dy}%`} x2={`${lx}%`} y2={`${ly}%`} stroke="white" strokeWidth="0.7" opacity="0.9" />
-          <circle cx={`${dx}%`} cy={`${dy}%`} r="1.7" fill="white" opacity="0.97" />
+          <line
+            x1={fx} y1={fy} x2={ex} y2={ey}
+            stroke="white"
+            strokeWidth="0.65"
+            opacity="0.90"
+          />
+          <circle cx={fx} cy={fy} r="1.6" fill="white" opacity="0.97" />
         </g>
       ))}
     </svg>
   );
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
 interface Props {
   faceShape: FaceShapeResult;
   features: FeatureBreakdown;
@@ -150,31 +207,40 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
   const displayConfidence = blendedConfidence ?? faceShape.confidence;
 
   return (
-    <div className="rounded-3xl overflow-hidden" style={{ background: "#F9F5F0", border: "1px solid #E8DDD0" }}>
-
-      {/* ── Title ──────────────────────────────────────────────────────────── */}
-      <div className="text-center pt-10 pb-6 px-6" style={{ background: "#F9F5F0" }}>
-        <div className="flex items-center justify-center gap-3">
-          <span style={{ color: "#C8A96E", fontSize: 18 }}>&#10022;</span>
-          <h2 className="text-4xl font-serif" style={{ color: "#3D2B1F", letterSpacing: "-0.01em" }}>
+    <div
+      className="rounded-3xl"
+      style={{ background: "#F7F2EC" }}
+    >
+      {/* ── Title section ────────────────────────────────────────────────────── */}
+      <div className="text-center pt-10 pb-4 px-6">
+        <div className="flex items-center justify-center gap-4">
+          <span style={{ color: "#C8A96E", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
+          <h2
+            className="text-[46px] leading-tight"
+            style={{
+              color: "#2C1A10",
+              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
+            }}
+          >
             Face Features Analysis
           </h2>
-          <span style={{ color: "#C8A96E", fontSize: 18 }}>&#10022;</span>
+          <span style={{ color: "#C8A96E", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
         </div>
-        {/* Centered dot divider matching reference */}
-        <div className="flex items-center justify-center mt-4 gap-2">
-          <div className="h-px w-16" style={{ background: "#E8DDD0" }} />
-          <div className="h-1.5 w-1.5 rounded-full" style={{ background: "#C8A96E" }} />
-          <div className="h-px w-16" style={{ background: "#E8DDD0" }} />
+
+        {/* Divider: line · dot · line */}
+        <div className="flex items-center justify-center mt-4 gap-3">
+          <div className="h-px flex-1 max-w-[80px]" style={{ background: "#D9CFC4" }} />
+          <div className="h-[5px] w-[5px] rounded-full" style={{ background: "#C8A96E" }} />
+          <div className="h-px flex-1 max-w-[80px]" style={{ background: "#D9CFC4" }} />
         </div>
       </div>
 
-      {/* ── 3-column layout ────────────────────────────────────────────────── */}
-      <div
-        className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 px-8 pb-10 items-center"
-        style={{ background: "#F9F5F0" }}
-      >
-        {/* Left column: Face Shape, Eyes, Nose */}
+      {/* ── 3-column body ─────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-8 px-10 pb-10 items-center">
+
+        {/* Left column: Face Shape · Eyes · Nose */}
         <div className="flex flex-col gap-4">
           <FeatureBox
             featureKey="faceShape"
@@ -196,13 +262,13 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
           />
         </div>
 
-        {/* Center: photo with pointer lines */}
+        {/* Center: Portrait photo + pointer lines */}
         <div
           className="relative mx-auto shrink-0 rounded-2xl overflow-hidden"
           style={{
-            width: "clamp(240px,28vw,340px)",
+            width: "clamp(260px, 30vw, 380px)",
             aspectRatio: "3/4",
-            boxShadow: "0 8px 36px rgba(61,43,31,0.14)",
+            boxShadow: "0 6px 32px rgba(61,43,31,0.18)",
           }}
         >
           {photoUrl ? (
@@ -212,15 +278,18 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
               fill
               unoptimized
               className="object-cover"
-              style={{ objectPosition: "center top" }}
+              style={{ objectPosition: "center 10%" }}
             />
           ) : (
-            <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }}
+            />
           )}
           <PointerLines />
         </div>
 
-        {/* Right column: Eyebrows, Cheeks, Lips */}
+        {/* Right column: Eyebrows · Cheeks · Lips */}
         <div className="flex flex-col gap-4">
           <FeatureBox
             featureKey="eyebrows"
@@ -243,10 +312,10 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
         </div>
       </div>
 
-      {/* ── Confidence footer ───────────────────────────────────────────────── */}
+      {/* ── Confidence footer ─────────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-center gap-3 px-6 py-4"
-        style={{ borderTop: "1px solid #E8DDD0", background: "#F5EFE7" }}
+        className="flex items-center justify-center px-6 py-5"
+        style={{ borderTop: "1px solid #E4D8CC" }}
       >
         <ConfidenceBadge confidence={displayConfidence} />
       </div>
