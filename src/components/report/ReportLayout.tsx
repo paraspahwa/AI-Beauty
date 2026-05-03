@@ -330,6 +330,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <ColorAnalysisCard
                       data={report.colorAnalysis}
                       photoUrl={report.imageUrl}
+                      reportId={report.id}
                     />
                   ) : (
                     <Empty />

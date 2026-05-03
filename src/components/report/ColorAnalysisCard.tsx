@@ -1,8 +1,82 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { Check, X } from "lucide-react";
+import { Check, X, Shirt, Loader2, ZoomIn } from "lucide-react";
+import { useState, useCallback } from "react";
 import type { ColorAnalysisResult } from "@/types/report";
+
+/* ─── helpers ──────────────────────────────────────────────────────────── */
+/** Lighten a hex color by mixing with white */
+function lightenHex(hex: string, pct: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = (n >> 16) & 0xff;
+  const g = (n >> 8) & 0xff;
+  const b = n & 0xff;
+  const mix = (c: number) => Math.round(c + (255 - c) * pct);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+}
+
+/* ─── Dress Preview Modal ──────────────────────────────────────────────── */
+function DressPreviewModal({
+  open,
+  onClose,
+  colorName,
+  colorHex,
+  imageUrl,
+  loading,
+  error,
+}: {
+  open: boolean;
+  onClose: () => void;
+  colorName: string;
+  colorHex: string;
+  imageUrl: string | null;
+  loading: boolean;
+  error: string | null;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.65)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+        style={{ background: "#FDFAF6", maxWidth: 420, width: "100%", border: "1px solid #E8DDD0" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: "1px solid #E8DDD0" }}>
+          <span className="h-5 w-5 rounded-full flex-shrink-0" style={{ backgroundColor: colorHex, border: "2px solid #fff", boxShadow: "0 0 0 1px #E8DDD0" }} />
+          <p className="font-bold text-sm" style={{ color: "#3D2B1F" }}>{colorName} — Virtual Try-On</p>
+          <button onClick={onClose} className="ml-auto text-xl leading-none" style={{ color: "#9C7D5B" }}>✕</button>
+        </div>
+
+        {/* Image area */}
+        <div className="relative flex items-center justify-center" style={{ minHeight: 340, background: "#EDE3D8" }}>
+          {loading && (
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#9C7D5B" }} />
+              <p className="text-sm" style={{ color: "#6B5344" }}>Generating your look…</p>
+            </div>
+          )}
+          {error && !loading && (
+            <p className="text-sm px-6 text-center" style={{ color: "#C06B3E" }}>{error}</p>
+          )}
+          {imageUrl && !loading && (
+            <Image src={imageUrl} alt={`Try-on: ${colorName}`} fill unoptimized className="object-contain" />
+          )}
+        </div>
+
+        <p className="text-[10px] text-center px-4 py-2.5" style={{ color: "#9C7D5B" }}>
+          AI-generated preview · actual result may vary
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
 /* ─── Characteristic icons ─────────────────────────────────────────────── */
 function IconSun() {
@@ -123,27 +197,91 @@ function MakeupLip({ hex }: { hex: string }) {
 const MAKEUP_LABELS = ["Peachy\nBlush", "Warm Brown\nEyeshadow", "Coral Nude\nLip"];
 
 /* ─── Comparison photo card ─────────────────────────────────────────────── */
-function ColorSwatch({ hex, name, photoUrl }: { hex: string; name: string; photoUrl?: string }) {
+/**
+ * Renders the user's photo with a V-neck dress shape painted over
+ * the lower clothing area in the given color — the face/hair are untouched.
+ * "Try On" button triggers an AI-generated photorealistic recolor.
+ */
+function ColorSwatch({
+  hex,
+  name,
+  photoUrl,
+  onTryOn,
+}: {
+  hex: string;
+  name: string;
+  photoUrl?: string;
+  onTryOn?: () => void;
+}) {
+  // Build 4 shade variants for the strip
+  const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
+
   return (
-    <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
-      <div className="relative w-full" style={{ aspectRatio: "3/4" }}>
+    <div
+      className="flex flex-col overflow-hidden group"
+      style={{ border: "1.5px solid #E8DDD0", borderRadius: 10, background: "#fff" }}
+    >
+      {/* Photo + SVG dress overlay */}
+      <div className="relative w-full" style={{ aspectRatio: "3/4", overflow: "hidden" }}>
         {photoUrl ? (
           <>
-            <Image src={photoUrl} alt={name} fill unoptimized className="object-cover"
-              style={{ objectPosition: "top center" }} />
-            <div className="absolute inset-0" style={{ backgroundColor: hex, mixBlendMode: "multiply", opacity: 0.42 }} />
+            <Image
+              src={photoUrl}
+              alt={name}
+              fill
+              unoptimized
+              className="object-cover"
+              style={{ objectPosition: "top center" }}
+            />
+            {/*
+              SVG overlay: only the V-neck dress region (bottom ~45% of image)
+              is painted with the palette color. The face/hair stay natural.
+            */}
+            <svg
+              viewBox="0 0 100 133"
+              preserveAspectRatio="none"
+              className="absolute inset-0 w-full h-full"
+              style={{ pointerEvents: "none" }}
+            >
+              <path
+                d="M0,77 L30,77 Q40,77 50,90 Q60,77 70,77 L100,77 L100,133 L0,133 Z"
+                fill={hex}
+                opacity="0.88"
+              />
+              <path d="M0,73 Q15,70 30,74 L30,77 L0,77 Z" fill={hex} opacity="0.88" />
+              <path d="M100,73 Q85,70 70,74 L70,77 L100,77 Z" fill={hex} opacity="0.88" />
+            </svg>
           </>
         ) : (
-          <div className="absolute inset-0" style={{ background: `linear-gradient(160deg,${hex}55,${hex}AA)` }} />
+          <svg viewBox="0 0 100 133" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+            <rect width="100" height="133" fill="#EDE3D8" />
+            <path d="M0,77 L30,77 Q40,77 50,90 Q60,77 70,77 L100,77 L100,133 L0,133 Z" fill={hex} opacity="0.88" />
+          </svg>
         )}
-        <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: "rgba(0,0,0,0.30)" }}>
-          <span className="text-[9px] font-medium text-white truncate block">{name}</span>
+
+        {/* Color name label */}
+        <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: "rgba(0,0,0,0.32)" }}>
+          <span className="text-[8px] font-semibold text-white truncate block leading-tight">{name}</span>
         </div>
+
+        {/* Try-On button — appears on hover */}
+        {onTryOn && (
+          <button
+            onClick={onTryOn}
+            title="AI Virtual Try-On"
+            className="absolute top-1 right-1 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ background: "rgba(255,255,255,0.92)", border: "1px solid #E8DDD0", fontSize: 9, color: "#3D2B1F" }}
+          >
+            <Shirt style={{ width: 10, height: 10 }} />
+            <span>Try On</span>
+          </button>
+        )}
       </div>
+
       {/* 4-shade strip */}
-      <div className="flex h-2.5">
-        {[`${hex}FF`, `${hex}CC`, `${hex}99`, `${hex}55`].map((h, i) => (
-          <div key={i} className="flex-1" style={{ backgroundColor: h }} />
+      <div className="flex" style={{ height: 9 }}>
+        {shades.map((s, i) => (
+          <div key={i} className="flex-1" style={{ backgroundColor: s }} />
         ))}
       </div>
     </div>
@@ -151,7 +289,47 @@ function ColorSwatch({ hex, name, photoUrl }: { hex: string; name: string; photo
 }
 
 /* ─── Main component ────────────────────────────────────────────────────── */
-export function ColorAnalysisCard({ data, photoUrl }: { data: ColorAnalysisResult; photoUrl?: string }) {
+export function ColorAnalysisCard({
+  data,
+  photoUrl,
+  reportId,
+}: {
+  data: ColorAnalysisResult;
+  photoUrl?: string;
+  /** If provided, "Try On" buttons appear and call the dress-preview API */
+  reportId?: string;
+}) {
+  /* ── Try-On modal state ─────────────────────────────────────── */
+  const [modal, setModal] = useState<{
+    open: boolean;
+    colorName: string;
+    colorHex: string;
+    imageUrl: string | null;
+    loading: boolean;
+    error: string | null;
+  }>({ open: false, colorName: "", colorHex: "", imageUrl: null, loading: false, error: null });
+
+  const tryOn = useCallback(
+    async (colorName: string, colorHex: string) => {
+      if (!reportId) return;
+      setModal({ open: true, colorName, colorHex, imageUrl: null, loading: true, error: null });
+      try {
+        const res = await fetch(`/api/reports/${reportId}/dress-preview`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ colorName, colorHex }),
+        });
+        const json = await res.json() as { imageUrl?: string; error?: string };
+        if (!res.ok || !json.imageUrl) throw new Error(json.error ?? "Generation failed");
+        setModal((m) => ({ ...m, loading: false, imageUrl: json.imageUrl! }));
+      } catch (err) {
+        setModal((m) => ({ ...m, loading: false, error: (err as Error).message }));
+      }
+    },
+    [reportId],
+  );
+
+  const closeModal = useCallback(() => setModal((m) => ({ ...m, open: false })), []);
 
   const neutrals = [
     { hex: "#F2EDE4" }, { hex: "#DDD0C0" }, { hex: "#B0A090" }, { hex: "#8B7D6B" }, { hex: "#5C4F40" },
@@ -172,9 +350,9 @@ export function ColorAnalysisCard({ data, photoUrl }: { data: ColorAnalysisResul
 
   const makeupColors = data.palette.slice(0, 3);
 
-  const pill = "px-4 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold";
+  const pill = "px-4 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-semibold inline-block";
   const pillStyle = { background: "#F0E8DC", color: "#9C7D5B", border: "1px solid #E8DDD0" };
-  const sectionTitle = "text-[10px] uppercase tracking-[0.18em] font-semibold";
+  const sectionTitle = "text-[10px] uppercase tracking-[0.16em] font-bold";
 
   const metalGradients: Record<string, [string, string]> = {
     gold:    ["#E8C96A", "#C9A83C"],
@@ -190,72 +368,113 @@ export function ColorAnalysisCard({ data, photoUrl }: { data: ColorAnalysisResul
   }
 
   return (
-    <div className="rounded-3xl overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+    <>
+      <DressPreviewModal
+        open={modal.open}
+        onClose={closeModal}
+        colorName={modal.colorName}
+        colorHex={modal.colorHex}
+        imageUrl={modal.imageUrl}
+        loading={modal.loading}
+        error={modal.error}
+      />
+
+      <div className="overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", borderRadius: 20 }}>
 
       {/* ── Top half: photo LEFT + info RIGHT ─────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2">
+      <div className="flex flex-col md:flex-row">
 
-        {/* Photo */}
-        <div className="relative min-h-[340px] md:min-h-[480px]" style={{ background: "#EDE3D8" }}>
+        {/* Photo — fixed height, square-ish */}
+        <div
+          className="relative flex-shrink-0"
+          style={{
+            width: "100%",
+            maxWidth: 340,
+            minHeight: 360,
+            background: "#EDE3D8",
+          }}
+        >
           {photoUrl ? (
-            <Image src={photoUrl} alt="Your photo" fill unoptimized className="object-cover"
-              style={{ objectPosition: "top center" }} />
+            <Image
+              src={photoUrl}
+              alt="Your photo"
+              fill
+              unoptimized
+              className="object-cover"
+              style={{ objectPosition: "top center" }}
+            />
           ) : (
             <div className="flex h-full items-center justify-center" style={{ color: "#9C7D5B" }}>No photo</div>
           )}
         </div>
 
         {/* Info panel */}
-        <div className="flex flex-col justify-center gap-6 px-8 py-8" style={{ background: "#FDFAF6" }}>
-
+        <div
+          className="flex flex-col justify-center gap-4 px-6 py-6 flex-1"
+          style={{ background: "#FDFAF6" }}
+        >
           {/* Big heading */}
-          <h2 className="text-right text-[2rem] font-black uppercase tracking-[0.14em]" style={{ color: "#3D2B1F" }}>
+          <h2
+            className="text-right text-2xl font-black uppercase tracking-[0.18em]"
+            style={{ color: "#3D2B1F", fontFamily: "serif" }}
+          >
             Color Analysis
           </h2>
 
-          {/* Season */}
-          <div className="flex flex-col items-center gap-2">
+          {/* Season pill + name */}
+          <div className="flex flex-col items-center gap-1">
             <span className={pill} style={pillStyle}>Season</span>
-            <p className="text-[1.7rem] font-black uppercase tracking-[0.08em] text-center" style={{ color: "#3D2B1F" }}>
+            <p
+              className="text-2xl font-black uppercase tracking-[0.06em] text-center leading-tight mt-0.5"
+              style={{ color: "#3D2B1F" }}
+            >
               {data.season}
             </p>
           </div>
 
           {/* 4 key palette dots */}
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-2.5">
             {data.palette.slice(0, 4).map((c) => (
-              <span key={c.hex} className="h-12 w-12 rounded-full shadow-md"
-                style={{ backgroundColor: c.hex, border: "3px solid #fff" }} title={c.name} />
+              <span
+                key={c.hex}
+                className="h-11 w-11 rounded-full shadow"
+                style={{ backgroundColor: c.hex, border: "3px solid #fff", display: "inline-block" }}
+                title={c.name}
+              />
             ))}
           </div>
 
           {/* Characteristics */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5">
             <span className={pill} style={pillStyle}>Characteristics</span>
-            <div className="flex gap-6 justify-center">
+            <div className="flex gap-6 justify-center mt-0.5">
               {characteristics.map((c) => (
-                <div key={c.label} className="flex flex-col items-center gap-1">
+                <div key={c.label} className="flex flex-col items-center gap-0.5">
                   <span style={{ color: "#9C7D5B" }}>{c.icon}</span>
-                  <span className="text-[12px]" style={{ color: "#6B5344" }}>{c.label}</span>
+                  <span className="text-[11px]" style={{ color: "#6B5344" }}>{c.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Best Neutrals */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5">
             <span className={pill} style={pillStyle}>Best Neutrals</span>
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-2.5 justify-center mt-0.5">
               {neutrals.map((n) => (
-                <span key={n.hex} className="h-9 w-9 rounded-full shadow-sm"
-                  style={{ backgroundColor: n.hex, border: "2px solid #fff" }} />
+                <span
+                  key={n.hex}
+                  className="h-8 w-8 rounded-full shadow-sm"
+                  style={{ backgroundColor: n.hex, border: "2px solid #fff", display: "inline-block" }}
+                />
               ))}
             </div>
           </div>
 
           {/* Clothing observation */}
           {data.clothingObservation && (
-            <div className="flex items-center gap-3 rounded-2xl px-4 py-2.5"
+            <div
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2"
               style={{
                 background: data.clothingObservation.effect === "flattering"
                   ? "rgba(123,160,91,0.1)" : data.clothingObservation.effect === "clashing"
@@ -265,13 +484,17 @@ export function ColorAnalysisCard({ data, photoUrl }: { data: ColorAnalysisResul
                   ? "rgba(192,107,62,0.3)" : "rgba(200,169,110,0.25)"}`,
               }}
             >
-              <span className="h-6 w-6 shrink-0 rounded-full shadow"
-                style={{ backgroundColor: data.clothingObservation.hex, border: "2px solid #fff" }} />
-              <p className="text-[11px] leading-snug" style={{ color: "#3D2B1F" }}>
+              <span
+                className="h-5 w-5 shrink-0 rounded-full"
+                style={{ backgroundColor: data.clothingObservation.hex, border: "2px solid #fff", display: "inline-block" }}
+              />
+              <p className="text-[10px] leading-snug" style={{ color: "#3D2B1F" }}>
                 <span className="font-semibold">{data.clothingObservation.color}</span>
-                {data.clothingObservation.effect === "flattering" ? " \u2014 flattering for your palette"
-                  : data.clothingObservation.effect === "clashing" ? " \u2014 clashes with your coloring"
-                  : " \u2014 neutral for your season"}
+                {data.clothingObservation.effect === "flattering"
+                  ? " — flattering for your palette"
+                  : data.clothingObservation.effect === "clashing"
+                  ? " — clashes with your coloring"
+                  : " — neutral for your season"}
               </p>
             </div>
           )}
@@ -279,79 +502,110 @@ export function ColorAnalysisCard({ data, photoUrl }: { data: ColorAnalysisResul
       </div>
 
       {/* ── COLOR COMPARISON divider ─────────────────────────────────────── */}
-      <div className="flex items-center justify-center gap-3 py-4 px-6"
-        style={{ background: "#F5EFE7", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}>
-        <span style={{ color: "#C8A96E" }}>&#10022;</span>
-        <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Color Comparison</p>
-        <span style={{ color: "#C8A96E" }}>&#10022;</span>
+      <div
+        className="flex items-center justify-center gap-3 py-3 px-6"
+        style={{ background: "#F5EFE7", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}
+      >
+        <span style={{ color: "#C8A96E", fontSize: 12 }}>✦</span>
+        <p className={sectionTitle} style={{ color: "#9C7D5B", letterSpacing: "0.22em" }}>Color Comparison</p>
+        <span style={{ color: "#C8A96E", fontSize: 12 }}>✦</span>
       </div>
 
       {/* ── Best Colors ──────────────────────────────────────────────────── */}
-      <div className="px-5 pt-5 pb-3" style={{ borderBottom: "1px solid #E8DDD0" }}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "#7BA05B" }}>
-            <Check className="h-3.5 w-3.5 text-white" />
+      <div className="px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        <div className="flex items-center gap-2 mb-2.5">
+          <span
+            className="flex h-5 w-5 items-center justify-center rounded-full"
+            style={{ background: "#7BA05B" }}
+          >
+            <Check className="h-3 w-3 text-white" />
           </span>
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {bestSix.map((c) => <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />)}
+          {bestSix.map((c) => (
+            <ColorSwatch
+              key={c.hex}
+              hex={c.hex}
+              name={c.name}
+              photoUrl={photoUrl}
+              onTryOn={reportId ? () => tryOn(c.name, c.hex) : undefined}
+            />
+          ))}
         </div>
       </div>
 
       {/* ── Less Flattering ──────────────────────────────────────────────── */}
-      <div className="px-5 pt-3 pb-5" style={{ borderBottom: "1px solid #E8DDD0" }}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "#C06B3E" }}>
-            <X className="h-3.5 w-3.5 text-white" />
+      <div className="px-4 pt-3 pb-4" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        <div className="flex items-center gap-2 mb-2.5">
+          <span
+            className="flex h-5 w-5 items-center justify-center rounded-full"
+            style={{ background: "#C06B3E" }}
+          >
+            <X className="h-3 w-3 text-white" />
           </span>
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Less Flattering</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {avoidSix.map((c) => <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />)}
+          {avoidSix.map((c) => (
+            <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />
+          ))}
         </div>
       </div>
 
       {/* ── Bottom 3-col: Metals | Prints | Makeup ───────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E8DDD0]">
-
+      <div
+        className="grid grid-cols-1 sm:grid-cols-3"
+        style={{ borderTop: "none" }}
+      >
         {/* Best Metals */}
-        <div className="flex flex-col items-center gap-4 py-7 px-5">
+        <div
+          className="flex flex-col items-center gap-3 py-6 px-5"
+          style={{ borderRight: "1px solid #E8DDD0" }}
+        >
           <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Best Metals</p>
           <div className="flex gap-6 justify-center">
             {data.metals.slice(0, 2).map((metal) => (
-              <div key={metal} className="flex flex-col items-center gap-2">
+              <div key={metal} className="flex flex-col items-center gap-1.5">
                 <MetalRing gradient={metalGrad(metal)} />
-                <span className="text-xs font-medium" style={{ color: "#3D2B1F" }}>{metal}</span>
+                <span className="text-[11px] font-medium" style={{ color: "#3D2B1F" }}>{metal}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Best Prints */}
-        <div className="flex flex-col items-center gap-4 py-7 px-5">
+        <div
+          className="flex flex-col items-center gap-3 py-6 px-5"
+          style={{ borderRight: "1px solid #E8DDD0" }}
+        >
           <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Best Prints</p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-3 justify-center">
             {PRINT_SWATCHES.map((p) => <PrintSwatch key={p.label} {...p} />)}
           </div>
         </div>
 
         {/* Best Makeup */}
-        <div className="flex flex-col items-center gap-4 py-7 px-5">
+        <div className="flex flex-col items-center gap-3 py-6 px-5">
           <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Best Makeup</p>
           <div className="flex gap-4 justify-center">
             {makeupColors.map((c, i) => (
-              <div key={c.hex} className="flex flex-col items-center gap-1.5">
+              <div key={c.hex} className="flex flex-col items-center gap-1">
                 {i === 0 ? <MakeupBlush hex={c.hex} />
                   : i === 1 ? <MakeupEyeshadow hex={c.hex} />
                   : <MakeupLip hex={c.hex} />}
-                <span className="text-[10px] text-center leading-tight max-w-[56px] whitespace-pre-line"
-                  style={{ color: "#6B5344" }}>{MAKEUP_LABELS[i]}</span>
+                <span
+                  className="text-[9px] text-center leading-tight max-w-[54px] whitespace-pre-line"
+                  style={{ color: "#6B5344" }}
+                >
+                  {MAKEUP_LABELS[i]}
+                </span>
               </div>
             ))}
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }
