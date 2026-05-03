@@ -88,6 +88,59 @@ function IconSparkle() {
     </svg>
   );
 }
+// Reference-matching feature icons
+function IconEye() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+      <path d="M1 12C3.5 7 7.5 4 12 4s8.5 3 11 8c-2.5 5-6.5 8-11 8S3.5 17 1 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+function IconCheekbone() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+      {/* simplified face outline with cheekbone highlight curve */}
+      <path d="M12 3 C7 3 4 7 4 12 C4 17 7 21 12 21 C17 21 20 17 20 12 C20 7 17 3 12 3 Z" />
+      <path d="M6 13 C7.5 15 10 16 12 16" strokeLinecap="round" />
+      <path d="M18 13 C16.5 15 14 16 12 16" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconLips() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+      <path d="M7 14 C8 17 10 18 12 18 C14 18 16 17 17 14" strokeLinecap="round" />
+      <path d="M7 14 C8 11 10 10 12 10 C14 10 16 11 17 14" strokeLinecap="round" />
+      <path d="M9 14 C10 13 14 13 15 14" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconDryer() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+      <path d="M3 8 L14 8 C17 8 20 10 20 13 C20 16 17 18 14 18 L3 18 Z" />
+      <line x1="14" y1="13" x2="22" y2="13" strokeLinecap="round" />
+      <line x1="3" y1="18" x2="3" y2="21" strokeLinecap="round" />
+      <line x1="17" y1="5" x2="19" y2="3" strokeLinecap="round" />
+      <line x1="20" y1="7" x2="22" y2="6" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconSpray() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+      <rect x="4" y="10" width="8" height="11" rx="1.5" />
+      <path d="M12 14 L15 14 L15 11 L12 11" />
+      <line x1="15" y1="12.5" x2="18" y2="12.5" strokeLinecap="round" />
+      <circle cx="18" cy="10" r="0.8" fill="currentColor" />
+      <circle cx="20" cy="12" r="0.8" fill="currentColor" />
+      <circle cx="19" cy="14" r="0.8" fill="currentColor" />
+      <line x1="7" y1="10" x2="7" y2="7" strokeLinecap="round" />
+      <line x1="7" y1="7" x2="11" y2="7" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 // ── Colour helpers ───────────────────────────────────────────────────────────
 function hexToRgba(hex: string, alpha: number): string {
@@ -440,11 +493,18 @@ export function HairstyleCard({
             {/* Face shape */}
             <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
               <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "#9C7D5B" }}>Face Shape</p>
-              <p className="font-serif text-lg mb-2" style={{ color: "#3D2B1F" }}>{resolvedFaceShape}</p>
-              <svg viewBox="0 0 40 48" fill="none" stroke="#9C7D5B" strokeWidth="1.4" className="h-12 w-10 mx-auto mb-3">
-                <circle cx="20" cy="24" r="18" fill="#F59E0B" opacity="0.09" />
-                <ellipse cx="20" cy="25" rx="14" ry="18" />
-                <line x1="20" y1="8" x2="20" y2="42" strokeDasharray="2 2" opacity="0.35" />
+              <p className="font-serif text-base mb-3" style={{ color: "#3D2B1F" }}>{resolvedFaceShape}</p>
+              {/* Face outline with hair — matches reference illustration */}
+              <svg viewBox="0 0 48 60" fill="none" className="h-14 w-10 mx-auto mb-3">
+                {/* hair top */}
+                <path d="M10 22 C8 14 10 6 24 5 C38 6 40 14 38 22" fill="#9C7D5B" opacity="0.55" />
+                {/* face oval */}
+                <ellipse cx="24" cy="32" rx="14" ry="18" stroke="#6B5344" strokeWidth="1.4" fill="none" />
+                {/* neck */}
+                <line x1="19" y1="49" x2="18" y2="55" stroke="#6B5344" strokeWidth="1.2" />
+                <line x1="29" y1="49" x2="30" y2="55" stroke="#6B5344" strokeWidth="1.2" />
+                {/* centre guide */}
+                <line x1="24" y1="15" x2="24" y2="50" stroke="#9C7D5B" strokeWidth="0.7" strokeDasharray="2 2" opacity="0.5" />
               </svg>
               <ul className="space-y-1.5">
                 {resolvedTraits.map((t, i) => (
@@ -520,14 +580,17 @@ export function HairstyleCard({
             <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
               <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>Best Features</p>
               <ul className="space-y-3">
-                {resolvedFeatures.map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-xs" style={{ color: "#6B5344" }}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
-                      {i === 0 ? "◎" : i === 1 ? "◉" : "●"}
-                    </span>
-                    {f}
-                  </li>
-                ))}
+                {resolvedFeatures.map((f, i) => {
+                  const icon = i === 0 ? <IconEye /> : i === 1 ? <IconCheekbone /> : <IconLips />;
+                  return (
+                    <li key={i} className="flex items-center gap-3 text-xs" style={{ color: "#6B5344" }}>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+                        {icon}
+                      </span>
+                      {f}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             {/* Styling Tips */}
@@ -537,7 +600,7 @@ export function HairstyleCard({
                 {resolvedTips.map((t, i) => (
                   <li key={i} className="flex items-start gap-3 text-xs" style={{ color: "#6B5344" }}>
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
-                      {i === 0 ? <IconScissors /> : i === 1 ? <IconWave /> : <IconSparkle />}
+                      {i === 0 ? <IconDryer /> : i === 1 ? <IconWave /> : <IconSpray />}
                     </span>
                     <span className="leading-tight">{t}</span>
                   </li>
