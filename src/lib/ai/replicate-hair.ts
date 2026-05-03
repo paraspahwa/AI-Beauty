@@ -17,12 +17,14 @@ import Replicate from "replicate";
 import sharp from "sharp";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-// SDXL inpainting — significantly better than SD 1.5 for face-preserving edits
-const SDXL_INPAINT_MODEL = "lucataco/sdxl-inpainting" as const;
-// Output size for SDXL (must be multiple of 8, SDXL native = 1024)
-const INPAINT_SIZE = 768;
+// Pinned stable version of lucataco/sdxl-inpainting
+// https://replicate.com/lucataco/sdxl-inpainting/versions
+const SDXL_INPAINT_MODEL =
+  "lucataco/sdxl-inpainting:a5b13068cc81a89a4fbeefecf6d6fc5e529a5ecc6bde3f97867ef36429a56a69" as const;
+// Output size for SDXL (must be multiple of 8)
+const INPAINT_SIZE = 1024;
 // Max concurrent Replicate predictions (to stay under rate limit)
-const MAX_CONCURRENCY = 3;
+const MAX_CONCURRENCY = 2;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface FaceBox {
@@ -98,18 +100,20 @@ async function buildHairMask(
 function buildPrompt(styleName: string, hairHex: string): string {
   const colour = hexToColourWord(hairHex);
   return (
-    `professional beauty portrait, ${styleName} hairstyle, ${colour} hair, ` +
-    `photorealistic, high detail, sharp focus, studio lighting, ` +
-    `same face same person same skin tone, hair only change, 8k resolution`
+    `close-up beauty portrait photograph, ${colour} hair styled as ${styleName}, ` +
+    `exact same face same person same skin tone same background, ` +
+    `only hair is changed, photorealistic DSLR photo, ` +
+    `sharp focus, natural studio lighting, high resolution`
   );
 }
 
 function buildNegativePrompt(): string {
   return (
-    "different person, different face, changed face, changed skin, " +
-    "cartoon, painting, anime, CGI, 3d render, illustration, " +
+    "green tint, green background, color shift, hue change, different background, " +
+    "different person, different face, different skin tone, changed face, " +
+    "cartoon, painting, anime, CGI, 3d render, illustration, digital art, " +
     "blurry, low quality, deformed, ugly, bad anatomy, watermark, " +
-    "extra limbs, missing face, bald, wig, plastic hair"
+    "extra limbs, missing face, bald, wig, plastic hair, orange hair, red hair"
   );
 }
 
@@ -156,7 +160,7 @@ export async function replicateHairPreview(
   const croppedPng = await sharp(selfieBuf)
     .rotate()
     .extract({ left: cropL, top: cropT, width: cropW, height: cropH })
-    .resize(INPAINT_SIZE, INPAINT_SIZE, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 1 } })
+    .resize(INPAINT_SIZE, INPAINT_SIZE, { fit: "cover", position: "top" })
     .removeAlpha()
     .png()
     .toBuffer();
@@ -177,9 +181,9 @@ export async function replicateHairPreview(
       mask:            maskDataUri,
       prompt:          buildPrompt(styleName, hairHex),
       negative_prompt: buildNegativePrompt(),
-      num_inference_steps: 40,
-      guidance_scale:      8.0,
-      strength:            0.90,
+      num_inference_steps: 35,
+      guidance_scale:      7.5,
+      strength:            0.75,
       scheduler:           "DPM++2MKarras",
       seed:                Math.floor(Math.random() * 9999999), // varied per card
     },
