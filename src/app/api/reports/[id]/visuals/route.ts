@@ -187,9 +187,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .eq("id", id);
 
     if (updateErr) {
-      // Fallback for environments without the visual_assets column
-      if (updateErr.code === "42703") {
-        await admin.from("recommendations").upsert(
+      // Fallback when visual_assets column doesn't exist yet on this DB instance.
+      // PostgREST surfaces this as either:
+      //   42703 — column does not exist
+      //   42P01 — relation/column alias not found (some PostgREST versions)
+      //   PGRST204 — PostgREST "no rows" on column reference
+      const isMissingColumn =
+        updateErr.code === "42703" ||
+        updateErr.code === "42P01" ||
+        updateErr.code === "PGRST204" ||
+        (updateErr.message ?? "").toLowerCase().includes("visual_assets");
+
+      if (isMissingColumn) {
+        console.warn(
+          "[visuals/route] visual_assets column missing — using recommendations fallback. " +
+          "Run migration 0011_ensure_visual_assets.sql to fix permanently.",
+        );
+        const { error: recErr } = await admin.from("recommendations").upsert(
           {
             report_id: id,
             category: "visual_assets",
@@ -198,6 +212,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           },
           { onConflict: "report_id,category" },
         );
+        if (recErr) {
+          // If recommendations table also missing, log and continue — don't crash
+          console.error("[visuals/route] recommendations fallback also failed:", recErr.message);
+        }
       } else {
         throw updateErr;
       }
