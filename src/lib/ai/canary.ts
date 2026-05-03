@@ -93,14 +93,16 @@ Return JSON:
     {
       id: "features_v1",
       weight: 1,
-      prompt: `Describe these facial features briefly and professionally:
-eyes, nose, lips, cheeks. Note shape and one styling-relevant detail per feature.
+      prompt: `Describe these 5 facial features briefly and professionally:
+eyebrows, eyes, nose, lips, cheeks.
+For each feature provide shape (2-3 words) and notes (exactly 3 short styling-relevant bullet facts separated by ". ").
 Return JSON:
 {
-  "eyes":   { "shape": string, "notes": string },
-  "nose":   { "shape": string, "notes": string },
-  "lips":   { "shape": string, "notes": string },
-  "cheeks": { "shape": string, "notes": string }
+  "eyebrows": { "shape": string, "notes": string },
+  "eyes":     { "shape": string, "notes": string },
+  "nose":     { "shape": string, "notes": string },
+  "lips":     { "shape": string, "notes": string },
+  "cheeks":   { "shape": string, "notes": string }
 }`,
     },
   ],

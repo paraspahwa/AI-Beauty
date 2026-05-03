@@ -56,10 +56,11 @@ export interface SkinAnalysisResult {
 }
 
 export interface FeatureBreakdown {
-  eyes: { shape: string; notes: string };
-  nose: { shape: string; notes: string };
-  lips: { shape: string; notes: string };
-  cheeks: { shape: string; notes: string };
+  eyes:     { shape: string; notes: string };
+  eyebrows: { shape: string; notes: string };
+  nose:     { shape: string; notes: string };
+  lips:     { shape: string; notes: string };
+  cheeks:   { shape: string; notes: string };
 }
 
 export interface GlassesResult {

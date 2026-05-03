@@ -326,10 +326,11 @@ export function normalizeFeatures(input: unknown): FeatureBreakdown {
   }
 
   return {
-    eyes: normalizeFeature("eyes", "Almond"),
-    nose: normalizeFeature("nose", "Straight"),
-    lips: normalizeFeature("lips", "Balanced"),
-    cheeks: normalizeFeature("cheeks", "Soft contour"),
+    eyebrows: normalizeFeature("eyebrows", "Natural Arch"),
+    eyes:     normalizeFeature("eyes",     "Almond"),
+    nose:     normalizeFeature("nose",     "Straight"),
+    lips:     normalizeFeature("lips",     "Balanced"),
+    cheeks:   normalizeFeature("cheeks",   "Soft contour"),
   };
 }
 
