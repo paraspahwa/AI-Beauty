@@ -366,6 +366,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                           ?.filter((a) => a.status === "ready" && a.signedUrl)
                           .map((a) => a.signedUrl!)
                       }
+                      faceShape={report.faceShape?.shape}
+                      faceTraits={report.faceShape?.traits}
                     />
                   ) : (
                     <Locked
