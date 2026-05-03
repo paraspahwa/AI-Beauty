@@ -401,6 +401,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   {isPaid && report.hairstyle ? (
                     <HairstyleCard
                       data={report.hairstyle}
+                      photoUrl={report.imageUrl}
                       previewUrls={
                         report.visualAssets?.assets.hairstylePreviews
                           ?.filter((a) => a.status === "ready" && a.signedUrl)

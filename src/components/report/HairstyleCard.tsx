@@ -91,6 +91,7 @@ const HAIR_BENEFITS = ["Adds Volume", "Enhances Texture", "Frames Face Beautiful
 // ─── Main card ─────────────────────────────────────────────────────────────
 export function HairstyleCard({
   data,
+  photoUrl,
   previewUrls,
   faceShape,
   faceTraits,
@@ -99,6 +100,7 @@ export function HairstyleCard({
   hairType,
 }: {
   data: HairstyleResult;
+  photoUrl?: string;
   previewUrls?: string[];
   faceShape?: string;
   faceTraits?: string[];
@@ -196,10 +198,10 @@ export function HairstyleCard({
 
         {/* Centre: user photo */}
         <div className="flex items-center justify-center p-4" style={{ background: "#F5EFE7" }}>
-          {previewUrls && previewUrls[0] ? (
+          {(previewUrls && previewUrls[0]) || photoUrl ? (
             <div className="relative rounded-2xl overflow-hidden" style={{ maxWidth: 280 }}>
               <Image
-                src={previewUrls[0]}
+                src={(previewUrls && previewUrls[0]) || photoUrl!}
                 alt="Your photo"
                 width={560}
                 height={700}
@@ -288,14 +290,22 @@ export function HairstyleCard({
           {flatteningStyles.map((s, i) => (
             <div key={s.name} className="flex flex-col items-center gap-2">
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
-                {previewUrls && previewUrls[i + 1] ? (
-                  <Image
-                    src={previewUrls[i + 1]}
-                    alt={s.name}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
+                {(previewUrls && previewUrls[i + 1]) || photoUrl ? (
+                  <>
+                    <Image
+                      src={(previewUrls && previewUrls[i + 1]) || photoUrl!}
+                      alt={s.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                    {/* subtle tint to differentiate cards */}
+                    <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.06)" }} />
+                    {/* style name overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1" style={{ background: "rgba(0,0,0,0.22)" }}>
+                      <span className="text-[10px] text-white font-medium block text-center">{s.name}</span>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="text-xs text-center px-2" style={{ color: "#9C7D5B" }}>{s.name}</span>
@@ -325,10 +335,20 @@ export function HairstyleCard({
             {data.avoid.slice(0, 4).map((a, i) => (
               <div key={i} className="flex flex-col items-center gap-2">
                 <div
-                  className="relative w-full rounded-2xl overflow-hidden flex items-center justify-center"
+                  className="relative w-full rounded-2xl overflow-hidden"
                   style={{ aspectRatio: "3/4", background: "#EDE3D8" }}
                 >
-                  <span className="text-xs text-center px-2" style={{ color: "#9C7D5B" }}>{a}</span>
+                  {photoUrl ? (
+                    <>
+                      <Image src={photoUrl} alt={a} fill unoptimized className="object-cover" />
+                      <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.18)" }} />
+                      <div className="absolute inset-0 flex items-center justify-center p-2">
+                        <span className="text-[10px] text-white font-medium text-center leading-tight">{a}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center text-xs text-center px-2" style={{ color: "#9C7D5B" }}>{a}</span>
+                  )}
                   {/* minus badge */}
                   <div
                     className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center"
