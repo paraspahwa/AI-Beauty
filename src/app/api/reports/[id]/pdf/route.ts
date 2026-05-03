@@ -60,12 +60,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     const browser = await puppeteer.default.launch({
       args: chromium.default.args,
-      defaultViewport: chromium.default.defaultViewport,
       executablePath,
       headless: true,
     });
 
     const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 900 });
     await page.setContent(html, { waitUntil: "networkidle0" });
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -74,7 +74,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     });
     await browser.close();
 
-    return new Response(pdfBuffer, {
+    return new Response(Buffer.from(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="styleai-report-${row.id}.pdf"`,
