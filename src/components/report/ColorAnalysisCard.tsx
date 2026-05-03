@@ -234,8 +234,16 @@ function ColorSwatch({
               style={{ objectPosition: "top center" }}
             />
             {/*
-              SVG overlay: only the V-neck dress region (bottom ~45% of image)
-              is painted with the palette color. The face/hair stay natural.
+              SVG clothing overlay — realistic top/blouse silhouette.
+              Viewbox 100×133 maps to the full card image.
+              Layout (portrait, head-to-chest crop):
+                0–60%  = face/hair area  → untouched
+                60–68% = neck + upper chest
+                68%+   = shoulder-to-bottom clothing region
+
+              Shape: wide shoulders from edges, shallow scoop-neck center,
+              fabric fills all the way to bottom.
+              A subtle linear gradient gives fabric depth.
             */}
             <svg
               viewBox="0 0 100 133"
@@ -243,19 +251,50 @@ function ColorSwatch({
               className="absolute inset-0 w-full h-full"
               style={{ pointerEvents: "none" }}
             >
+              <defs>
+                <linearGradient id={`dg-${hex.replace("#","")}`} x1="0.3" y1="0" x2="0.7" y2="1">
+                  <stop offset="0%" stopColor={hex} stopOpacity="0.75" />
+                  <stop offset="40%" stopColor={hex} stopOpacity="0.92" />
+                  <stop offset="100%" stopColor={hex} stopOpacity="0.96" />
+                </linearGradient>
+              </defs>
+              {/*
+                Clothing path:
+                - Starts at left edge y=72, right edge y=72 (shoulder line)
+                - Curves up slightly at outer shoulders (~y=69)
+                - Neckline: smooth shallow V from x=35,y=72 dipping to x=50,y=80 back to x=65,y=72
+                - Fills entire bottom of image
+              */}
               <path
-                d="M0,77 L30,77 Q40,77 50,90 Q60,77 70,77 L100,77 L100,133 L0,133 Z"
-                fill={hex}
-                opacity="0.88"
+                d={[
+                  "M0,76",          // left edge shoulder
+                  "L22,69",         // left shoulder peak
+                  "L35,72",         // left neckline start
+                  "Q50,84 65,72",   // shallow V-neck
+                  "L78,69",         // right shoulder peak
+                  "L100,76",        // right edge shoulder
+                  "L100,133",       // bottom right
+                  "L0,133",         // bottom left
+                  "Z"
+                ].join(" ")}
+                fill={`url(#dg-${hex.replace("#","")})`}
               />
-              <path d="M0,73 Q15,70 30,74 L30,77 L0,77 Z" fill={hex} opacity="0.88" />
-              <path d="M100,73 Q85,70 70,74 L70,77 L100,77 Z" fill={hex} opacity="0.88" />
+              {/* subtle fabric sheen highlight on left chest */}
+              <path
+                d="M15,76 Q22,72 30,74 L28,133 L0,133 Z"
+                fill="#ffffff"
+                opacity="0.07"
+              />
             </svg>
           </>
         ) : (
           <svg viewBox="0 0 100 133" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
             <rect width="100" height="133" fill="#EDE3D8" />
-            <path d="M0,77 L30,77 Q40,77 50,90 Q60,77 70,77 L100,77 L100,133 L0,133 Z" fill={hex} opacity="0.88" />
+            <path
+              d="M0,76 L22,69 L35,72 Q50,84 65,72 L78,69 L100,76 L100,133 L0,133 Z"
+              fill={hex}
+              opacity="0.88"
+            />
           </svg>
         )}
 
@@ -382,15 +421,14 @@ export function ColorAnalysisCard({
       <div className="overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", borderRadius: 20 }}>
 
       {/* ── Top half: photo LEFT + info RIGHT ─────────────────────────────── */}
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row" style={{ minHeight: 380 }}>
 
-        {/* Photo — fixed height, square-ish */}
+        {/* Photo — fills left half, same height as info panel */}
         <div
           className="relative flex-shrink-0"
           style={{
-            width: "100%",
-            maxWidth: 340,
-            minHeight: 360,
+            width: "42%",
+            minWidth: 200,
             background: "#EDE3D8",
           }}
         >
@@ -410,22 +448,22 @@ export function ColorAnalysisCard({
 
         {/* Info panel */}
         <div
-          className="flex flex-col justify-center gap-4 px-6 py-6 flex-1"
+          className="flex flex-col justify-center gap-3 px-5 py-5 flex-1"
           style={{ background: "#FDFAF6" }}
         >
           {/* Big heading */}
           <h2
-            className="text-right text-2xl font-black uppercase tracking-[0.18em]"
-            style={{ color: "#3D2B1F", fontFamily: "serif" }}
+            className="text-right text-[1.4rem] font-black uppercase tracking-[0.2em]"
+            style={{ color: "#3D2B1F", letterSpacing: "0.18em" }}
           >
             Color Analysis
           </h2>
 
           {/* Season pill + name */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-0.5">
             <span className={pill} style={pillStyle}>Season</span>
             <p
-              className="text-2xl font-black uppercase tracking-[0.06em] text-center leading-tight mt-0.5"
+              className="text-[1.6rem] font-black uppercase tracking-[0.05em] text-center leading-tight"
               style={{ color: "#3D2B1F" }}
             >
               {data.season}
@@ -433,39 +471,39 @@ export function ColorAnalysisCard({
           </div>
 
           {/* 4 key palette dots */}
-          <div className="flex justify-center gap-2.5">
+          <div className="flex justify-center gap-2">
             {data.palette.slice(0, 4).map((c) => (
               <span
                 key={c.hex}
-                className="h-11 w-11 rounded-full shadow"
-                style={{ backgroundColor: c.hex, border: "3px solid #fff", display: "inline-block" }}
+                className="h-10 w-10 rounded-full"
+                style={{ backgroundColor: c.hex, border: "3px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.15)", display: "inline-block" }}
                 title={c.name}
               />
             ))}
           </div>
 
           {/* Characteristics */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1">
             <span className={pill} style={pillStyle}>Characteristics</span>
-            <div className="flex gap-6 justify-center mt-0.5">
+            <div className="flex gap-5 justify-center mt-0.5">
               {characteristics.map((c) => (
-                <div key={c.label} className="flex flex-col items-center gap-0.5">
+                <div key={c.label} className="flex flex-col items-center gap-0">
                   <span style={{ color: "#9C7D5B" }}>{c.icon}</span>
-                  <span className="text-[11px]" style={{ color: "#6B5344" }}>{c.label}</span>
+                  <span className="text-[10px]" style={{ color: "#6B5344" }}>{c.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Best Neutrals */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1">
             <span className={pill} style={pillStyle}>Best Neutrals</span>
-            <div className="flex gap-2.5 justify-center mt-0.5">
+            <div className="flex gap-2 justify-center mt-0.5">
               {neutrals.map((n) => (
                 <span
                   key={n.hex}
-                  className="h-8 w-8 rounded-full shadow-sm"
-                  style={{ backgroundColor: n.hex, border: "2px solid #fff", display: "inline-block" }}
+                  className="h-7 w-7 rounded-full"
+                  style={{ backgroundColor: n.hex, border: "2px solid #fff", boxShadow: "0 1px 3px rgba(0,0,0,0.12)", display: "inline-block" }}
                 />
               ))}
             </div>
@@ -522,7 +560,7 @@ export function ColorAnalysisCard({
           </span>
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {bestSix.map((c) => (
             <ColorSwatch
               key={c.hex}
@@ -546,7 +584,7 @@ export function ColorAnalysisCard({
           </span>
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Less Flattering</p>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {avoidSix.map((c) => (
             <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />
           ))}

@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Download original photo from Supabase storage
     const { data: fileData, error: fileErr } = await admin.storage
-      .from("user-photos")
+      .from(env.supabase.bucket)
       .download(row.image_path as string);
 
     if (fileErr || !fileData) {
