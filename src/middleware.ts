@@ -5,6 +5,53 @@ import { updateSession } from "@/lib/supabase/middleware";
 /** Routes that require a valid Supabase session */
 const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/admin"];
 
+// ── IP rate limiter for expensive API routes ──────────────────────────────────
+// Uses an in-process LRU window (edge-safe, no external store).
+// Limits: /api/analyze → 5 req / 60 s per IP.
+// Note: Edge middleware restarts wipe state between cold starts, which is acceptable —
+//       the per-user burst guard in the route handler is the hard gate; this is a
+//       lightweight first-pass filter that stops bots without a session.
+
+const RATE_LIMIT_ROUTES = ["/api/analyze", "/api/reports"];
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 8; // requests per window per IP
+
+type WindowEntry = { count: number; resetAt: number };
+// Max 4 096 entries — oldest evicted when full (LRU approximation via insertion order)
+const ipWindows = new Map<string, WindowEntry>();
+const IP_MAP_MAX = 4096;
+
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  let entry = ipWindows.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    // Evict oldest entry when map is full
+    if (!entry && ipWindows.size >= IP_MAP_MAX) {
+      const firstKey = ipWindows.keys().next().value;
+      if (firstKey !== undefined) ipWindows.delete(firstKey);
+    }
+    entry = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS };
+    ipWindows.set(ip, entry);
+    return false;
+  }
+
+  entry.count += 1;
+  if (entry.count > RATE_LIMIT_MAX) {
+    return true;
+  }
+  return false;
+}
+
+
 const SUPABASE_AUTH_QUERY_KEYS = [
   "code",
   "token_hash",
@@ -39,7 +86,25 @@ function buildSafeNextFromCurrent(request: NextRequest): string | null {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Handle malformed magic links like /?code=... by normalizing into /auth/callback.
+  // ── IP rate limiting for expensive API routes ──────────────────────────────
+  if (RATE_LIMIT_ROUTES.some((r) => pathname.startsWith(r))) {
+    const ip = getClientIp(request);
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
+            "X-RateLimit-Window": "60s",
+          },
+        },
+      );
+    }
+  }
+
+  // Handle malformed magic links
   if (pathname !== "/auth/callback" && hasSupabaseAuthParams(request.nextUrl)) {
     const callbackUrl = new URL("/auth/callback", request.url);
 
