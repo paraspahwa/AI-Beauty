@@ -104,11 +104,13 @@ function FitGuideIllustration() {
 // ── Main card ──────────────────────────────────────────────────────────────
 export function SpectaclesCard({
   data,
+  photoUrl,
   previewUrls,
   faceShape,
   faceTraits,
 }: {
   data: GlassesResult;
+  photoUrl?: string;
   previewUrls?: string[];
   faceShape?: string;
   faceTraits?: string[];
@@ -173,10 +175,10 @@ export function SpectaclesCard({
 
         {/* Centre: photo */}
         <div className="flex items-center justify-center p-4 min-h-[280px]" style={{ background: "#F5EFE7" }}>
-          {previewUrls && previewUrls[0] ? (
+          {(previewUrls && previewUrls[0]) || photoUrl ? (
             <div className="relative rounded-2xl overflow-hidden" style={{ maxWidth: 280, width: "100%" }}>
               <Image
-                src={previewUrls[0]}
+                src={(previewUrls && previewUrls[0]) || photoUrl!}
                 alt="Your photo with glasses"
                 width={560}
                 height={700}
@@ -237,10 +239,18 @@ export function SpectaclesCard({
               <div className="text-center py-2 px-1" style={{ borderBottom: "1px solid #E8DDD0" }}>
                 <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#3D2B1F" }}>{r.style}</p>
               </div>
-              {/* Photo or frame illustration placeholder */}
+              {/* Photo or frame illustration */}
               <div className="flex items-center justify-center" style={{ aspectRatio: "3/4", background: "#EDE3D8", position: "relative" }}>
-                {previewUrls && previewUrls[i + 1] ? (
-                  <Image src={previewUrls[i + 1]} alt={r.style} fill unoptimized className="object-cover" />
+                {(previewUrls && previewUrls[i + 1]) || photoUrl ? (
+                  <>
+                    <Image src={(previewUrls && previewUrls[i + 1]) || photoUrl!} alt={r.style} fill unoptimized className="object-cover" />
+                    {/* colour tint to differentiate style cards */}
+                    <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.08)" }} />
+                    {/* frame SVG overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <FrameIllustration style={r.style} size={72} />
+                    </div>
+                  </>
                 ) : (
                   <div className="flex flex-col items-center gap-2 p-3">
                     <FrameIllustration style={r.style} size={56} />
