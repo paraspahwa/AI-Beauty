@@ -323,51 +323,60 @@ const LENGTH_LEVELS = [
 ];
 
 function LengthDiagram({ recommended }: { recommended: string }) {
+  // Side-profile silhouette matching the reference image
+  // ViewBox: 0 0 160 220
+  // Head centre: cx=72 cy=38. Chin ~68. Neck to y=82. Shoulders slope out.
+  // Hair flows down the right side (viewer's left = back of head)
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 140 210" fill="none" className="h-56 w-auto">
-        {/* ── silhouette ── */}
-        {/* head */}
-        <ellipse cx="55" cy="36" rx="20" ry="26" stroke="#C8B89A" strokeWidth="1.3" />
-        {/* neck */}
-        <line x1="47" y1="61" x2="45" y2="76" stroke="#C8B89A" strokeWidth="1.3" />
-        <line x1="63" y1="61" x2="65" y2="76" stroke="#C8B89A" strokeWidth="1.3" />
-        {/* shoulders */}
-        <path d="M45 76 C34 80 24 90 20 104" stroke="#C8B89A" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-        <path d="M65 76 C76 80 86 90 90 104" stroke="#C8B89A" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-        {/* hair flowing dashes */}
-        <path d="M36 44 C26 64 22 104 24 168" stroke="#C8B89A" strokeWidth="1" strokeDasharray="3 2" opacity="0.5" fill="none" />
-        <path d="M74 44 C84 64 88 104 86 168" stroke="#C8B89A" strokeWidth="1" strokeDasharray="3 2" opacity="0.5" fill="none" />
+      <svg viewBox="0 0 160 220" fill="none" className="h-56 w-auto">
+        {/* ── Side profile silhouette ── */}
+        {/* Head outline — simplified side profile */}
+        <path
+          d="M72 14 C58 14 46 22 42 34 C38 46 40 58 46 66 C50 72 58 76 66 76 L70 82 L76 82 L78 76 C86 74 92 68 94 60 C98 48 96 34 88 24 C82 18 78 14 72 14 Z"
+          stroke="#C8B89A" strokeWidth="1.4" fill="none"
+        />
+        {/* Neck */}
+        <line x1="70" y1="82" x2="68" y2="96" stroke="#C8B89A" strokeWidth="1.4" />
+        <line x1="76" y1="82" x2="78" y2="96" stroke="#C8B89A" strokeWidth="1.4" />
+        {/* Shoulders */}
+        <path d="M68 96 C56 100 42 110 36 126" stroke="#C8B89A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+        <path d="M78 96 C90 100 104 110 110 126" stroke="#C8B89A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
 
-        {/* ── length indicator lines ── */}
+        {/* Hair flowing down the back — dark filled shape */}
+        <path
+          d="M72 14 C58 10 46 16 40 28 C38 30 38 22 42 18 C50 10 62 6 72 8 Z"
+          fill="#A0784A" opacity="0.7"
+        />
+        <path
+          d="M40 28 C36 36 36 48 38 58 C36 72 34 92 36 120 C38 148 40 168 40 200"
+          stroke="#A0784A" strokeWidth="10" strokeLinecap="round" fill="none" opacity="0.7"
+        />
+        <path
+          d="M38 60 C34 72 32 96 34 124 C36 150 38 172 36 200"
+          stroke="#C8A96E" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.45"
+        />
+
+        {/* ── Length indicator lines (horizontal, right side) ── */}
         {LENGTH_LEVELS.map(({ label, y }) => {
           const isRec = recommended.toLowerCase().includes(label.toLowerCase().split(" ")[0]);
+          // Shift y down slightly to align with side-profile body
+          const py = y + 18;
           return (
             <g key={label}>
               {isRec ? (
-                /* animated golden recommended line with glow pulse */
                 <>
-                  {/* glow shadow duplicate (blurred, behind) */}
-                  <line x1="4" y1={y} x2="106" y2={y} stroke="#C8A96E" strokeWidth="4" opacity="0.18" />
-                  <line
-                    x1="4" y1={y} x2="106" y2={y}
-                    stroke="#9C7D5B" strokeWidth="1.8"
-                    className="length-rec-glow"
-                  />
-                  {/* left tick */}
-                  <line x1="4" y1={y - 4} x2="4" y2={y + 4} stroke="#9C7D5B" strokeWidth="1.8" strokeLinecap="round" />
-                  {/* right tick / dot */}
-                  <circle cx="106" cy={y} r="3" fill="#C8A96E" />
-                  {/* ♥ label */}
-                  <text x="112" y={y - 3} fontSize="6" fill="#9C7D5B" fontWeight="700">&#9825; {label}</text>
-                  <text x="112" y={y + 6} fontSize="5.5" fill="#A89070">recommended</text>
+                  <line x1="28" y1={py} x2="118" y2={py} stroke="#C8A96E" strokeWidth="4" opacity="0.15" />
+                  <line x1="28" y1={py} x2="118" y2={py} stroke="#9C7D5B" strokeWidth="1.8" strokeDasharray="5 2" className="length-rec-glow" />
+                  <line x1="118" y1={py - 4} x2="118" y2={py + 4} stroke="#9C7D5B" strokeWidth="1.8" strokeLinecap="round" />
+                  <text x="122" y={py - 2} fontSize="6.5" fill="#9C7D5B" fontWeight="700">&#9825; {label}</text>
+                  <text x="122" y={py + 7} fontSize="5.5" fill="#A89070">recommended</text>
                 </>
               ) : (
-                /* static faint dashed line with small tick */
                 <>
-                  <line x1="4" y1={y} x2="106" y2={y} stroke="#C8B89A" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.5" />
-                  <line x1="4" y1={y - 3} x2="4" y2={y + 3} stroke="#C8B89A" strokeWidth="0.8" opacity="0.5" />
-                  <text x="110" y={y + 1.5} fontSize="5.5" fill="#B8A888">{label}</text>
+                  <line x1="28" y1={py} x2="118" y2={py} stroke="#C8B89A" strokeWidth="0.8" strokeDasharray="4 2" opacity="0.5" />
+                  <line x1="118" y1={py - 3} x2="118" y2={py + 3} stroke="#C8B89A" strokeWidth="0.8" opacity="0.5" />
+                  <text x="122" y={py + 1.5} fontSize="6" fill="#B8A888">{label}</text>
                 </>
               )}
             </g>
@@ -517,13 +526,52 @@ export function HairstyleCard({
                   )}
                 </div>
 
-                {/* dashed oval tracking head outline */}
-                <div className="absolute pointer-events-none" style={{
-                  border: "2px dashed rgba(255,255,255,0.5)",
-                  borderRadius: "50% 50% 45% 45% / 58% 58% 42% 42%",
-                  top: "4%", left: "14%", right: "14%", bottom: "30%",
-                  zIndex: 9,
-                }} />
+                {/* Dashed oval + guide lines SVG overlay matching reference */}
+                <svg
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  viewBox="0 0 300 400"
+                  style={{ zIndex: 9 }}
+                >
+                  {/* dashed face oval */}
+                  <ellipse
+                    cx="150" cy="148" rx="88" ry="115"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.60)"
+                    strokeWidth="1.8"
+                    strokeDasharray="7 5"
+                  />
+                  {/* vertical centre line */}
+                  <line x1="150" y1="28" x2="150" y2="268"
+                    stroke="rgba(255,255,255,0.45)" strokeWidth="1.2" strokeDasharray="5 4" />
+                  {/* horizontal eye-level guide */}
+                  <line x1="56" y1="138" x2="244" y2="138"
+                    stroke="rgba(255,255,255,0.35)" strokeWidth="1" strokeDasharray="4 3" />
+                  {/* pointer lines to face features (radiating from centre outward) */}
+                  {/* top-left → forehead */}
+                  <line x1="90" y1="68" x2="130" y2="102"
+                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="88" cy="66" r="2.5" fill="rgba(255,255,255,0.7)" />
+                  {/* top-right → crown */}
+                  <line x1="210" y1="68" x2="170" y2="102"
+                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="212" cy="66" r="2.5" fill="rgba(255,255,255,0.7)" />
+                  {/* mid-left → cheek */}
+                  <line x1="52" y1="155" x2="96" y2="155"
+                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="50" cy="155" r="2.5" fill="rgba(255,255,255,0.7)" />
+                  {/* mid-right → cheek */}
+                  <line x1="248" y1="155" x2="204" y2="155"
+                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="250" cy="155" r="2.5" fill="rgba(255,255,255,0.7)" />
+                  {/* lower-left → jaw */}
+                  <line x1="72" y1="228" x2="112" y2="210"
+                    stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
+                  <circle cx="70" cy="230" r="2.5" fill="rgba(255,255,255,0.6)" />
+                  {/* lower-right → jaw */}
+                  <line x1="228" y1="228" x2="188" y2="210"
+                    stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
+                  <circle cx="230" cy="230" r="2.5" fill="rgba(255,255,255,0.6)" />
+                </svg>
               </div>
             ) : (
               <div className="flex items-center justify-center rounded-2xl" style={{ width: 220, height: 280, background: "#EDE3D8", border: "2px dashed #C8B89A" }}>
@@ -568,9 +616,9 @@ export function HairstyleCard({
         {/* ── Most Flattering Styles ── */}
         <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
           <div className="flex items-center justify-center gap-3 mb-5">
-            <span style={{ color: "#C8A96E" }}>&#10022;</span>
+            <span style={{ color: "#C8A96E" }}>&#9825;</span>
             <p className={sectionTitle} style={sT}>Most Flattering Styles</p>
-            <span style={{ color: "#C8A96E" }}>&#10022;</span>
+            <span style={{ color: "#C8A96E" }}>&#9825;</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {flatteningStyles.map((s, i) => {
@@ -594,21 +642,23 @@ export function HairstyleCard({
                     </span>
                   </div>
 
-                  {/* photo + hair overlay + hover expand */}
-                  <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
-                    {photoUrl ? (
-                      <Image
-                        src={photoUrl}
-                        alt={s.name}
-                        fill
-                        unoptimized
-                        className="object-cover"
-                        style={{ objectPosition: "top center" }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
-                    )}
-                    <HairOverlay style={s.name} animate delay={i * 0.09} hairColor={primaryHairColor} />
+                  {/* photo: real server-composited preview or fallback to base photo */}
+                  <div className="relative w-full" style={{ aspectRatio: "4/5", background: "#EDE3D8" }}>
+                    {(() => {
+                      const src = previewUrls?.[i] ?? photoUrl;
+                      return src ? (
+                        <Image
+                          src={src}
+                          alt={s.name}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                          style={{ objectPosition: "top center" }}
+                        />
+                      ) : (
+                        <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
+                      );
+                    })()}
                     {/* green check badge */}
                     <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#7BA05B" }}>
                       <Check className="h-3.5 w-3.5 text-white" />
@@ -654,16 +704,23 @@ export function HairstyleCard({
                   <div className="text-center py-1.5 px-1" style={{ borderBottom: "1px solid #F0D8CC" }}>
                     <p className="text-[9px] uppercase tracking-widest font-semibold truncate" style={{ color: "#C06B3E" }}>{a.split(" ").slice(0, 3).join(" ")}</p>
                   </div>
-                  <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
-                    {photoUrl ? (
-                      <>
-                        <Image src={photoUrl} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                        <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.18)" }} />
-                      </>
-                    ) : (
-                      <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#E8DDD0,#D0C0B0)" }} />
-                    )}
-                    <HairOverlay style={a} hairColor={primaryHairColor} />
+                  <div className="relative w-full" style={{ aspectRatio: "4/5", background: "#EDE3D8" }}>
+                    {(() => {
+                      // avoid styles occupy preview slots 5-7
+                      const avoidIdx = 5 + i;
+                      const src = previewUrls?.[avoidIdx] ?? photoUrl;
+                      return src ? (
+                        <>
+                          <Image src={src} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                          {/* warm red tint only when using plain photo fallback */}
+                          {!previewUrls?.[avoidIdx] && (
+                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.18)" }} />
+                          )}
+                        </>
+                      ) : (
+                        <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#E8DDD0,#D0C0B0)" }} />
+                      );
+                    })()}
                     <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#C06B3E" }}>
                       <Minus className="h-3.5 w-3.5 text-white" />
                     </div>
@@ -690,15 +747,26 @@ export function HairstyleCard({
           {/* Hair Type Match */}
           <div className="px-6 py-6 flex flex-col gap-4" style={{ borderRight: "1px solid #E8DDD0" }}>
             <p className={sectionTitle} style={sT}>Hair Type Match</p>
-            <div className="flex items-center gap-5 flex-wrap">
-              <div className="flex flex-col items-center gap-2">
-                <span className="flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>&#8779;</span>
-                <p className="text-xs font-semibold text-center" style={{ color: "#3D2B1F" }}>{resolvedHairType}</p>
+            {/* horizontal row: big wave icon + type label | benefit pills */}
+            <div className="flex items-center gap-6">
+              {/* icon + label */}
+              <div className="flex flex-col items-center gap-1.5 shrink-0">
+                <span
+                  className="flex h-20 w-20 items-center justify-center rounded-full text-3xl"
+                  style={{ background: "#EDE3D8", color: "#9C7D5B", lineHeight: 1 }}
+                >
+                  &#8779;
+                </span>
+                <p className="text-[11px] font-semibold text-center whitespace-nowrap" style={{ color: "#3D2B1F" }}>{resolvedHairType}</p>
               </div>
+              {/* benefit pills in a row */}
               <div className="flex flex-col gap-2">
                 {HAIR_BENEFITS.map((b) => (
-                  <div key={b} className="flex items-center gap-2 text-xs" style={{ color: "#6B5344" }}>
-                    <Check className="h-4 w-4 shrink-0" style={{ color: "#7BA05B" }} />{b}
+                  <div key={b} className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ background: "#7BA05B" }}>
+                      <Check className="h-3 w-3 text-white" />
+                    </span>
+                    <span className="text-[11px] font-medium" style={{ color: "#6B5344" }}>{b}</span>
                   </div>
                 ))}
               </div>
@@ -709,21 +777,45 @@ export function HairstyleCard({
           <div className="px-6 py-6 flex flex-col gap-4">
             <p className={sectionTitle} style={sT}>Best Color Direction</p>
             <div className="flex flex-wrap gap-4 justify-center">
-              {data.colors.map((c) => (
-                <div key={c.hex} className="flex flex-col items-center gap-1.5">
-                  <span className="h-12 w-12 rounded-full shadow-md" style={{ backgroundColor: c.hex, border: "2px solid #fff" }} />
-                  <p className="text-[10px] text-center leading-tight max-w-[52px]" style={{ color: "#6B5344" }}>{c.name}</p>
-                </div>
-              ))}
+              {data.colors.map((c) => {
+                // Compute a lighter highlight colour for the gradient sheen
+                const base = c.hex.replace("#", "");
+                const rr = Math.min(255, parseInt(base.slice(0, 2), 16) + 55).toString(16).padStart(2, "0");
+                const gg = Math.min(255, parseInt(base.slice(2, 4), 16) + 40).toString(16).padStart(2, "0");
+                const bb2 = Math.min(255, parseInt(base.slice(4, 6), 16) + 30).toString(16).padStart(2, "0");
+                const highlightHex = `#${rr}${gg}${bb2}`;
+                const gradId = `hc-${c.hex.replace("#", "")}`;
+                return (
+                  <div key={c.hex} className="flex flex-col items-center gap-1.5">
+                    <svg width="52" height="52" viewBox="0 0 52 52">
+                      <defs>
+                        <radialGradient id={gradId} cx="35%" cy="30%" r="65%">
+                          <stop offset="0%"   stopColor={highlightHex} />
+                          <stop offset="55%"  stopColor={c.hex} />
+                          <stop offset="100%" stopColor={hexToRgba(c.hex, 1).replace("rgba", "rgb").replace(",1)", ")")} />
+                        </radialGradient>
+                      </defs>
+                      <circle cx="26" cy="26" r="24" fill={`url(#${gradId})`} />
+                      <circle cx="26" cy="26" r="24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
+                      {/* subtle gloss highlight */}
+                      <ellipse cx="20" cy="18" rx="7" ry="5" fill="rgba(255,255,255,0.18)" />
+                    </svg>
+                    <p className="text-[10px] text-center leading-tight max-w-[56px]" style={{ color: "#6B5344" }}>{c.name}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* ── Footer ── */}
-        <div className="text-center py-4 px-6" style={{ background: "#F0E8DC" }}>
-          <p className="text-xs font-semibold tracking-[0.15em] uppercase" style={{ color: "#9C7D5B" }}>
-            &#9825;&nbsp;{flatteningStyles[0]?.name ?? "Natural Layers"} &bull; {flatteningStyles[1]?.name ?? "Soft Waves"} = Your Best Look&nbsp;&#10022;
-          </p>
+        {/* ── Footer tagline pill ── matches reference */}
+        <div className="flex justify-center py-5 px-6" style={{ background: "#FDFAF6" }}>
+          <div
+            className="px-6 py-2.5 rounded-full text-xs font-semibold tracking-[0.14em] uppercase text-center"
+            style={{ background: "#F0E4D2", color: "#9C7D5B", border: "1px solid #E0CEBC" }}
+          >
+            &#9825;&nbsp;{flatteningStyles[0]?.name ?? "Natural Layers"} + {flatteningStyles[1]?.name ?? "Soft Waves"} = Your Best Look&nbsp;&#10022;
+          </div>
         </div>
       </div>
     </>

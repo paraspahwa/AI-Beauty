@@ -120,35 +120,40 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     }
 
     // ── Try-on previews (glasses + hairstyle) ─────────────────────────────────
-    const glassesResult = row.glasses as GlassesResult;
+    const glassesResult   = row.glasses   as GlassesResult;
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
     visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
       .slice(0, 2)
       .map((_, i) => ({
-        path: `${visualAssets.basePath}glasses-${i}.png`,
+        path: `${visualAssets.basePath}glasses-${i}.jpg`,
         status: "missing" as const,
-        mime: "image/png",
+        mime: "image/jpeg",
         error: null,
       }));
 
-    visualAssets.assets.hairstylePreviews = (hairstyleResult?.styles ?? [])
-      .slice(0, 2)
-      .map((_, i) => ({
-        path: `${visualAssets.basePath}hairstyle-${i}.png`,
-        status: "missing" as const,
-        mime: "image/png",
-        error: null,
-      }));
+    // Up to 8 hairstyle previews: 5 flattering + 3 avoid
+    const allHairStyles = [
+      ...(hairstyleResult?.styles ?? []).slice(0, 5),
+      ...(hairstyleResult?.avoid  ?? []).slice(0, 3).map((a) => ({ name: a, description: a })),
+    ];
+    visualAssets.assets.hairstylePreviews = allHairStyles.map((s, i) => ({
+      path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
+      status: "missing" as const,
+      mime: "image/jpeg",
+      error: null,
+      // Store style name in a meta field so the card component can match index → style
+      ...(typeof s.name === "string" ? { styleName: s.name } : {}),
+    }));
 
     const [glassesPrevResults, hairstylePrevResults] = await Promise.all([
       generateGlassesPreviews(buffer, glassesResult).catch((err) => {
         console.warn("[visuals/route] glasses previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer }[];
       }),
-      generateHairstylePreviews(buffer, hairstyleResult).catch((err) => {
+      generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
         console.warn("[visuals/route] hairstyle previews failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer }[];
+        return [] as { index: number; buffer: Buffer; style: string }[];
       }),
     ]);
 
@@ -157,7 +162,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       if (!asset) continue;
       const { error: upErr } = await admin.storage
         .from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/png", upsert: true });
+        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
       asset.status = upErr ? "failed" : "ready";
       if (upErr) asset.error = upErr.message;
     }
@@ -167,7 +172,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       if (!asset) continue;
       const { error: upErr } = await admin.storage
         .from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/png", upsert: true });
+        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
       asset.status = upErr ? "failed" : "ready";
       if (upErr) asset.error = upErr.message;
     }
