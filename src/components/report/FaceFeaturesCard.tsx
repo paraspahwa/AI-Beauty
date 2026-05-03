@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import type { FaceShapeResult, FeatureBreakdown } from "@/types/report";
+import type { FaceShapeResult, FeatureBreakdown, FaceLandmarks } from "@/types/report";
 
 // ── Confidence badge ──────────────────────────────────────────────────────────
 function ConfidenceBadge({ confidence }: { confidence: number }) {
@@ -157,28 +157,56 @@ function FeatureBox({
 }
 
 // ── Pointer lines ─────────────────────────────────────────────────────────────
-// ViewBox: 0 0 100 133  (matches 3:4 container exactly, no letterbox)
-// All coordinates in viewBox units.
-// Face occupies roughly X: 28-72, Y: 18-80 within the 100×133 frame.
+// ViewBox: 0 0 100 133  (3:4 aspect ratio, preserveAspectRatio="none" so
+// x=0 is exact left photo edge, x=100 exact right, y=0 top, y=133 bottom).
 //
-// Reference measurements (taken from reference image):
-//   Left panel → 3 dots face leftward:
-//     [1] Face shape → left temple:  dot(28, 25) → edge(0, 25)
-//     [2] Eyes       → right eye:    dot(37, 42) → edge(0, 50)
-//     [3] Nose       → nose tip:     dot(46, 60) → edge(0, 75)
-//   Right panel → 3 dots face rightward:
-//     [4] Eyebrows   → left brow:    dot(62, 30) → edge(100, 23)
-//     [5] Cheeks     → right cheek:  dot(68, 53) → edge(100, 57)
-//     [6] Lips       → mouth corner: dot(60, 72) → edge(100, 80)
-function PointerLines() {
-  const lines: [number, number, number, number][] = [
-    // [dotX, dotY, exitX, exitY]
-    [28, 25,   0, 25],   // 1 — Face Shape  → left temple
-    [37, 42,   0, 50],   // 2 — Eyes        → right eye
-    [46, 60,   0, 75],   // 3 — Nose        → nose tip
-    [62, 30, 100, 23],   // 4 — Eyebrows    → left eyebrow
-    [68, 53, 100, 57],   // 5 — Cheeks      → right cheekbone
-    [60, 72, 100, 80],   // 6 — Lips        → mouth corner
+// Rekognition landmark X/Y are 0-1 fractions of the original image.
+// objectPosition "center 10%" shifts the photo slightly downward in the
+// container, so we subtract a small Y offset (≈5%) before mapping to SVG.
+//
+// Conversion: svgX = landmarkX * 100
+//             svgY = (landmarkY - Y_CROP_OFFSET) * 133 / (1 - Y_CROP_OFFSET)
+//
+// The photo container uses objectPosition "center 10%" which means the top
+// 10% of the image is clipped. We compensate so dots land on the right pixel.
+
+const Y_CROP_OFFSET = 0.05; // matches objectPosition "center 10%" ÷ 2
+
+// Hardcoded fallback when Rekognition landmarks unavailable
+const FALLBACK_DOTS = {
+  faceShape: { x: 0.28, y: 0.25 },
+  eyes:      { x: 0.37, y: 0.42 },
+  nose:      { x: 0.50, y: 0.58 },
+  eyebrows:  { x: 0.65, y: 0.28 },
+  cheeks:    { x: 0.70, y: 0.52 },
+  lips:      { x: 0.62, y: 0.70 },
+} satisfies FaceLandmarks;
+
+function toSvg(pt: { x: number; y: number }): { svgX: number; svgY: number } {
+  const svgX = pt.x * 100;
+  const rawY  = Math.max(0, pt.y - Y_CROP_OFFSET);
+  const svgY  = (rawY / (1 - Y_CROP_OFFSET)) * 133;
+  return { svgX, svgY };
+}
+
+interface PointerLinesProps {
+  landmarks?: FaceLandmarks;
+}
+
+function PointerLines({ landmarks }: PointerLinesProps) {
+  const dots = landmarks ?? FALLBACK_DOTS;
+
+  // Each entry: [dot point, exit X (0=left edge, 100=right edge), exit Y]
+  // Left panel exits go to x=0; right panel exits go to x=100.
+  // exitY is proportional to where the corresponding feature box sits in the
+  // 3-row panel (top≈20%, mid≈50%, bottom≈80% of photo height).
+  const entries: Array<{ dot: { x: number; y: number }; exitX: number; exitY: number }> = [
+    { dot: dots.faceShape, exitX:   0, exitY: 20  },  // → Face Shape  (top-left box)
+    { dot: dots.eyes,      exitX:   0, exitY: 50  },  // → Eyes        (mid-left box)
+    { dot: dots.nose,      exitX:   0, exitY: 80  },  // → Nose        (bot-left box)
+    { dot: dots.eyebrows,  exitX: 100, exitY: 20  },  // → Eyebrows    (top-right box)
+    { dot: dots.cheeks,    exitX: 100, exitY: 50  },  // → Cheeks      (mid-right box)
+    { dot: dots.lips,      exitX: 100, exitY: 80  },  // → Lips        (bot-right box)
   ];
 
   return (
@@ -187,17 +215,21 @@ function PointerLines() {
       viewBox="0 0 100 133"
       preserveAspectRatio="none"
     >
-      {lines.map(([dx, dy, ex, ey], i) => (
-        <g key={i}>
-          <line
-            x1={dx} y1={dy} x2={ex} y2={ey}
-            stroke="white"
-            strokeWidth="0.6"
-            opacity="0.92"
-          />
-          <circle cx={dx} cy={dy} r="1.5" fill="white" opacity="1" />
-        </g>
-      ))}
+      {entries.map(({ dot, exitX, exitY }, i) => {
+        const { svgX, svgY } = toSvg(dot);
+        return (
+          <g key={i}>
+            <line
+              x1={svgX} y1={svgY}
+              x2={exitX} y2={exitY}
+              stroke="white"
+              strokeWidth="0.6"
+              opacity="0.92"
+            />
+            <circle cx={svgX} cy={svgY} r="1.5" fill="white" opacity="1" />
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -208,9 +240,10 @@ interface Props {
   features: FeatureBreakdown;
   blendedConfidence?: number;
   photoUrl?: string;
+  faceLandmarks?: FaceLandmarks;
 }
 
-export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photoUrl }: Props) {
+export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photoUrl, faceLandmarks }: Props) {
   const displayConfidence = blendedConfidence ?? faceShape.confidence;
 
   return (
@@ -293,7 +326,7 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
               style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }}
             />
           )}
-          <PointerLines />
+          <PointerLines landmarks={faceLandmarks} />
         </div>
 
         {/* Right column: Eyebrows · Cheeks · Lips */}

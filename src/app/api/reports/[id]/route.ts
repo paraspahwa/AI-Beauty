@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
+import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -151,6 +152,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     visualAssets,
     summary:      row.summary ?? undefined,
     pipelineMeta,
+    faceLandmarks: extractFaceLandmarks(row.rekognition) ?? undefined,
     createdAt:    row.created_at,
   };
 

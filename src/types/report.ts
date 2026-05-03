@@ -110,6 +110,16 @@ export interface PipelineMeta {
   stages: { stage: string; durationMs: number; degraded: boolean }[];
 }
 
+/** Auto-detected face landmark dot positions (0-1 fractions of image size). */
+export interface FaceLandmarks {
+  faceShape: { x: number; y: number };
+  eyes:      { x: number; y: number };
+  nose:      { x: number; y: number };
+  eyebrows:  { x: number; y: number };
+  cheeks:    { x: number; y: number };
+  lips:      { x: number; y: number };
+}
+
 export interface CompiledReport {
   id: string;
   userId: string;
@@ -126,5 +136,6 @@ export interface CompiledReport {
   visualAssets?: ReportVisualAssets;
   summary?: string;
   pipelineMeta?: PipelineMeta;
+  faceLandmarks?: FaceLandmarks;
   createdAt: string;
 }
