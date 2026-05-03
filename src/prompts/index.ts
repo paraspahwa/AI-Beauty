@@ -18,31 +18,56 @@ Return JSON of shape:
   "confidence": number      // 0..1 (use values below 0.65 when uncertain)
 }`;
 
-export const COLOR_ANALYSIS_PROMPT = `Perform a 12-season color analysis on the person in the photo.
+/**
+ * Build the color analysis prompt, optionally injecting server-side extracted
+ * dominant clothing colours and coverage fraction so the AI has hard pixel data
+ * instead of guessing from the compressed image.
+ */
+export function buildColorAnalysisPrompt(opts?: {
+  clothingColors?: string[];  // e.g. ["#4A2D6F", "#C8A87B"]
+  clothingCoverage?: number;  // 0..1
+}): string {
+  const clothingBlock =
+    opts?.clothingColors && opts.clothingColors.length > 0
+      ? `\n\nSERVER-EXTRACTED CLOTHING COLOURS (pixel-accurate, use as hard evidence):\n` +
+        `  Dominant colors: ${opts.clothingColors.join(", ")}\n` +
+        `  Clothing coverage in frame: ${Math.round((opts.clothingCoverage ?? 0) * 100)}%\n` +
+        (((opts.clothingCoverage ?? 0) < 0.2)
+          ? `  Coverage is LOW (<20%) — this is likely a headshot; weight clothing signal less heavily.\n`
+          : `  Coverage is GOOD — evaluate each colour against the person's coloring.\n`)
+      : "";
+
+  return `Perform a 12-season color analysis on the person in the photo.
+
+IMPORTANT: Focus ONLY on the person. Ignore background, walls, furniture, or environment.
 
 Analysis signals to consider (in priority order):
 1. SKIN UNDERTONE — examine inner wrist / jaw / neck area (not the forehead which may be oily).
    Identify warm (peachy/golden/yellow), cool (pink/rosy/bluish), or neutral undertones.
 2. HAIR COLOR — natural root color and depth (dark/medium/light, cool/warm cast).
 3. EYE COLOR — depth and warmth of iris.
-4. CLOTHING COLOR — IMPORTANT: observe what the person is wearing.
-   A color that visibly flatters the face (makes skin look radiant, eyes pop, no shadowing)
-   provides strong real-world evidence for the palette.  Include clothing colors that look
-   good on them in the "palette" array; if the clothing color creates a harsh contrast or
-   washes out the complexion, that is evidence for "avoidColors".
+4. CLOTHING COLOR — observe what the person is wearing (ignoring background).${clothingBlock}
+   If a clothing color visibly flatters the face (skin looks radiant, no shadowing), include
+   it in "palette". If it clashes or washes out the complexion, include in "avoidColors".
+   Set "clothingObservation" for the most prominent visible clothing color.
 5. OVERALL CONTRAST — high (dark hair + light skin), medium, or low contrast affects season.
 
-Return JSON:
+Return JSON (strict, no markdown):
 {
   "season": "Spring" | "Summer" | "Autumn" | "Winter" | "Soft Spring" | "Soft Summer" |
             "Soft Autumn" | "Deep Winter" | "Deep Autumn" | "Bright Spring" | "Bright Winter" |
             "Light Spring" | "Light Summer",
   "undertone": "Warm" | "Cool" | "Neutral",
-  "description": string,                    // 2-3 sentences mentioning skin/hair/eye signals
-  "palette": [{ "name": string, "hex": "#RRGGBB" }],   // exactly 8 colors (include any clothing color that flatters)
+  "description": string,
+  "palette": [{ "name": string, "hex": "#RRGGBB" }],
   "metals": ("Gold"|"Silver"|"Rose Gold"|"Bronze"|"Platinum")[],
-  "avoidColors": [{ "name": string, "hex": "#RRGGBB" }] // 3-4 colors (include clothing color if it clashes)
+  "avoidColors": [{ "name": string, "hex": "#RRGGBB" }],
+  "clothingObservation": { "color": string, "hex": "#RRGGBB", "effect": "flattering"|"clashing"|"neutral" }
 }`;
+}
+
+// Legacy constant kept for backward compat (canary v1 still uses it)
+export const COLOR_ANALYSIS_PROMPT = buildColorAnalysisPrompt();
 
 export const SKIN_ANALYSIS_PROMPT = `Analyze skin from the photo.
 Return JSON:

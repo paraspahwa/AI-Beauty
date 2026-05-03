@@ -40,6 +40,12 @@ export interface ColorAnalysisResult {
   palette: { name: string; hex: string }[];
   metals: ("Gold" | "Silver" | "Rose Gold" | "Bronze" | "Platinum")[];
   avoidColors: { name: string; hex: string }[];
+  /** Real-world clothing colour evidence extracted from the photo. */
+  clothingObservation?: {
+    color: string;
+    hex: string;
+    effect: "flattering" | "clashing" | "neutral";
+  };
 }
 
 export interface SkinAnalysisResult {

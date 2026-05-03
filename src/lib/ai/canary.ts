@@ -49,20 +49,30 @@ Return JSON of shape:
   color_analysis: [
     {
       id: "color_v1",
-      weight: 1,
+      weight: 5,   // 5:1 toward v2 once stable; keep v1 for baseline comparison
       prompt: `Perform a 12-season color analysis.
 Consider skin undertone, hair, and eye color from the photo.
+Ignore background. Focus only on the person.
 Return JSON:
 {
   "season": "Spring" | "Summer" | "Autumn" | "Winter" | "Soft Spring" | "Soft Summer" |
             "Soft Autumn" | "Deep Winter" | "Deep Autumn" | "Bright Spring" | "Bright Winter" |
             "Light Spring" | "Light Summer",
   "undertone": "Warm" | "Cool" | "Neutral",
-  "description": string,                    // 2-3 sentences
-  "palette": [{ "name": string, "hex": "#RRGGBB" }],   // exactly 8 colors
+  "description": string,
+  "palette": [{ "name": string, "hex": "#RRGGBB" }],
   "metals": ("Gold"|"Silver"|"Rose Gold"|"Bronze"|"Platinum")[],
-  "avoidColors": [{ "name": string, "hex": "#RRGGBB" }] // 3-4 colors
+  "avoidColors": [{ "name": string, "hex": "#RRGGBB" }],
+  "clothingObservation": { "color": string, "hex": "#RRGGBB", "effect": "flattering"|"clashing"|"neutral" }
 }`,
+    },
+    {
+      // v2: prompt is built dynamically in pipeline.ts using server-extracted colours
+      // This variant exists to route traffic through the dominant-colour path.
+      id: "color_v2_dominant",
+      weight: 5,
+      // Sentinel: pipeline.ts checks for this id and builds the prompt via buildColorAnalysisPrompt()
+      prompt: "__dominant_color_variant__",
     },
   ],
   skin_analysis: [

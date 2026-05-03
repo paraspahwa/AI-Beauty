@@ -1,6 +1,6 @@
 import { detectFaceDetails } from "./rekognition";
 import { chatJSON } from "./openai";
-import { compressForAI } from "./image";
+import { compressForAI, extractClothingColors } from "./image";
 import {
   normalizeColorAnalysis,
   normalizeFaceShape,
@@ -15,7 +15,7 @@ import { PipelineStageError, classifyStageError, withRetry } from "./resilience"
 import { pickVariant } from "./canary";
 import { buildPersonalizedSystemBase } from "./memory";
 import { env } from "../env";
-import { SYSTEM_BASE, COMPILE_PROMPT } from "@/prompts";
+import { SYSTEM_BASE, COMPILE_PROMPT, buildColorAnalysisPrompt } from "@/prompts";
 import type {
   ColorAnalysisResult,
   FaceShapeResult,
@@ -76,19 +76,28 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
   const compressed = await compressForAI(rawImage, 512);
   const imageBase64 = compressed.toString("base64");
 
+  // Server-side dominant clothing colour extraction (runs in parallel with Rekognition)
+  const [rekognition, clothingInfo] = await Promise.all([
+    // 1) Rekognition for landmarks (uses original bytes — better signal)
+    (async () => {
+      const rekStart = Date.now();
+      const result = await detectFaceDetails(rawImage).catch((err) => {
+        console.warn("[pipeline] Rekognition failed:", err);
+        return null;
+      });
+      stageMetas.push({ stage: "rekognition", durationMs: Date.now() - rekStart, degraded: result === null });
+      return result;
+    })(),
+    // Dominant clothing colours (uses raw buffer for full resolution)
+    extractClothingColors(rawImage),
+  ]);
+
   // Personalized system base: fetches prior prefs from DB (soft prior for repeat users)
   const effectiveSystemBase = userId
     ? await buildPersonalizedSystemBase(userId, SYSTEM_BASE)
     : SYSTEM_BASE;
 
-  // 1) Rekognition for landmarks (uses original bytes — better signal)
-  const rekStart = Date.now();
-  const rekognition = await detectFaceDetails(rawImage).catch((err) => {
-    // We don't fail the pipeline if Rekognition is unavailable.
-    console.warn("[pipeline] Rekognition failed:", err);
-    return null;
-  });
-  stageMetas.push({ stage: "rekognition", durationMs: Date.now() - rekStart, degraded: rekognition === null });
+  console.info("[pipeline] clothing colours extracted:", clothingInfo.clothingColors, `coverage=${Math.round(clothingInfo.clothingCoverage * 100)}%`);
 
   // P1-4: Timed + degradation-tracked stage runner
   async function runNormalizedStage<T>(
@@ -139,6 +148,17 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
   // 3) + 4) Color & skin in parallel — these are the two highest-quality calls
   const colorVariant = pickVariant("color_analysis");
   const skinVariant = pickVariant("skin_analysis");
+
+  // Build the color prompt: v2 (dominant-colour variant) gets pixel data injected;
+  // v1 gets the prompt without clothing colours for baseline comparison.
+  const colorPrompt =
+    colorVariant.id === "color_v2_dominant"
+      ? buildColorAnalysisPrompt({
+          clothingColors: clothingInfo.clothingColors,
+          clothingCoverage: clothingInfo.clothingCoverage,
+        })
+      : (colorVariant.prompt as string);
+
   const [colorAnalysis, skinAnalysis] = await Promise.all([
     runNormalizedStage(
       "color_analysis",
@@ -146,7 +166,7 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
         chatJSON<unknown>({
           model: env.openai.visionModel,
           system: effectiveSystemBase,
-          user: colorVariant.prompt as string,
+          user: colorPrompt,
           imageBase64,
         }),
       normalizeColorAnalysis,

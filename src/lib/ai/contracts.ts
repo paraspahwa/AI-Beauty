@@ -136,6 +136,40 @@ function takeOrPad<T>(items: T[], count: number, fallbackFactory: (index: number
   return out;
 }
 
+// ── Season → expected undertone mapping for cross-check ───────────────────
+const SEASON_UNDERTONE_MAP: Record<string, ("Warm" | "Cool" | "Neutral")[]> = {
+  Spring: ["Warm"],
+  "Soft Spring": ["Warm", "Neutral"],
+  "Bright Spring": ["Warm"],
+  "Light Spring": ["Warm", "Neutral"],
+  Summer: ["Cool"],
+  "Soft Summer": ["Cool", "Neutral"],
+  "Light Summer": ["Cool", "Neutral"],
+  Autumn: ["Warm"],
+  "Soft Autumn": ["Warm", "Neutral"],
+  "Deep Autumn": ["Warm"],
+  Winter: ["Cool"],
+  "Deep Winter": ["Cool", "Neutral"],
+  "Bright Winter": ["Cool"],
+};
+
+/**
+ * Cross-check season vs undertone consistency.
+ * Returns a penalty 0..0.2 to subtract from a hypothetical confidence score
+ * (useful for logging; contract normalizer logs a warning when inconsistent).
+ */
+function undertoneSeasonPenalty(
+  season: string,
+  undertone: "Warm" | "Cool" | "Neutral",
+): number {
+  const expected = SEASON_UNDERTONE_MAP[season];
+  if (!expected) return 0;
+  if (expected.includes(undertone)) return 0;
+  // Neutral is less wrong than a flat contradiction
+  if (undertone === "Neutral") return 0.1;
+  return 0.2;
+}
+
 export function normalizeFaceShape(input: unknown): FaceShapeResult {
   const obj = asObject(input);
   const shapeRaw = asString(obj.shape, "Soft Oval");
@@ -196,6 +230,29 @@ export function normalizeColorAnalysis(input: unknown): ColorAnalysisResult {
       .filter((item) => METALS.includes(item as (typeof METALS)[number])),
   ) as ColorAnalysisResult["metals"];
 
+  // Undertone cross-check — log a warning if season/undertone contradict each other
+  const penalty = undertoneSeasonPenalty(season, undertone);
+  if (penalty > 0) {
+    console.warn(
+      `[contracts:color] Undertone/season mismatch — season="${season}" undertone="${undertone}" penalty=${penalty}. ` +
+        `Consider that the model may have been confused by background colour.`,
+    );
+  }
+
+  // clothingObservation (optional field from v2 prompt)
+  const clothingRaw = asObject(obj.clothingObservation ?? {});
+  const clothingEffect = asString(clothingRaw.effect, "neutral");
+  const clothingObservation: ColorAnalysisResult["clothingObservation"] =
+    clothingRaw.color || clothingRaw.hex
+      ? {
+          color: asString(clothingRaw.color, "Unknown"),
+          hex: normalizeHex(clothingRaw.hex, "#888888"),
+          effect: (["flattering", "clashing", "neutral"].includes(clothingEffect)
+            ? clothingEffect
+            : "neutral") as "flattering" | "clashing" | "neutral",
+        }
+      : undefined;
+
   return {
     season,
     undertone,
@@ -206,6 +263,7 @@ export function normalizeColorAnalysis(input: unknown): ColorAnalysisResult {
     palette: takeOrPad(paletteRaw, 8, (index) => DEFAULT_PALETTE[index]),
     metals: metals.length > 0 ? metals : ["Gold", "Rose Gold"],
     avoidColors: takeOrPad(avoidRaw, 3, (index) => DEFAULT_AVOID_COLORS[index]).slice(0, 4),
+    clothingObservation,
   };
 }
 

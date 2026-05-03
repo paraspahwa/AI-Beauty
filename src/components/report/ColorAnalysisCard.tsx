@@ -216,6 +216,34 @@ export function ColorAnalysisCard({
               ))}
             </div>
           </div>
+
+          {/* Clothing observation banner (only when present) */}
+          {data.clothingObservation && (
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3 mt-1"
+              style={{
+                background: data.clothingObservation.effect === "flattering"
+                  ? "rgba(123,160,91,0.12)"
+                  : data.clothingObservation.effect === "clashing"
+                    ? "rgba(192,107,62,0.12)"
+                    : "rgba(200,169,110,0.1)",
+                border: `1px solid ${data.clothingObservation.effect === "flattering" ? "rgba(123,160,91,0.3)" : data.clothingObservation.effect === "clashing" ? "rgba(192,107,62,0.3)" : "rgba(200,169,110,0.25)"}`,
+              }}
+            >
+              <span
+                className="h-7 w-7 shrink-0 rounded-full shadow"
+                style={{ backgroundColor: data.clothingObservation.hex, border: "2px solid #fff" }}
+              />
+              <p className="text-[11px] leading-snug" style={{ color: "#3D2B1F" }}>
+                <span className="font-semibold">{data.clothingObservation.color}</span>
+                {data.clothingObservation.effect === "flattering"
+                  ? " ✓ aligns with your palette"
+                  : data.clothingObservation.effect === "clashing"
+                    ? " ✗ clashes with your coloring"
+                    : " — neutral for your season"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
