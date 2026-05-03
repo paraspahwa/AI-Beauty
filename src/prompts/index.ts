@@ -18,18 +18,30 @@ Return JSON of shape:
   "confidence": number      // 0..1 (use values below 0.65 when uncertain)
 }`;
 
-export const COLOR_ANALYSIS_PROMPT = `Perform a 12-season color analysis.
-Consider skin undertone, hair, and eye color from the photo.
+export const COLOR_ANALYSIS_PROMPT = `Perform a 12-season color analysis on the person in the photo.
+
+Analysis signals to consider (in priority order):
+1. SKIN UNDERTONE — examine inner wrist / jaw / neck area (not the forehead which may be oily).
+   Identify warm (peachy/golden/yellow), cool (pink/rosy/bluish), or neutral undertones.
+2. HAIR COLOR — natural root color and depth (dark/medium/light, cool/warm cast).
+3. EYE COLOR — depth and warmth of iris.
+4. CLOTHING COLOR — IMPORTANT: observe what the person is wearing.
+   A color that visibly flatters the face (makes skin look radiant, eyes pop, no shadowing)
+   provides strong real-world evidence for the palette.  Include clothing colors that look
+   good on them in the "palette" array; if the clothing color creates a harsh contrast or
+   washes out the complexion, that is evidence for "avoidColors".
+5. OVERALL CONTRAST — high (dark hair + light skin), medium, or low contrast affects season.
+
 Return JSON:
 {
   "season": "Spring" | "Summer" | "Autumn" | "Winter" | "Soft Spring" | "Soft Summer" |
             "Soft Autumn" | "Deep Winter" | "Deep Autumn" | "Bright Spring" | "Bright Winter" |
             "Light Spring" | "Light Summer",
   "undertone": "Warm" | "Cool" | "Neutral",
-  "description": string,                    // 2-3 sentences
-  "palette": [{ "name": string, "hex": "#RRGGBB" }],   // exactly 8 colors
+  "description": string,                    // 2-3 sentences mentioning skin/hair/eye signals
+  "palette": [{ "name": string, "hex": "#RRGGBB" }],   // exactly 8 colors (include any clothing color that flatters)
   "metals": ("Gold"|"Silver"|"Rose Gold"|"Bronze"|"Platinum")[],
-  "avoidColors": [{ "name": string, "hex": "#RRGGBB" }] // 3-4 colors
+  "avoidColors": [{ "name": string, "hex": "#RRGGBB" }] // 3-4 colors (include clothing color if it clashes)
 }`;
 
 export const SKIN_ANALYSIS_PROMPT = `Analyze skin from the photo.
