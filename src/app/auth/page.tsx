@@ -235,6 +235,7 @@ function AuthContent() {
         }
       } else {
         const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+        router.refresh();
         router.push(safe);
       }
     } else {
@@ -255,6 +256,7 @@ function AuthContent() {
       } else {
         // Auto-confirmed (e.g. Supabase project has confirmations disabled)
         const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+        router.refresh();
         router.push(safe);
       }
     }
@@ -339,6 +341,7 @@ function AuthContent() {
       setOtp("");
     } else {
       const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+      router.refresh();
       router.push(safe);
     }
   }
