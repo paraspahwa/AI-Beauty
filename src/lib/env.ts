@@ -43,6 +43,11 @@ export const env = {
     visionModel: optional(process.env.OPENAI_VISION_MODEL, "gpt-4o"),
     miniModel: optional(process.env.OPENAI_MINI_MODEL, "gpt-4o-mini"),
   },
+  replicate: {
+    apiToken: optional(process.env.REPLICATE_API_TOKEN),
+    /** true only when a token is actually configured */
+    isConfigured: optional(process.env.REPLICATE_API_TOKEN).length > 0,
+  },
   aws: {
     region: optional(process.env.AWS_REGION, "us-east-1"),
     accessKeyId: optional(process.env.AWS_ACCESS_KEY_ID),

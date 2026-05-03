@@ -1,6 +1,8 @@
 import sharp from "sharp";
 import type { ColorAnalysisResult, GlassesResult, HairstyleResult, ReportVisualAssets } from "@/types/report";
 import { generateTryOnImage } from "./image-gen";
+import { replicateHairPreview } from "./replicate-hair";
+import { env } from "@/lib/env";
 
 type LandmarkPoint = {
   Type?: string;
@@ -359,45 +361,63 @@ export async function generateHairstylePreviews(
 
   const results: { index: number; buffer: Buffer; style: string }[] = [];
 
+  const replicateToken = env.replicate.apiToken;
+  const useReplicate   = env.replicate.isConfigured && !!faceBox;
+
   for (let i = 0; i < allStyles.length; i++) {
     const style = allStyles[i];
     try {
+      // ── Tier 1: Replicate inpainting (photorealistic, primary) ────────────
+      if (useReplicate && faceBox) {
+        try {
+          const buf = await replicateHairPreview(
+            selfieBuf,
+            faceBox,
+            style.name,
+            hairHex,
+            replicateToken,
+          );
+          results.push({ index: i, buffer: buf, style: style.name });
+          continue;
+        } catch (repErr) {
+          console.warn(
+            `[visuals] Replicate preview ${i} (${style.name}) failed, falling back to Sharp:`,
+            (repErr as Error).message,
+          );
+        }
+      }
+
+      // ── Tier 2: Sharp SVG composite (fast, no API cost) ──────────────────
       if (faceBox) {
-        // ── Phase 1 + 2: Sharp composite at face coords ─────────────────────
-
-        // Phase 2: erase original hair area with feathered dark ellipse
+        // Phase 2: feathered erase mask over original hair zone
         const eraseMask = await buildHairEraseMask(faceBox, W, H);
+        // Phase 1: per-style SVG hair silhouette at real face pixel coords
+        const hairSvg   = buildHairSvg(style.name, faceBox, W, H, hairHex);
 
-        // Phase 1: new style hair SVG at actual face pixel coords
-        const hairSvg = buildHairSvg(style.name, faceBox, W, H, hairHex);
-
-        // Composite: erase first, then draw new hair, then crop to face portrait
-        // Tight face crop: add 30% padding around the face box for a portrait feel
         const padX  = Math.round(faceBox.faceW * 0.45);
         const padY  = Math.round(faceBox.faceH * 0.55);
         const cropL = Math.max(0, Math.round(faceBox.left   - padX));
         const cropT = Math.max(0, Math.round(faceBox.crownY - padY * 0.35));
         const cropR = Math.min(W, Math.round(faceBox.right  + padX));
         const cropB = Math.min(H, Math.round(faceBox.bottom + padY * 0.45));
-        const cropW = cropR - cropL;
-        const cropH = cropB - cropT;
 
         const composited = await sharp(selfieBuf)
           .rotate()
           .composite([
-            // Phase 2: darken / erase original hair zone
-            { input: eraseMask, blend: "over", top: 0, left: 0 },
-            // Phase 1: new hair style
+            { input: eraseMask,            blend: "over", top: 0, left: 0 },
             { input: Buffer.from(hairSvg), blend: "over", top: 0, left: 0 },
           ])
-          .extract({ left: cropL, top: cropT, width: cropW, height: cropH })
+          .extract({ left: cropL, top: cropT, width: cropR - cropL, height: cropB - cropT })
           .resize(400, 530, { fit: "cover", position: "top" })
           .jpeg({ quality: 88 })
           .toBuffer();
 
         results.push({ index: i, buffer: composited, style: style.name });
-      } else if (i < 2) {
-        // Fallback: DALL-E for first 2 styles when no Rekognition face box
+        continue;
+      }
+
+      // ── Tier 3: DALL-E edit (no face data, first 2 slots only) ───────────
+      if (i < 2) {
         const buf = await generateTryOnImage(
           selfieBuf,
           `${style.name} — ${style.description}`,
