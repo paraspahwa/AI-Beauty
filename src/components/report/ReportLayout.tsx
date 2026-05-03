@@ -316,7 +316,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   exit="exit"
                 >
                   {report.colorAnalysis ? (
-                    <ColorAnalysisCard data={report.colorAnalysis} />
+                    <ColorAnalysisCard
+                      data={report.colorAnalysis}
+                      photoUrl={report.imageUrl}
+                    />
                   ) : (
                     <Empty />
                   )}

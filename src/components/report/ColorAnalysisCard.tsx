@@ -1,246 +1,352 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, Copy } from "lucide-react";
+import Image from "next/image";
+import { Check, X } from "lucide-react";
 import type { ColorAnalysisResult } from "@/types/report";
-import { staggerContainer, fadeUp, hoverScale } from "@/lib/animations";
 
-export function ColorAnalysisCard({ data }: { data: ColorAnalysisResult }) {
-  const [copiedHex, setCopiedHex] = useState<string | null>(null);
+// ── Characteristic icons (inline SVG) ──────────────────────────────────────
+function IconSun() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
+      <circle cx="12" cy="12" r="4" />
+      {[0,45,90,135,180,225,270,315].map((deg) => (
+        <line key={deg}
+          x1={12 + 7 * Math.cos(deg * Math.PI / 180)}
+          y1={12 + 7 * Math.sin(deg * Math.PI / 180)}
+          x2={12 + 9.5 * Math.cos(deg * Math.PI / 180)}
+          y2={12 + 9.5 * Math.sin(deg * Math.PI / 180)}
+          strokeLinecap="round"
+        />
+      ))}
+    </svg>
+  );
+}
+function IconLeaf() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
+      <path d="M12 22C12 22 4 16 4 10a8 8 0 0 1 16 0c0 6-8 12-8 12z" />
+      <path d="M12 22V10" strokeDasharray="2 2" />
+    </svg>
+  );
+}
+function IconHalfCircle() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
+      <path d="M12 4a8 8 0 0 1 0 16" />
+      <path d="M12 4a8 8 0 0 0 0 16" strokeDasharray="2 2" />
+      <line x1="12" y1="4" x2="12" y2="20" />
+    </svg>
+  );
+}
 
-  const copyToClipboard = async (hex: string, name: string) => {
-    try {
-      await navigator.clipboard.writeText(hex);
-      setCopiedHex(hex);
-      setTimeout(() => setCopiedHex(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
+// ── Colour strip beneath each comparison photo ────────────────────────────
+function ColorStrip({ colors }: { colors: { hex: string }[] }) {
+  return (
+    <div className="flex h-3 w-full overflow-hidden rounded-b-xl">
+      {colors.map((c) => (
+        <div key={c.hex} className="flex-1" style={{ backgroundColor: c.hex }} />
+      ))}
+    </div>
+  );
+}
+
+// ── Circular print swatch (placeholder pattern) ────────────────────────────
+const PRINT_LABELS = ["Soft Florals", "Muted Paisley", "Earthy Jacquard"];
+const PRINT_COLORS = ["#C8956B", "#6A8E7F", "#C8A96E"];
+
+// ── Makeup suggestions derived from palette ────────────────────────────────
+const MAKEUP_LABELS = ["Peachy\nBlush", "Warm Brown\nEyeshadow", "Coral Nude\nLip"];
+
+// ── Main component ──────────────────────────────────────────────────────────
+export function ColorAnalysisCard({
+  data,
+  photoUrl,
+}: {
+  data: ColorAnalysisResult;
+  photoUrl?: string;
+}) {
+  // derive 4 neutrals (greige tones) from avoidColors or palette tail
+  const neutrals = [
+    { hex: "#F2EDE4" },
+    { hex: "#DDD0C0" },
+    { hex: "#B0A090" },
+    { hex: "#8B7D6B" },
+    { hex: "#5C4F40" },
+  ];
+
+  // best 6 palette colours (for comparison row)
+  const bestSix = data.palette.slice(0, 6);
+  // avoid 6
+  const avoidSix = data.avoidColors.slice(0, 6);
+
+  const characteristics = [
+    { icon: <IconSun />,        label: data.undertone === "Warm" ? "Warm" : data.undertone === "Cool" ? "Cool" : "Neutral" },
+    { icon: <IconLeaf />,       label: "Muted" },
+    { icon: <IconHalfCircle />, label: "Soft" },
+  ];
+
+  const makeupColors = data.palette.slice(0, 3);
+
+  const sectionTitle =
+    "text-[10px] uppercase tracking-[0.18em] font-semibold text-center";
+  const warmBrown = { color: "#9C7D5B" };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-ink-mist mb-2">
-              Your Color Season
+    <div
+      className="rounded-3xl overflow-hidden"
+      style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}
+    >
+      {/* ── Top half: photo LEFT + info RIGHT ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2">
+
+        {/* Photo */}
+        <div className="relative min-h-[320px] md:min-h-[460px]" style={{ background: "#EDE3D8" }}>
+          {photoUrl ? (
+            <Image
+              src={photoUrl}
+              alt="Your photo"
+              fill
+              unoptimized
+              className="object-cover object-center"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm" style={{ color: "#9C7D5B" }}>
+              No photo
+            </div>
+          )}
+        </div>
+
+        {/* Info panel */}
+        <div className="flex flex-col justify-center gap-5 px-8 py-8" style={{ background: "#FDFAF6" }}>
+          {/* Title */}
+          <h2
+            className="text-3xl font-black uppercase tracking-[0.12em] text-right"
+            style={{ color: "#3D2B1F", letterSpacing: "0.1em" }}
+          >
+            Color Analysis
+          </h2>
+
+          {/* Season */}
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className="px-4 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold"
+              style={{ background: "#F0E8DC", color: "#9C7D5B", border: "1px solid #E8DDD0" }}
+            >
+              Season
+            </span>
+            <p
+              className="text-2xl font-black uppercase tracking-[0.08em]"
+              style={{ color: "#3D2B1F" }}
+            >
+              {data.season}
             </p>
-            <CardTitle className="gradient-text text-3xl">{data.season}</CardTitle>
           </div>
-          <Badge
-            tone="accent"
-            className="text-sm px-4 py-2 bg-terracotta/10 text-terracotta border-terracotta/20"
-          >
-            {data.undertone} undertone
-          </Badge>
-        </div>
-      </CardHeader>
 
-      <CardContent className="space-y-8">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-sm text-ink-stone leading-relaxed"
-        >
-          {data.description}
-        </motion.p>
-
-        {/* Color Palette Grid */}
-        <section>
-          <h4 className="mb-4 text-xs uppercase tracking-widest text-ink-mist flex items-center gap-2">
-            <span className="h-px flex-1 bg-gradient-to-r from-terracotta/30 to-transparent" />
-            Your Perfect Palette
-            <span className="h-px flex-1 bg-gradient-to-l from-terracotta/30 to-transparent" />
-          </h4>
-
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-8"
-          >
-            {data.palette.map((color, index) => (
-              <motion.div
-                key={color.hex}
-                variants={fadeUp}
-                className="flex flex-col items-center gap-2 group"
-              >
-                <motion.button
-                  whileHover="hover"
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => copyToClipboard(color.hex, color.name)}
-                  className="relative cursor-pointer focus-ring rounded-full"
-                  aria-label={`Copy ${color.name} color ${color.hex}`}
-                >
-                  <motion.div
-                    variants={hoverScale}
-                    className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-white shadow-card relative overflow-hidden"
-                    style={{ backgroundColor: color.hex }}
-                  >
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      {copiedHex === color.hex ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="rounded-full p-1.5" style={{ background: "#0A0A0F" }}
-                        >
-                          <Check className="h-4 w-4 text-sage" />
-                        </motion.div>
-                      ) : (
-                        <Copy className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      )}
-                    </div>
-                  </motion.div>
-
-                  {/* Tooltip on hover */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    whileHover={{ opacity: 1, y: 0 }}
-                    className="absolute -bottom-16 left-1/2 -translate-x-1/2 bg-ink text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    {color.hex}
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-ink rotate-45" />
-                  </motion.div>
-                </motion.button>
-
-                <span className="text-[10px] sm:text-xs text-ink-stone text-center leading-tight max-w-[4rem]">
-                  {color.name}
-                </span>
-              </motion.div>
+          {/* 4 key palette dots */}
+          <div className="flex justify-end gap-3">
+            {data.palette.slice(0, 4).map((c) => (
+              <span
+                key={c.hex}
+                className="h-11 w-11 rounded-full shadow-md"
+                style={{ backgroundColor: c.hex, border: "2px solid #fff" }}
+                title={c.name}
+              />
             ))}
-          </motion.div>
+          </div>
 
-          <p className="mt-4 text-center text-xs text-ink-mist italic">
-            Click any color to copy its hex code
-          </p>
-        </section>
-
-        {/* Two-Column Comparison */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Wear These */}
-          <motion.section
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-2xl bg-sage/5 border-l-4 border-sage p-6"
-          >
-            <h4 className="mb-4 text-sm font-medium text-sage flex items-center gap-2">
-              <Check className="h-5 w-5" />
-              Wear These Colors
-            </h4>
-            <div className="space-y-3">
-              {data.palette.slice(0, 4).map((color) => (
-                <div key={color.hex} className="flex items-center gap-3">
-                  <div
-                    className="h-8 w-8 rounded-full border border-white shadow-sm shrink-0"
-                    style={{ backgroundColor: color.hex }}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-ink">{color.name}</p>
-                    <p className="text-xs text-ink-stone">Enhances your natural coloring</p>
-                  </div>
+          {/* Characteristics */}
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className="px-4 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold"
+              style={{ background: "#F0E8DC", color: "#9C7D5B", border: "1px solid #E8DDD0" }}
+            >
+              Characteristics
+            </span>
+            <div className="flex gap-5">
+              {characteristics.map((c) => (
+                <div key={c.label} className="flex flex-col items-center gap-1">
+                  <span style={{ color: "#9C7D5B" }}>{c.icon}</span>
+                  <span className="text-[11px]" style={{ color: "#6B5344" }}>{c.label}</span>
                 </div>
               ))}
             </div>
-          </motion.section>
+          </div>
 
-          {/* Avoid These */}
-          <motion.section
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="rounded-2xl bg-terracotta/5 border-l-4 border-terracotta/40 p-6"
-          >
-            <h4 className="mb-4 text-sm font-medium text-terracotta flex items-center gap-2">
-              <span className="text-lg">✕</span>
-              Avoid These Colors
-            </h4>
-            <div className="space-y-3">
-              {data.avoidColors.map((color) => (
-                <div key={color.hex} className="flex items-center gap-3">
-                  <div
-                    className="h-8 w-8 rounded-full border border-white shadow-sm shrink-0"
-                    style={{ backgroundColor: color.hex }}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-ink">{color.name}</p>
-                    <p className="text-xs text-ink-stone">Can wash you out</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.section>
-        </div>
-
-        {/* Mini Cards Row */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          {/* Best Metals */}
-          <motion.div
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-2xl bg-gradient-to-br from-camel/10 to-terracotta/10 p-5 border border-cream-200"
-          >
-            <h4 className="mb-3 text-xs uppercase tracking-widest text-terracotta font-medium">
-              Best Metals
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {data.metals.map((metal) => (
-                <Badge
-                  key={metal}
-                  tone="default"
-                  className="text-ink-stone" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  {metal}
-                </Badge>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Makeup Colors */}
-          <motion.div
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-2xl bg-gradient-to-br from-sage/10 to-olive/10 p-5 border border-cream-200"
-          >
-            <h4 className="mb-3 text-xs uppercase tracking-widest text-olive font-medium">
-              Makeup Tones
-            </h4>
-            <div className="flex gap-2">
-              {data.palette.slice(0, 3).map((color) => (
-                <div
-                  key={color.hex}
-                  className="h-8 w-8 rounded-full border-2 border-white shadow-sm"
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
+          {/* Best Neutrals */}
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className="px-4 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold"
+              style={{ background: "#F0E8DC", color: "#9C7D5B", border: "1px solid #E8DDD0" }}
+            >
+              Best Neutrals
+            </span>
+            <div className="flex gap-3">
+              {neutrals.map((n) => (
+                <span
+                  key={n.hex}
+                  className="h-9 w-9 rounded-full shadow-sm"
+                  style={{ backgroundColor: n.hex, border: "2px solid #fff" }}
                 />
               ))}
             </div>
-            <p className="mt-2 text-xs text-ink-stone">Warm, muted tones</p>
-          </motion.div>
-
-          {/* Best Prints */}
-          <motion.div
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-2xl bg-gradient-to-br from-olive/10 to-sage/10 p-5 border border-cream-200"
-          >
-            <h4 className="mb-3 text-xs uppercase tracking-widest text-sage font-medium">
-              Best Prints
-            </h4>
-            <ul className="space-y-1 text-xs text-ink-stone">
-              <li>• Soft florals</li>
-              <li>• Muted patterns</li>
-              <li>• Earthy plaids</li>
-            </ul>
-          </motion.div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* ── COLOR COMPARISON divider ── */}
+      <div
+        className="flex items-center justify-center gap-3 py-4 px-6"
+        style={{ background: "#F5EFE7", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}
+      >
+        <span style={{ color: "#C8A96E" }}>✦</span>
+        <p className={sectionTitle} style={warmBrown}>Color Comparison</p>
+        <span style={{ color: "#C8A96E" }}>✦</span>
+      </div>
+
+      {/* ── Best Colors row ── */}
+      <div className="px-5 pt-5 pb-3" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="flex h-6 w-6 items-center justify-center rounded-full"
+            style={{ background: "#7BA05B" }}
+          >
+            <Check className="h-3.5 w-3.5 text-white" />
+          </span>
+          <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {bestSix.map((c) => (
+            <div key={c.hex} className="flex flex-col rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
+              {/* photo-like placeholder tinted with the colour */}
+              <div
+                className="w-full"
+                style={{
+                  aspectRatio: "3/4",
+                  background: `linear-gradient(160deg, ${c.hex}33 0%, ${c.hex}88 100%)`,
+                  position: "relative",
+                }}
+              >
+                {/* colour name overlay */}
+                <div className="absolute inset-0 flex items-end p-1">
+                  <span className="text-[9px] font-medium truncate" style={{ color: "#3D2B1F" }}>{c.name}</span>
+                </div>
+              </div>
+              {/* colour strip */}
+              <div className="flex h-3">
+                {[c.hex, c.hex + "CC", c.hex + "99", c.hex + "66"].map((h, i) => (
+                  <div key={i} className="flex-1" style={{ backgroundColor: h }} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Less Flattering row ── */}
+      <div className="px-5 pt-3 pb-5" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="flex h-6 w-6 items-center justify-center rounded-full"
+            style={{ background: "#C06B3E" }}
+          >
+            <X className="h-3.5 w-3.5 text-white" />
+          </span>
+          <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Less Flattering</p>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {avoidSix.map((c) => (
+            <div key={c.hex} className="flex flex-col rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
+              <div
+                className="w-full"
+                style={{
+                  aspectRatio: "3/4",
+                  background: `linear-gradient(160deg, ${c.hex}33 0%, ${c.hex}88 100%)`,
+                  position: "relative",
+                }}
+              >
+                <div className="absolute inset-0 flex items-end p-1">
+                  <span className="text-[9px] font-medium truncate" style={{ color: "#3D2B1F" }}>{c.name}</span>
+                </div>
+              </div>
+              <div className="flex h-3">
+                {[c.hex, c.hex + "CC", c.hex + "99", c.hex + "66"].map((h, i) => (
+                  <div key={i} className="flex-1" style={{ backgroundColor: h }} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Bottom 3-col: Metals | Prints | Makeup ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ "--tw-divide-opacity": 1, borderTop: "1px solid #E8DDD0" } as React.CSSProperties}>
+
+        {/* Best Metals */}
+        <div className="flex flex-col items-center gap-4 py-6 px-5">
+          <p className={sectionTitle} style={warmBrown}>Best Metals</p>
+          <div className="flex gap-6 justify-center">
+            {data.metals.slice(0, 2).map((metal) => {
+              const isGold = metal.toLowerCase().includes("gold") && !metal.toLowerCase().includes("rose");
+              const isRose = metal.toLowerCase().includes("rose");
+              const bg = isGold ? "linear-gradient(135deg,#E8C96A,#C9A83C)"
+                       : isRose ? "linear-gradient(135deg,#E8B4A0,#C98070)"
+                       : "linear-gradient(135deg,#E0E0E0,#A0A0A0)";
+              return (
+                <div key={metal} className="flex flex-col items-center gap-2">
+                  <span
+                    className="flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold shadow-md"
+                    style={{ background: bg, color: "#fff" }}
+                  >
+                    ◯
+                  </span>
+                  <span className="text-xs font-medium" style={{ color: "#3D2B1F" }}>{metal}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Best Prints */}
+        <div className="flex flex-col items-center gap-4 py-6 px-5">
+          <p className={sectionTitle} style={warmBrown}>Best Prints</p>
+          <div className="flex gap-4 justify-center">
+            {PRINT_LABELS.map((label, i) => (
+              <div key={label} className="flex flex-col items-center gap-1.5">
+                <span
+                  className="h-14 w-14 rounded-full shadow-md flex items-center justify-center text-white text-xs font-medium"
+                  style={{
+                    background: `radial-gradient(circle at 40% 40%, ${PRINT_COLORS[i]}CC, ${PRINT_COLORS[i]})`,
+                    border: "2px solid #fff",
+                  }}
+                >
+                  ✿
+                </span>
+                <span className="text-[10px] text-center leading-tight max-w-[48px]" style={{ color: "#6B5344" }}>
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Best Makeup */}
+        <div className="flex flex-col items-center gap-4 py-6 px-5">
+          <p className={sectionTitle} style={warmBrown}>Best Makeup</p>
+          <div className="flex gap-4 justify-center">
+            {makeupColors.map((c, i) => (
+              <div key={c.hex} className="flex flex-col items-center gap-1.5">
+                <span
+                  className="h-14 w-14 rounded-full shadow-md"
+                  style={{ backgroundColor: c.hex, border: "2px solid #fff" }}
+                />
+                <span className="text-[10px] text-center leading-tight max-w-[56px] whitespace-pre-line" style={{ color: "#6B5344" }}>
+                  {MAKEUP_LABELS[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
