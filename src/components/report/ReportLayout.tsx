@@ -392,6 +392,19 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                           ?.filter((a) => a.status === "ready" && a.signedUrl)
                           .map((a) => a.signedUrl!)
                       }
+                      faceShape={report.faceShape?.shape}
+                      faceTraits={report.faceShape?.traits}
+                      bestFeatures={
+                        report.features
+                          ? [
+                              report.features.eyes.shape,
+                              report.features.cheeks.shape,
+                              report.features.lips.shape,
+                            ]
+                          : undefined
+                      }
+                      stylingTips={report.hairstyle.avoid.slice(0, 3)}
+                      hairType={undefined}
                     />
                   ) : (
                     <Locked
