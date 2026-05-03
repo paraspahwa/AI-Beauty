@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import type { ColorAnalysisResult, GlassesResult, HairstyleResult, ReportVisualAssets } from "@/types/report";
 import { generateTryOnImage } from "./image-gen";
-import { replicateHairPreview } from "./replicate-hair";
+import { replicateHairPreview, replicateHairPreviewBatch } from "./replicate-hair";
 import { env } from "@/lib/env";
 
 type LandmarkPoint = {
@@ -364,29 +364,60 @@ export async function generateHairstylePreviews(
   const replicateToken = env.replicate.apiToken;
   const useReplicate   = env.replicate.isConfigured && !!faceBox;
 
+  // ── Tier 1: Replicate SDXL batch (photorealistic, parallel) ───────────────
+  if (useReplicate && faceBox) {
+    const batchStyles = allStyles.map((s, i) => ({ index: i, name: s.name }));
+    const replicateResults = await replicateHairPreviewBatch(
+      selfieBuf,
+      faceBox,
+      batchStyles,
+      hairHex,
+      replicateToken,
+    ).catch((err) => {
+      console.warn("[visuals] Replicate batch failed, falling back to Sharp:", (err as Error).message);
+      return [] as { index: number; buffer: Buffer; style: string }[];
+    });
+
+    // Fill in Sharp fallback for any slots Replicate didn't produce
+    const replicateDone = new Set(replicateResults.map((r) => r.index));
+    results.push(...replicateResults);
+
+    for (let i = 0; i < allStyles.length; i++) {
+      if (replicateDone.has(i)) continue;
+      const style = allStyles[i];
+      try {
+        if (faceBox) {
+          const eraseMask = await buildHairEraseMask(faceBox, W, H);
+          const hairSvg   = buildHairSvg(style.name, faceBox, W, H, hairHex);
+          const padX  = Math.round(faceBox.faceW * 0.45);
+          const padY  = Math.round(faceBox.faceH * 0.55);
+          const cropL = Math.max(0, Math.round(faceBox.left   - padX));
+          const cropT = Math.max(0, Math.round(faceBox.crownY - padY * 0.35));
+          const cropR = Math.min(W, Math.round(faceBox.right  + padX));
+          const cropB = Math.min(H, Math.round(faceBox.bottom + padY * 0.45));
+          const composited = await sharp(selfieBuf)
+            .rotate()
+            .composite([
+              { input: eraseMask,            blend: "over", top: 0, left: 0 },
+              { input: Buffer.from(hairSvg), blend: "over", top: 0, left: 0 },
+            ])
+            .extract({ left: cropL, top: cropT, width: cropR - cropL, height: cropB - cropT })
+            .resize(400, 530, { fit: "cover", position: "top" })
+            .jpeg({ quality: 88 })
+            .toBuffer();
+          results.push({ index: i, buffer: composited, style: style.name });
+        }
+      } catch (err) {
+        console.warn(`[visuals] Sharp fallback ${i} (${style.name}) failed:`, (err as Error).message);
+      }
+    }
+    return results;
+  }
+
+  // ── No Replicate: Sharp SVG composite for all slots ────────────────────────
   for (let i = 0; i < allStyles.length; i++) {
     const style = allStyles[i];
     try {
-      // ── Tier 1: Replicate inpainting (photorealistic, primary) ────────────
-      if (useReplicate && faceBox) {
-        try {
-          const buf = await replicateHairPreview(
-            selfieBuf,
-            faceBox,
-            style.name,
-            hairHex,
-            replicateToken,
-          );
-          results.push({ index: i, buffer: buf, style: style.name });
-          continue;
-        } catch (repErr) {
-          console.warn(
-            `[visuals] Replicate preview ${i} (${style.name}) failed, falling back to Sharp:`,
-            (repErr as Error).message,
-          );
-        }
-      }
-
       // ── Tier 2: Sharp SVG composite (fast, no API cost) ──────────────────
       if (faceBox) {
         // Phase 2: feathered erase mask over original hair zone
