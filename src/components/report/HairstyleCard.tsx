@@ -6,15 +6,25 @@ import type { HairstyleResult } from "@/types/report";
 
 // ── Animation CSS ────────────────────────────────────────────────────────────
 const HAIR_CSS = `
-@keyframes hair-draw {
-  from { stroke-dashoffset: 1; opacity: 0; }
-  8%   { opacity: 1; }
-  to   { stroke-dashoffset: 0; opacity: 1; }
+/* Filled hair silhouette fade-in */
+@keyframes hair-fill-in {
+  from { opacity: 0; transform: scaleY(0.96); transform-origin: top center; }
+  to   { opacity: 1; transform: scaleY(1);    transform-origin: top center; }
 }
-.hair-line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: hair-draw 0.8s cubic-bezier(0.4,0,0.2,1) forwards;
+.hair-fill {
+  opacity: 0;
+  animation: hair-fill-in 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+/* Sheen highlight stroke draw */
+@keyframes hair-sheen {
+  from { stroke-dashoffset: 80; opacity: 0; }
+  to   { stroke-dashoffset: 0;  opacity: 1; }
+}
+.hair-sheen {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: hair-sheen 0.5s 0.4s ease forwards;
 }
 
 /* Length diagram: recommended line draws in left-to-right */
@@ -70,145 +80,159 @@ function IconSparkle() {
 }
 
 // ── Per-style hairstyle SVG overlay ─────────────────────────────────────────
-// viewBox 0 0 100 140 — face occupies y=10-75, hair flows from the head
-// Each style draws distinctive hair paths so the cards look unique.
+// viewBox 0 0 100 140 — head oval: cx=50 cy=38 rx=18 ry=22
+// Crown y≈16, Chin y≈60, Ears x≈32/68 y≈38
+// Each style uses FILLED semi-transparent dark shapes so cards look visually distinct.
 function HairOverlay({ style, animate = false, delay = 0 }: { style: string; animate?: boolean; delay?: number }) {
-  const s   = style.toLowerCase();
-  const col = "rgba(255,255,255,0.82)";
-  const sw  = "1.4";
+  const s = style.toLowerCase();
+  // Dark warm-brown fill — overlays on photo look like real hair mass
+  const fill    = "rgba(28,14,4,0.72)";
+  // Warm amber sheen strokes for hair gloss/texture
+  const sheen   = "rgba(190,140,75,0.55)";
+  const fillCls = animate ? "hair-fill" : "";
+  const fillSty = animate ? ({ animationDelay: `${delay}s` } as React.CSSProperties) : {};
+  const sheenCls = animate ? "hair-sheen" : "";
 
-  function ac(d = 0): React.SVGProps<SVGPathElement> {
-    if (!animate) return {};
-    return {
-      className: "hair-line",
-      pathLength: 1,
-      style: { animationDelay: `${delay + d}s` } as React.CSSProperties,
-    };
-  }
+  let shapes: React.ReactNode;
 
-  // Head oval centred at cx=50 cy=38, rx=18 ry=22
-  // Hair starts from the crown (y~16) and ears (x~32 / x~68)
-
-  let paths: React.ReactNode;
-
-  if (s.includes("long layer") || s.includes("long layer")) {
-    // Long layers: smooth flowing lines down past shoulders, slight wave at ends
-    paths = (
+  if (s.includes("long layer") || (s.includes("long") && !s.includes("bob"))) {
+    // Long layers — wide flowing mass past the frame bottom
+    shapes = (
       <>
-        <path d="M32 30 C18 50 14 80 16 120" stroke={col} strokeWidth={sw} fill="none" {...ac(0)} />
-        <path d="M34 28 C20 50 18 85 20 125" stroke={col} strokeWidth={sw} fill="none" {...ac(0.07)} />
-        <path d="M68 30 C82 50 86 80 84 120" stroke={col} strokeWidth={sw} fill="none" {...ac(0.04)} />
-        <path d="M66 28 C80 50 82 85 80 125" stroke={col} strokeWidth={sw} fill="none" {...ac(0.11)} />
-        {/* top volume */}
-        <path d="M36 16 C38 10 62 10 64 16" stroke={col} strokeWidth={sw} fill="none" {...ac(0.14)} />
+        <path d="M34 22 C18 32 8 62 6 95 C4 122 8 140 8 140 L28 140 C26 120 22 98 24 76 C26 56 30 38 36 26 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M66 22 C82 32 92 62 94 95 C96 122 92 140 92 140 L72 140 C74 120 78 98 76 76 C74 56 70 38 64 26 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 22 C38 12 62 12 66 22 C60 17 40 17 34 22 Z" fill={fill} className={fillCls} style={fillSty} />
+        <path d="M12 68 C10 82 12 98 14 114" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M88 68 C90 82 88 98 86 114" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M18 88 C20 100 22 114 20 126" stroke={sheen} strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.7" className={sheenCls} />
+        <path d="M82 88 C80 100 78 114 80 126" stroke={sheen} strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.7" className={sheenCls} />
       </>
     );
   } else if (s.includes("bob") || s.includes("lob")) {
-    // Bob/Lob: hair ends at jaw / shoulder level
-    paths = (
+    const cutY = s.includes("lob") ? 90 : 75;
+    shapes = (
       <>
-        <path d="M32 30 C18 48 18 65 22 76" stroke={col} strokeWidth={sw} fill="none" {...ac(0)} />
-        <path d="M68 30 C82 48 82 65 78 76" stroke={col} strokeWidth={sw} fill="none" {...ac(0.05)} />
-        {/* blunt bottom line */}
-        <path d="M22 76 C38 80 62 80 78 76" stroke={col} strokeWidth={sw} fill="none" {...ac(0.10)} />
-        {/* top */}
-        <path d="M36 16 C40 10 60 10 64 16" stroke={col} strokeWidth={sw} fill="none" {...ac(0.15)} />
+        <path d={`M34 22 C18 32 16 55 16 ${cutY} L84 ${cutY} C84 55 82 32 66 22 C60 17 40 17 34 22 Z`}
+          fill={fill} className={fillCls} style={fillSty} />
+        <line x1="16" y1={cutY} x2="84" y2={cutY} stroke={sheen} strokeWidth="2" strokeLinecap="round" />
+        <path d={`M24 28 L20 ${cutY - 5}`} stroke={sheen} strokeWidth="1.4" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d={`M76 28 L80 ${cutY - 5}`} stroke={sheen} strokeWidth="1.4" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   } else if (s.includes("bang") || s.includes("fringe")) {
-    // Side-swept bangs: diagonal fringe across forehead + flowing sides
-    paths = (
+    shapes = (
       <>
-        {/* side-swept bang */}
-        <path d="M36 16 C44 18 54 22 58 26" stroke={col} strokeWidth="2" fill="none" {...ac(0)} />
-        <path d="M36 16 C42 20 50 24 54 28" stroke={col} strokeWidth={sw} fill="none" {...ac(0.05)} />
-        {/* flowing sides */}
-        <path d="M32 30 C18 52 16 90 18 115" stroke={col} strokeWidth={sw} fill="none" {...ac(0.10)} />
-        <path d="M68 30 C82 52 84 90 82 115" stroke={col} strokeWidth={sw} fill="none" {...ac(0.12)} />
+        <path d="M34 22 C16 36 10 72 8 112 L24 116 C22 80 26 54 32 34 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M66 22 C84 36 90 72 92 112 L76 116 C78 80 74 54 68 34 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M32 22 C38 12 62 12 68 22 C58 18 42 20 36 26 C30 28 32 26 32 22 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 20 C44 24 56 22 66 18" stroke={sheen} strokeWidth="1.8" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M10 60 C8 74 10 88 8 100" stroke={sheen} strokeWidth="1.4" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M90 60 C92 74 90 88 92 100" stroke={sheen} strokeWidth="1.4" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   } else if (s.includes("updo") || s.includes("bun") || s.includes("ponytail") || s.includes("pony")) {
-    // Updo/Ponytail: hair gathered upward, bun at top or tail at back
-    const isTail = s.includes("pony");
-    paths = (
+    const isPony = s.includes("pony");
+    shapes = (
       <>
-        {/* sides swept up */}
-        <path d="M32 34 C28 28 32 20 40 17" stroke={col} strokeWidth={sw} fill="none" {...ac(0)} />
-        <path d="M68 34 C72 28 68 20 60 17" stroke={col} strokeWidth={sw} fill="none" {...ac(0.05)} />
-        {isTail ? (
-          // ponytail flowing down from crown
-          <path d="M50 14 C54 8 58 20 52 50 C48 70 46 90 48 110" stroke={col} strokeWidth="2" fill="none" {...ac(0.10)} />
+        <path d="M34 28 C26 22 28 14 38 12 L50 10 L62 12 C72 14 74 22 66 28 C60 20 40 20 34 28 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 30 C28 38 30 48 32 54" stroke={fill} strokeWidth="8" strokeLinecap="round" fill="none" className={fillCls} style={fillSty} />
+        <path d="M66 30 C72 38 70 48 68 54" stroke={fill} strokeWidth="8" strokeLinecap="round" fill="none" className={fillCls} style={fillSty} />
+        {isPony ? (
+          <path d="M50 8 C56 4 64 16 58 48 C54 70 52 92 54 122"
+            stroke={fill} strokeWidth="12" fill="none" strokeLinecap="round" className={fillCls} style={fillSty} />
         ) : (
-          // bun circle at top
           <>
-            <circle cx="50" cy="12" r="7" stroke={col} strokeWidth={sw} fill="none" {...(ac(0.10) as React.SVGProps<SVGCircleElement>)} />
-            <path d="M44 16 C42 18 42 22 44 24" stroke={col} strokeWidth="1" fill="none" {...ac(0.15)} />
+            <ellipse cx="50" cy="7" rx="10" ry="8" fill={fill} className={fillCls} style={fillSty} />
+            <path d="M42 10 C46 14 54 14 58 10" stroke={sheen} strokeWidth="1.4" fill="none" className={sheenCls} />
           </>
         )}
       </>
     );
   } else if (s.includes("wavy") || s.includes("wave")) {
-    // Wavy: sinusoidal paths flowing down from head
-    paths = (
+    shapes = (
       <>
-        <path d="M32 30 C16 44 20 56 14 68 C10 78 16 92 12 110" stroke={col} strokeWidth={sw} fill="none" strokeLinecap="round" {...ac(0)} />
-        <path d="M68 30 C84 44 80 56 86 68 C90 78 84 92 88 110" stroke={col} strokeWidth={sw} fill="none" strokeLinecap="round" {...ac(0.06)} />
-        <path d="M36 16 C40 10 60 10 64 16" stroke={col} strokeWidth={sw} fill="none" {...ac(0.12)} />
+        <path d="M34 22 C12 36 6 64 8 88 C10 106 6 120 8 140 L24 140 C22 122 26 108 24 90 C22 68 24 48 34 30 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M66 22 C88 36 94 64 92 88 C90 106 94 120 92 140 L76 140 C78 122 74 108 76 90 C78 68 76 48 66 30 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 22 C40 12 60 12 66 22 C60 17 40 17 34 22 Z" fill={fill} className={fillCls} style={fillSty} />
+        <path d="M10 56 C8 66 14 74 10 84 C6 94 12 102 10 112" stroke={sheen} strokeWidth="2" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M90 56 C92 66 86 74 90 84 C94 94 88 102 90 112" stroke={sheen} strokeWidth="2" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   } else if (s.includes("curl") || s.includes("coil") || s.includes("afro")) {
-    // Curly/Afro: voluminous cloud-like halo with spiral hints
-    paths = (
+    // Afro/Curly — large halo volume extending well beyond the head oval
+    shapes = (
       <>
-        {/* volume halo */}
-        <path d="M26 22 C14 14 12 30 18 36" stroke={col} strokeWidth={sw} fill="none" {...ac(0)} />
-        <path d="M74 22 C86 14 88 30 82 36" stroke={col} strokeWidth={sw} fill="none" {...ac(0.06)} />
-        <path d="M36 12 C38 4 62 4 64 12" stroke={col} strokeWidth="2" fill="none" {...ac(0.10)} />
-        {/* spiral hints */}
-        <path d="M22 40 C18 46 20 54 24 58" stroke={col} strokeWidth="1.1" fill="none" {...ac(0.14)} />
-        <path d="M78 40 C82 46 80 54 76 58" stroke={col} strokeWidth="1.1" fill="none" {...ac(0.16)} />
+        <path d="M50 2 C18 0 2 18 2 40 C2 60 14 70 22 68 C16 80 10 96 12 124 L30 128 C26 106 28 88 30 72 L30 68 C20 60 14 52 14 40 C14 22 28 12 50 10 C72 12 86 22 86 40 C86 52 80 60 70 68 L70 72 C72 88 74 106 70 128 L88 124 C90 96 84 80 78 68 C86 70 98 60 98 40 C98 18 82 0 50 2 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M18 28 C14 34 18 42 24 38" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M82 28 C86 34 82 42 76 38" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M26 14 C22 18 24 24 28 22" stroke={sheen} strokeWidth="1.4" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M74 14 C78 18 76 24 72 22" stroke={sheen} strokeWidth="1.4" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M50 4 C46 8 48 14 52 12 C56 10 56 4 50 4" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   } else if (s.includes("pixie") || s.includes("short")) {
-    // Pixie/Short: barely covers the ears, cropped crown
-    paths = (
+    // Pixie — tight to skull, ends just below ears
+    shapes = (
       <>
-        <path d="M33 26 C24 30 22 40 24 50" stroke={col} strokeWidth={sw} fill="none" {...ac(0)} />
-        <path d="M67 26 C76 30 78 40 76 50" stroke={col} strokeWidth={sw} fill="none" {...ac(0.05)} />
-        {/* short textured top */}
-        <path d="M36 16 C40 12 50 10 60 12 L64 16" stroke={col} strokeWidth="2" fill="none" {...ac(0.10)} />
-        <path d="M40 13 C42 9 48 8 54 10" stroke={col} strokeWidth="1.1" fill="none" {...ac(0.14)} />
+        <path d="M34 28 C22 36 20 48 22 60 L78 60 C80 48 78 36 66 28 C60 22 40 22 34 28 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M38 24 C42 16 50 13 58 16 L62 22" stroke={fill} strokeWidth="9" strokeLinecap="round" fill="none" className={fillCls} style={fillSty} />
+        <path d="M24 36 C22 44 22 52 24 58" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M76 36 C78 44 78 52 76 58" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M40 22 C42 18 46 16 50 16" stroke={sheen} strokeWidth="1.2" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M50 16 C54 16 58 18 60 22" stroke={sheen} strokeWidth="1.2" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   } else if (s.includes("straight") || s.includes("sleek")) {
-    // Straight/Sleek: perfectly straight parallel lines
-    paths = (
+    // Sleek straight — smooth parallel mass, wide gloss stripe
+    shapes = (
       <>
-        <path d="M32 28 L22 110" stroke={col} strokeWidth={sw} fill="none" strokeLinecap="round" {...ac(0)} />
-        <path d="M35 26 L26 112" stroke={col} strokeWidth="1.1" fill="none" strokeLinecap="round" {...ac(0.06)} />
-        <path d="M68 28 L78 110" stroke={col} strokeWidth={sw} fill="none" strokeLinecap="round" {...ac(0.04)} />
-        <path d="M65 26 L74 112" stroke={col} strokeWidth="1.1" fill="none" strokeLinecap="round" {...ac(0.09)} />
-        <path d="M36 16 C40 10 60 10 64 16" stroke={col} strokeWidth={sw} fill="none" {...ac(0.13)} />
+        <path d="M34 22 C18 36 16 62 14 92 C12 118 16 134 16 140 L30 140 C28 132 24 112 26 88 C28 62 30 40 36 28 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M66 22 C82 36 84 62 86 92 C88 118 84 134 84 140 L70 140 C72 132 76 112 74 88 C72 62 70 40 64 28 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 22 C40 12 60 12 66 22 C60 17 40 17 34 22 Z" fill={fill} className={fillCls} style={fillSty} />
+        {/* Wide glossy highlight stripe — key visual for sleek */}
+        <path d="M40 18 L30 140" stroke="rgba(255,230,180,0.50)" strokeWidth="5" strokeLinecap="round" />
+        <path d="M44 17 L34 140" stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeLinecap="round" />
       </>
     );
   } else if (s.includes("textured") || s.includes("shag")) {
-    // Textured/Shag: jagged layered lines
-    paths = (
+    // Shag — layered jagged edges with notched sheen
+    shapes = (
       <>
-        <path d="M32 30 C20 44 22 60 18 80 C16 96 20 110 18 120" stroke={col} strokeWidth={sw} fill="none" strokeLinecap="round" {...ac(0)} />
-        <path d="M68 30 C80 44 78 60 82 80 C84 96 80 110 82 120" stroke={col} strokeWidth={sw} fill="none" strokeLinecap="round" {...ac(0.06)} />
-        {/* layered fringe */}
-        <path d="M36 16 C40 12 46 14 50 16 C54 14 60 12 64 16" stroke={col} strokeWidth="2" fill="none" {...ac(0.12)} />
-        <path d="M38 19 C42 16 48 18 50 20 C52 18 58 16 62 19" stroke={col} strokeWidth="1.1" fill="none" {...ac(0.16)} />
+        <path d="M34 24 C14 38 10 68 10 96 C10 118 14 134 14 140 L28 140 C26 130 22 114 22 94 C22 70 24 46 32 30 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M66 24 C86 38 90 68 90 96 C90 118 86 134 86 140 L72 140 C74 130 78 114 78 94 C78 70 76 46 68 30 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 24 C40 12 60 12 66 24 C60 18 40 18 34 24 Z" fill={fill} className={fillCls} style={fillSty} />
+        <path d="M12 66 C16 62 20 68 24 64 C28 60 32 66 36 62" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M88 66 C84 62 80 68 76 64 C72 60 68 66 64 62" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M12 90 C16 86 20 92 24 88" stroke={sheen} strokeWidth="1.3" fill="none" strokeLinecap="round" opacity="0.85" className={sheenCls} />
+        <path d="M88 90 C84 86 80 92 76 88" stroke={sheen} strokeWidth="1.3" fill="none" strokeLinecap="round" opacity="0.85" className={sheenCls} />
+        <path d="M36 22 C40 16 46 18 50 20 C54 18 60 16 64 22" stroke={sheen} strokeWidth="1.8" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   } else {
-    // Default: medium-length loose waves
-    paths = (
+    // Default: medium loose wave
+    shapes = (
       <>
-        <path d="M32 30 C18 50 16 80 18 110" stroke={col} strokeWidth={sw} fill="none" {...ac(0)} />
-        <path d="M68 30 C82 50 84 80 82 110" stroke={col} strokeWidth={sw} fill="none" {...ac(0.06)} />
-        <path d="M36 16 C40 10 60 10 64 16" stroke={col} strokeWidth={sw} fill="none" {...ac(0.12)} />
+        <path d="M34 24 C16 38 14 66 14 100 L28 104 C24 76 24 52 32 32 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M66 24 C84 38 86 66 86 100 L72 104 C76 76 76 52 68 32 Z"
+          fill={fill} className={fillCls} style={fillSty} />
+        <path d="M34 24 C40 14 60 14 66 24 C60 18 40 18 34 24 Z" fill={fill} className={fillCls} style={fillSty} />
+        <path d="M16 55 C14 66 18 76 14 86" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
+        <path d="M84 55 C86 66 82 76 86 86" stroke={sheen} strokeWidth="1.6" fill="none" strokeLinecap="round" className={sheenCls} />
       </>
     );
   }
@@ -219,7 +243,7 @@ function HairOverlay({ style, animate = false, delay = 0 }: { style: string; ani
       viewBox="0 0 100 140"
       preserveAspectRatio="xMidYMid meet"
     >
-      {paths}
+      {shapes}
     </svg>
   );
 }
@@ -417,37 +441,15 @@ export function HairstyleCard({
                   style={{ objectPosition: "top center" }}
                 />
 
-                {/* RIGHT half: tinted overlay + recommended style hair drawing */}
+                {/* RIGHT half: tinted overlay + first recommended style's filled hair silhouette */}
                 <div
                   className="absolute top-0 right-0 bottom-0 overflow-hidden"
-                  style={{ width: "50%", background: "rgba(61,43,31,0.10)" }}
+                  style={{ width: "50%", clipPath: "inset(0)" }}
                 >
-                  {/* clip the HairOverlay to the right half only */}
-                  <svg
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    viewBox="0 0 50 140"
-                    preserveAspectRatio="xMidYMid meet"
-                  >
-                    {/* right-side hair for first recommended style at higher opacity */}
-                    <path
-                      d="M18 30 C32 50 36 80 34 120"
-                      stroke="rgba(255,255,255,0.92)" strokeWidth="2" fill="none"
-                      className="hair-line" pathLength={1}
-                      style={{ animationDelay: "0.2s" } as React.CSSProperties}
-                    />
-                    <path
-                      d="M20 28 C34 50 38 85 36 125"
-                      stroke="rgba(255,255,255,0.65)" strokeWidth="1.4" fill="none"
-                      className="hair-line" pathLength={1}
-                      style={{ animationDelay: "0.3s" } as React.CSSProperties}
-                    />
-                    <path
-                      d="M14 16 C18 10 42 10 46 16"
-                      stroke="rgba(255,255,255,0.85)" strokeWidth="1.4" fill="none"
-                      className="hair-line" pathLength={1}
-                      style={{ animationDelay: "0.4s" } as React.CSSProperties}
-                    />
-                  </svg>
+                  <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.08)" }} />
+                  {flatteningStyles[0] && (
+                    <HairOverlay style={flatteningStyles[0].name} animate delay={0.15} />
+                  )}
                 </div>
 
                 {/* Vertical divider line */}
