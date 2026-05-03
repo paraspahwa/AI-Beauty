@@ -25,7 +25,7 @@ export const maxDuration = 120;
  * Idempotent: if visual_assets already contains ready assets the route returns
  * immediately without re-generating.
  */
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     env.assertServer();
 
@@ -34,6 +34,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
+    const force = req.nextUrl.searchParams.get("force") === "1";
 
     const admin = createSupabaseAdminClient();
 
@@ -50,16 +51,18 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Report is not ready yet" }, { status: 409 });
     }
 
-    // Idempotency: if visuals already generated, skip
-    const existingAssets = row.visual_assets as Record<string, unknown> | null;
-    const alreadyDone =
-      existingAssets &&
-      typeof existingAssets === "object" &&
-      existingAssets.assets &&
-      typeof existingAssets.assets === "object" &&
-      (existingAssets.assets as Record<string, unknown>).paletteBoard;
-    if (alreadyDone) {
-      return NextResponse.json({ ok: true, skipped: true });
+    // Idempotency: skip if already generated, unless ?force=1
+    if (!force) {
+      const existingAssets = row.visual_assets as Record<string, unknown> | null;
+      const alreadyDone =
+        existingAssets &&
+        typeof existingAssets === "object" &&
+        existingAssets.assets &&
+        typeof existingAssets.assets === "object" &&
+        (existingAssets.assets as Record<string, unknown>).paletteBoard;
+      if (alreadyDone) {
+        return NextResponse.json({ ok: true, skipped: true });
+      }
     }
 
     // Fetch the original image from storage
@@ -132,10 +135,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         error: null,
       }));
 
-    // Up to 8 hairstyle previews: 5 flattering + 3 avoid
+    // Up to 9 hairstyle previews: 5 flattering + 4 avoid
     const allHairStyles = [
       ...(hairstyleResult?.styles ?? []).slice(0, 5),
-      ...(hairstyleResult?.avoid  ?? []).slice(0, 3).map((a) => ({ name: a, description: a })),
+      ...(hairstyleResult?.avoid  ?? []).slice(0, 4).map((a) => ({ name: a, description: a })),
     ];
     visualAssets.assets.hairstylePreviews = allHairStyles.map((s, i) => ({
       path: `${visualAssets.basePath}hairstyle-${i}.jpg`,

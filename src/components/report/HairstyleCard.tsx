@@ -323,60 +323,48 @@ const LENGTH_LEVELS = [
 ];
 
 function LengthDiagram({ recommended }: { recommended: string }) {
-  // Side-profile silhouette matching the reference image
-  // ViewBox: 0 0 160 220
-  // Head centre: cx=72 cy=38. Chin ~68. Neck to y=82. Shoulders slope out.
-  // Hair flows down the right side (viewer's left = back of head)
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 160 220" fill="none" className="h-56 w-auto">
-        {/* ── Side profile silhouette ── */}
-        {/* Head outline — simplified side profile */}
-        <path
-          d="M72 14 C58 14 46 22 42 34 C38 46 40 58 46 66 C50 72 58 76 66 76 L70 82 L76 82 L78 76 C86 74 92 68 94 60 C98 48 96 34 88 24 C82 18 78 14 72 14 Z"
-          stroke="#C8B89A" strokeWidth="1.4" fill="none"
-        />
+      <svg viewBox="0 0 180 230" fill="none" className="h-56 w-auto">
+        {/* ── Minimal side-profile silhouette (black ink, reference style) ── */}
+        {/* Head — simple side oval */}
+        <ellipse cx="68" cy="46" rx="28" ry="34"
+          stroke="#3D2B1F" strokeWidth="1.5" fill="none" />
         {/* Neck */}
-        <line x1="70" y1="82" x2="68" y2="96" stroke="#C8B89A" strokeWidth="1.4" />
-        <line x1="76" y1="82" x2="78" y2="96" stroke="#C8B89A" strokeWidth="1.4" />
+        <line x1="56" y1="79" x2="54" y2="96" stroke="#3D2B1F" strokeWidth="1.5" />
+        <line x1="80" y1="79" x2="82" y2="96" stroke="#3D2B1F" strokeWidth="1.5" />
         {/* Shoulders */}
-        <path d="M68 96 C56 100 42 110 36 126" stroke="#C8B89A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-        <path d="M78 96 C90 100 104 110 110 126" stroke="#C8B89A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+        <path d="M54 96 C44 102 32 114 28 132" stroke="#3D2B1F" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        <path d="M82 96 C92 102 104 114 108 132" stroke="#3D2B1F" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        {/* Hair flowing down — simple filled dark shape */}
+        <path d="M40 28 C32 36 28 58 28 88 C28 118 30 148 30 178 C32 196 34 210 34 222"
+          stroke="#3D2B1F" strokeWidth="8" strokeLinecap="round" fill="none" opacity="0.85" />
+        <path d="M68 13 C54 10 40 18 36 28 C38 20 48 14 68 13 Z" fill="#3D2B1F" opacity="0.85" />
 
-        {/* Hair flowing down the back — dark filled shape */}
-        <path
-          d="M72 14 C58 10 46 16 40 28 C38 30 38 22 42 18 C50 10 62 6 72 8 Z"
-          fill="#A0784A" opacity="0.7"
-        />
-        <path
-          d="M40 28 C36 36 36 48 38 58 C36 72 34 92 36 120 C38 148 40 168 40 200"
-          stroke="#A0784A" strokeWidth="10" strokeLinecap="round" fill="none" opacity="0.7"
-        />
-        <path
-          d="M38 60 C34 72 32 96 34 124 C36 150 38 172 36 200"
-          stroke="#C8A96E" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.45"
-        />
-
-        {/* ── Length indicator lines (horizontal, right side) ── */}
+        {/* ── Horizontal length lines (right side) ── */}
         {LENGTH_LEVELS.map(({ label, y }) => {
           const isRec = recommended.toLowerCase().includes(label.toLowerCase().split(" ")[0]);
-          // Shift y down slightly to align with side-profile body
-          const py = y + 18;
+          const py = y + 12; // shift to align with body
           return (
             <g key={label}>
               {isRec ? (
                 <>
-                  <line x1="28" y1={py} x2="118" y2={py} stroke="#C8A96E" strokeWidth="4" opacity="0.15" />
-                  <line x1="28" y1={py} x2="118" y2={py} stroke="#9C7D5B" strokeWidth="1.8" strokeDasharray="5 2" className="length-rec-glow" />
-                  <line x1="118" y1={py - 4} x2="118" y2={py + 4} stroke="#9C7D5B" strokeWidth="1.8" strokeLinecap="round" />
-                  <text x="122" y={py - 2} fontSize="6.5" fill="#9C7D5B" fontWeight="700">&#9825; {label}</text>
-                  <text x="122" y={py + 7} fontSize="5.5" fill="#A89070">recommended</text>
+                  {/* highlighted recommended line */}
+                  <line x1="24" y1={py} x2="116" y2={py}
+                    stroke="#9C7D5B" strokeWidth="1.5" strokeDasharray="6 3"
+                    className="length-rec-glow" />
+                  <line x1="116" y1={py - 4} x2="116" y2={py + 4}
+                    stroke="#9C7D5B" strokeWidth="1.5" strokeLinecap="round" />
+                  <text x="120" y={py - 1} fontSize="7" fill="#9C7D5B" fontWeight="700">&#9825; {label}</text>
+                  <text x="120" y={py + 8} fontSize="6" fill="#A89070">recommended</text>
                 </>
               ) : (
                 <>
-                  <line x1="28" y1={py} x2="118" y2={py} stroke="#C8B89A" strokeWidth="0.8" strokeDasharray="4 2" opacity="0.5" />
-                  <line x1="118" y1={py - 3} x2="118" y2={py + 3} stroke="#C8B89A" strokeWidth="0.8" opacity="0.5" />
-                  <text x="122" y={py + 1.5} fontSize="6" fill="#B8A888">{label}</text>
+                  <line x1="24" y1={py} x2="116" y2={py}
+                    stroke="#C8B89A" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.6" />
+                  <line x1="116" y1={py - 3} x2="116" y2={py + 3}
+                    stroke="#C8B89A" strokeWidth="0.8" opacity="0.6" />
+                  <text x="120" y={py + 2} fontSize="6.5" fill="#B8A888">{label}</text>
                 </>
               )}
             </g>
@@ -410,7 +398,7 @@ export function HairstyleCard({
   hairType?: string;
 }) {
   const flatteningStyles  = data.styles.slice(0, 5);
-  const considerStyles    = data.avoid.slice(0, 3);
+  const considerStyles    = data.avoid.slice(0, 4);
   // Hair colour from AI analysis — first recommended colour drives overlay tinting
   const primaryHairColor  = data.colors[0]?.hex;
   const bestLength        = data.lengths[1]?.name ?? "Collarbone to Below Shoulder";
@@ -480,97 +468,43 @@ export function HairstyleCard({
             </div>
           </div>
 
-          {/* Centre: Before / After split hero */}
+          {/* Centre: single full photo + face guide overlay (matches reference) */}
           <div className="flex items-center justify-center p-6 min-h-[340px]" style={{ background: "#F5EFE7" }}>
-            {(previewUrls && previewUrls[0]) || photoUrl ? (
+            {photoUrl ? (
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ maxWidth: 300, aspectRatio: "3/4" }}>
-                {/* Base photo fills full width */}
                 <Image
-                  src={(previewUrls && previewUrls[0]) || photoUrl!}
+                  src={photoUrl}
                   alt="Your photo"
                   fill
                   unoptimized
                   className="object-cover"
                   style={{ objectPosition: "top center" }}
                 />
-
-                {/* RIGHT half: tinted overlay + first recommended style's filled hair silhouette */}
-                <div
-                  className="absolute top-0 right-0 bottom-0 overflow-hidden"
-                  style={{ width: "50%", clipPath: "inset(0)" }}
-                >
-                  <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.08)" }} />
-                  {flatteningStyles[0] && (
-                    <HairOverlay style={flatteningStyles[0].name} animate delay={0.15} hairColor={primaryHairColor} />
-                  )}
-                </div>
-
-                {/* Vertical divider line */}
-                <div className="absolute top-0 bottom-0" style={{ left: "50%", width: 2, background: "rgba(255,255,255,0.75)", zIndex: 10 }} />
-
-                {/* Before label */}
-                <div className="absolute bottom-3 left-3" style={{ zIndex: 11 }}>
-                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.6)", color: "rgba(255,255,255,0.85)" }}>Before</span>
-                </div>
-
-                {/* After label — shows recommended style name */}
-                <div className="absolute bottom-3 right-2 flex flex-col items-end gap-0.5" style={{ zIndex: 11, maxWidth: "46%" }}>
-                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.6)", color: "#C8A96E" }}>After</span>
-                  {flatteningStyles[0] && (
-                    <span
-                      className="text-[7.5px] font-semibold px-1.5 py-0.5 rounded-full text-right leading-tight"
-                      style={{ background: styleAccentFromStyle(flatteningStyles[0].name).band, color: styleAccentFromStyle(flatteningStyles[0].name).text, maxWidth: "100%" }}
-                    >
-                      {flatteningStyles[0].name}
-                    </span>
-                  )}
-                </div>
-
-                {/* Dashed oval + guide lines SVG overlay matching reference */}
+                {/* Dashed oval + guide lines matching reference */}
                 <svg
                   className="absolute inset-0 w-full h-full pointer-events-none"
                   viewBox="0 0 300 400"
                   style={{ zIndex: 9 }}
                 >
-                  {/* dashed face oval */}
-                  <ellipse
-                    cx="150" cy="148" rx="88" ry="115"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.60)"
-                    strokeWidth="1.8"
-                    strokeDasharray="7 5"
-                  />
-                  {/* vertical centre line */}
-                  <line x1="150" y1="28" x2="150" y2="268"
-                    stroke="rgba(255,255,255,0.45)" strokeWidth="1.2" strokeDasharray="5 4" />
-                  {/* horizontal eye-level guide */}
-                  <line x1="56" y1="138" x2="244" y2="138"
-                    stroke="rgba(255,255,255,0.35)" strokeWidth="1" strokeDasharray="4 3" />
-                  {/* pointer lines to face features (radiating from centre outward) */}
-                  {/* top-left → forehead */}
-                  <line x1="90" y1="68" x2="130" y2="102"
-                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="88" cy="66" r="2.5" fill="rgba(255,255,255,0.7)" />
-                  {/* top-right → crown */}
-                  <line x1="210" y1="68" x2="170" y2="102"
-                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="212" cy="66" r="2.5" fill="rgba(255,255,255,0.7)" />
-                  {/* mid-left → cheek */}
-                  <line x1="52" y1="155" x2="96" y2="155"
-                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="50" cy="155" r="2.5" fill="rgba(255,255,255,0.7)" />
-                  {/* mid-right → cheek */}
-                  <line x1="248" y1="155" x2="204" y2="155"
-                    stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="250" cy="155" r="2.5" fill="rgba(255,255,255,0.7)" />
-                  {/* lower-left → jaw */}
-                  <line x1="72" y1="228" x2="112" y2="210"
-                    stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
-                  <circle cx="70" cy="230" r="2.5" fill="rgba(255,255,255,0.6)" />
-                  {/* lower-right → jaw */}
-                  <line x1="228" y1="228" x2="188" y2="210"
-                    stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
-                  <circle cx="230" cy="230" r="2.5" fill="rgba(255,255,255,0.6)" />
+                  <ellipse cx="150" cy="155" rx="90" ry="118"
+                    fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.8" strokeDasharray="8 5" />
+                  <line x1="150" y1="30" x2="150" y2="275"
+                    stroke="rgba(255,255,255,0.40)" strokeWidth="1.2" strokeDasharray="5 4" />
+                  <line x1="54" y1="143" x2="246" y2="143"
+                    stroke="rgba(255,255,255,0.30)" strokeWidth="1" strokeDasharray="4 3" />
+                  {/* pointer dots + lines radiating outward */}
+                  <line x1="86" y1="66" x2="128" y2="106" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="84" cy="64" r="3" fill="rgba(255,255,255,0.75)" />
+                  <line x1="214" y1="66" x2="172" y2="106" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="216" cy="64" r="3" fill="rgba(255,255,255,0.75)" />
+                  <line x1="48" y1="158" x2="96" y2="158" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="46" cy="158" r="3" fill="rgba(255,255,255,0.75)" />
+                  <line x1="252" y1="158" x2="204" y2="158" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                  <circle cx="254" cy="158" r="3" fill="rgba(255,255,255,0.75)" />
+                  <line x1="70" y1="236" x2="114" y2="216" stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
+                  <circle cx="68" cy="238" r="3" fill="rgba(255,255,255,0.65)" />
+                  <line x1="230" y1="236" x2="186" y2="216" stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
+                  <circle cx="232" cy="238" r="3" fill="rgba(255,255,255,0.65)" />
                 </svg>
               </div>
             ) : (
@@ -620,101 +554,59 @@ export function HairstyleCard({
             <p className={sectionTitle} style={sT}>Most Flattering Styles</p>
             <span style={{ color: "#C8A96E" }}>&#9825;</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {flatteningStyles.map((s, i) => {
-              const tex   = textureFromStyle(s.name);
-              const maint = maintenanceFromStyle(s.name);
-              const mc    = MAINTENANCE_COLORS[maint.level];
-              return (
-                <div
-                  key={s.name}
-                  className="style-card flex flex-col rounded-2xl overflow-hidden"
-                  style={{ border: `1.5px solid ${styleAccentFromStyle(s.name).band}`, background: "#F5EFE7" }}
-                >
-                  {/* name + texture badge row — accent colour per style family */}
-                  <div className="flex items-center justify-between gap-1 px-2 py-1.5" style={{ background: styleAccentFromStyle(s.name).band, borderBottom: "1px solid #E8DDD0" }}>
-                    <p className="text-[9px] uppercase tracking-widest font-semibold truncate" style={{ color: styleAccentFromStyle(s.name).text }}>{s.name}</p>
-                    <span
-                      className="shrink-0 text-[8px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                      style={{ background: tex.bg, color: tex.color }}
-                    >
-                      {tex.label}
-                    </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {flatteningStyles.map((s, i) => (
+              <div
+                key={s.name}
+                className="style-card flex flex-col rounded-2xl overflow-hidden"
+                style={{ border: "1px solid #E8DDD0", background: "#FFFFFF" }}
+              >
+                {/* photo fills top, composited preview or base photo */}
+                <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
+                  {(() => {
+                    const src = previewUrls?.[i] ?? photoUrl;
+                    return src ? (
+                      <Image src={src} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
+                    );
+                  })()}
+                  {/* green check badge */}
+                  <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#7BA05B" }}>
+                    <Check className="h-3.5 w-3.5 text-white" />
                   </div>
-
-                  {/* photo: real server-composited preview or fallback to base photo */}
-                  <div className="relative w-full" style={{ aspectRatio: "4/5", background: "#EDE3D8" }}>
-                    {(() => {
-                      const src = previewUrls?.[i] ?? photoUrl;
-                      return src ? (
-                        <Image
-                          src={src}
-                          alt={s.name}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                          style={{ objectPosition: "top center" }}
-                        />
-                      ) : (
-                        <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
-                      );
-                    })()}
-                    {/* green check badge */}
-                    <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#7BA05B" }}>
-                      <Check className="h-3.5 w-3.5 text-white" />
-                    </div>
-                    {/* hover expand: full description overlay */}
-                    <div
-                      className="desc-overlay absolute inset-0 flex items-end"
-                      style={{ background: "linear-gradient(to top, rgba(30,18,10,0.82) 0%, rgba(30,18,10,0.0) 55%)" }}
-                    >
-                      <p className="text-[9px] text-white leading-tight p-2 pb-3">{s.description}</p>
-                    </div>
-                  </div>
-
-                  {/* maintenance dots */}
-                  <div className="flex items-center justify-between px-2 py-1.5" style={{ borderTop: "1px solid #E8DDD0" }}>
-                    <span className="text-[8px] font-medium" style={{ color: mc.filled }}>Maint.</span>
-                    <div className="flex gap-1">
-                      {[1, 2, 3].map((dot) => (
-                        <span
-                          key={dot}
-                          className="inline-block h-2 w-2 rounded-full"
-                          style={{ background: dot <= maint.level ? mc.filled : mc.empty }}
-                        />
-                      ))}
-                      <span className="text-[8px] ml-0.5" style={{ color: mc.filled }}>{maint.label}</span>
-                    </div>
+                  {/* hover description */}
+                  <div className="desc-overlay absolute inset-0 flex items-end" style={{ background: "linear-gradient(to top, rgba(30,18,10,0.82) 0%, rgba(30,18,10,0.0) 55%)" }}>
+                    <p className="text-[9px] text-white leading-tight p-2 pb-3">{s.description}</p>
                   </div>
                 </div>
-              );
-            })}
+                {/* style name below image */}
+                <div className="px-2 py-2 text-center" style={{ borderTop: "1px solid #F0E8DF" }}>
+                  <p className="text-[11px] font-semibold leading-tight" style={{ color: "#3D2B1F" }}>{s.name}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* ── Styles to Consider + Best Length ── */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr_260px]" style={{ borderBottom: "1px solid #E8DDD0" }}>
 
-          {/* Styles to Consider */}
+          {/* Styles to Consider — 4 cards horizontal */}
           <div className="px-6 py-6" style={{ borderRight: "1px solid #E8DDD0" }}>
             <p className={sectionTitle} style={sT}>Styles to Consider</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {considerStyles.map((a, i) => (
-                <div key={i} className="flex flex-col rounded-2xl overflow-hidden" style={{ border: "1px solid #F0D8CC", background: "#FDF5F0" }}>
-                  <div className="text-center py-1.5 px-1" style={{ borderBottom: "1px solid #F0D8CC" }}>
-                    <p className="text-[9px] uppercase tracking-widest font-semibold truncate" style={{ color: "#C06B3E" }}>{a.split(" ").slice(0, 3).join(" ")}</p>
-                  </div>
-                  <div className="relative w-full" style={{ aspectRatio: "4/5", background: "#EDE3D8" }}>
+                <div key={i} className="flex flex-col rounded-2xl overflow-hidden" style={{ border: "1px solid #F0D8CC", background: "#FFFFFF" }}>
+                  <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
                     {(() => {
-                      // avoid styles occupy preview slots 5-7
                       const avoidIdx = 5 + i;
                       const src = previewUrls?.[avoidIdx] ?? photoUrl;
                       return src ? (
                         <>
                           <Image src={src} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                          {/* warm red tint only when using plain photo fallback */}
                           {!previewUrls?.[avoidIdx] && (
-                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.18)" }} />
+                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.15)" }} />
                           )}
                         </>
                       ) : (
@@ -725,8 +617,8 @@ export function HairstyleCard({
                       <Minus className="h-3.5 w-3.5 text-white" />
                     </div>
                   </div>
-                  <div className="p-2">
-                    <p className="text-[9px] leading-tight text-center" style={{ color: "#6B5344" }}>{a}</p>
+                  <div className="px-2 py-2 text-center" style={{ borderTop: "1px solid #F0D8CC" }}>
+                    <p className="text-[11px] font-semibold leading-tight" style={{ color: "#3D2B1F" }}>{a}</p>
                   </div>
                 </div>
               ))}

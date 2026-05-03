@@ -348,7 +348,7 @@ export async function generateHairstylePreviews(
   rekognitionFace?: unknown,
 ): Promise<{ index: number; buffer: Buffer; style: string }[]> {
   const flatteningStyles = hairstyle.styles.slice(0, 5);
-  const avoidStyles      = hairstyle.avoid.slice(0, 3).map((a) => ({ name: a, description: a }));
+  const avoidStyles      = hairstyle.avoid.slice(0, 4).map((a) => ({ name: a, description: a }));
   const allStyles        = [...flatteningStyles, ...avoidStyles];
   const hairHex          = hairstyle.colors[0]?.hex ?? "#3B1F0A";
 
