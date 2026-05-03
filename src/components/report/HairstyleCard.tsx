@@ -38,6 +38,16 @@ const HAIR_CSS = `
   animation: length-line-draw 0.7s 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
 }
 
+/* Length diagram: recommended line gentle glow-pulse after draw */
+@keyframes length-glow {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 0px #C8A96E); }
+  50%       { opacity: 0.82; filter: drop-shadow(0 0 3px #C8A96E); }
+}
+.length-rec-glow {
+  animation: length-line-draw 0.7s 0.3s cubic-bezier(0.4,0,0.2,1) forwards,
+             length-glow 2.2s 1.0s ease-in-out infinite;
+}
+
 /* Style card hover: expand description overlay */
 .style-card { position: relative; }
 .style-card .desc-overlay {
@@ -335,22 +345,29 @@ function LengthDiagram({ recommended }: { recommended: string }) {
           return (
             <g key={label}>
               {isRec ? (
-                /* animated golden recommended line */
+                /* animated golden recommended line with glow pulse */
                 <>
+                  {/* glow shadow duplicate (blurred, behind) */}
+                  <line x1="4" y1={y} x2="106" y2={y} stroke="#C8A96E" strokeWidth="4" opacity="0.18" />
                   <line
                     x1="4" y1={y} x2="106" y2={y}
-                    stroke="#9C7D5B" strokeWidth="1.4"
-                    className="length-rec-line"
+                    stroke="#9C7D5B" strokeWidth="1.8"
+                    className="length-rec-glow"
                   />
-                  {/* ♥ marker */}
-                  <text x="110" y={y + 1.5} fontSize="7" fill="#9C7D5B" fontWeight="700">&#9825;</text>
-                  <text x="120" y={y + 1.5} fontSize="6.5" fill="#3D2B1F" fontWeight="700">{label}</text>
+                  {/* left tick */}
+                  <line x1="4" y1={y - 4} x2="4" y2={y + 4} stroke="#9C7D5B" strokeWidth="1.8" strokeLinecap="round" />
+                  {/* right tick / dot */}
+                  <circle cx="106" cy={y} r="3" fill="#C8A96E" />
+                  {/* ♥ label */}
+                  <text x="112" y={y - 3} fontSize="6" fill="#9C7D5B" fontWeight="700">&#9825; {label}</text>
+                  <text x="112" y={y + 6} fontSize="5.5" fill="#A89070">recommended</text>
                 </>
               ) : (
-                /* static faint line */
+                /* static faint dashed line with small tick */
                 <>
                   <line x1="4" y1={y} x2="106" y2={y} stroke="#C8B89A" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.5" />
-                  <text x="110" y={y + 1.5} fontSize="6" fill="#A89070">{label}</text>
+                  <line x1="4" y1={y - 3} x2="4" y2={y + 3} stroke="#C8B89A" strokeWidth="0.8" opacity="0.5" />
+                  <text x="110" y={y + 1.5} fontSize="5.5" fill="#B8A888">{label}</text>
                 </>
               )}
             </g>
@@ -480,14 +497,24 @@ export function HairstyleCard({
                 </div>
 
                 {/* Vertical divider line */}
-                <div className="absolute top-0 bottom-0" style={{ left: "50%", width: 2, background: "rgba(255,255,255,0.7)", zIndex: 10 }} />
+                <div className="absolute top-0 bottom-0" style={{ left: "50%", width: 2, background: "rgba(255,255,255,0.75)", zIndex: 10 }} />
 
-                {/* Labels */}
+                {/* Before label */}
                 <div className="absolute bottom-3 left-3" style={{ zIndex: 11 }}>
-                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}>Before</span>
+                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.6)", color: "rgba(255,255,255,0.85)" }}>Before</span>
                 </div>
-                <div className="absolute bottom-3 right-3" style={{ zIndex: 11 }}>
-                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.55)", color: "#C8A96E" }}>After</span>
+
+                {/* After label — shows recommended style name */}
+                <div className="absolute bottom-3 right-2 flex flex-col items-end gap-0.5" style={{ zIndex: 11, maxWidth: "46%" }}>
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.6)", color: "#C8A96E" }}>After</span>
+                  {flatteningStyles[0] && (
+                    <span
+                      className="text-[7.5px] font-semibold px-1.5 py-0.5 rounded-full text-right leading-tight"
+                      style={{ background: styleAccentFromStyle(flatteningStyles[0].name).band, color: styleAccentFromStyle(flatteningStyles[0].name).text, maxWidth: "100%" }}
+                    >
+                      {flatteningStyles[0].name}
+                    </span>
+                  )}
                 </div>
 
                 {/* dashed oval tracking head outline */}
