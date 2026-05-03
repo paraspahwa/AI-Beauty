@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft, Lock, Eye as EyeIcon, EyeOff } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
 
@@ -182,7 +182,6 @@ function AuthContent() {
   const [cooldown, setCooldown] = useState(0);
 
   const searchParams = useSearchParams();
-  const router = useRouter();
   const nextPath = searchParams.get("redirect") ?? "/upload";
   const phoneCountryLabel = useMemo(() => `${phoneCountry.iso} ${phoneCountry.dial}`, [phoneCountry]);
 
@@ -235,8 +234,7 @@ function AuthContent() {
         }
       } else {
         const safe = nextPath.startsWith("/") ? nextPath : "/upload";
-        router.refresh();
-        router.push(safe);
+        window.location.href = safe;
       }
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password });
@@ -256,8 +254,7 @@ function AuthContent() {
       } else {
         // Auto-confirmed (e.g. Supabase project has confirmations disabled)
         const safe = nextPath.startsWith("/") ? nextPath : "/upload";
-        router.refresh();
-        router.push(safe);
+        window.location.href = safe;
       }
     }
   }
@@ -341,8 +338,7 @@ function AuthContent() {
       setOtp("");
     } else {
       const safe = nextPath.startsWith("/") ? nextPath : "/upload";
-      router.refresh();
-      router.push(safe);
+      window.location.href = safe;
     }
   }
 
