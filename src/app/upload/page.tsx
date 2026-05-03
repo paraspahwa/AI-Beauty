@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ImageUploader } from "@/components/ImageUploader";
 import { CheckCircle2 } from "lucide-react";
 import { fadeUp, staggerContainer } from "@/lib/animations";
+import { OnboardingGate } from "@/components/OnboardingModal";
 
 const TIPS = [
   "Look straight into the camera, hair off your forehead",
@@ -16,6 +17,7 @@ export default function UploadPage() {
   const router = useRouter();
 
   return (
+    <OnboardingGate>
     <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
       <motion.div
         variants={staggerContainer}
@@ -79,5 +81,6 @@ export default function UploadPage() {
         </motion.div>
       </motion.div>
     </main>
+    </OnboardingGate>
   );
 }

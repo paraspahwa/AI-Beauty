@@ -12,6 +12,7 @@ import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
 import { Paywall } from "@/components/Paywall";
+import { StyleChatDrawer } from "@/components/StyleChatDrawer";
 import type { CompiledReport } from "@/types/report";
 import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
 
@@ -405,6 +406,9 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
           </AnimatePresence>
         </Tabs>
       </motion.div>
+
+      {/* Style Consultant Chat — only for the authenticated owner */}
+      {!isReadOnly && <StyleChatDrawer reportId={report.id} />}
     </div>
   );
 }
