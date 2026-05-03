@@ -157,38 +157,45 @@ function FeatureBox({
 }
 
 // ── Pointer lines ─────────────────────────────────────────────────────────────
-// The photo has aspectRatio 3:4 = 0.75. ViewBox 0 0 100 133 matches (100/133≈0.75).
-// Coordinates are in viewBox units (0-100 wide, 0-133 tall).
-// Left features: lines start at dot on face, extend left to x=0 (photo edge).
-// Right features: lines start at dot on face, extend right to x=100 (photo edge).
+// ViewBox: 0 0 100 133  (matches 3:4 container exactly, no letterbox)
+// All coordinates in viewBox units.
+// Face occupies roughly X: 28-72, Y: 18-80 within the 100×133 frame.
+//
+// Reference measurements (taken from reference image):
+//   Left panel → 3 dots face leftward:
+//     [1] Face shape → left temple:  dot(28, 25) → edge(0, 25)
+//     [2] Eyes       → right eye:    dot(37, 42) → edge(0, 50)
+//     [3] Nose       → nose tip:     dot(46, 60) → edge(0, 75)
+//   Right panel → 3 dots face rightward:
+//     [4] Eyebrows   → left brow:    dot(62, 30) → edge(100, 23)
+//     [5] Cheeks     → right cheek:  dot(68, 53) → edge(100, 57)
+//     [6] Lips       → mouth corner: dot(60, 72) → edge(100, 80)
 function PointerLines() {
-  // [faceX, faceY, edgeX, edgeY] in viewBox units
   const lines: [number, number, number, number][] = [
-    // Left side — Face Shape (forehead/temple), Eyes, Nose
-    [33, 28,  0, 28],   // temple → face shape box (top)
-    [30, 52,  0, 58],   // eye level → eyes box (mid)
-    [42, 75,  0, 88],   // nose tip  → nose box (bottom)
-    // Right side — Eyebrows, Cheeks, Lips
-    [67, 24, 100, 22],  // brow      → eyebrows box (top)
-    [70, 52, 100, 58],  // cheekbone → cheeks box (mid)
-    [60, 72, 100, 85],  // mouth     → lips box (bottom)
+    // [dotX, dotY, exitX, exitY]
+    [28, 25,   0, 25],   // 1 — Face Shape  → left temple
+    [37, 42,   0, 50],   // 2 — Eyes        → right eye
+    [46, 60,   0, 75],   // 3 — Nose        → nose tip
+    [62, 30, 100, 23],   // 4 — Eyebrows    → left eyebrow
+    [68, 53, 100, 57],   // 5 — Cheeks      → right cheekbone
+    [60, 72, 100, 80],   // 6 — Lips        → mouth corner
   ];
 
   return (
     <svg
       className="absolute inset-0 w-full h-full pointer-events-none"
       viewBox="0 0 100 133"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio="none"
     >
-      {lines.map(([fx, fy, ex, ey], i) => (
+      {lines.map(([dx, dy, ex, ey], i) => (
         <g key={i}>
           <line
-            x1={fx} y1={fy} x2={ex} y2={ey}
+            x1={dx} y1={dy} x2={ex} y2={ey}
             stroke="white"
-            strokeWidth="0.65"
-            opacity="0.90"
+            strokeWidth="0.6"
+            opacity="0.92"
           />
-          <circle cx={fx} cy={fy} r="1.6" fill="white" opacity="0.97" />
+          <circle cx={dx} cy={dy} r="1.5" fill="white" opacity="1" />
         </g>
       ))}
     </svg>
