@@ -131,19 +131,31 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
 
         <div className="relative mx-4 my-2 rounded-2xl overflow-hidden shrink-0" style={{ width: "clamp(200px,26vw,300px)", aspectRatio: "3/4", background: "#EDE3D8" }}>
           {photoUrl && <Image src={photoUrl} alt="Face features" fill unoptimized className="object-cover object-center" />}
+          {/* SVG pointer lines: viewBox 0 0 100 133 maps to the 3:4 portrait.
+              Face anatomy (approximate % of frame):
+                Hairline  y≈12,  Eyebrows y≈38,  Eyes y≈48,
+                Nose-tip  y≈68,  Lips     y≈82,  Chin  y≈108
+              Left column  → dots on LEFT  side of face, lines run to x=0
+              Right column → dots on RIGHT side of face, lines run to x=100  */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 133" preserveAspectRatio="xMidYMid meet">
-            <line x1="30" y1="22" x2="5" y2="22" stroke="white" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="30" cy="22" r="1.4" fill="white" opacity="0.9" />
-            <line x1="28" y1="55" x2="5" y2="55" stroke="white" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="28" cy="55" r="1.4" fill="white" opacity="0.9" />
-            <line x1="38" y1="80" x2="5" y2="90" stroke="white" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="38" cy="80" r="1.4" fill="white" opacity="0.9" />
-            <line x1="60" y1="22" x2="95" y2="18" stroke="white" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="60" cy="22" r="1.4" fill="white" opacity="0.9" />
-            <line x1="70" y1="58" x2="95" y2="55" stroke="white" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="70" cy="58" r="1.4" fill="white" opacity="0.9" />
-            <line x1="50" y1="95" x2="95" y2="95" stroke="white" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="50" cy="95" r="1.4" fill="white" opacity="0.9" />
+            {/* Face Shape → chin/jaw left */}
+            <line x1="28" y1="105" x2="0" y2="105" stroke="white" strokeWidth="0.7" opacity="0.9" />
+            <circle cx="28" cy="105" r="1.6" fill="white" opacity="0.95" />
+            {/* Eyes → left eye */}
+            <line x1="32" y1="49" x2="0" y2="49" stroke="white" strokeWidth="0.7" opacity="0.9" />
+            <circle cx="32" cy="49" r="1.6" fill="white" opacity="0.95" />
+            {/* Nose → nose tip */}
+            <line x1="42" y1="70" x2="0" y2="78" stroke="white" strokeWidth="0.7" opacity="0.9" />
+            <circle cx="42" cy="70" r="1.6" fill="white" opacity="0.95" />
+            {/* Eyebrows → right eyebrow */}
+            <line x1="63" y1="38" x2="100" y2="38" stroke="white" strokeWidth="0.7" opacity="0.9" />
+            <circle cx="63" cy="38" r="1.6" fill="white" opacity="0.95" />
+            {/* Cheeks → right cheek */}
+            <line x1="70" y1="62" x2="100" y2="62" stroke="white" strokeWidth="0.7" opacity="0.9" />
+            <circle cx="70" cy="62" r="1.6" fill="white" opacity="0.95" />
+            {/* Lips → lip centre-right */}
+            <line x1="58" y1="82" x2="100" y2="82" stroke="white" strokeWidth="0.7" opacity="0.9" />
+            <circle cx="58" cy="82" r="1.6" fill="white" opacity="0.95" />
           </svg>
         </div>
 
