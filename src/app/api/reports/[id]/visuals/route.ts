@@ -128,12 +128,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
     visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
-      .slice(0, 2)
-      .map((_, i) => ({
+      .slice(0, 5)
+      .map((s, i) => ({
         path: `${visualAssets.basePath}glasses-${i}.jpg`,
         status: "missing" as const,
         mime: "image/jpeg",
         error: null,
+        ...(typeof s.style === "string" ? { styleName: s.style } : {}),
       }));
 
     // Up to 9 hairstyle previews: 5 flattering + 4 avoid
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }));
 
     const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
-      generateGlassesPreviews(buffer, glassesResult).catch((err) => {
+      generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
         console.warn("[visuals/route] glasses previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer }[];
       }),
