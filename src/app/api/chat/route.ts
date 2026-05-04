@@ -19,7 +19,9 @@ const MAX_MESSAGE_CONTENT_CHARS = 2000;
 const MAX_MESSAGES_IN_BODY     = 100; // sanity cap on payload size
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type Message = { role: "user" | "assistant"; content: string };(report: Partial<CompiledReport>): string {
+type Message = { role: "user" | "assistant"; content: string };
+
+function buildReportContext(report: Partial<CompiledReport>): string {
   const parts: string[] = [];
 
   // Face shape
