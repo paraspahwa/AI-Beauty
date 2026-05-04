@@ -1,4 +1,4 @@
-﻿import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
