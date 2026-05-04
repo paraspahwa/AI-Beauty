@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
@@ -6,7 +6,10 @@ import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
-
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
   if (!value || typeof value !== "object") return undefined;
   return value as ReportVisualAssets;
