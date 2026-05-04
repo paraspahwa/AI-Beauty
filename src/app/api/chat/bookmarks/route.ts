@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
+const MAX_BOOKMARK_CONTENT_CHARS = 5000;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const runtime = "nodejs";
 
 /**
@@ -17,6 +20,7 @@ export async function GET(req: NextRequest) {
 
     const reportId = req.nextUrl.searchParams.get("reportId");
     if (!reportId) return NextResponse.json({ error: "reportId required" }, { status: 400 });
+    if (!UUID_RE.test(reportId)) return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
 
     // Verify ownership
     const { data: report } = await supabase
@@ -52,6 +56,11 @@ export async function POST(req: NextRequest) {
     if (!body.reportId || !body.content?.trim()) {
       return NextResponse.json({ error: "reportId and content required" }, { status: 400 });
     }
+    if (!UUID_RE.test(body.reportId)) {
+      return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
+    }
+
+    const trimmedContent = body.content.trim().slice(0, MAX_BOOKMARK_CONTENT_CHARS);
 
     // Verify ownership
     const { data: report } = await supabase
@@ -60,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
       .from("chat_bookmarks")
-      .insert({ report_id: body.reportId, user_id: user.id, content: body.content.trim() })
+      .insert({ report_id: body.reportId, user_id: user.id, content: trimmedContent })
       .select("id, content, created_at")
       .single();
 

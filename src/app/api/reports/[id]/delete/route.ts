@@ -5,17 +5,17 @@ import { env } from "@/lib/env";
 export const runtime = "nodejs";
 export const maxDuration = 15;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
- * DELETE /api/reports/[id]
- * Deletes a report owned by the authenticated user.
- * Also removes the associated image from storage.
- * Cascade deletes handle recommendations and payments via FK.
+ * DELETE /api/reports/[id]/delete
  */
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();

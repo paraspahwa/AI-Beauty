@@ -6,7 +6,7 @@ import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
-
+
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
   if (!value || typeof value !== "object") return undefined;
   return value as ReportVisualAssets;
@@ -96,13 +96,15 @@ async function resolveVisualAssets(
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: row, error } = await supabase
     .from("reports")
-    .select("*")
+    .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, rekognition, summary, visual_assets, pipeline_meta, created_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();

@@ -15,9 +15,11 @@ Use the report context below to give specific, actionable advice.
 - If asked something outside personal styling, politely redirect.
 - Do not invent facts not in the report context.`;
 
-type Message = { role: "user" | "assistant"; content: string };
+const MAX_MESSAGE_CONTENT_CHARS = 2000;
+const MAX_MESSAGES_IN_BODY     = 100; // sanity cap on payload size
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function buildReportContext(report: Partial<CompiledReport>): string {
+type Message = { role: "user" | "assistant"; content: string };(report: Partial<CompiledReport>): string {
   const parts: string[] = [];
 
   // Face shape
@@ -116,6 +118,7 @@ export async function GET(req: NextRequest) {
 
     const reportId = req.nextUrl.searchParams.get("reportId");
     if (!reportId) return NextResponse.json({ error: "reportId is required" }, { status: 400 });
+    if (!UUID_RE.test(reportId)) return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
 
     // Verify ownership
     const { data: report } = await supabase
@@ -168,6 +171,17 @@ export async function POST(req: NextRequest) {
     if (!reportId || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "reportId and messages are required" }, { status: 400 });
     }
+    if (!UUID_RE.test(reportId)) {
+      return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
+    }
+    if (messages.length > MAX_MESSAGES_IN_BODY) {
+      return NextResponse.json({ error: "Too many messages in payload" }, { status: 400 });
+    }
+    // Validate and truncate individual message content to prevent token abuse
+    const sanitizedMessages: Message[] = messages.map((m) => ({
+      role: m.role === "user" || m.role === "assistant" ? m.role : "user",
+      content: String(m.content ?? "").slice(0, MAX_MESSAGE_CONTENT_CHARS),
+    }));
 
     // Fetch report to inject context — must belong to this user
     const admin = createSupabaseAdminClient();
@@ -182,7 +196,7 @@ export async function POST(req: NextRequest) {
     const systemContent = SYSTEM_PROMPT + reportContext;
 
     // Cap history at last 12 messages to control token cost
-    const history = messages.slice(-12).map((m) => ({
+    const history = sanitizedMessages.slice(-12).map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     }));
@@ -201,7 +215,7 @@ export async function POST(req: NextRequest) {
     const reply = completion.choices[0]?.message?.content?.trim() ?? "I'm not sure how to answer that. Could you rephrase?";
 
     // Persist the latest user turn + assistant reply (fire-and-forget, don't block response)
-    const lastUserMsg = messages[messages.length - 1];
+    const lastUserMsg = sanitizedMessages[sanitizedMessages.length - 1];
     if (lastUserMsg?.role === "user") {
       admin.from("chat_messages").insert([
         { report_id: reportId, user_id: user.id, role: "user",      content: lastUserMsg.content },

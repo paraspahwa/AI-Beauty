@@ -4,6 +4,8 @@ import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * DELETE /api/chat/bookmarks/[id]
  * Removes a bookmark by ID. User must own it.
@@ -19,6 +21,8 @@ export async function DELETE(
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
+    if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     const { error } = await supabase
       .from("chat_bookmarks")
       .delete()

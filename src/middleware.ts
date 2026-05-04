@@ -7,16 +7,18 @@ const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/ad
 
 // ── IP rate limiter for expensive API routes ──────────────────────────────────
 // Uses an in-process LRU window (edge-safe, no external store).
-// Limits: /api/analyze → 5 req / 60 s per IP.
 // Note: Edge middleware restarts wipe state between cold starts, which is acceptable —
 //       the per-user burst guard in the route handler is the hard gate; this is a
 //       lightweight first-pass filter that stops bots without a session.
 
-// Only rate-limit the expensive analysis endpoint. Report reads and deletes are
-// user-specific, low-cost operations that should not be gated by IP rate limits.
-const RATE_LIMIT_ROUTES = ["/api/analyze"];
+// Rate-limit expensive API routes:
+//   /api/analyze → 8 req / 60 s per IP  (ML pipeline — very expensive)
+//   /api/chat    → 30 req / 60 s per IP  (OpenAI chat — moderate cost)
+const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
+  { prefix: "/api/analyze", max: 8 },
+  { prefix: "/api/chat",    max: 30 },
+];
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 8; // requests per window per IP
 
 type WindowEntry = { count: number; resetAt: number };
 // Max 4 096 entries — oldest evicted when full (LRU approximation via insertion order)
@@ -31,43 +33,26 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
-function isRateLimited(ip: string): boolean {
+function isRateLimited(ip: string, max: number): boolean {
   const now = Date.now();
-  let entry = ipWindows.get(ip);
+  // Key includes the max so different limits don't share counters
+  const key = `${ip}:${max}`;
+  let entry = ipWindows.get(key);
 
   if (!entry || now > entry.resetAt) {
-    // Evict oldest entry when map is full
     if (!entry && ipWindows.size >= IP_MAP_MAX) {
       const firstKey = ipWindows.keys().next().value;
       if (firstKey !== undefined) ipWindows.delete(firstKey);
     }
     entry = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS };
-    ipWindows.set(ip, entry);
+    ipWindows.set(key, entry);
     return false;
   }
 
   entry.count += 1;
-  if (entry.count > RATE_LIMIT_MAX) {
-    return true;
-  }
-  return false;
+  return entry.count > max;
 }
 
-
-// Admin emails that bypass IP rate limiting (must match env.auth.adminEmailAllowlist)
-// We read directly from process.env here because middleware runs at edge before
-// the full env module is available.
-const ADMIN_EMAIL_ALLOWLIST: string[] = (
-  process.env.ADMIN_EMAIL_ALLOWLIST ?? "paraspahwa5@gmail.com"
-)
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
-
-// Always include the hardcoded owner email regardless of env
-if (!ADMIN_EMAIL_ALLOWLIST.includes("paraspahwa5@gmail.com")) {
-  ADMIN_EMAIL_ALLOWLIST.push("paraspahwa5@gmail.com");
-}
 
 const SUPABASE_AUTH_QUERY_KEYS = [
   "code",
@@ -104,24 +89,24 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // ── IP rate limiting for expensive API routes ──────────────────────────────
-  if (RATE_LIMIT_ROUTES.some((r) => pathname.startsWith(r))) {
-    const adminEmail = request.headers.get("x-admin-email")?.toLowerCase() ?? "";
-    const isAdmin = ADMIN_EMAIL_ALLOWLIST.includes(adminEmail);
-    if (!isAdmin) {
-      const ip = getClientIp(request);
-      if (isRateLimited(ip)) {
-        return NextResponse.json(
-          { error: "Too many requests. Please slow down." },
-          {
-            status: 429,
-            headers: {
-              "Retry-After": "60",
-              "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
-              "X-RateLimit-Window": "60s",
-            },
+  // Admin bypass is NOT done via headers (trivially spoofable). The per-user
+  // quota in the route handler uses verified Supabase auth and already skips
+  // admins. The IP limiter here is a lightweight first-pass filter only.
+  const matchedRoute = RATE_LIMIT_ROUTES.find((r) => pathname.startsWith(r.prefix));
+  if (matchedRoute) {
+    const ip = getClientIp(request);
+    if (isRateLimited(ip, matchedRoute.max)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Limit": String(matchedRoute.max),
+            "X-RateLimit-Window": "60s",
           },
-        );
-      }
+        },
+      );
     }
   }
 
