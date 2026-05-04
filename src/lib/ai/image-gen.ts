@@ -30,21 +30,9 @@ async function toSquarePng(buf: Buffer, size: number): Promise<Buffer> {
  * DALL-E 2 mask: fully opaque everywhere except the edit region, which is transparent (alpha=0).
  * DALL-E 2 fills transparent areas with AI-generated content.
  */
-async function buildEditMask(size: number, type: "glasses" | "hairstyle" | "dress-recolor"): Promise<Buffer> {
-  let regionTop: number;
-  let regionH: number;
-
-  if (type === "glasses") {
-    regionTop = Math.floor(size * 0.32);
-    regionH   = Math.floor(size * 0.28);
-  } else if (type === "dress-recolor") {
-    // clothing region: from ~55% down to the bottom of the image
-    regionTop = Math.floor(size * 0.55);
-    regionH   = Math.floor(size * 0.45);
-  } else {
-    regionTop = 0;
-    regionH   = Math.floor(size * 0.42);
-  }
+async function buildEditMask(size: number, type: "glasses" | "hairstyle"): Promise<Buffer> {
+  const regionTop = type === "glasses" ? Math.floor(size * 0.32) : 0;
+  const regionH = type === "glasses" ? Math.floor(size * 0.28) : Math.floor(size * 0.42);
 
   // Start with fully-opaque white background
   const base = await sharp({
@@ -75,24 +63,20 @@ async function buildEditMask(size: number, type: "glasses" | "hairstyle" | "dres
  *
  * @param selfieBuf       Raw image buffer (JPEG / PNG / WEBP)
  * @param styleDescription Short description of the style to try on
- * @param type            "glasses" | "hairstyle" | "dress-recolor"
+ * @param type            "glasses" | "hairstyle"
  * @returns PNG buffer of the generated try-on image
  */
 export async function generateTryOnImage(
   selfieBuf: Buffer,
   styleDescription: string,
-  type: "glasses" | "hairstyle" | "dress-recolor",
+  type: "glasses" | "hairstyle",
 ): Promise<Buffer> {
   const client = getOpenAI();
 
-  let prompt: string;
-  if (type === "glasses") {
-    prompt = `The same person now wearing ${styleDescription}. Photorealistic portrait, identical face, skin tone, and lighting. High-quality fashion photography.`;
-  } else if (type === "dress-recolor") {
-    prompt = `The exact same person, same face, same background, same pose, same hairstyle — only the clothing/top has been changed to a ${styleDescription} colored outfit. Photorealistic, high-quality fashion photography. Do NOT change the face, hair, skin, or background.`;
-  } else {
-    prompt = `The same person now with ${styleDescription}. Photorealistic portrait, identical face, skin tone, and lighting. High-quality fashion photography.`;
-  }
+  const prompt =
+    type === "glasses"
+      ? `The same person now wearing ${styleDescription}. Photorealistic portrait, identical face, skin tone, and lighting. High-quality fashion photography.`
+      : `The same person now with ${styleDescription}. Photorealistic portrait, identical face, skin tone, and lighting. High-quality fashion photography.`;
 
   // ── Primary: gpt-image-1 images.edit ─────────────────────────────────────
   try {
