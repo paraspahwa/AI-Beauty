@@ -58,6 +58,53 @@ const STATIC_CATEGORY_QUESTIONS: Record<CategoryId, string[]> = {
   ],
 };
 
+// ── Build proactive insight cards from report data (no API call) ─────────────
+function buildInsights(report?: Partial<CompiledReport>): string[] {
+  if (!report) return [];
+  const insights: string[] = [];
+
+  if (report.colorAnalysis) {
+    const { season, palette, avoidColors, metals } = report.colorAnalysis;
+    const top = palette?.slice(0, 2).map((c) => c.name).join(" and ");
+    if (top) insights.push(`✨ As a ${season}, your power shades are **${top}**${metals?.[0] ? ` and ${metals[0]} jewellery` : ""}. Wear these when you want to look your most vibrant.`);
+    if (avoidColors?.length) insights.push(`🚫 Steer clear of **${avoidColors[0].name}**${avoidColors[1] ? ` and ${avoidColors[1].name}` : ""} — these clash with your undertone and wash you out.`);
+  }
+
+  if (report.faceShape) {
+    const shapeInsights: Record<string, string> = {
+      Oval:     "You can pull off almost any style — lucky you! Experiment freely.",
+      Round:    "Styles with height and length at the crown will elongate your face beautifully.",
+      Square:   "Soft, layered cuts and oval or round frames balance your strong jaw perfectly.",
+      Heart:    "Volume at the jaw and chin-length cuts balance your wider forehead.",
+      Diamond:  "Highlight your cheekbones — side-swept bangs and wider frames suit you best.",
+      Oblong:   "Side-swept styles and wider frames add width and balance your length.",
+      Triangle: "Volume at the crown and lighter frames at the top draw the eye upward.",
+    };
+    const tip = shapeInsights[report.faceShape.shape];
+    if (tip) insights.push(`💡 **${report.faceShape.shape} face shape tip:** ${tip}`);
+  }
+
+  if (report.skinAnalysis?.concerns?.[0]) {
+    const concern = report.skinAnalysis.concerns[0].toLowerCase();
+    const ingredientMap: Record<string, string> = {
+      acne: "niacinamide, salicylic acid, and tea tree",
+      "dark spots": "vitamin C, kojic acid, and alpha-arbutin",
+      dryness: "hyaluronic acid, ceramides, and squalane",
+      redness: "centella asiatica, azelaic acid, and green tea extract",
+      aging: "retinol, peptides, and vitamin C",
+      oiliness: "niacinamide, zinc, and BHAs",
+    };
+    const match = Object.keys(ingredientMap).find((k) => concern.includes(k));
+    if (match) insights.push(`🧴 For your **${match}** concern, look for products with **${ingredientMap[match]}** — these are your most effective allies.`);
+  }
+
+  if (report.hairstyle?.styles?.[0]) {
+    insights.push(`💇 Your top recommended style is **${report.hairstyle.styles[0].name}** — ${report.hairstyle.styles[0].description}`);
+  }
+
+  return insights.slice(0, 3);
+}
+
 // ── Build personalized dynamic chips from the actual report ─────────────────
 function buildDynamicSuggestions(report?: Partial<CompiledReport>): string[] {
   if (!report) return [
@@ -100,28 +147,47 @@ function buildDynamicSuggestions(report?: Partial<CompiledReport>): string[] {
   return chips.slice(0, 5);
 }
 
+const GREETING: Message = {
+  role: "assistant",
+  content:
+    "Hi! I'm your StyleAI consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
+};
+
 // ── Component ────────────────────────────────────────────────────────────────
 export function StyleChatDrawer({ reportId, report }: Props) {
-  const [open, setOpen]       = React.useState(false);
-  const [messages, setMessages] = React.useState<Message[]>([
-    {
-      role: "assistant",
-      content:
-        "Hi! I'm your StyleAI consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
-    },
-  ]);
-  const [input, setInput]     = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen]         = React.useState(false);
+  const [messages, setMessages] = React.useState<Message[]>([GREETING]);
+  const [input, setInput]       = React.useState("");
+  const [loading, setLoading]   = React.useState(false);
+  const [historyLoaded, setHistoryLoaded] = React.useState(false);
   const [activeCategory, setActiveCategory] = React.useState<CategoryId | "suggested">("suggested");
   const bottomRef  = React.useRef<HTMLDivElement>(null);
   const inputRef   = React.useRef<HTMLTextAreaElement>(null);
 
   const dynamicSuggestions = React.useMemo(() => buildDynamicSuggestions(report), [report]);
+  const proactiveInsights  = React.useMemo(() => buildInsights(report), [report]);
 
   const visibleChips =
     activeCategory === "suggested"
       ? dynamicSuggestions
       : STATIC_CATEGORY_QUESTIONS[activeCategory];
+
+  // Load persisted chat history once on first open
+  React.useEffect(() => {
+    if (!open || historyLoaded) return;
+    setHistoryLoaded(true);
+
+    fetch(`/api/chat?reportId=${reportId}`)
+      .then((r) => r.json())
+      .then((data: { messages?: Message[] }) => {
+        if (data.messages && data.messages.length > 0) {
+          // Restore full history — replace the greeting with actual history
+          setMessages(data.messages);
+        }
+        // else: no history yet — keep greeting + show insights
+      })
+      .catch(() => {/* silently keep greeting */});
+  }, [open, historyLoaded, reportId]);
 
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -169,7 +235,8 @@ export function StyleChatDrawer({ reportId, report }: Props) {
     }
   }
 
-  const showChips = messages.length <= 1;
+  const showChips    = messages.length <= 1;
+  const showInsights = showChips && proactiveInsights.length > 0;
 
   return (
     <>
@@ -278,6 +345,35 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     </div>
                   </motion.div>
                 ))}
+
+                {/* Proactive insight cards — shown before first user message */}
+                {showInsights && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="space-y-2 pt-1"
+                  >
+                    <p className="text-xs px-1" style={{ color: "rgba(240,232,216,0.35)" }}>
+                      Insights from your report
+                    </p>
+                    {proactiveInsights.map((insight, i) => (
+                      <button
+                        key={i}
+                        onClick={() => send(insight.replace(/\*\*/g, ""))}
+                        className="w-full text-left rounded-2xl px-4 py-3 text-xs leading-relaxed transition-opacity hover:opacity-80"
+                        style={{
+                          background: "rgba(201,149,107,0.08)",
+                          border: "1px solid rgba(201,149,107,0.2)",
+                          color: "rgba(240,232,216,0.85)",
+                          borderBottomLeftRadius: 4,
+                        }}
+                      >
+                        {insight}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
 
                 {/* Category + chip selector — only before first user message */}
                 {showChips && (

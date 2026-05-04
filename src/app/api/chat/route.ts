@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { getOpenAI } from "@/lib/ai/openai";
 import { env } from "@/lib/env";
 import type { CompiledReport } from "@/types/report";
@@ -104,14 +104,55 @@ function buildReportContext(report: Partial<CompiledReport>): string {
 }
 
 /**
+ * GET /api/chat?reportId=<uuid>
+ * Returns the persisted chat history for a report (oldest first, last 60 messages).
+ */
+export async function GET(req: NextRequest) {
+  try {
+    env.assertServer();
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const reportId = req.nextUrl.searchParams.get("reportId");
+    if (!reportId) return NextResponse.json({ error: "reportId is required" }, { status: 400 });
+
+    // Verify ownership
+    const { data: report } = await supabase
+      .from("reports")
+      .select("id")
+      .eq("id", reportId)
+      .eq("user_id", user.id)
+      .single();
+    if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+
+    const { data: rows } = await supabase
+      .from("chat_messages")
+      .select("role, content, created_at")
+      .eq("report_id", reportId)
+      .order("created_at", { ascending: true })
+      .limit(60);
+
+    const messages: Message[] = (rows ?? []).map((r) => ({
+      role: r.role as "user" | "assistant",
+      content: r.content,
+    }));
+
+    return NextResponse.json({ messages });
+  } catch (err) {
+    console.error("[GET /api/chat]", err);
+    return NextResponse.json({ error: "Failed to load history" }, { status: 500 });
+  }
+}
+
+/**
  * POST /api/chat
  * Body: { reportId: string; messages: { role: "user"|"assistant"; content: string }[] }
  * Returns: { reply: string }
  *
- * Streams the last N messages (capped for cost) to gpt-4o-mini with the
- * report context injected into the system prompt. Rate-limited by the
- * existing per-user session auth — no extra quota logic needed here since
- * this is text-only and cheap.
+ * Sends the last N messages (capped for cost) to gpt-4o-mini with the
+ * full report context injected into the system prompt, then persists
+ * the latest user message + assistant reply to chat_messages.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -129,8 +170,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch report to inject context — must belong to this user
-    const { data: row } = await (await import("@/lib/supabase/server"))
-      .createSupabaseAdminClient()
+    const admin = createSupabaseAdminClient();
+    const { data: row } = await admin
       .from("reports")
       .select("face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, is_paid")
       .eq("id", reportId)
@@ -158,6 +199,18 @@ export async function POST(req: NextRequest) {
     });
 
     const reply = completion.choices[0]?.message?.content?.trim() ?? "I'm not sure how to answer that. Could you rephrase?";
+
+    // Persist the latest user turn + assistant reply (fire-and-forget, don't block response)
+    const lastUserMsg = messages[messages.length - 1];
+    if (lastUserMsg?.role === "user") {
+      admin.from("chat_messages").insert([
+        { report_id: reportId, user_id: user.id, role: "user",      content: lastUserMsg.content },
+        { report_id: reportId, user_id: user.id, role: "assistant",  content: reply },
+      ]).then(() => {/* persisted */}).catch((e: unknown) => {
+        console.warn("[chat] failed to persist messages:", (e as Error).message);
+      });
+    }
+
     return NextResponse.json({ reply });
   } catch (err) {
     console.error("[POST /api/chat]", err);
