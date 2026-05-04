@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -102,6 +102,12 @@ export function Navbar() {
                   My Reports
                 </Link>
               </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/style-dna">
+                  <Dna className="h-3.5 w-3.5" />
+                  Style DNA
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out
@@ -177,6 +183,11 @@ export function Navbar() {
                     <Button asChild variant="outline" className="w-full">
                       <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
                         <LayoutDashboard className="h-4 w-4" /> My Reports
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/dashboard/style-dna" onClick={() => setMenuOpen(false)}>
+                        <Dna className="h-4 w-4" /> Style DNA
                       </Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">

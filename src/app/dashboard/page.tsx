@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2 } from "lucide-react";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -30,6 +30,16 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/auth?redirect=/dashboard");
 
+  // Fetch style prefs for DNA teaser
+  const admin = createSupabaseAdminClient();
+  const { data: prefsRow } = await admin
+    .from("user_style_prefs")
+    .select("color_season, face_shape, skin_type, prefs")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const prefs = prefsRow as { color_season?: string | null; face_shape?: string | null; skin_type?: string | null; prefs?: { palette?: string[] } | null } | null;
+
   const { data: reports } = await supabase
     .from("reports")
     .select("id, status, is_paid, created_at, summary, face_shape, share_token")
@@ -53,6 +63,47 @@ export default async function DashboardPage() {
           </Link>
         </Button>
       </div>
+
+      {/* Style DNA teaser — shown when prefs exist */}
+      {prefs?.color_season && (
+        <Link
+          href="/dashboard/style-dna"
+          className="mb-6 flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+          style={{
+            background: "linear-gradient(135deg, rgba(201,149,107,0.14) 0%, rgba(123,110,158,0.08) 100%)",
+            border: "1px solid rgba(201,149,107,0.2)",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.2)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-full shrink-0"
+              style={{ background: "rgba(201,149,107,0.2)" }}
+            >
+              <Dna className="h-5 w-5" style={{ color: "#C9956B" }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
+                {prefs.color_season} · {prefs.face_shape ?? "Style DNA"}
+              </p>
+              <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>
+                View your full Style DNA profile
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* mini swatches */}
+            {(prefs.prefs?.palette ?? []).slice(0, 3).map((hex) => (
+              <div
+                key={hex}
+                className="h-5 w-5 rounded-full"
+                style={{ background: hex, border: "1px solid rgba(255,255,255,0.12)" }}
+              />
+            ))}
+            <Sparkles className="h-4 w-4 ml-1 opacity-50 group-hover:opacity-100 transition-opacity" style={{ color: "#C8A96E" }} />
+          </div>
+        </Link>
+      )}
 
       {rows.length === 0 ? (
         <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.8), rgba(26,26,38,0.6))", border: "1px dashed rgba(255,255,255,0.1)" }}>
