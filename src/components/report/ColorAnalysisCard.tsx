@@ -734,19 +734,22 @@ function normalizeSeasonKey(season: string): string {
 
 /* ─── Comparison photo card ─────────────────────────────────────────────── */
 /**
- * Deterministic comparison thumbnail: face/background are the original photo,
- * only the clothing region is replaced by a clean solid V-neck top.
- * This intentionally avoids mix-blend-mode because it keeps the user's original
- * clothing pattern, which does not match the reference image.
+ * Comparison thumbnail.
+ * Priority:
+ *   1. aiPreviewUrl — real Replicate SDXL inpainted photo (best quality)
+ *   2. photoUrl + CSS clip overlay — deterministic CSS clothing recolour
+ *   3. Solid colour block fallback (no photo available)
  */
 function ColorSwatch({
   hex,
   name,
   photoUrl,
+  aiPreviewUrl,
 }: {
   hex: string;
   name: string;
   photoUrl?: string;
+  aiPreviewUrl?: string;
 }) {
   const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
 
@@ -773,7 +776,18 @@ function ColorSwatch({
         className="relative w-full"
         style={{ aspectRatio: "3/4", overflow: "hidden", isolation: "isolate" }}
       >
-        {photoUrl ? (
+        {aiPreviewUrl ? (
+          /* ── Tier 1: Real AI-inpainted photo ───────────────────────────── */
+          <Image
+            src={aiPreviewUrl}
+            alt={name}
+            fill
+            unoptimized
+            className="object-cover"
+            style={{ objectPosition: "top center" }}
+          />
+        ) : photoUrl ? (
+          /* ── Tier 2: CSS clip-path clothing overlay ─────────────────────── */
           <>
             <Image
               src={photoUrl}
@@ -849,9 +863,16 @@ function ColorSwatch({
 export function ColorAnalysisCard({
   data,
   photoUrl,
+  bestColorPreviewUrls,
 }: {
   data: ColorAnalysisResult;
   photoUrl?: string;
+  /**
+   * Optional array of signed URLs for AI-inpainted clothing colour previews.
+   * Index N maps to bestColors[N]. When present, the card renders real
+   * inpainted photos instead of the CSS clip-path overlay.
+   */
+  bestColorPreviewUrls?: string[];
 }) {
   const presetKey = normalizeSeasonKey(data.season);
   // Guard: normalizeSeasonKey always returns a valid key (falls back to "Soft Autumn"),
@@ -1036,12 +1057,13 @@ export function ColorAnalysisCard({
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-          {bestSix.map((c) => (
+          {bestSix.map((c, i) => (
             <ColorSwatch
               key={c.hex}
               hex={c.hex}
               name={c.name}
               photoUrl={photoUrl}
+              aiPreviewUrl={bestColorPreviewUrls?.[i]}
             />
           ))}
         </div>

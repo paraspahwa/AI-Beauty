@@ -2,6 +2,7 @@ import sharp from "sharp";
 import type { ColorAnalysisResult, GlassesResult, HairstyleResult, ReportVisualAssets } from "@/types/report";
 import { generateTryOnImage } from "./image-gen";
 import { replicateHairPreview, replicateHairPreviewBatch } from "./replicate-hair";
+import { replicateClothingPreviewBatch } from "./replicate-clothing";
 import { env } from "@/lib/env";
 
 type LandmarkPoint = {
@@ -460,6 +461,56 @@ export async function generateHairstylePreviews(
       console.warn(`[visuals] hairstyle preview ${i} (${style.name}) failed:`, (err as Error).message);
     }
   }
+
+  return results;
+}
+
+/**
+ * Generate per-colour clothing try-on previews for the 6 best season colours.
+ *
+ * Tier 1: Replicate SDXL inpainting (face-box required, photorealistic)
+ * Tier 2: CSS overlay only — no server-side image generated (caller falls back
+ *          to the existing CSS clip-path overlay in ColorSwatch)
+ *
+ * Returns up to 6 entries (indices 0-5 = bestColors[0-5]).
+ * Always returns the subset that succeeded; missing slots keep CSS fallback.
+ */
+export async function generateColorSwatchPreviews(
+  selfieBuf: Buffer,
+  colorAnalysis: ColorAnalysisResult,
+  rekognitionFace?: unknown,
+): Promise<{ index: number; buffer: Buffer; colorName: string }[]> {
+  // We only inpaint the 6 "best" colours — avoid colours use the CSS fallback
+  // to keep cost reasonable (6 Replicate calls vs 12).
+  const bestSix = colorAnalysis.palette.slice(0, 6);
+
+  const img  = sharp(selfieBuf).rotate();
+  const meta = await img.metadata();
+  const W    = meta.width  ?? 512;
+  const H    = meta.height ?? 768;
+
+  const faceBox = getFaceBox(rekognitionFace, W, H);
+
+  const replicateToken = env.replicate.apiToken;
+  const useReplicate   = env.replicate.isConfigured && !!faceBox;
+
+  if (!useReplicate || !faceBox) {
+    // No Replicate configured or no face data — caller uses CSS overlay fallback
+    console.info("[visuals] colorSwatchPreviews: Replicate unavailable, skipping (CSS fallback active)");
+    return [];
+  }
+
+  const batchColors = bestSix.map((c, i) => ({ index: i, name: c.name, hex: c.hex }));
+
+  const results = await replicateClothingPreviewBatch(
+    selfieBuf,
+    faceBox,
+    batchColors,
+    replicateToken,
+  ).catch((err) => {
+    console.warn("[visuals] colorSwatchPreviews batch failed:", (err as Error).message);
+    return [] as { index: number; buffer: Buffer; colorName: string }[];
+  });
 
   return results;
 }

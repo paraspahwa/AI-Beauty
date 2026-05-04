@@ -330,6 +330,11 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <ColorAnalysisCard
                       data={report.colorAnalysis}
                       photoUrl={report.imageUrl}
+                      bestColorPreviewUrls={
+                        report.visualAssets?.assets.colorSwatchPreviews
+                          ?.filter((a) => a.status === "ready" && a.signedUrl)
+                          .map((a) => a.signedUrl!)
+                      }
                     />
                   ) : (
                     <Empty />
