@@ -19,18 +19,87 @@ type Message = { role: "user" | "assistant"; content: string };
 
 function buildReportContext(report: Partial<CompiledReport>): string {
   const parts: string[] = [];
-  if (report.faceShape)     parts.push(`Face shape: ${report.faceShape.shape} (confidence ${Math.round((report.faceShape.confidence ?? 0) * 100)}%)`);
-  if (report.colorAnalysis) parts.push(`Color season: ${report.colorAnalysis.season}, undertone: ${report.colorAnalysis.undertone}`);
-  if (report.skinAnalysis)  parts.push(`Skin type: ${report.skinAnalysis.type}, concerns: ${report.skinAnalysis.concerns.join(", ") || "none"}`);
-  if (report.glasses?.recommended?.length) {
-    parts.push(`Best frame styles: ${report.glasses.recommended.slice(0, 3).map((r) => r.style).join(", ")}`);
+
+  // Face shape
+  if (report.faceShape) {
+    parts.push(`Face shape: ${report.faceShape.shape} (confidence ${Math.round((report.faceShape.confidence ?? 0) * 100)}%)`);
+    if (report.faceShape.traits?.length) parts.push(`Face traits: ${report.faceShape.traits.join(", ")}`);
   }
-  if (report.hairstyle?.styles?.length) {
-    parts.push(`Recommended hairstyles: ${report.hairstyle.styles.slice(0, 3).map((s) => s.name).join(", ")}`);
+
+  // Color analysis — full palette, metals, avoid
+  if (report.colorAnalysis) {
+    const ca = report.colorAnalysis;
+    parts.push(`Color season: ${ca.season}, undertone: ${ca.undertone}`);
+    if (ca.description) parts.push(`Season description: ${ca.description}`);
+    if (ca.palette?.length) {
+      parts.push(`Best colors to wear: ${ca.palette.map((c) => `${c.name} (${c.hex})`).join(", ")}`);
+    }
+    if (ca.avoidColors?.length) {
+      parts.push(`Colors to avoid: ${ca.avoidColors.map((c) => c.name).join(", ")}`);
+    }
+    if (ca.metals?.length) parts.push(`Best metals/jewellery: ${ca.metals.join(", ")}`);
+    if (ca.clothingObservation) {
+      parts.push(`Clothing observed in photo: ${ca.clothingObservation.color} — ${ca.clothingObservation.effect} on this person`);
+    }
   }
-  if (report.summary) parts.push(`Summary: ${report.summary}`);
+
+  // Skin analysis — type, concerns, zones, routine
+  if (report.skinAnalysis) {
+    const sa = report.skinAnalysis;
+    parts.push(`Skin type: ${sa.type}`);
+    if (sa.concerns?.length) parts.push(`Skin concerns: ${sa.concerns.join(", ")}`);
+    if (sa.zones?.length) {
+      parts.push(`Skin zone observations: ${sa.zones.map((z) => `${z.zone}: ${z.observation}`).join("; ")}`);
+    }
+    if (sa.routine?.length) {
+      parts.push(`Recommended skincare routine: ${sa.routine.map((r) => `${r.step} → ${r.product}`).join("; ")}`);
+    }
+  }
+
+  // Facial features — eyes, brows, nose, lips, cheeks
+  if (report.features) {
+    const f = report.features;
+    parts.push(
+      `Facial features: eyes (${f.eyes.shape}: ${f.eyes.notes}), eyebrows (${f.eyebrows.shape}: ${f.eyebrows.notes}), nose (${f.nose.shape}: ${f.nose.notes}), lips (${f.lips.shape}: ${f.lips.notes}), cheeks (${f.cheeks.shape}: ${f.cheeks.notes})`
+    );
+  }
+
+  // Glasses — recommended + avoid + colors + fit tips
+  if (report.glasses) {
+    const g = report.glasses;
+    if (g.recommended?.length) {
+      parts.push(`Recommended frame styles: ${g.recommended.map((r) => `${r.style} (${r.reason})`).join("; ")}`);
+    }
+    if (g.avoid?.length) {
+      parts.push(`Frame styles to avoid: ${g.avoid.map((a) => a.style).join(", ")}`);
+    }
+    if (g.colors?.length) {
+      parts.push(`Best frame colors: ${g.colors.map((c) => c.name).join(", ")}`);
+    }
+    if (g.fitTips?.length) parts.push(`Frame fit tips: ${g.fitTips.join("; ")}`);
+  }
+
+  // Hairstyle — flattering, avoid, colors, styling tips
+  if (report.hairstyle) {
+    const h = report.hairstyle;
+    if (h.styles?.length) {
+      parts.push(`Recommended hairstyles: ${h.styles.map((s) => `${s.name}: ${s.description}`).join("; ")}`);
+    }
+    if (h.lengths?.length) {
+      parts.push(`Recommended hair lengths: ${h.lengths.map((l) => l.name).join(", ")}`);
+    }
+    if (h.colors?.length) {
+      parts.push(`Flattering hair colors: ${h.colors.map((c) => `${c.name} (${c.description})`).join("; ")}`);
+    }
+    if (h.avoid?.length) parts.push(`Hairstyles to avoid: ${h.avoid.join(", ")}`);
+    if (h.stylingTips?.length) parts.push(`Styling tips: ${h.stylingTips.join("; ")}`);
+    if (h.hairType) parts.push(`Hair type: ${h.hairType}`);
+  }
+
+  if (report.summary) parts.push(`Overall summary: ${report.summary}`);
+
   return parts.length > 0
-    ? `\n\n--- User's Style Profile ---\n${parts.join("\n")}\n---`
+    ? `\n\n--- User's Full Style Profile ---\n${parts.join("\n")}\n---`
     : "";
 }
 
@@ -63,7 +132,7 @@ export async function POST(req: NextRequest) {
     const { data: row } = await (await import("@/lib/supabase/server"))
       .createSupabaseAdminClient()
       .from("reports")
-      .select("face_shape, color_analysis, skin_analysis, glasses, hairstyle, summary, is_paid")
+      .select("face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, is_paid")
       .eq("id", reportId)
       .eq("user_id", user.id)
       .single();

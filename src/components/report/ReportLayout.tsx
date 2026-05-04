@@ -447,7 +447,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       </motion.div>
 
       {/* Style Consultant Chat — only for the authenticated owner */}
-      {!isReadOnly && <StyleChatDrawer reportId={report.id} />}
+      {!isReadOnly && <StyleChatDrawer reportId={report.id} report={report} />}
     </div>
     </div>
   );

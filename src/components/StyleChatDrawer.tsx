@@ -4,40 +4,129 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { CompiledReport } from "@/types/report";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 interface Props {
   reportId: string;
+  report?: Partial<CompiledReport>;
 }
 
-const SUGGESTED = [
-  "What colors should I wear this season?",
-  "Which hairstyle is best for my face shape?",
-  "What glasses frames flatter me most?",
-  "How should I build my skincare routine?",
-];
+// ── Category definitions ────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: "wardrobe", label: "👗 Wardrobe" },
+  { id: "makeup",   label: "💄 Makeup" },
+  { id: "hair",     label: "💇 Hair" },
+  { id: "skin",     label: "🧴 Skin" },
+  { id: "frames",   label: "👓 Frames" },
+  { id: "occasion", label: "🎉 Occasion" },
+] as const;
 
-export function StyleChatDrawer({ reportId }: Props) {
-  const [open, setOpen] = React.useState(false);
+type CategoryId = (typeof CATEGORIES)[number]["id"];
+
+const STATIC_CATEGORY_QUESTIONS: Record<CategoryId, string[]> = {
+  wardrobe: [
+    "Build me a capsule wardrobe for my color season",
+    "What neutral tones work best for my undertone?",
+    "Which patterns suit my style profile?",
+  ],
+  makeup:   [
+    "What lip shades suit my undertone?",
+    "Recommend a day-to-night makeup look for my season",
+    "What eyeshadow colors complement my eye shape?",
+  ],
+  hair:     [
+    "Would highlights or a balayage work for my coloring?",
+    "What length best suits my face shape?",
+    "Suggest low-maintenance styles for my hair type",
+  ],
+  skin:     [
+    "What skincare ingredients should I prioritize?",
+    "Build me a morning and night routine",
+    "How do I handle my biggest skin concern?",
+  ],
+  frames:   [
+    "Which frame colors flatter me most?",
+    "Should I choose full-rim or rimless frames?",
+    "What frame shape should I avoid?",
+  ],
+  occasion: [
+    "What should I wear to a job interview?",
+    "Help me dress for a wedding",
+    "Suggest a first-date outfit palette",
+  ],
+};
+
+// ── Build personalized dynamic chips from the actual report ─────────────────
+function buildDynamicSuggestions(report?: Partial<CompiledReport>): string[] {
+  if (!report) return [
+    "What colors should I wear this season?",
+    "Which hairstyle is best for my face shape?",
+    "What glasses frames flatter me most?",
+    "How should I build my skincare routine?",
+  ];
+
+  const chips: string[] = [];
+
+  if (report.colorAnalysis) {
+    const { season, undertone, metals } = report.colorAnalysis;
+    chips.push(`I'm a ${season} — what are my best power colors?`);
+    if (metals?.length) chips.push(`Do ${metals[0]} accessories suit my ${undertone} undertone?`);
+  }
+
+  if (report.faceShape) {
+    chips.push(`I have a ${report.faceShape.shape} face — which haircuts add the most balance?`);
+  }
+
+  if (report.skinAnalysis) {
+    const top = report.skinAnalysis.concerns?.[0];
+    if (top) chips.push(`What ingredients help with ${top.toLowerCase()}?`);
+  }
+
+  if (report.glasses?.recommended?.[0]) {
+    chips.push(`Why do ${report.glasses.recommended[0].style} frames suit me?`);
+  }
+
+  if (report.hairstyle?.colors?.[0]) {
+    chips.push(`Would ${report.hairstyle.colors[0].name} hair color look good on me?`);
+  }
+
+  // Pad with generic fallbacks
+  if (chips.length < 3) {
+    chips.push("Suggest a complete style upgrade plan");
+  }
+
+  return chips.slice(0, 5);
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+export function StyleChatDrawer({ reportId, report }: Props) {
+  const [open, setOpen]       = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([
     {
       role: "assistant",
       content:
-        "Hi! I'm your StyleAI consultant. Ask me anything about your report — colors, hairstyles, glasses, skincare, or anything style-related! ✨",
+        "Hi! I'm your StyleAI consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
     },
   ]);
-  const [input, setInput] = React.useState("");
+  const [input, setInput]     = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const bottomRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const [activeCategory, setActiveCategory] = React.useState<CategoryId | "suggested">("suggested");
+  const bottomRef  = React.useRef<HTMLDivElement>(null);
+  const inputRef   = React.useRef<HTMLTextAreaElement>(null);
 
-  // Scroll to bottom on new messages
+  const dynamicSuggestions = React.useMemo(() => buildDynamicSuggestions(report), [report]);
+
+  const visibleChips =
+    activeCategory === "suggested"
+      ? dynamicSuggestions
+      : STATIC_CATEGORY_QUESTIONS[activeCategory];
+
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
-  // Focus input when drawer opens
   React.useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
@@ -80,7 +169,7 @@ export function StyleChatDrawer({ reportId }: Props) {
     }
   }
 
-  const hasSuggestions = messages.length <= 1;
+  const showChips = messages.length <= 1;
 
   return (
     <>
@@ -144,7 +233,7 @@ export function StyleChatDrawer({ reportId }: Props) {
                       Style Consultant
                     </p>
                     <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>
-                      Ask anything about your report
+                      Knows your full style report
                     </p>
                   </div>
                 </div>
@@ -190,27 +279,59 @@ export function StyleChatDrawer({ reportId }: Props) {
                   </motion.div>
                 ))}
 
-                {/* Suggested questions — only on first load */}
-                {hasSuggestions && (
+                {/* Category + chip selector — only before first user message */}
+                {showChips && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-wrap gap-2 pt-1"
+                    className="space-y-3 pt-1"
                   >
-                    {SUGGESTED.map((q) => (
+                    {/* Category tabs */}
+                    <div className="flex flex-wrap gap-1.5">
                       <button
-                        key={q}
-                        onClick={() => send(q)}
-                        className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80"
+                        onClick={() => setActiveCategory("suggested")}
+                        className="rounded-full px-3 py-1 text-xs font-medium transition-all"
                         style={{
-                          background: "rgba(201,149,107,0.12)",
-                          color: "#C9956B",
-                          border: "1px solid rgba(201,149,107,0.25)",
+                          background: activeCategory === "suggested" ? "rgba(201,149,107,0.25)" : "rgba(255,255,255,0.04)",
+                          color: activeCategory === "suggested" ? "#C9956B" : "rgba(240,232,216,0.45)",
+                          border: `1px solid ${activeCategory === "suggested" ? "rgba(201,149,107,0.4)" : "rgba(255,255,255,0.08)"}`,
                         }}
                       >
-                        {q}
+                        ✨ For You
                       </button>
-                    ))}
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setActiveCategory(cat.id)}
+                          className="rounded-full px-3 py-1 text-xs font-medium transition-all"
+                          style={{
+                            background: activeCategory === cat.id ? "rgba(201,149,107,0.25)" : "rgba(255,255,255,0.04)",
+                            color: activeCategory === cat.id ? "#C9956B" : "rgba(240,232,216,0.45)",
+                            border: `1px solid ${activeCategory === cat.id ? "rgba(201,149,107,0.4)" : "rgba(255,255,255,0.08)"}`,
+                          }}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Question chips for active category */}
+                    <div className="flex flex-wrap gap-2">
+                      {visibleChips.map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => send(q)}
+                          className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80 text-left"
+                          style={{
+                            background: "rgba(201,149,107,0.12)",
+                            color: "#C9956B",
+                            border: "1px solid rgba(201,149,107,0.25)",
+                          }}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
 
