@@ -1,3 +1,6 @@
+# Visual Studio IDE files
+.vs/
+
 # Dependencies
 node_modules/
 .pnp
