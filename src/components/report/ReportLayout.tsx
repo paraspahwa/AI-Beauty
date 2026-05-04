@@ -10,17 +10,19 @@ import { ColorAnalysisCard } from "./ColorAnalysisCard";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
+import { ShoppingGuideCard } from "./ShoppingGuideCard";
 import { Paywall } from "@/components/Paywall";
 import { StyleChatDrawer } from "@/components/StyleChatDrawer";
 import type { CompiledReport } from "@/types/report";
 import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
 
 const TABS = [
-  { value: "face", label: "Face" },
-  { value: "color", label: "Color" },
-  { value: "skin", label: "Skin" },
+  { value: "face",    label: "Face" },
+  { value: "color",   label: "Color" },
+  { value: "skin",    label: "Skin" },
   { value: "glasses", label: "Spectacles" },
-  { value: "hair", label: "Hairstyle" },
+  { value: "hair",    label: "Hairstyle" },
+  { value: "shop",    label: "🛍 Shop" },
 ] as const;
 
 interface Props {
@@ -271,7 +273,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
             >
               {TABS.map((t) => {
                 const isLocked =
-                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair");
+                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "shop");
 
                 return (
                   <TabsTrigger
@@ -437,6 +439,28 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       reportId={report.id}
                       onUnlocked={refresh}
                       title="Hairstyle Guide"
+                    />
+                  )}
+                </motion.div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="shop" className="mt-0">
+              {activeTab === "shop" && (
+                <motion.div
+                  key="shop"
+                  variants={tabContent}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  {isPaid ? (
+                    <ShoppingGuideCard report={report} />
+                  ) : (
+                    <Locked
+                      reportId={report.id}
+                      onUnlocked={refresh}
+                      title="Shop Your Look"
                     />
                   )}
                 </motion.div>
