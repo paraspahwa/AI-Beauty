@@ -743,41 +743,24 @@ function normalizeSeasonKey(season: string): string {
 function ColorSwatch({
   hex,
   name,
-  photoUrl,
   aiPreviewUrl,
 }: {
   hex: string;
   name: string;
-  photoUrl?: string;
   aiPreviewUrl?: string;
 }) {
   const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
-
-  // V-neck clothing region. Kept low enough to avoid recoloring face/hair.
-  const clothingClip = [
-    "0% 72%",
-    "20% 66%",
-    "36% 67%",
-    "50% 80%",
-    "64% 67%",
-    "80% 66%",
-    "100% 72%",
-    "100% 100%",
-    "0% 100%",
-  ].join(", ");
 
   return (
     <div
       className="flex flex-col overflow-hidden group"
       style={{ border: "1.5px solid #E8DDD0", borderRadius: 10, background: "#fff" }}
     >
-      {/* Photo + CSS clothing overlay */}
       <div
         className="relative w-full"
         style={{ aspectRatio: "3/4", overflow: "hidden", isolation: "isolate" }}
       >
         {aiPreviewUrl ? (
-          /* ── Tier 1: Real AI-inpainted photo ───────────────────────────── */
           <Image
             src={aiPreviewUrl}
             alt={name}
@@ -786,59 +769,14 @@ function ColorSwatch({
             className="object-cover"
             style={{ objectPosition: "top center" }}
           />
-        ) : photoUrl ? (
-          /* ── Tier 2: CSS clip-path clothing overlay ─────────────────────── */
-          <>
-            <Image
-              src={photoUrl}
-              alt={name}
-              fill
-              unoptimized
-              className="object-cover"
-              style={{ objectPosition: "top center" }}
-            />
-            {/* solid top color — not full-image color filter */}
-            {/* V-neck lighting constants:
-                 160deg  = diagonal angle that mimics natural light falling on a draped fabric
-                 0.12    = slight highlight tint (12% white mix) at the shoulder edge
-                 42%     = gradient stop where the base color takes full effect mid-chest
-                 0.96    = near-opaque so the fabric colour fully masks the original clothing */}
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: `linear-gradient(160deg, ${lightenHex(hex, 0.12)} 0%, ${hex} 42%, ${hex} 100%)`,
-                opacity: 0.96,
-                clipPath: `polygon(${clothingClip})`,
-                pointerEvents: "none",
-              }}
-            />
-            {/* subtle V-neck seam + fabric depth, still clipped to clothing only */}
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(105deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 33%, rgba(0,0,0,0.10) 100%)",
-                clipPath: `polygon(${clothingClip})`,
-                pointerEvents: "none",
-              }}
-            />
-          </>
         ) : (
-          /* No photo fallback — solid color block with clip shape */
-          <div style={{ position: "absolute", inset: 0, background: "#EDE3D8" }}>
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                backgroundColor: hex,
-                opacity: 0.88,
-                clipPath: `polygon(${clothingClip})`,
-              }}
-            />
+          /* Skeleton while AI preview is generating */
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-1"
+            style={{ background: "#F5EFE7" }}
+          >
+            <div className="h-10 w-10 rounded-full animate-pulse" style={{ backgroundColor: hex, opacity: 0.6 }} />
+            <span className="text-[8px] text-center px-1" style={{ color: "#9C7D5B" }}>Generating…</span>
           </div>
         )}
 
@@ -1062,7 +1000,6 @@ export function ColorAnalysisCard({
               key={c.hex}
               hex={c.hex}
               name={c.name}
-              photoUrl={photoUrl}
               aiPreviewUrl={bestColorPreviewUrls?.[i]}
             />
           ))}
@@ -1082,7 +1019,7 @@ export function ColorAnalysisCard({
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {avoidSix.map((c) => (
-            <ColorSwatch key={c.hex} hex={c.hex} name={c.name} photoUrl={photoUrl} />
+            <ColorSwatch key={c.hex} hex={c.hex} name={c.name} />
           ))}
         </div>
       </div>
