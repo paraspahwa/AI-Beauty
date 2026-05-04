@@ -310,7 +310,6 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       features={report.features}
                       blendedConfidence={report.pipelineMeta?.blendedConfidence}
                       photoUrl={report.imageUrl}
-                      faceLandmarks={report.faceLandmarks}
                     />
                   ) : (
                     <Empty />
