@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Loader2, Sparkles, Bookmark, Trash2, ChevronLeft, Share2, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -202,7 +203,8 @@ declare global {
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function StyleChatDrawer({ reportId, report }: Props) {
-  const [open, setOpen]         = React.useState(false);
+  const searchParams = useSearchParams();
+  const [open, setOpen]         = React.useState(() => searchParams.get("chat") === "1");
   const [messages, setMessages] = React.useState<Message[]>([GREETING]);
   const [input, setInput]       = React.useState("");
   const [loading, setLoading]   = React.useState(false);

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag } from "lucide-react";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -188,6 +188,13 @@ export default async function DashboardPage() {
                   <Button asChild variant={report.status === "ready" ? "accent" : "outline"} size="sm">
                     <Link href={`/report/${report.id}`}>View report</Link>
                   </Button>
+                  {report.status === "ready" && (
+                    <Button asChild variant="outline" size="sm" title="Open style chat">
+                      <Link href={`/report/${report.id}?chat=1`}>
+                        <MessageCircle className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
                   <DeleteReportButton reportId={report.id} />
                 </div>
               </div>
