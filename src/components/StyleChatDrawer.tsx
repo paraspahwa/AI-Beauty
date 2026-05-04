@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Loader2, Sparkles, Bookmark, Trash2, ChevronLeft } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Bookmark, Trash2, ChevronLeft, Share2, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CompiledReport } from "@/types/report";
 
@@ -163,6 +163,43 @@ const GREETING: Message = {
     "Hi! I'm your StyleAI consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
 };
 
+// ── Share helper — Web Share API with clipboard fallback ─────────────────────
+async function shareSnippet(content: string, season?: string): Promise<"shared" | "copied" | "error"> {
+  const text = `✨ StyleAI Tip${season ? ` for ${season}` : ""}:\n\n${content}\n\n— Get your own style report at StyleAI`;
+  try {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      await navigator.share({ text });
+      return "shared";
+    }
+  } catch { /* user cancelled or unsupported */ }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return "copied";
+  } catch {
+    return "error";
+  }
+}
+
+// ── SpeechRecognition type shim ───────────────────────────────────────────────
+type SpeechRecognitionInstance = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((e: SpeechRecognitionEvent) => void) | null;
+  onerror: ((e: Event) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+};
+type SpeechRecognitionEvent = { results: { [i: number]: { [j: number]: { transcript: string } } } };
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+  }
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 export function StyleChatDrawer({ reportId, report }: Props) {
   const [open, setOpen]         = React.useState(false);
@@ -174,6 +211,11 @@ export function StyleChatDrawer({ reportId, report }: Props) {
   const [bookmarks, setBookmarks]             = React.useState<{ id: string; content: string }[]>([]);
   const [bookmarksLoaded, setBookmarksLoaded] = React.useState(false);
   const [bookmarking, setBookmarking]         = React.useState<number | null>(null);
+  const [sharing, setSharing]                 = React.useState<number | "bk" | null>(null);
+  const [shareToast, setShareToast]           = React.useState<string | null>(null);
+  const [isListening, setIsListening]         = React.useState(false);
+  const [voiceSupported, setVoiceSupported]   = React.useState(false);
+  const recognitionRef = React.useRef<SpeechRecognitionInstance | null>(null);
   const [occasionStep, setOccasionStep]       = React.useState<{ occasion: string } | null>(null);
   const [activeCategory, setActiveCategory]   = React.useState<CategoryId | "suggested">("suggested");
   const bottomRef  = React.useRef<HTMLDivElement>(null);
@@ -226,6 +268,20 @@ export function StyleChatDrawer({ reportId, report }: Props) {
       })
       .catch(() => {});
   }, [drawerView, bookmarksLoaded, reportId]);
+
+  // Detect SpeechRecognition support on mount
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition)) {
+      setVoiceSupported(true);
+    }
+  }, []);
+
+  // Auto-dismiss share toast
+  React.useEffect(() => {
+    if (!shareToast) return;
+    const t = setTimeout(() => setShareToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [shareToast]);
 
   async function send(text?: string) {
     const userText = (text ?? input).trim();
@@ -283,6 +339,38 @@ export function StyleChatDrawer({ reportId, report }: Props) {
   function removeBookmark(id: string) {
     setBookmarks((prev) => prev.filter((b) => b.id !== id));
     fetch(`/api/chat/bookmarks/${id}`, { method: "DELETE" }).catch(() => {});
+  }
+
+  function toggleVoice() {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const rec = new Ctor();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (e) => {
+      const transcript = e.results[0]?.[0]?.transcript ?? "";
+      if (transcript) setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend   = () => setIsListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setIsListening(true);
+  }
+
+  async function shareMessage(content: string, idx: number | "bk") {
+    if (sharing !== null) return;
+    setSharing(idx);
+    const result = await shareSnippet(content, report?.colorAnalysis?.season);
+    setSharing(null);
+    if (result === "shared") setShareToast("Shared! ✨");
+    else if (result === "copied") setShareToast("Copied to clipboard! 📋");
   }
 
   function sendOccasionPrompt(venue: "indoor" | "outdoor") {
@@ -441,15 +529,27 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                         }}
                       >
                         {bk.content}
-                        <button
-                          onClick={() => removeBookmark(bk.id)}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex h-6 w-6 items-center justify-center rounded-lg"
-                          style={{ color: "rgba(240,100,100,0.7)" }}
-                          aria-label="Remove tip"
-                          title="Remove"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => shareMessage(bk.content, "bk")}
+                            disabled={sharing === "bk"}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg"
+                            style={{ color: "#C9956B" }}
+                            aria-label="Share tip"
+                            title="Share"
+                          >
+                            <Share2 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => removeBookmark(bk.id)}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg"
+                            style={{ color: "rgba(240,100,100,0.7)" }}
+                            aria-label="Remove tip"
+                            title="Remove"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </motion.div>
                     ))
                   )}
@@ -486,21 +586,36 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     >
                       {msg.content}
                     </div>
-                    {/* Pin button — only on non-greeting assistant messages */}
+                    {/* Pin + Share buttons — only on non-greeting assistant messages */}
                     {msg.role === "assistant" && i > 0 && (
-                      <button
-                        onClick={() => bookmarkMessage(msg.content, i)}
-                        disabled={bookmarking === i}
-                        className="mt-1 flex items-center gap-1 text-xs transition-opacity opacity-30 hover:opacity-100"
-                        style={{ color: "#C9956B" }}
-                        title="Save this tip"
-                      >
-                        {bookmarking === i
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <Bookmark className="h-3 w-3" />
-                        }
-                        <span>Save tip</span>
-                      </button>
+                      <div className="mt-1 flex items-center gap-3">
+                        <button
+                          onClick={() => bookmarkMessage(msg.content, i)}
+                          disabled={bookmarking === i}
+                          className="flex items-center gap-1 text-xs transition-opacity opacity-30 hover:opacity-100"
+                          style={{ color: "#C9956B" }}
+                          title="Save this tip"
+                        >
+                          {bookmarking === i
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <Bookmark className="h-3 w-3" />
+                          }
+                          <span>Save</span>
+                        </button>
+                        <button
+                          onClick={() => shareMessage(msg.content, i)}
+                          disabled={sharing === i}
+                          className="flex items-center gap-1 text-xs transition-opacity opacity-30 hover:opacity-100"
+                          style={{ color: "#C9956B" }}
+                          title="Share this tip"
+                        >
+                          {sharing === i
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <Share2 className="h-3 w-3" />
+                          }
+                          <span>Share</span>
+                        </button>
+                      </div>
                     )}
                   </motion.div>
                 ))}
@@ -657,17 +772,47 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                 className="px-4 py-4"
                 style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
               >
+                {/* Share / copy toast */}
+                <AnimatePresence>
+                  {shareToast && (
+                    <motion.p
+                      key="toast"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="mb-2 text-center text-xs font-medium rounded-xl py-1"
+                      style={{ background: "rgba(201,149,107,0.2)", color: "#E8C990" }}
+                    >
+                      {shareToast}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
                 <div
                   className="flex items-end gap-2 rounded-2xl px-4 py-3"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
+                  {/* Mic button */}
+                  {voiceSupported && (
+                    <button
+                      onClick={toggleVoice}
+                      className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all"
+                      style={{
+                        background: isListening ? "rgba(201,149,107,0.3)" : "transparent",
+                        color: isListening ? "#E8C990" : "rgba(240,232,216,0.4)",
+                      }}
+                      title={isListening ? "Stop recording" : "Voice input"}
+                      aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                    >
+                      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    </button>
+                  )}
                   <textarea
                     ref={inputRef}
                     rows={1}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKey}
-                    placeholder="Ask about your style…"
+                    placeholder={isListening ? "Listening…" : "Ask about your style…"}
                     disabled={loading}
                     className="flex-1 resize-none bg-transparent text-sm outline-none placeholder:opacity-40"
                     style={{ color: "#F0E8D8", maxHeight: "6rem" }}
