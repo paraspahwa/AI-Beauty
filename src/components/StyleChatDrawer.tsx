@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Loader2, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Bookmark, Trash2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CompiledReport } from "@/types/report";
 
@@ -57,6 +57,16 @@ const STATIC_CATEGORY_QUESTIONS: Record<CategoryId, string[]> = {
     "Suggest a first-date outfit palette",
   ],
 };
+
+// ── Occasion wizard options ──────────────────────────────────────────────────
+const OCCASIONS = [
+  { label: "💼 Job Interview",    value: "job interview" },
+  { label: "💒 Wedding",          value: "wedding" },
+  { label: "💕 First Date",       value: "first date" },
+  { label: "🎉 Party / Night Out", value: "party or night out" },
+  { label: "🏖️ Vacation",         value: "vacation or holiday" },
+  { label: "☕ Casual Outing",    value: "casual outing" },
+] as const;
 
 // ── Build proactive insight cards from report data (no API call) ─────────────
 function buildInsights(report?: Partial<CompiledReport>): string[] {
@@ -160,7 +170,12 @@ export function StyleChatDrawer({ reportId, report }: Props) {
   const [input, setInput]       = React.useState("");
   const [loading, setLoading]   = React.useState(false);
   const [historyLoaded, setHistoryLoaded] = React.useState(false);
-  const [activeCategory, setActiveCategory] = React.useState<CategoryId | "suggested">("suggested");
+  const [drawerView, setDrawerView]           = React.useState<"chat" | "tips">("chat");
+  const [bookmarks, setBookmarks]             = React.useState<{ id: string; content: string }[]>([]);
+  const [bookmarksLoaded, setBookmarksLoaded] = React.useState(false);
+  const [bookmarking, setBookmarking]         = React.useState<number | null>(null);
+  const [occasionStep, setOccasionStep]       = React.useState<{ occasion: string } | null>(null);
+  const [activeCategory, setActiveCategory]   = React.useState<CategoryId | "suggested">("suggested");
   const bottomRef  = React.useRef<HTMLDivElement>(null);
   const inputRef   = React.useRef<HTMLTextAreaElement>(null);
 
@@ -196,6 +211,21 @@ export function StyleChatDrawer({ reportId, report }: Props) {
   React.useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
+
+  // Reset occasion wizard when user switches category
+  React.useEffect(() => { setOccasionStep(null); }, [activeCategory]);
+
+  // Load bookmarks on first switch to tips view
+  React.useEffect(() => {
+    if (drawerView !== "tips" || bookmarksLoaded) return;
+    setBookmarksLoaded(true);
+    fetch(`/api/chat/bookmarks?reportId=${reportId}`)
+      .then((r) => r.json())
+      .then((d: { bookmarks?: { id: string; content: string }[] }) => {
+        if (d.bookmarks) setBookmarks(d.bookmarks);
+      })
+      .catch(() => {});
+  }, [drawerView, bookmarksLoaded, reportId]);
 
   async function send(text?: string) {
     const userText = (text ?? input).trim();
@@ -233,6 +263,37 @@ export function StyleChatDrawer({ reportId, report }: Props) {
       e.preventDefault();
       send();
     }
+  }
+
+  async function bookmarkMessage(content: string, msgIdx: number) {
+    if (bookmarking !== null) return;
+    setBookmarking(msgIdx);
+    try {
+      const res = await fetch("/api/chat/bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId, content }),
+      });
+      const data = (await res.json()) as { bookmark?: { id: string; content: string } };
+      if (data.bookmark) setBookmarks((prev) => [data.bookmark!, ...prev]);
+    } catch { /* ignore */ }
+    setBookmarking(null);
+  }
+
+  function removeBookmark(id: string) {
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
+    fetch(`/api/chat/bookmarks/${id}`, { method: "DELETE" }).catch(() => {});
+  }
+
+  function sendOccasionPrompt(venue: "indoor" | "outdoor") {
+    if (!occasionStep) return;
+    const { occasion } = occasionStep;
+    setOccasionStep(null);
+    send(
+      `Plan my complete look for a ${occasion} (${venue}). Based on my full style profile, give me: ` +
+      `the best outfit color palette, which accessories and metals to wear, ` +
+      `makeup tone and approach, and hairstyle recommendation.`,
+    );
   }
 
   const showChips    = messages.length <= 1;
@@ -288,33 +349,115 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                 className="flex items-center justify-between px-5 py-4"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-8 w-8 items-center justify-center rounded-full"
-                    style={{ background: "rgba(201,149,107,0.15)" }}
+                {drawerView === "tips" ? (
+                  <button
+                    onClick={() => setDrawerView("chat")}
+                    className="flex items-center gap-2 text-sm font-semibold"
+                    style={{ color: "#F0E8D8" }}
                   >
-                    <Sparkles className="h-4 w-4" style={{ color: "#C9956B" }} />
+                    <ChevronLeft className="h-4 w-4" />
+                    My Saved Tips
+                    {bookmarks.length > 0 && (
+                      <span
+                        className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium"
+                        style={{ background: "rgba(201,149,107,0.2)", color: "#C9956B" }}
+                      >
+                        {bookmarks.length}
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-full"
+                      style={{ background: "rgba(201,149,107,0.15)" }}
+                    >
+                      <Sparkles className="h-4 w-4" style={{ color: "#C9956B" }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
+                        Style Consultant
+                      </p>
+                      <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>
+                        Knows your full style report
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
-                      Style Consultant
-                    </p>
-                    <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>
-                      Knows your full style report
-                    </p>
-                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  {drawerView === "chat" && (
+                    <button
+                      onClick={() => setDrawerView("tips")}
+                      className="relative flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:opacity-80"
+                      style={{ color: "rgba(240,232,216,0.5)" }}
+                      aria-label="View saved tips"
+                      title="My Saved Tips"
+                    >
+                      <Bookmark className="h-4 w-4" />
+                      {bookmarks.length > 0 && (
+                        <span
+                          className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold"
+                          style={{ background: "#C9956B", color: "#1A1009" }}
+                        >
+                          {bookmarks.length > 9 ? "9+" : bookmarks.length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:opacity-80"
+                    style={{ color: "rgba(240,232,216,0.5)" }}
+                    aria-label="Close chat"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:opacity-80"
-                  style={{ color: "rgba(240,232,216,0.5)" }}
-                  aria-label="Close chat"
-                >
-                  <X className="h-4 w-4" />
-                </button>
               </div>
 
-              {/* Messages */}
+              {/* ── Tips view ──────────────────────────────────────────── */}
+              {drawerView === "tips" && (
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                  {bookmarks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-3 py-16">
+                      <Bookmark className="h-10 w-10 opacity-20" style={{ color: "#C9956B" }} />
+                      <p className="text-sm text-center" style={{ color: "rgba(240,232,216,0.4)" }}>
+                        No saved tips yet.
+                        <br />Pin any assistant reply with the 📌 button.
+                      </p>
+                    </div>
+                  ) : (
+                    bookmarks.map((bk) => (
+                      <motion.div
+                        key={bk.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-2xl px-4 py-3 text-sm leading-relaxed relative group"
+                        style={{
+                          background: "rgba(201,149,107,0.08)",
+                          border: "1px solid rgba(201,149,107,0.2)",
+                          color: "rgba(240,232,216,0.88)",
+                        }}
+                      >
+                        {bk.content}
+                        <button
+                          onClick={() => removeBookmark(bk.id)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex h-6 w-6 items-center justify-center rounded-lg"
+                          style={{ color: "rgba(240,100,100,0.7)" }}
+                          aria-label="Remove tip"
+                          title="Remove"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* ── Chat view ───────────────────────────────────────────── */}
+              {drawerView === "chat" && (
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {messages.map((msg, i) => (
                   <motion.div
@@ -322,7 +465,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 }}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
                   >
                     <div
                       className="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
@@ -343,6 +486,22 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     >
                       {msg.content}
                     </div>
+                    {/* Pin button — only on non-greeting assistant messages */}
+                    {msg.role === "assistant" && i > 0 && (
+                      <button
+                        onClick={() => bookmarkMessage(msg.content, i)}
+                        disabled={bookmarking === i}
+                        className="mt-1 flex items-center gap-1 text-xs transition-opacity opacity-30 hover:opacity-100"
+                        style={{ color: "#C9956B" }}
+                        title="Save this tip"
+                      >
+                        {bookmarking === i
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <Bookmark className="h-3 w-3" />
+                        }
+                        <span>Save tip</span>
+                      </button>
+                    )}
                   </motion.div>
                 ))}
 
@@ -411,22 +570,60 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                       ))}
                     </div>
 
-                    {/* Question chips for active category */}
+                    {/* Question chips — occasion category gets the wizard */}
                     <div className="flex flex-wrap gap-2">
-                      {visibleChips.map((q) => (
-                        <button
-                          key={q}
-                          onClick={() => send(q)}
-                          className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80 text-left"
-                          style={{
-                            background: "rgba(201,149,107,0.12)",
-                            color: "#C9956B",
-                            border: "1px solid rgba(201,149,107,0.25)",
-                          }}
-                        >
-                          {q}
-                        </button>
-                      ))}
+                      {activeCategory === "occasion" ? (
+                        occasionStep ? (
+                          // Step 2: Indoor or outdoor?
+                          <div className="w-full space-y-2">
+                            <p className="text-xs px-1" style={{ color: "rgba(240,232,216,0.4)" }}>
+                              {occasionStep.occasion} — indoor or outdoor?
+                            </p>
+                            <div className="flex gap-2 flex-wrap">
+                              {(["indoor", "outdoor"] as const).map((venue) => (
+                                <button
+                                  key={venue}
+                                  onClick={() => sendOccasionPrompt(venue)}
+                                  className="rounded-full px-4 py-1.5 text-xs font-medium capitalize transition-opacity hover:opacity-80"
+                                  style={{ background: "rgba(201,149,107,0.2)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.35)" }}
+                                >
+                                  {venue === "indoor" ? "🏛️ Indoor" : "🌿 Outdoor"}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setOccasionStep(null)}
+                                className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80"
+                                style={{ color: "rgba(240,232,216,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
+                              >
+                                ← Back
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          // Step 1: Pick occasion type
+                          OCCASIONS.map((occ) => (
+                            <button
+                              key={occ.value}
+                              onClick={() => setOccasionStep({ occasion: occ.value })}
+                              className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80 text-left"
+                              style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}
+                            >
+                              {occ.label}
+                            </button>
+                          ))
+                        )
+                      ) : (
+                        visibleChips.map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => send(q)}
+                            className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80 text-left"
+                            style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}
+                          >
+                            {q}
+                          </button>
+                        ))
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -452,8 +649,10 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                 )}
                 <div ref={bottomRef} />
               </div>
+              )} {/* end chat view */}
 
-              {/* Input */}
+              {/* Input — only shown in chat view */}
+              {drawerView === "chat" && (
               <div
                 className="px-4 py-4"
                 style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
@@ -492,6 +691,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                   Powered by StyleAI · Responses are AI-generated
                 </p>
               </div>
+              )}
             </motion.div>
           </>
         )}
