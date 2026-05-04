@@ -217,14 +217,16 @@ export async function POST(req: NextRequest) {
     // Persist the latest user turn + assistant reply (fire-and-forget, don't block response)
     const lastUserMsg = sanitizedMessages[sanitizedMessages.length - 1];
     if (lastUserMsg?.role === "user") {
-      void Promise.resolve(
-        admin.from("chat_messages").insert([
-          { report_id: reportId, user_id: user.id, role: "user",      content: lastUserMsg.content },
-          { report_id: reportId, user_id: user.id, role: "assistant",  content: reply },
-        ])
-      ).catch((e: unknown) => {
-        console.warn("[chat] failed to persist messages:", (e as Error).message);
-      });
+      void (async () => {
+        try {
+          await admin.from("chat_messages").insert([
+            { report_id: reportId, user_id: user.id, role: "user",      content: lastUserMsg.content },
+            { report_id: reportId, user_id: user.id, role: "assistant",  content: reply },
+          ]);
+        } catch (e: unknown) {
+          console.warn("[chat] failed to persist messages:", (e as Error).message);
+        }
+      })();
     }
 
     return NextResponse.json({ reply });
