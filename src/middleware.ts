@@ -12,7 +12,9 @@ const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/ad
 //       the per-user burst guard in the route handler is the hard gate; this is a
 //       lightweight first-pass filter that stops bots without a session.
 
-const RATE_LIMIT_ROUTES = ["/api/analyze", "/api/reports"];
+// Only rate-limit the expensive analysis endpoint. Report reads and deletes are
+// user-specific, low-cost operations that should not be gated by IP rate limits.
+const RATE_LIMIT_ROUTES = ["/api/analyze"];
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 8; // requests per window per IP
 
