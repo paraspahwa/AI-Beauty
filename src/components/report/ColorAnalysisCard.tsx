@@ -125,6 +125,7 @@ function MakeupLip({ hex }: { hex: string }) {
   );
 }
 
+/* ─── Data types (defined before SEASON_PRESETS for co-location) ────────── */
 type Swatch = { name: string; hex: string };
 type PrintStyle = { label: string; bg: string; pat: string };
 
@@ -783,6 +784,11 @@ function ColorSwatch({
               style={{ objectPosition: "top center" }}
             />
             {/* solid top color — not full-image color filter */}
+            {/* V-neck lighting constants:
+                 160deg  = diagonal angle that mimics natural light falling on a draped fabric
+                 0.12    = slight highlight tint (12% white mix) at the shoulder edge
+                 42%     = gradient stop where the base color takes full effect mid-chest
+                 0.96    = near-opaque so the fabric colour fully masks the original clothing */}
             <div
               aria-hidden
               style={{
@@ -848,7 +854,9 @@ export function ColorAnalysisCard({
   photoUrl?: string;
 }) {
   const presetKey = normalizeSeasonKey(data.season);
-  const preset = SEASON_PRESETS[presetKey]!;
+  // Guard: normalizeSeasonKey always returns a valid key (falls back to "Soft Autumn"),
+  // but we defensively fall back here too to avoid a runtime crash on unexpected input.
+  const preset = SEASON_PRESETS[presetKey] ?? SEASON_PRESETS["Soft Autumn"]!;
 
   const bestSix = preset.bestColors;
   const avoidSix = preset.avoidColors;
@@ -875,7 +883,12 @@ export function ColorAnalysisCard({
     platinum:["#D8D8D8", "#A8A8A8"],
   };
   function metalGrad(m: string): string {
-    const key = Object.keys(metalGradients).find((k) => m.toLowerCase().includes(k)) ?? "gold";
+    const lower = m.toLowerCase();
+    // Sort keys longest-first so "rose gold" matches "rose gold" before "rose" or "gold".
+    const key =
+      Object.keys(metalGradients)
+        .sort((a, b) => b.length - a.length)
+        .find((k) => lower.includes(k)) ?? "gold";
     return metalGradients[key].join(",");
   }
 
