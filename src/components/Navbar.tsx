@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna, TrendingUp, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -108,6 +108,18 @@ export function Navbar() {
                   Style DNA
                 </Link>
               </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/progress">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  Progress
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/wardrobe-capsule">
+                  <ShoppingBag className="h-3.5 w-3.5" />
+                  Capsule
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out
@@ -188,6 +200,16 @@ export function Navbar() {
                     <Button asChild variant="outline" className="w-full">
                       <Link href="/dashboard/style-dna" onClick={() => setMenuOpen(false)}>
                         <Dna className="h-4 w-4" /> Style DNA
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/dashboard/progress" onClick={() => setMenuOpen(false)}>
+                        <TrendingUp className="h-4 w-4" /> Progress
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/dashboard/wardrobe-capsule" onClick={() => setMenuOpen(false)}>
+                        <ShoppingBag className="h-4 w-4" /> Capsule
                       </Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">

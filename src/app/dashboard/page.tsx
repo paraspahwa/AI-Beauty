@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles } from "lucide-react";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -62,6 +62,36 @@ export default async function DashboardPage() {
             New analysis
           </Link>
         </Button>
+      </div>
+
+      {/* Feature quick links */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <Link
+          href="/dashboard/progress"
+          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+          style={{ background: "rgba(99,162,130,0.08)", border: "1px solid rgba(99,162,130,0.18)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(99,162,130,0.18)" }}>
+            <TrendingUp className="h-5 w-5" style={{ color: "#63A282" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Progress Tracker</p>
+            <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>See how your style profile has evolved</p>
+          </div>
+        </Link>
+        <Link
+          href="/dashboard/wardrobe-capsule"
+          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+          style={{ background: "rgba(123,110,158,0.08)", border: "1px solid rgba(123,110,158,0.18)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(123,110,158,0.18)" }}>
+            <ShoppingBag className="h-5 w-5" style={{ color: "#A69CC4" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Wardrobe Capsule</p>
+            <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>Your 10-piece seasonal wardrobe edit</p>
+          </div>
+        </Link>
       </div>
 
       {/* Style DNA teaser — shown when prefs exist */}

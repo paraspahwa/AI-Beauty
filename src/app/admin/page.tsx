@@ -17,23 +17,61 @@ interface SummaryStats {
   readyReports: number;
   failedReports: number;
   totalUsers: number;
+  paidReports: number;
+  conversionRate: number;
+  estRevenueInr: number;
 }
 
-async function getAdminStats(): Promise<{ canary: CanaryRow[]; summary: SummaryStats }> {
+interface DailyBucket {
+  date: string; // YYYY-MM-DD
+  total: number;
+  paid: number;
+}
+
+async function getAdminStats(): Promise<{
+  canary: CanaryRow[];
+  summary: SummaryStats;
+  daily: DailyBucket[];
+}> {
   const admin = createSupabaseAdminClient();
 
-  const [canaryRes, reportCountRes, failedCountRes, userPrefsCountRes] = await Promise.all([
-    admin.rpc("get_canary_stats"),
-    admin.from("reports").select("status", { count: "exact", head: false }).in("status", ["ready", "processing", "failed"]),
-    admin.from("reports").select("id", { count: "exact", head: true }).eq("status", "failed"),
-    admin.from("user_style_prefs").select("user_id", { count: "exact", head: true }),
-  ]);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [canaryRes, reportCountRes, failedCountRes, userPrefsCountRes, paidCountRes, dailyRes] =
+    await Promise.all([
+      admin.rpc("get_canary_stats"),
+      admin
+        .from("reports")
+        .select("status", { count: "exact", head: false })
+        .in("status", ["ready", "processing", "failed"]),
+      admin.from("reports").select("id", { count: "exact", head: true }).eq("status", "failed"),
+      admin.from("user_style_prefs").select("user_id", { count: "exact", head: true }),
+      admin.from("reports").select("id", { count: "exact", head: true }).eq("is_paid", true),
+      admin
+        .from("reports")
+        .select("created_at, is_paid")
+        .gte("created_at", thirtyDaysAgo)
+        .order("created_at", { ascending: true }),
+    ]);
 
   const rows = (reportCountRes.data ?? []) as { status: string }[];
   const totalReports = rows.length;
   const readyReports = rows.filter((r) => r.status === "ready").length;
   const failedReports = failedCountRes.count ?? 0;
   const totalUsers = userPrefsCountRes.count ?? 0;
+  const paidReports = paidCountRes.count ?? 0;
+  const conversionRate = totalReports > 0 ? Math.round((paidReports / totalReports) * 100) : 0;
+  const estRevenueInr = paidReports * 399; // base plan price ₹399
+
+  // Build daily buckets from last 30 days
+  const dailyMap: Record<string, DailyBucket> = {};
+  for (const row of (dailyRes.data ?? []) as { created_at: string; is_paid: boolean }[]) {
+    const date = row.created_at.slice(0, 10);
+    if (!dailyMap[date]) dailyMap[date] = { date, total: 0, paid: 0 };
+    dailyMap[date].total++;
+    if (row.is_paid) dailyMap[date].paid++;
+  }
+  const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
 
   const canary = ((canaryRes.data ?? []) as {
     stage: string;
@@ -51,7 +89,7 @@ async function getAdminStats(): Promise<{ canary: CanaryRow[]; summary: SummaryS
     degradationPct: r.degradation_pct,
   }));
 
-  return { canary, summary: { totalReports, readyReports, failedReports, totalUsers } };
+  return { canary, summary: { totalReports, readyReports, failedReports, totalUsers, paidReports, conversionRate, estRevenueInr }, daily };
 }
 
 export default async function AdminPage() {
@@ -60,7 +98,7 @@ export default async function AdminPage() {
 
   if (!user || !isAdminUserEmail(user.email)) redirect("/");
 
-  const { canary, summary } = await getAdminStats();
+  const { canary, summary, daily } = await getAdminStats();
 
   const stages = Array.from(new Set(canary.map((r) => r.stage))).sort();
 
@@ -75,7 +113,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total reports", value: summary.totalReports },
           { label: "Completed", value: summary.readyReports },
@@ -92,6 +130,67 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
+
+      {/* Revenue / conversion cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        {[
+          { label: "Paid conversions", value: summary.paidReports, color: "#63A282", note: "reports unlocked" },
+          { label: "Conversion rate", value: `${summary.conversionRate}%`, color: "#C9956B", note: "of total analyses" },
+          { label: "Est. Revenue", value: `₹${summary.estRevenueInr.toLocaleString("en-IN")}`, color: "#E8C990", note: "at ₹399 base plan" },
+        ].map(({ label, value, color, note }) => (
+          <div
+            key={label}
+            className="rounded-2xl p-5 text-center"
+            style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: `1px solid ${color}30` }}
+          >
+            <p className="text-3xl font-serif" style={{ color }}>{value}</p>
+            <p className="text-xs font-medium mt-1" style={{ color }}>{label}</p>
+            <p className="text-xs text-ink-stone mt-0.5">{note}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Daily activity bar chart (last 30 days) */}
+      {daily.length > 0 && (
+        <div
+          className="rounded-3xl overflow-hidden mb-8"
+          style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <h2 className="text-ink font-medium">Daily activity — last 30 days</h2>
+            <p className="text-xs text-ink-stone mt-1">Total analyses (light) and paid (dark) per day</p>
+          </div>
+          <div className="px-6 py-5">
+            <div className="flex items-end gap-1 h-28 overflow-x-auto">
+              {(() => {
+                const maxTotal = Math.max(...daily.map((d) => d.total), 1);
+                return daily.map((d) => (
+                  <div key={d.date} className="flex flex-col items-center gap-0.5 min-w-[20px] flex-1" title={`${d.date}: ${d.total} total, ${d.paid} paid`}>
+                    <div className="w-full rounded-t flex flex-col justify-end overflow-hidden" style={{ height: `${Math.max((d.total / maxTotal) * 96, 4)}px`, background: "rgba(201,149,107,0.25)" }}>
+                      {d.paid > 0 && (
+                        <div
+                          className="w-full rounded-t"
+                          style={{ height: `${(d.paid / d.total) * 100}%`, background: "#C9956B", minHeight: "3px" }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-3 rounded" style={{ background: "rgba(201,149,107,0.25)" }} />
+                <span className="text-xs text-ink-stone">Total</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-3 rounded" style={{ background: "#C9956B" }} />
+                <span className="text-xs text-ink-stone">Paid</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Canary stats table */}
       <div
