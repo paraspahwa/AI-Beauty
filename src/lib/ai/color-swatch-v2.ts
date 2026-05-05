@@ -60,7 +60,7 @@ function hexToColorWord(hex: string): string {
 function buildKontextPrompt(colorName: string, colorHex: string): string {
   const word = hexToColorWord(colorHex);
   return (
-	`Change the color of the dress to a solid ${word} color (${colorName}, hex ${colorHex}). ` 
+	`Change the color of the dress to a solid ${word} color (${colorName}, hex ${colorHex}) but dont change the dress. ` 
   );
 }
 
