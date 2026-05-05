@@ -20,6 +20,10 @@ const OUTPUT_W = 400;
 const OUTPUT_H = 530;
 const MAX_CONCURRENCY = 6;
 
+// Selfie is resized to this before sending — smaller payload = faster upload
+// and faster model processing. 640px is sufficient for clothing color preview.
+const SELFIE_SEND_SIZE = 640;
+
 // ── Replicate singleton ────────────────────────────────────────────────────────
 let _replicate: Replicate | null = null;
 function getReplicate(token: string): Replicate {
@@ -91,18 +95,28 @@ async function runFluxKontext(
   colorHex: string,
   replicateToken: string,
 ): Promise<Buffer> {
-  // The model's real input field is `img_cond_path` (not `input_image`).
-  // `aspect_ratio` defaults to "match_input_image" — leave it unset to
-  // preserve the selfie's natural proportions.
-  const imageDataUri = `data:image/jpeg;base64,${selfieBuf.toString("base64")}`;
+  // Downscale selfie to SELFIE_SEND_SIZE before encoding — reduces base64
+  // payload size and model processing time significantly.
+  const sharp = (await import("sharp")).default;
+  const smallBuf = await sharp(selfieBuf)
+	.rotate()
+	.resize(SELFIE_SEND_SIZE, SELFIE_SEND_SIZE, { fit: "inside", withoutEnlargement: true })
+	.jpeg({ quality: 80 })
+	.toBuffer();
+
+  const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
 
   const client = getReplicate(replicateToken);
   const output = await client.run(FLUX_KONTEXT_MODEL, {
 	input: {
-	  img_cond_path:  imageDataUri,
-	  prompt:         buildKontextPrompt(colorName, colorHex),
-	  output_format:  "jpg",
-	  output_quality: 92,
+	  img_cond_path:      imageDataUri,
+	  prompt:             buildKontextPrompt(colorName, colorHex),
+	  output_format:      "jpg",
+	  output_quality:     80,
+	  // Smallest output size — 512px is plenty for a 400×530 preview card
+	  image_size:         512,
+	  // Minimum steps for "Extra Juiced" speed mode — model is already fast
+	  num_inference_steps: 20,
 	},
   });
 
