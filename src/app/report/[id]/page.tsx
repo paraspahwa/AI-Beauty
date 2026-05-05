@@ -117,6 +117,18 @@ async function resolveVisualAssets(
     );
   }
 
+  if (out.assets.colorSwatchPreviews) {
+    out.assets.colorSwatchPreviews = await Promise.all(
+      out.assets.colorSwatchPreviews.map(async (asset) => {
+        if (asset.path && asset.status === "ready") {
+          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
+          return { ...asset, signedUrl: data?.signedUrl };
+        }
+        return asset;
+      }),
+    );
+  }
+
   return out;
 }
 

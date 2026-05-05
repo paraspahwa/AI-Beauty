@@ -29,7 +29,10 @@ const DEFAULT_ADMIN_EMAIL_ALLOWLIST = ["paraspahwa5@gmail.com"];
 
 export const env = {
   app: {
-    url: optional(process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"),
+    // VERCEL_URL is automatically set by Vercel (without https://) — use it as fallback
+    url: optional(process.env.NEXT_PUBLIC_APP_URL,
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"
+    ),
     name: optional(process.env.NEXT_PUBLIC_APP_NAME, "StyleAI"),
   },
   supabase: {
