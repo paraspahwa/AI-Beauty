@@ -56,8 +56,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessing, report.id, isReadOnly]);
 
-  // Track whether a /visuals/colors call is currently in-flight to avoid
-  // firing concurrent Replicate batches.
+  // True while /visuals/colors is in-flight; drives the loading skeleton in ColorAnalysisCard.
+  const [colorsGenerating, setColorsGenerating] = React.useState(false);
+  // Ref copy used inside the fire-and-forget fetch to prevent stacking concurrent batches
+  // without a stale-closure dependency on the state value.
   const colorsRunning = React.useRef(false);
 
   // When the report is ready but visuals haven't been generated yet, trigger
@@ -107,9 +109,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       // colorsRunning prevents stacking concurrent batches during polling cycles.
       if (!colorsRunning.current) {
         colorsRunning.current = true;
+        setColorsGenerating(true);
         fetch(`/api/reports/${report.id}/visuals/colors`, { method: "POST" })
           .catch(() => { /* server logs the error; slots show as "failed" in UI */ })
-          .finally(() => { colorsRunning.current = false; });
+          .finally(() => { colorsRunning.current = false; setColorsGenerating(false); });
       }
       await refresh();
     } catch {
@@ -334,11 +337,11 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <ColorAnalysisCard
                       data={report.colorAnalysis}
                       photoUrl={report.imageUrl}
-                      swatchesGenerating={visualsLoading}
+                      swatchesGenerating={colorsGenerating}
                       bestColorPreviewUrls={
                         report.visualAssets?.assets.colorSwatchPreviews
                           ?.slice(0, 6)
-                          .map((a) =>
+                          .map((a: { status: string; signedUrl?: string }) =>
                             a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
                           )
                       }
