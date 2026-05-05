@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const { data: row } = await supabase
     .from("reports")
-    .select("id, user_id, status, is_paid, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary")
+    .select("id, user_id, status, is_paid, created_at, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
