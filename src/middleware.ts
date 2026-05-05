@@ -12,11 +12,13 @@ const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/ad
 //       lightweight first-pass filter that stops bots without a session.
 
 // Rate-limit expensive API routes:
-//   /api/analyze → 8 req / 60 s per IP  (ML pipeline — very expensive)
-//   /api/chat    → 30 req / 60 s per IP  (OpenAI chat — moderate cost)
+//   /api/analyze         → 8 req / 60 s per IP  (ML pipeline — very expensive)
+//   /api/chat            → 30 req / 60 s per IP  (OpenAI chat — moderate cost)
+//   /api/reports (POST)  → 15 req / 60 s per IP  (Replicate image generation)
 const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
-  { prefix: "/api/analyze", max: 8 },
-  { prefix: "/api/chat",    max: 30 },
+  { prefix: "/api/analyze",             max: 8  },
+  { prefix: "/api/chat",                max: 30 },
+  { prefix: "/api/reports",             max: 15 },
 ];
 const RATE_LIMIT_WINDOW_MS = 60_000;
 

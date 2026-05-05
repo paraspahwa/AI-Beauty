@@ -4,8 +4,8 @@ import { env } from "@/lib/env";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
-// Cache at CDN for 1 hour; revalidate in background
-export const revalidate = 3600;
+// No CDN caching — share revocation must take effect immediately
+export const revalidate = 0;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -61,7 +61,9 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "image/jpeg",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+      "X-Content-Type-Options": "nosniff",
+      // private: OG selfie must not be cached by CDN — share revocation must take effect immediately
+      "Cache-Control": "private, max-age=3600",
     },
   });
 }

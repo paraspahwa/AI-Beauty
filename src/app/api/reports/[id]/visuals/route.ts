@@ -10,6 +10,7 @@ import {
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
+import { isAdminUserEmail } from "@/lib/auth/access";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const force = req.nextUrl.searchParams.get("force") === "1";
+    const force = req.nextUrl.searchParams.get("force") === "1" && isAdminUserEmail(user.email);
     // ?type=glasses|hairstyle triggers lazy on-demand generation for a single section.
     // ?index=N (0-2) restricts generation to that single slot within the section (Phase 5.4).
     const sectionType = req.nextUrl.searchParams.get("type") as "glasses" | "hairstyle" | null;

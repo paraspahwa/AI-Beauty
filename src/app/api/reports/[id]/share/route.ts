@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
@@ -13,7 +14,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * Returns: { shareToken: string, shareUrl: string }
  */
 export async function POST(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -41,10 +42,9 @@ export async function POST(
 
   // Idempotent: return existing token if present
   if (report.share_token) {
-    const origin = new URL(req.url).origin;
     return NextResponse.json({
       shareToken: report.share_token,
-      shareUrl: `${origin}/r/${report.share_token}`,
+      shareUrl: `${env.app.url}/r/${report.share_token}`,
     });
   }
 
@@ -61,10 +61,9 @@ export async function POST(
     return NextResponse.json({ error: "Failed to generate share token" }, { status: 500 });
   }
 
-  const origin = new URL(req.url).origin;
   return NextResponse.json({
     shareToken: updated.share_token,
-    shareUrl: `${origin}/r/${updated.share_token}`,
+    shareUrl: `${env.app.url}/r/${updated.share_token}`,
   });
 }
 

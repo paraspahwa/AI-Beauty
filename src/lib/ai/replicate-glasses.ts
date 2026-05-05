@@ -87,6 +87,11 @@ export async function replicateGlassesPreview(
   const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
   if (!url) throw new Error("Flux Kontext returned no output URL");
 
+  const TRUSTED_PREFIXES = ["https://replicate.delivery/", "https://pbxt.replicate.delivery/"];
+  if (!TRUSTED_PREFIXES.some((p) => url.startsWith(p))) {
+    throw new Error("Unexpected output URL from Replicate");
+  }
+
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
   const resultBuf = Buffer.from(await resp.arrayBuffer());

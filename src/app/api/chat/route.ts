@@ -167,7 +167,12 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = (await req.json()) as { reportId?: string; messages?: Message[] };
+    let body: { reportId?: string; messages?: Message[] };
+    try {
+      body = (await req.json()) as { reportId?: string; messages?: Message[] };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
     const { reportId, messages } = body;
 
     if (!reportId || !Array.isArray(messages) || messages.length === 0) {

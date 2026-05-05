@@ -90,5 +90,11 @@ export const env = {
     required("OPENAI_API_KEY", this.openai.apiKey);
     required("AWS_ACCESS_KEY_ID", this.aws.accessKeyId);
     required("AWS_SECRET_ACCESS_KEY", this.aws.secretAccessKey);
+    if (process.env.NODE_ENV === "production" && this.flags.paymentTestAllowInProd) {
+      console.error(
+        "[env] DANGER: PAYMENT_TEST_ALLOW_IN_PROD=true in production — fake payments are enabled! " +
+        "Disable this flag immediately."
+      );
+    }
   },
 };

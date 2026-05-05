@@ -74,9 +74,17 @@ function buildKontextPrompt(colorName: string, colorHex: string): string {
 }
 
 // ── Download URL → Buffer ──────────────────────────────────────────────────────
+const TRUSTED_REPLICATE_PREFIXES = [
+  "https://replicate.delivery/",
+  "https://pbxt.replicate.delivery/",
+];
+
 async function fetchImageBuffer(url: string): Promise<Buffer> {
+  if (!TRUSTED_REPLICATE_PREFIXES.some((p) => url.startsWith(p))) {
+    throw new Error("Unexpected output URL from Replicate");
+  }
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Download failed: ${res.status} ${url}`);
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   return Buffer.from(await res.arrayBuffer());
 }
 

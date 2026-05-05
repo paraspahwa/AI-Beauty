@@ -167,7 +167,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     glasses:      hasPremium ? row.glasses       ?? undefined : undefined,
     hairstyle:    hasPremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
-    summary:      row.summary ?? undefined,
+    summary:      hasPremium ? row.summary       ?? undefined : undefined,
     pipelineMeta,
     faceLandmarks: extractFaceLandmarks(row.rekognition) ?? undefined,
     createdAt:    row.created_at,

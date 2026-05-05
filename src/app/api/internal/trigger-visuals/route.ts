@@ -14,6 +14,7 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import {
@@ -39,7 +40,9 @@ export async function POST(req: NextRequest) {
       console.warn("[trigger-visuals] INTERNAL_API_SECRET not configured or too short");
       return NextResponse.json({ error: "Not configured" }, { status: 503 });
     }
-    if (secret !== configured) {
+    const secretBuf    = Buffer.from(secret ?? "", "utf8");
+    const configuredBuf = Buffer.from(configured, "utf8");
+    if (secretBuf.length !== configuredBuf.length || !timingSafeEqual(secretBuf, configuredBuf)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
