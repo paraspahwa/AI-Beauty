@@ -79,6 +79,11 @@ export const env = {
       ...csv(process.env.ADMIN_EMAIL_ALLOWLIST),
     ])),
   },
+  internal: {
+    // Shared secret used for server-to-server calls (e.g. background visual generation).
+    // Set INTERNAL_API_SECRET in .env.local and Vercel env vars.
+    secret: optional(process.env.INTERNAL_API_SECRET),
+  },
   /** Throws if any required server-side secret is missing. Call from server code. */
   assertServer() {
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);

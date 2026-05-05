@@ -9,6 +9,27 @@ import { env } from "@/lib/env";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+/**
+ * Fire-and-forget: call the internal trigger-visuals endpoint so visual
+ * generation starts immediately after the report is marked ready — before
+ * the client even receives the response.
+ */
+async function kickOffVisualsInBackground(
+  reportId: string,
+  appUrl: string,
+  internalSecret: string,
+): Promise<void> {
+  const url = `${appUrl}/api/internal/trigger-visuals`;
+  await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-secret": internalSecret,
+    },
+    body: JSON.stringify({ reportId }),
+  });
+}
+
 /** Accepted MIME types for uploaded selfies. */
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MIN_IMAGE_DIMENSION = 256;
@@ -254,6 +275,13 @@ export async function POST(req: NextRequest) {
       }).eq("id", report.id);
       return NextResponse.json({ error: "Analysis failed. Please try again." }, { status: 500 });
     }
+
+    // Fire visual generation in the background — non-blocking.
+    // The client still polls, but images will be ready sooner because generation
+    // started ~60s earlier (during the text-analysis wait time).
+    kickOffVisualsInBackground(report.id, env.app.url, env.internal.secret).catch(() => {
+      // Failure is non-fatal — client will retrigger via polling
+    });
 
     // visualsPending tells the client to immediately fire POST /api/reports/[id]/visuals
     return NextResponse.json({ reportId: report.id, visualsPending: true });
