@@ -70,15 +70,6 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       const json = (await res.json()) as { reportId?: string; visualsPending?: boolean };
       if (!json.reportId) throw new Error("Analysis started but no report ID was returned.");
 
-      setProgress(90);
-
-      // Fire visual generation in the background — don't await, navigate immediately
-      if (json.visualsPending) {
-        fetch(`/api/reports/${json.reportId}/visuals`, { method: "POST" }).catch(() => {
-          // Non-critical: report page polls for visuals separately
-        });
-      }
-
       setProgress(100);
       onUploaded(json.reportId);
     } catch (err) {
