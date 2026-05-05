@@ -60,7 +60,11 @@ function hexToColorWord(hex: string): string {
 function buildKontextPrompt(colorName: string, colorHex: string): string {
   const word = hexToColorWord(colorHex);
   return (
-	`Change the color of the dress to a solid ${word} color (${colorName}, hex ${colorHex}) but dont change the dress. ` 
+	`Change only the clothing color to solid ${word} (${colorName}, hex ${colorHex}). ` +
+	`Do not change the dress style, cut, or fabric texture. ` +
+	`Keep the person's face, skin tone, hair, and expression exactly the same. ` +
+	`Keep the background exactly the same. ` +
+	`Only the clothing color changes — nothing else.`
   );
 }
 
