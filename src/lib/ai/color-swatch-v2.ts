@@ -69,20 +69,21 @@ function hexToColorWord(hex: string): string {
 function buildInpaintPrompt(colorName: string, colorHex: string): string {
   const word = hexToColorWord(colorHex);
   return (
-    `close-up beauty portrait photograph, same person wearing a solid ${word} ${colorName} colored top, ` +
-    `exact same face exact same skin tone exact same background, ` +
-    `only the shirt clothing color is changed to ${colorName}, ` +
-    `photorealistic DSLR photo, fashion editorial, natural studio lighting, sharp focus, high resolution`
+    // Keep prompt laser-focused on RECOLOR only — verbose generation prompts
+    // push strength up and cause face/background drift at low strength values.
+    `${word} ${colorName} solid colored fabric, clothing recolor only, ` +
+    `same person same face same background same lighting, ` +
+    `photorealistic, DSLR, high resolution`
   );
 }
 
 function buildInpaintNegative(): string {
   return (
-    "different person, different face, changed face, different skin tone, " +
-    "different background, color shift on face or hair, " +
-    "cartoon, painting, anime, CGI, 3d render, illustration, digital art, " +
-    "blurry, low quality, deformed, ugly, bad anatomy, watermark, " +
-    "pattern, print, stripes, texture on clothing, logo, text on clothing"
+    "new person, different face, altered face, changed skin tone, changed background, " +
+    "changed lighting, color bleed onto face or hair or skin, " +
+    "cartoon, painting, anime, CGI, 3d render, illustration, " +
+    "blurry, low quality, deformed, bad anatomy, watermark, " +
+    "pattern, print, stripes, graphic, logo, text, buttons, collar change"
   );
 }
 
@@ -166,8 +167,11 @@ async function buildClothingMask(
   const faceBottom_s = Math.min(INPAINT_SIZE, Math.round((faceBox.bottom - cropT) * scaleY));
   const faceCx_s     = Math.round((faceBox.cx - cropL) * scaleX);
   const faceCy_s     = Math.round(((faceBox.top + faceBox.bottom) / 2 - cropT) * scaleY);
-  const faceRx_s     = Math.round(((faceRight_s - faceLeft_s) / 2) * 1.10);
-  const faceRy_s     = Math.round(((faceBottom_s - faceTop_s) / 2) * 1.10);
+  // 1.45× wider oval — protects forehead, jaw, and neck from the inpainter.
+  // At low strength (0.35) even pixels outside the white mask region can shift
+  // slightly; a generous black ellipse prevents any face-area touch.
+  const faceRx_s     = Math.round(((faceRight_s - faceLeft_s) / 2) * 1.45);
+  const faceRy_s     = Math.round(((faceBottom_s - faceTop_s) / 2) * 1.45);
 
   const torsoTop    = Math.min(INPAINT_SIZE, faceBottom_s + Math.round(faceRy_s * 0.25));
   const torsoBottom = Math.round(INPAINT_SIZE * 0.92);
@@ -212,10 +216,15 @@ async function tryOptionA(
       mask:                maskDataUri,
       prompt:              buildInpaintPrompt(colorName, colorHex),
       negative_prompt:     buildInpaintNegative(),
-      num_inference_steps: 35,
-      guidance_scale:      7.5,
-      strength:            0.65,
-      scheduler:           "DPM++2MKarras",
+      // ── Tuned for recolor-only fidelity ──────────────────────────────────
+      // strength 0.35 → just enough to recolor fabric; face/bg stay identical
+      // guidance 5.0  → lower adherence = less hallucination outside mask
+      // steps 40      → more diffusion steps at low strength = cleaner edges
+      // DDIM          → best scheduler for faithful low-strength inpainting
+      num_inference_steps: 40,
+      guidance_scale:      5.0,
+      strength:            0.35,
+      scheduler:           "DDIM",
       seed:                Math.floor(Math.random() * 9999999),
     },
   });
