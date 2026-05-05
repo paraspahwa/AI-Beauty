@@ -1,32 +1,23 @@
 /**
- * Replicate-based hairstyle inpainting — v2
+ * Hairstyle try-on generation — v3 (Flux Kontext Fast)
  *
- * Model: lucataco/sdxl-inpainting (SDXL-based — far better face preservation than SD 1.5)
- *   https://replicate.com/lucataco/sdxl-inpainting
- *
- * Key improvements over v1:
- *  1. SDXL model → higher resolution, much better face preservation
- *  2. Face-cutout mask: WHITE = hair-only zone (above forehead + sides),
- *     BLACK = face + body (SD must NOT touch the face)
- *  3. img2img + inpaint combination at strength 0.75 on hair zone only
- *  4. 768px crop for SDXL quality
- *  5. Parallel batch generation with concurrency limit
+ * Replaces SDXL inpainting (v2) with prunaai/flux-kontext-fast:
+ *   - No mask or faceBox geometry required
+ *   - Instruction-based: "restyle hair to [style name]"
+ *   - ~30% cheaper per prediction vs SDXL, better face preservation
  */
 
 import Replicate from "replicate";
 import sharp from "sharp";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-// Pinned stable version of lucataco/sdxl-inpainting
-// https://replicate.com/lucataco/sdxl-inpainting/versions
-const SDXL_INPAINT_MODEL =
-  "lucataco/sdxl-inpainting:a5b13068cc81a89a4fbeefecf6d6fc5e529a5ecc6bde3f97867ef36429a56a69" as const;
-// Output size for SDXL (must be multiple of 8)
-const INPAINT_SIZE = 1024;
-// Max concurrent Replicate predictions (to stay under rate limit)
+// ── Constants ──────────────────────────────────────────────────────────────────
+const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
+const SELFIE_SEND_SIZE = 640;
+const OUTPUT_W = 400;
+const OUTPUT_H = 530;
 const MAX_CONCURRENCY = 2;
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 export interface FaceBox {
   left: number;
   top: number;
@@ -38,85 +29,14 @@ export interface FaceBox {
   faceH: number;
 }
 
-// ── Replicate client (lazy singleton) ────────────────────────────────────────
+// ── Replicate client (lazy singleton) ─────────────────────────────────────────
 let _client: Replicate | null = null;
-function getReplicateClient(token: string): Replicate {
-  if (!_client) {
-    _client = new Replicate({ auth: token });
-  }
+function getClient(token: string): Replicate {
+  if (!_client) _client = new Replicate({ auth: token });
   return _client;
 }
 
-// ── Mask builder ─────────────────────────────────────────────────────────────
-/**
- * Build the inpaint mask at INPAINT_SIZE × INPAINT_SIZE.
- *
- * Layout in the CROPPED coordinate space:
- *   - Entire image starts as WHITE (repaint everything)
- *   - Face oval is painted BLACK (preserve the face)
- *   - Body below chin is painted BLACK (preserve body)
- *
- * This means SD only changes the hair region around/above the face.
- */
-async function buildHairMask(
-  faceBox: FaceBox,
-  cropL: number,
-  cropT: number,
-  cropW: number,
-  cropH: number,
-): Promise<Buffer> {
-  const scaleX = INPAINT_SIZE / cropW;
-  const scaleY = INPAINT_SIZE / cropH;
-
-  // Face oval in crop-relative → scaled coords
-  const faceLeft_scaled   = Math.max(0, Math.round((faceBox.left   - cropL) * scaleX));
-  const faceTop_scaled    = Math.max(0, Math.round((faceBox.top    - cropT) * scaleY));
-  const faceRight_scaled  = Math.min(INPAINT_SIZE, Math.round((faceBox.right  - cropL) * scaleX));
-  const faceBottom_scaled = Math.min(INPAINT_SIZE, Math.round((faceBox.bottom - cropT) * scaleY));
-  const faceCx_scaled     = Math.round((faceBox.cx    - cropL) * scaleX);
-  const faceCy_scaled     = Math.round(((faceBox.top + faceBox.bottom) / 2 - cropT) * scaleY);
-  const faceRx_scaled     = Math.round(((faceRight_scaled - faceLeft_scaled) / 2) * 1.05); // 5% wider for comfort
-  const faceRy_scaled     = Math.round(((faceBottom_scaled - faceTop_scaled) / 2) * 1.05);
-
-  // Body region below chin (preserve shirt/background)
-  const belowChin_scaled  = Math.min(INPAINT_SIZE, faceBottom_scaled + Math.round(faceRy_scaled * 0.3));
-
-  // SVG mask: white bg, black face oval + black body region
-  const svg = `<svg width="${INPAINT_SIZE}" height="${INPAINT_SIZE}" xmlns="http://www.w3.org/2000/svg">
-    <!-- White = repaint (hair zone) -->
-    <rect width="${INPAINT_SIZE}" height="${INPAINT_SIZE}" fill="white"/>
-    <!-- Black = preserve face -->
-    <ellipse cx="${faceCx_scaled}" cy="${faceCy_scaled}" rx="${faceRx_scaled}" ry="${faceRy_scaled}" fill="black"/>
-    <!-- Black = preserve body below chin -->
-    <rect x="0" y="${belowChin_scaled}" width="${INPAINT_SIZE}" height="${INPAINT_SIZE - belowChin_scaled}" fill="black"/>
-  </svg>`;
-
-  return sharp(Buffer.from(svg))
-    .png()
-    .toBuffer();
-}
-
-// ── Style → inpainting prompt ─────────────────────────────────────────────────
-function buildPrompt(styleName: string, hairHex: string): string {
-  const colour = hexToColourWord(hairHex);
-  return (
-    `close-up beauty portrait photograph, ${colour} hair styled as ${styleName}, ` +
-    `exact same face same person same skin tone same background, ` +
-    `only hair is changed, photorealistic DSLR photo, ` +
-    `sharp focus, natural studio lighting, high resolution`
-  );
-}
-
-function buildNegativePrompt(): string {
-  return (
-    "green tint, green background, color shift, hue change, different background, " +
-    "different person, different face, different skin tone, changed face, " +
-    "cartoon, painting, anime, CGI, 3d render, illustration, digital art, " +
-    "blurry, low quality, deformed, ugly, bad anatomy, watermark, " +
-    "extra limbs, missing face, bald, wig, plastic hair, orange hair, red hair"
-  );
-}
-
+// ── Hair colour word helper ────────────────────────────────────────────────────
 function hexToColourWord(hex: string): string {
   const h = hex.replace("#", "").toLowerCase();
   if (!h || h.length < 6) return "natural brown";
@@ -133,86 +53,73 @@ function hexToColourWord(hex: string): string {
   return "black";
 }
 
-// ── Single preview generator ──────────────────────────────────────────────────
+// ── Prompt builder ─────────────────────────────────────────────────────────────
+function buildPrompt(styleName: string, hairHex: string): string {
+  const colour = hexToColourWord(hairHex);
+  return (
+    `Restyle the hair to ${styleName} while keeping the same ${colour} hair color. ` +
+    `The person's face, eyes, nose, lips, skin tone, expression, clothing, and background must remain EXACTLY the same. ` +
+    `Only the hair style and shape changes — color and everything else stays identical. ` +
+    `Photorealistic beauty portrait, natural studio lighting.`
+  );
+}
+
+// ── Single preview generator ───────────────────────────────────────────────────
 /**
- * Generate one photorealistic hairstyle preview using SDXL inpainting.
- * Face is preserved exactly; only the hair region is changed.
+ * Generate one photorealistic hairstyle try-on using Flux Kontext Fast.
+ * No mask or faceBox required — the model handles the edit from the prompt.
+ * _faceBox param kept for API compatibility with callers; it is unused.
  */
 export async function replicateHairPreview(
   selfieBuf: Buffer,
-  faceBox: FaceBox,
+  _faceBox: FaceBox | null,
   styleName: string,
   hairHex: string,
   replicateToken: string,
 ): Promise<Buffer> {
-  // ── Crop: tight portrait centred on face, with generous crown room ─────────
-  const padX  = faceBox.faceW * 0.50;   // horizontal breathing room
-  const padTop = faceBox.faceH * 0.70;  // generous top for hair above crown
-  const padBot = faceBox.faceH * 0.35;  // small bottom padding for chin
-  const cropL = Math.max(0, Math.round(faceBox.left   - padX));
-  const cropT = Math.max(0, Math.round(faceBox.crownY - padTop));
-  const cropR = Math.round(faceBox.right  + padX);
-  const cropB = Math.round(faceBox.bottom + padBot);
-  const cropW = Math.max(1, cropR - cropL);
-  const cropH = Math.max(1, cropB - cropT);
-
-  // Resize crop to INPAINT_SIZE keeping aspect (pad if needed)
-  const croppedPng = await sharp(selfieBuf)
+  const smallBuf = await sharp(selfieBuf)
     .rotate()
-    .extract({ left: cropL, top: cropT, width: cropW, height: cropH })
-    .resize(INPAINT_SIZE, INPAINT_SIZE, { fit: "cover", position: "top" })
-    .removeAlpha()
-    .png()
+    .resize(SELFIE_SEND_SIZE, SELFIE_SEND_SIZE, { fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 80 })
     .toBuffer();
 
-  // ── Build face-cutout mask ─────────────────────────────────────────────────
-  const maskPng = await buildHairMask(faceBox, cropL, cropT, cropW, cropH);
+  const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
+  const client = getClient(replicateToken);
 
-  // ── Encode as base64 data-URIs ────────────────────────────────────────────
-  const imageDataUri = `data:image/png;base64,${croppedPng.toString("base64")}`;
-  const maskDataUri  = `data:image/png;base64,${maskPng.toString("base64")}`;
-
-  // ── Run Replicate SDXL inpainting ─────────────────────────────────────────
-  const client = getReplicateClient(replicateToken);
-
-  const output = await client.run(SDXL_INPAINT_MODEL, {
+  const output = await client.run(FLUX_KONTEXT_MODEL, {
     input: {
-      image:           imageDataUri,
-      mask:            maskDataUri,
-      prompt:          buildPrompt(styleName, hairHex),
-      negative_prompt: buildNegativePrompt(),
-      num_inference_steps: 35,
-      guidance_scale:      7.5,
-      strength:            0.75,
-      scheduler:           "DPM++2MKarras",
-      seed:                Math.floor(Math.random() * 9999999), // varied per card
+      img_cond_path:       imageDataUri,
+      prompt:              buildPrompt(styleName, hairHex),
+      output_format:       "jpg",
+      output_quality:      85,
+      image_size:          512,
+      num_inference_steps: 4,
     },
   });
 
-  // ── Download output + resize to card dimensions ───────────────────────────
-  const outputUrl: string = Array.isArray(output)
-    ? (output[0] as string)
-    : (output as unknown as string);
-  if (!outputUrl) throw new Error("Replicate returned no output");
+  const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
+  if (!url) throw new Error("Flux Kontext returned no output URL");
 
-  const resp = await fetch(outputUrl);
-  if (!resp.ok) throw new Error(`Replicate output download failed: ${resp.status}`);
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
   const resultBuf = Buffer.from(await resp.arrayBuffer());
 
   return sharp(resultBuf)
-    .resize(400, 530, { fit: "cover", position: "top" })
+    .resize(OUTPUT_W, OUTPUT_H, { fit: "cover", position: "top" })
     .jpeg({ quality: 92 })
     .toBuffer();
 }
 
-// ── Batch generator with concurrency cap ──────────────────────────────────────
+// ── Batch generator with concurrency cap ───────────────────────────────────────
 /**
- * Generate all hairstyle previews in parallel (up to MAX_CONCURRENCY at once).
+ * Generate up to 3 hairstyle previews in parallel.
+ * Concurrency capped at MAX_CONCURRENCY to stay under Replicate rate limits.
  * Returns array of { index, buffer, style } for successful generations.
+ * faceBox param kept for API compatibility; Flux Kontext does not use it.
  */
 export async function replicateHairPreviewBatch(
   selfieBuf: Buffer,
-  faceBox: FaceBox,
+  faceBox: FaceBox | null,
   styles: { index: number; name: string }[],
   hairHex: string,
   replicateToken: string,
@@ -234,8 +141,7 @@ export async function replicateHairPreviewBatch(
     }
   }
 
-  const workers = Array.from({ length: Math.min(MAX_CONCURRENCY, styles.length) }, () => worker());
-  await Promise.all(workers);
+  await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENCY, styles.length) }, () => worker()));
   return results;
 }
 

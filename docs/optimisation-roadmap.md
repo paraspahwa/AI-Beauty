@@ -76,10 +76,10 @@ without removing any user-facing feature.
 ### Changes
 | Step | What | File | Status |
 |------|------|------|--------|
-| 3.1 | Glasses: replace SDXL + mask geometry with Flux Kontext prompt | `src/lib/ai/replicate-glasses.ts` | ⬜ Pending |
-| 3.2 | Hairstyle: replace SDXL + mask geometry with Flux Kontext prompt | `src/lib/ai/replicate-hair.ts` | ⬜ Pending |
-| 3.3 | Remove `buildHairSvg` overlay in visuals.ts (SDXL workaround, no longer needed) | `src/lib/ai/visuals.ts` | ⬜ Pending |
-| 3.4 | Delete old `replicate-clothing.ts` SDXL path + `visuals/colors` webhook route | `src/lib/ai/replicate-clothing.ts`, `api/webhooks/replicate-clothing` | ⬜ Pending |
+| 3.1 | Glasses: replace SDXL + mask geometry with Flux Kontext prompt | `src/lib/ai/replicate-glasses.ts` | ✅ Done |
+| 3.2 | Hairstyle: replace SDXL + mask geometry with Flux Kontext prompt | `src/lib/ai/replicate-hair.ts` | ✅ Done |
+| 3.3 | Remove `buildHairSvg` overlay in visuals.ts (SDXL workaround, no longer needed) | `src/lib/ai/visuals.ts` | ✅ Done |
+| 3.4 | Delete old `replicate-clothing.ts` SDXL path + `visuals/colors` webhook route | `src/lib/ai/replicate-clothing.ts`, `api/webhooks/replicate-clothing` | ✅ Done |
 
 ### After Phase 3
 - No mask-building code path anywhere in the codebase
