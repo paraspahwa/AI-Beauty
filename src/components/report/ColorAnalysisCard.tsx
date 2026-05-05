@@ -754,10 +754,16 @@ function ColorSwatch({
 }) {
   // After 3 minutes stop spinning and fall back to color circle
   const [timedOut, setTimedOut] = React.useState(false);
+  // Countdown timer — starts at 25s (expected generation time) and counts down
+  const [secondsLeft, setSecondsLeft] = React.useState(25);
   React.useEffect(() => {
-    if (!generating) return;
-    const t = setTimeout(() => setTimedOut(true), 3 * 60 * 1000);
-    return () => clearTimeout(t);
+    if (!generating) { setSecondsLeft(25); return; }
+    const timeout = setTimeout(() => setTimedOut(true), 3 * 60 * 1000);
+    setSecondsLeft(25);
+    const tick = setInterval(() => {
+      setSecondsLeft((s) => (s > 1 ? s - 1 : 1));
+    }, 1000);
+    return () => { clearTimeout(timeout); clearInterval(tick); };
   }, [generating]);
 
   const showSkeleton = generating && !timedOut;
@@ -788,7 +794,8 @@ function ColorSwatch({
             style={{ background: "#F5EFE7" }}
           >
             <div className="h-10 w-10 rounded-full animate-pulse" style={{ backgroundColor: hex, opacity: 0.6 }} />
-            <span className="text-[8px] text-center px-1" style={{ color: "#9C7D5B" }}>Generating…</span>
+            <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#9C7D5B" }}>{secondsLeft}s</span>
+            <span className="text-[7px] text-center px-1" style={{ color: "#B8A898" }}>generating…</span>
           </div>
         ) : (
           /* Static color circle — no AI preview available */
