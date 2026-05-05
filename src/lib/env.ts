@@ -69,6 +69,7 @@ export const env = {
   },
   flags: {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",
+    replicateColorSwatches: optional(process.env.ENABLE_REPLICATE_COLOR_SWATCHES, "false") === "true",
     paymentTestMode: bool(process.env.PAYMENT_TEST_MODE, false),
     paymentTestAllowInProd: bool(process.env.PAYMENT_TEST_ALLOW_IN_PROD, false),
   },

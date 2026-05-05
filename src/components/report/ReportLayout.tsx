@@ -57,20 +57,21 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
 
   // When the report is ready but visuals haven't been generated yet, trigger
   // the async visuals route and refresh once it finishes.
-  // Also re-trigger if color swatch slots are stuck in pending/missing.
+  // Also re-trigger if color swatch slots are incomplete. Older reports may
+  // have failed/missing/pending color assets from the old webhook-only path.
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const hasStuckSwatches = swatches.some(
-      (s) => s.status === "pending" || s.status === "missing",
+    const hasIncompleteSwatches = swatches.length < 6 || swatches.some(
+      (s) => s.status !== "ready",
     );
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
-    if (!hasVisuals || hasStuckSwatches) {
+    if (!hasVisuals || hasIncompleteSwatches) {
       triggerVisuals();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report.status, report.id, isReadOnly]);
+  }, [report.status, report.id, report.visualAssets?.assets?.colorSwatchPreviews, isReadOnly]);
 
   // Poll every 12s while color swatches are still generating
   React.useEffect(() => {

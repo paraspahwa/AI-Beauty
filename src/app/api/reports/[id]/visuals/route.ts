@@ -52,22 +52,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Report is not ready yet" }, { status: 409 });
     }
 
-    // Idempotency: skip if already generated, unless ?force=1
-    // BUT always re-run if any color swatch slot is stuck in "pending" or "missing"
+    // Idempotency: skip if already generated, unless ?force=1.
+    // BUT always re-run if color swatch slots are incomplete. Older builds could
+    // persist "failed"/"missing"/"pending" swatches and then never retry them.
     if (!force) {
       const existingAssets = row.visual_assets as Record<string, unknown> | null;
       const assets = existingAssets?.assets as Record<string, unknown> | undefined;
       const alreadyDone = !!assets?.paletteBoard;
       if (alreadyDone) {
-        // Check for stuck pending/missing color swatch slots
+        // Check for incomplete color swatch slots.
         const swatches = (assets?.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
-        const hasStuckSlots = swatches.some(
-          (s) => s.status === "pending" || s.status === "missing",
+        const hasIncompleteColorSlots = swatches.length < 6 || swatches.some(
+          (s) => s.status !== "ready",
         );
-        if (!hasStuckSlots) {
+        if (!hasIncompleteColorSlots) {
           return NextResponse.json({ ok: true, skipped: true });
         }
-        // Fall through to re-generate only color swatches
+        // Fall through and regenerate visuals; color swatches now have a local
+        // photo fallback so retrying should resolve failed slots.
       }
     }
 

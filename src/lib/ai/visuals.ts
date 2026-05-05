@@ -383,7 +383,7 @@ export async function generateHairstylePreviews(
   const results: { index: number; buffer: Buffer; style: string }[] = [];
 
   const replicateToken = env.replicate.apiToken;
-  const useReplicate   = env.replicate.isConfigured && !!faceBox;
+  const useReplicate   = env.flags.replicateColorSwatches && env.replicate.isConfigured && !!faceBox;
 
   // ── Tier 1: Replicate SDXL batch (photorealistic, parallel) ───────────────
   if (useReplicate && faceBox) {
@@ -511,26 +511,140 @@ export async function generateColorSwatchPreviews(
 
   const faceBox = getFaceBox(rekognitionFace, W, H);
 
+  const batchColors = bestSix.map((c, i) => ({ index: i, name: c.name, hex: c.hex }));
+  const results: { index: number; buffer: Buffer; colorName: string }[] = [];
+
   const replicateToken = env.replicate.apiToken;
   const useReplicate   = env.replicate.isConfigured && !!faceBox;
 
-  if (!useReplicate || !faceBox) {
-    // No Replicate configured or no face data — caller uses CSS overlay fallback
-    console.info("[visuals] colorSwatchPreviews: Replicate unavailable, skipping (CSS fallback active)");
-    return [];
+  if (useReplicate && faceBox) {
+    const replicateResults = await replicateClothingPreviewBatch(
+      selfieBuf,
+      faceBox,
+      batchColors,
+      replicateToken,
+    ).catch((err) => {
+      console.warn("[visuals] colorSwatchPreviews batch failed:", (err as Error).message);
+      return [] as { index: number; buffer: Buffer; colorName: string }[];
+    });
+    results.push(...replicateResults);
+  } else {
+    console.info("[visuals] colorSwatchPreviews: Replicate unavailable; using local Sharp clothing recolor fallback");
   }
 
-  const batchColors = bestSix.map((c, i) => ({ index: i, name: c.name, hex: c.hex }));
-
-  const results = await replicateClothingPreviewBatch(
-    selfieBuf,
-    faceBox,
-    batchColors,
-    replicateToken,
-  ).catch((err) => {
-    console.warn("[visuals] colorSwatchPreviews batch failed:", (err as Error).message);
-    return [] as { index: number; buffer: Buffer; colorName: string }[];
-  });
+  // Always fill missing slots with a deterministic local photo recolor.
+  // This prevents the report from degrading to static color dots when Replicate
+  // is not configured, times out, or returns only partial results.
+  const done = new Set(results.map((r) => r.index));
+  for (const color of batchColors) {
+    if (done.has(color.index)) continue;
+    try {
+      const buffer = await generateLocalClothingColorPreview(selfieBuf, faceBox, color.hex);
+      results.push({ index: color.index, buffer, colorName: color.name });
+    } catch (err) {
+      console.warn(
+        `[visuals] local color fallback ${color.index} (${color.name}) failed:`,
+        (err as Error).message,
+      );
+    }
+  }
 
   return results;
+}
+
+function normalizeHexColor(hex: string): string {
+  const cleaned = hex.trim().replace("#", "");
+  if (/^[0-9a-f]{6}$/i.test(cleaned)) return `#${cleaned}`;
+  return "#8A5A3C";
+}
+
+async function generateLocalClothingColorPreview(
+  selfieBuf: Buffer,
+  faceBox: FaceBox | null,
+  colorHex: string,
+): Promise<Buffer> {
+  const img = sharp(selfieBuf).rotate();
+  const meta = await img.metadata();
+  const W = meta.width ?? 512;
+  const H = meta.height ?? 768;
+
+  let cropL = 0;
+  let cropT = 0;
+  let cropR = W;
+  let cropB = H;
+
+  if (faceBox) {
+    const padX = faceBox.faceW * 0.8;
+    const padTop = faceBox.faceH * 0.55;
+    const padBot = faceBox.faceH * 1.65;
+    cropL = Math.max(0, Math.round(faceBox.left - padX));
+    cropT = Math.max(0, Math.round(faceBox.top - padTop));
+    cropR = Math.min(W, Math.round(faceBox.right + padX));
+    cropB = Math.min(H, Math.round(faceBox.bottom + padBot));
+  }
+
+  const cropW = Math.max(1, cropR - cropL);
+  const cropH = Math.max(1, cropB - cropT);
+
+  const resized = await img
+    .extract({ left: cropL, top: cropT, width: cropW, height: cropH })
+    .resize(400, 530, { fit: "cover", position: "top" })
+    .removeAlpha()
+    .jpeg({ quality: 92 })
+    .toBuffer();
+
+  const outW = 400;
+  const outH = 530;
+  let torsoTop = Math.round(outH * 0.43);
+  if (faceBox) {
+    const relativeFaceBottom = (faceBox.bottom - cropT) / cropH;
+    torsoTop = Math.max(Math.round(outH * 0.36), Math.min(Math.round(outH * 0.58), Math.round(relativeFaceBottom * outH + 12)));
+  }
+
+  const color = normalizeHexColor(colorHex);
+  const maskSvg = Buffer.from(`
+    <svg width="${outW}" height="${outH}" viewBox="0 0 ${outW} ${outH}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="white" stop-opacity="0.70"/>
+          <stop offset="35%" stop-color="white" stop-opacity="0.88"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0.96"/>
+        </linearGradient>
+      </defs>
+      <path
+        d="M26 ${torsoTop + 28} C82 ${torsoTop - 14}, 318 ${torsoTop - 14}, 374 ${torsoTop + 28} L394 ${outH} L6 ${outH} Z"
+        fill="url(#fade)"
+      />
+    </svg>
+  `);
+
+  const tintSvg = Buffer.from(`
+    <svg width="${outW}" height="${outH}" viewBox="0 0 ${outW} ${outH}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${outW}" height="${outH}" fill="${color}"/>
+    </svg>
+  `);
+
+  const softTintSvg = Buffer.from(`
+    <svg width="${outW}" height="${outH}" viewBox="0 0 ${outW} ${outH}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${outW}" height="${outH}" fill="${color}" fill-opacity="0.22"/>
+    </svg>
+  `);
+
+  const tintedLayer = await sharp(tintSvg)
+    .composite([{ input: maskSvg, blend: "dest-in" }])
+    .png()
+    .toBuffer();
+
+  const softTintLayer = await sharp(softTintSvg)
+    .composite([{ input: maskSvg, blend: "dest-in" }])
+    .png()
+    .toBuffer();
+
+  return sharp(resized)
+    .composite([
+      { input: tintedLayer, blend: "multiply" },
+      { input: softTintLayer, blend: "overlay" },
+    ])
+    .jpeg({ quality: 92 })
+    .toBuffer();
 }
