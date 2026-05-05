@@ -7,8 +7,9 @@ import {
   generatePaletteBoard,
   generateGlassesPreviews,
   generateHairstylePreviews,
-  generateColorSwatchPreviews,
 } from "@/lib/ai/visuals";
+import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
+import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (alreadyDone) {
         // Check for incomplete color swatch slots.
         const swatches = (assets?.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
-        const hasIncompleteColorSlots = swatches.length < 6 || swatches.some(
+        const hasIncompleteColorSlots = swatches.length < 12 || swatches.some(
           (s) => s.status !== "ready",
         );
         if (!hasIncompleteColorSlots) {
@@ -158,16 +159,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ...(typeof s.name === "string" ? { styleName: s.name } : {}),
     }));
 
-    // Up to 6 colour swatch previews slots — initialised as "missing" here;
-    // the dedicated POST /visuals/colors route fills them in a separate invocation.
+    // Up to 12 colour swatch preview slots (6 best + 6 avoid) from the canonical preset.
     const colorResult = row.color_analysis as ColorAnalysisResult;
-    const bestSixColors = (colorResult?.palette ?? []).slice(0, 6);
-    visualAssets.assets.colorSwatchPreviews = bestSixColors.map((c, i) => ({
-      path: `${visualAssets.basePath}color-swatch-${i}.jpg`,
-      status: "missing" as const,
-      mime: "image/jpeg",
-      error: null,
-    }));
+    const seasonKey   = normalizeSeasonKey(colorResult?.season ?? "");
+    const palette     = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
+    const bestSix     = palette.best;
+    const avoidSix    = palette.avoid;
+
+    visualAssets.assets.colorSwatchPreviews = [
+      ...bestSix.map((_c, i) => ({
+        path:   `${visualAssets.basePath}color-swatch-${i}.jpg`,
+        status: "missing" as const,
+        mime:   "image/jpeg",
+        error:  null,
+      })),
+      ...avoidSix.map((_c, i) => ({
+        path:   `${visualAssets.basePath}color-swatch-${i + 6}.jpg`,
+        status: "missing" as const,
+        mime:   "image/jpeg",
+        error:  null,
+      })),
+    ];
 
     const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
       generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
@@ -178,9 +190,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         console.warn("[visuals/route] hairstyle previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; style: string }[];
       }),
-      generateColorSwatchPreviews(buffer, colorResult, row.rekognition).catch((err) => {
+      generateAllColorSwatchPreviews(
+        buffer,
+        bestSix,
+        avoidSix,
+        row.rekognition,
+        env.replicate.apiToken,
+        env.openai.apiKey,
+      ).catch((err) => {
         console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; colorName: string }[];
+        return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
       }),
     ]);
 
@@ -215,12 +234,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Mark any color swatch slots that didn't produce a result as "failed"
-    // so the UI stops spinning immediately instead of waiting forever.
+    // so the UI stops spinning instead of waiting forever.
     if (visualAssets.assets.colorSwatchPreviews) {
       for (const asset of visualAssets.assets.colorSwatchPreviews) {
         if (asset.status === "missing") {
           asset.status = "failed";
-          asset.error = "No preview generated";
+          asset.error = "No AI preview generated (all providers failed)";
         }
       }
     }

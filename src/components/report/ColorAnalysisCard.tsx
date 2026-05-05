@@ -822,6 +822,7 @@ export function ColorAnalysisCard({
   data,
   photoUrl,
   bestColorPreviewUrls,
+  avoidColorPreviewUrls,
   swatchesGenerating = false,
 }: {
   data: ColorAnalysisResult;
@@ -832,11 +833,15 @@ export function ColorAnalysisCard({
    */
   swatchesGenerating?: boolean;
   /**
-   * Optional array of signed URLs for AI-inpainted clothing colour previews.
-   * Index N maps to bestColors[N]. When present, the card renders real
-   * inpainted photos instead of the CSS clip-path overlay.
+   * Optional array of signed URLs for AI-generated clothing colour previews.
+   * Index N maps to bestColors[N]. Indices 0-5 = best colors.
    */
   bestColorPreviewUrls?: (string | undefined)[];
+  /**
+   * Optional array of signed URLs for avoid-color clothing previews.
+   * Index N maps to avoidColors[N]. Indices 0-5 = avoid colors.
+   */
+  avoidColorPreviewUrls?: (string | undefined)[];
 }) {
   const presetKey = normalizeSeasonKey(data.season);
   // Guard: normalizeSeasonKey always returns a valid key (falls back to "Soft Autumn"),
@@ -1045,8 +1050,14 @@ export function ColorAnalysisCard({
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Less Flattering</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-          {avoidSix.map((c) => (
-            <ColorSwatch key={c.hex} hex={c.hex} name={c.name} />
+          {avoidSix.map((c, i) => (
+            <ColorSwatch
+              key={c.hex}
+              hex={c.hex}
+              name={c.name}
+              aiPreviewUrl={avoidColorPreviewUrls?.[i]}
+              generating={swatchesGenerating && !avoidColorPreviewUrls?.[i]}
+            />
           ))}
         </div>
       </div>

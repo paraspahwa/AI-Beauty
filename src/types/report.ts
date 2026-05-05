@@ -99,7 +99,11 @@ export interface ReportVisualAssets {
     paletteBoard?: ReportVisualAsset;
     glassesPreviews?: ReportVisualAsset[];
     hairstylePreviews?: ReportVisualAsset[];
-    /** AI-inpainted clothing colour previews — indices 0-5 = bestColors */
+    /**
+     * AI-generated clothing colour previews.
+     * Indices 0-5  = bestColors[0-5]
+     * Indices 6-11 = avoidColors[0-5]
+     */
     colorSwatchPreviews?: ReportVisualAsset[];
   };
 }
