@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
-import type { ColorAnalysisResult, ReportVisualAssets } from "@/types/report";
+import type { ColorAnalysisResult, ReportVisualAsset, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
 // Synchronous mode: all 6 Flux Kontext slots run concurrently — should finish in <30s
@@ -85,7 +85,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       assets: {},
     };
 
-    const updatedSwatches = [...swatches];
+    const updatedSwatches: ReportVisualAsset[] = [...(swatches as ReportVisualAsset[])];
     for (const r of results) {
       const path = `${basePath}color-swatch-${r.index}.jpg`;
       await admin.storage
