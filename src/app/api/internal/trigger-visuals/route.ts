@@ -47,6 +47,10 @@ export async function POST(req: NextRequest) {
     if (!reportId) {
       return NextResponse.json({ error: "reportId required" }, { status: 400 });
     }
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(reportId)) {
+      return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
+    }
 
     const admin = createSupabaseAdminClient();
 

@@ -36,6 +36,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const force = req.nextUrl.searchParams.get("force") === "1";
     // ?type=glasses|hairstyle triggers lazy on-demand generation for a single section.
     // ?index=N (0-2) restricts generation to that single slot within the section (Phase 5.4).

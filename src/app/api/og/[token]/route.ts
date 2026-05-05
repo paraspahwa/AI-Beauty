@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 // Cache at CDN for 1 hour; revalidate in background
@@ -49,7 +50,14 @@ export async function GET(
 
   const buffer = Buffer.from(await blob.arrayBuffer());
 
-  return new NextResponse(buffer, {
+  // Resize to 1200×630 OG thumbnail — avoids serving full-res selfie publicly
+  const thumbnail = await sharp(buffer)
+    .rotate()
+    .resize(1200, 630, { fit: "cover", position: "attention" })
+    .jpeg({ quality: 80 })
+    .toBuffer();
+
+  return new NextResponse(thumbnail, {
     status: 200,
     headers: {
       "Content-Type": "image/jpeg",

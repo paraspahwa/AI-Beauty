@@ -25,7 +25,8 @@ function csv(value: string | undefined): string[] {
     .filter((entry) => entry.length > 0);
 }
 
-const DEFAULT_ADMIN_EMAIL_ALLOWLIST = ["paraspahwa5@gmail.com"];
+// Admin emails must come entirely from the ADMIN_EMAIL_ALLOWLIST env var.
+// Never hardcode email addresses in source code.
 
 export const env = {
   app: {
@@ -74,10 +75,8 @@ export const env = {
     paymentTestAllowInProd: bool(process.env.PAYMENT_TEST_ALLOW_IN_PROD, false),
   },
   auth: {
-    adminEmailAllowlist: Array.from(new Set([
-      ...DEFAULT_ADMIN_EMAIL_ALLOWLIST,
-      ...csv(process.env.ADMIN_EMAIL_ALLOWLIST),
-    ])),
+    // Comma-separated list of admin emails. Must be set via ADMIN_EMAIL_ALLOWLIST env var.
+    adminEmailAllowlist: csv(process.env.ADMIN_EMAIL_ALLOWLIST),
   },
   internal: {
     // Shared secret used for server-to-server calls (e.g. background visual generation).

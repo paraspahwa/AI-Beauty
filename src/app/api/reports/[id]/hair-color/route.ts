@@ -41,7 +41,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json() as { colorName?: string; colorHex?: string };
-    const colorName = (body.colorName ?? "").trim();
+    // Limit length to prevent prompt injection / DoS; strip non-printable chars
+    const colorName = (body.colorName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E]/g, "");
     const colorHex = (body.colorHex ?? "").trim();
     if (!colorName || !/^#[0-9a-f]{6}$/i.test(colorHex)) {
       return NextResponse.json({ error: "colorName and valid colorHex (#rrggbb) are required" }, { status: 400 });
@@ -111,8 +112,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
     if (!url) return NextResponse.json({ error: "Generation failed" }, { status: 502 });
 
-    // Download result from Replicate
-    const resultRes = await fetch(url);
+    // Download result from Replicate — 30 s timeout to avoid indefinite hangs
+    const dlController = new AbortController();
+    const dlTimeout = setTimeout(() => dlController.abort(), 30_000);
+    let resultRes: Response;
+    try {
+      resultRes = await fetch(url, { signal: dlController.signal });
+    } finally {
+      clearTimeout(dlTimeout);
+    }
     if (!resultRes.ok) return NextResponse.json({ error: "Failed to download generated image" }, { status: 502 });
     const resultBuf = Buffer.from(await resultRes.arrayBuffer());
 

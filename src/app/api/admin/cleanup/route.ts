@@ -21,8 +21,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json().catch(() => ({})) as { thresholdMinutes?: number };
-  const thresholdMinutes = Math.max(1, Math.min(60, body.thresholdMinutes ?? 10));
+  const body = await req.json().catch(() => ({})) as { thresholdMinutes?: unknown };
+  const rawMinutes = Number(body.thresholdMinutes ?? 10);
+  const thresholdMinutes = Number.isFinite(rawMinutes) ? Math.max(1, Math.min(60, rawMinutes)) : 10;
 
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin.rpc("expire_stuck_reports", {

@@ -33,10 +33,36 @@ export async function DELETE(
 
   if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Delete image from storage (best-effort — don't fail if already gone)
+  // Remove the original selfie
   if (report.image_path && report.image_path !== "pending") {
     await admin.storage.from(env.supabase.bucket).remove([report.image_path]).catch(() => {});
   }
+
+  // Remove all visual asset files: visuals folder + hair-color try-ons
+  // Paths follow: {userId}/{reportId}/visuals/v1/* and users/{userId}/reports/{reportId}/*
+  const visualsPrefix = `${user.id}/${id}/visuals/`;
+  const hairColorPrefix = `users/${user.id}/reports/${id}/`;
+  await Promise.allSettled([
+    admin.storage.from(env.supabase.bucket).list(visualsPrefix).then(({ data }) => {
+      if (data && data.length > 0) {
+        const paths = data.map((f) => `${visualsPrefix}${f.name}`);
+        return admin.storage.from(env.supabase.bucket).remove(paths);
+      }
+    }),
+    // Remove nested v1/ subfolder files
+    admin.storage.from(env.supabase.bucket).list(`${visualsPrefix}v1/`).then(({ data }) => {
+      if (data && data.length > 0) {
+        const paths = data.map((f) => `${visualsPrefix}v1/${f.name}`);
+        return admin.storage.from(env.supabase.bucket).remove(paths);
+      }
+    }),
+    admin.storage.from(env.supabase.bucket).list(hairColorPrefix).then(({ data }) => {
+      if (data && data.length > 0) {
+        const paths = data.map((f) => `${hairColorPrefix}${f.name}`);
+        return admin.storage.from(env.supabase.bucket).remove(paths);
+      }
+    }),
+  ]);
 
   const { error } = await admin.from("reports").delete().eq("id", id);
   if (error) {
