@@ -166,20 +166,32 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const bestSix     = palette.best;
     const avoidSix    = palette.avoid;
 
+    // Carry over already-ready slots from the existing visual_assets so they
+    // are never overwritten with "missing" and disappear from the UI.
+    const existingSwatches =
+      ((row.visual_assets as Record<string, unknown> | null)
+        ?.assets as Record<string, unknown> | undefined
+      )?.colorSwatchPreviews as { path: string; status: "pending" | "ready" | "failed" | "missing"; mime: string; error: string | null }[] | undefined;
+
     visualAssets.assets.colorSwatchPreviews = [
-      ...bestSix.map((_c, i) => ({
-        path:   `${visualAssets.basePath}color-swatch-${i}.jpg`,
-        status: "missing" as const,
-        mime:   "image/jpeg",
-        error:  null,
-      })),
-      ...avoidSix.map((_c, i) => ({
-        path:   `${visualAssets.basePath}color-swatch-${i + 6}.jpg`,
-        status: "missing" as const,
-        mime:   "image/jpeg",
-        error:  null,
-      })),
+      ...bestSix.map((_c, i) => {
+        const existing = existingSwatches?.[i];
+        if (existing?.status === "ready") return { path: existing.path, status: "ready" as const, mime: existing.mime, error: existing.error };
+        return { path: `${visualAssets.basePath}color-swatch-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
+      }),
+      ...avoidSix.map((_c, i) => {
+        const existing = existingSwatches?.[i + 6];
+        if (existing?.status === "ready") return { path: existing.path, status: "ready" as const, mime: existing.mime, error: existing.error };
+        return { path: `${visualAssets.basePath}color-swatch-${i + 6}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
+      }),
     ];
+
+    // Only generate slots that are not already ready
+    const readySlotIndices = new Set(
+      (visualAssets.assets.colorSwatchPreviews ?? [])
+        .map((s, i) => (s.status === "ready" ? i : -1))
+        .filter((i) => i >= 0)
+    );
 
     const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
       generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
@@ -196,6 +208,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         avoidSix,
         row.rekognition,
         env.replicate.apiToken,
+        readySlotIndices,
       ).catch((err) => {
         console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];

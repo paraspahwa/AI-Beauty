@@ -18,7 +18,7 @@ const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
 
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
-const MAX_CONCURRENCY = 3;
+const MAX_CONCURRENCY = 6;
 
 // ── Replicate singleton ────────────────────────────────────────────────────────
 let _replicate: Replicate | null = null;
@@ -138,6 +138,7 @@ export async function generateAllColorSwatchPreviews(
   avoidColors: { name: string; hex: string }[],
   _rekognitionFace: unknown,   // unused — Flux Kontext needs no face data
   replicateToken: string,
+  skipSlots: Set<number> = new Set(), // already-ready slot indices to skip
 ): Promise<SwatchResult[]> {
   if (!replicateToken) {
 	console.error("[swatch-v2] No Replicate token — skipping all slots");
@@ -147,7 +148,7 @@ export async function generateAllColorSwatchPreviews(
   const jobs: SwatchColorEntry[] = [
 	...bestColors.slice(0, 6).map((c, i) => ({ index: i,      name: c.name, hex: c.hex, isBest: true  })),
 	...avoidColors.slice(0, 6).map((c, i) => ({ index: i + 6, name: c.name, hex: c.hex, isBest: false })),
-  ];
+  ].filter((job) => !skipSlots.has(job.index)); // skip already-ready slots
 
   const results: SwatchResult[] = [];
   const queue = [...jobs];
