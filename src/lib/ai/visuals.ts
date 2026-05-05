@@ -20,7 +20,7 @@ type FaceLike = {
 // ── Face bounding box extraction ─────────────────────────────────────────────
 interface FaceBox { left: number; top: number; right: number; bottom: number; cx: number; crownY: number; faceW: number; faceH: number }
 
-function getFaceBox(face: unknown, W: number, H: number): FaceBox | null {
+export function getFaceBox(face: unknown, W: number, H: number): FaceBox | null {
   if (!face || typeof face !== "object") return null;
   const f = face as FaceLike;
   const bb = f.BoundingBox;
