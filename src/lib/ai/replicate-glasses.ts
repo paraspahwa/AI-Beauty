@@ -52,10 +52,6 @@ function buildPrompt(styleName: string): string {
   );
 }
 
- * Build INPAINT_SIZE × INPAINT_SIZE mask for the glasses region.
- *
- * Layout (all coords in the CROPPED, then scaled coordinate space):
-
 // ── Single preview generator ───────────────────────────────────────────────────
 /**
  * Generate one photorealistic glasses try-on using Flux Kontext Fast.

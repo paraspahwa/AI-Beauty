@@ -1,13 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
-import { replicateClothingBatchAsync } from "@/lib/ai/replicate-clothing";
-import { getFaceBox } from "@/lib/ai/visuals";
+import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import type { ColorAnalysisResult, ReportVisualAssets } from "@/types/report";
-import sharp from "sharp";
 
 export const runtime = "nodejs";
-// Webhook mode: only fires async predictions — should complete in <10s
+// Synchronous mode: all 6 Flux Kontext slots run concurrently — should finish in <30s
 export const maxDuration = 60;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -15,9 +13,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * POST /api/reports/[id]/visuals/colors
  *
- * Queues 6 Replicate SDXL inpainting predictions asynchronously.
- * Each prediction calls back to /api/webhooks/replicate-clothing when done.
- * This route returns in <10s — no Vercel timeout risk.
+ * Generates up to 6 color swatch previews synchronously using Flux Kontext Fast (v2).
+ * Results are uploaded to storage and visual_assets is updated in a single pass.
  */
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,7 +31,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     const { data: row, error: rowErr } = await admin
       .from("reports")
-      .select("id, user_id, status, image_path, rekognition, color_analysis, visual_assets")
+      .select("id, user_id, status, image_path, color_analysis, visual_assets")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -42,10 +39,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (rowErr || !row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     if (row.status !== "ready") return NextResponse.json({ error: "Report not ready" }, { status: 409 });
 
-    // Idempotency: skip if all 6 slots are already "ready" or "pending"
+    // Idempotency: skip if all 6 slots are already "ready"
     const existing = row.visual_assets as { assets?: { colorSwatchPreviews?: { status: string }[] } } | null;
     const swatches = existing?.assets?.colorSwatchPreviews ?? [];
-    const allDone = swatches.length >= 6 && swatches.every((s) => s.status === "ready" || s.status === "pending");
+    const allDone = swatches.length >= 6 && swatches.every((s) => s.status === "ready");
     if (allDone) return NextResponse.json({ ok: true, skipped: true });
 
     if (!env.replicate.isConfigured) {
@@ -63,49 +60,47 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const bestSix = (colorResult?.palette ?? []).slice(0, 6);
     const basePath = `users/${user.id}/reports/${id}/`;
 
-    // Build the "pending" skeleton entries in visual_assets so the UI shows the spinner
-    const pendingSwatches = bestSix.map((_, i) => ({
-      path: `${basePath}color-swatch-${i}.jpg`,
-      status: "pending" as const,
-      mime: "image/jpeg",
-      error: null,
-    }));
+    // Determine which slots are already ready so we can skip regenerating them
+    const skipSlots = new Set<number>(
+      swatches
+        .map((s, i) => (s.status === "ready" ? i : -1))
+        .filter((i) => i >= 0),
+    );
 
-    // Merge pending swatches into existing visual_assets
+    // Generate all swatch previews synchronously (6 concurrent Flux Kontext requests)
+    const results = await generateAllColorSwatchPreviews(
+      buffer,
+      bestSix,
+      [],          // avoid colors are CSS-only in v2
+      null,        // rekognition face data unused by v2
+      env.replicate.apiToken,
+      skipSlots,
+    );
+
+    // Upload each result buffer to storage and record the ready entry
     const currentAssets = (row.visual_assets as ReportVisualAssets | null) ?? {
       version: 1,
       bucket: env.supabase.bucket,
       basePath,
       assets: {},
     };
+
+    const updatedSwatches = [...swatches];
+    for (const r of results) {
+      const path = `${basePath}color-swatch-${r.index}.jpg`;
+      await admin.storage
+        .from(env.supabase.bucket)
+        .upload(path, r.buffer, { contentType: "image/jpeg", upsert: true });
+      updatedSwatches[r.index] = { path, status: "ready", mime: "image/jpeg", error: null };
+    }
+
     const merged: ReportVisualAssets = {
       ...currentAssets,
-      assets: { ...currentAssets.assets, colorSwatchPreviews: pendingSwatches },
+      assets: { ...currentAssets.assets, colorSwatchPreviews: updatedSwatches },
     };
     await admin.from("reports").update({ visual_assets: merged }).eq("id", id);
 
-    // Get faceBox for mask generation
-    const imgMeta = await sharp(buffer).rotate().metadata();
-    const W = imgMeta.width ?? 512;
-    const H = imgMeta.height ?? 768;
-    const faceBox = getFaceBox(row.rekognition, W, H);
-    if (!faceBox) {
-      console.warn("[visuals/colors] no face box — cannot inpaint");
-      return NextResponse.json({ error: "No face detected" }, { status: 422 });
-    }
-
-    // Fire all 6 predictions asynchronously — returns immediately
-    const appUrl = env.app.url;
-    await replicateClothingBatchAsync(
-      buffer,
-      faceBox,
-      bestSix.map((c, i) => ({ index: i, name: c.name, hex: c.hex })),
-      env.replicate.apiToken,
-      (i) =>
-        `${appUrl}/api/webhooks/replicate-clothing?reportId=${id}&userId=${user.id}&slot=${i}&bucket=${env.supabase.bucket}`,
-    );
-
-    return NextResponse.json({ ok: true, queued: bestSix.length });
+    return NextResponse.json({ ok: true, generated: results.length });
   } catch (err) {
     console.error("[POST /api/reports/[id]/visuals/colors]", err);
     return NextResponse.json({ error: "Color swatch generation failed" }, { status: 500 });
