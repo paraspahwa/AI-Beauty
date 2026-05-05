@@ -89,15 +89,18 @@ async function runFluxKontext(
   colorHex: string,
   replicateToken: string,
 ): Promise<Buffer> {
+  // The model's real input field is `img_cond_path` (not `input_image`).
+  // `aspect_ratio` defaults to "match_input_image" — leave it unset to
+  // preserve the selfie's natural proportions.
   const imageDataUri = `data:image/jpeg;base64,${selfieBuf.toString("base64")}`;
 
   const client = getReplicate(replicateToken);
   const output = await client.run(FLUX_KONTEXT_MODEL, {
 	input: {
-	  input_image:   imageDataUri,
-	  prompt:        buildKontextPrompt(colorName, colorHex),
-	  aspect_ratio:  "3:4",
-	  output_format: "webp",
+	  img_cond_path:  imageDataUri,
+	  prompt:         buildKontextPrompt(colorName, colorHex),
+	  output_format:  "jpg",
+	  output_quality: 92,
 	},
   });
 
