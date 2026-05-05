@@ -84,15 +84,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     setVisualsLoading(true);
     setVisualsFailed(false);
     try {
-      // Step 1: overlay + palette + glasses + hairstyle (no Replicate, fast ~30-60s)
+      // Step 1: overlay + palette + glasses + hairstyle + color swatches (all in one request)
       const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
       if (!res.ok) { setVisualsFailed(true); return; }
       await refresh();
-
-      // Step 2: AI clothing colour swatches — separate 120s budget via dedicated route
-      fetch(`/api/reports/${report.id}/visuals/colors`, { method: "POST" })
-        .then(async (r) => { if (r.ok) await refresh(); })
-        .catch(() => { /* non-critical */ });
     } catch {
       setVisualsFailed(true);
     } finally {

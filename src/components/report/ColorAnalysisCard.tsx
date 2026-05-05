@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import * as React from "react";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { ColorAnalysisResult } from "@/types/report";
@@ -751,6 +752,15 @@ function ColorSwatch({
   aiPreviewUrl?: string;
   generating?: boolean;
 }) {
+  // After 3 minutes stop spinning and fall back to color circle
+  const [timedOut, setTimedOut] = React.useState(false);
+  React.useEffect(() => {
+    if (!generating) return;
+    const t = setTimeout(() => setTimedOut(true), 3 * 60 * 1000);
+    return () => clearTimeout(t);
+  }, [generating]);
+
+  const showSkeleton = generating && !timedOut;
   const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
 
   return (
@@ -771,7 +781,7 @@ function ColorSwatch({
             className="object-cover"
             style={{ objectPosition: "top center" }}
           />
-        ) : generating ? (
+        ) : showSkeleton ? (
           /* Skeleton — only shown while actively waiting for AI preview */
           <div
             className="absolute inset-0 flex flex-col items-center justify-center gap-1"

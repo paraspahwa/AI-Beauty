@@ -7,11 +7,12 @@ import {
   generatePaletteBoard,
   generateGlassesPreviews,
   generateHairstylePreviews,
+  generateColorSwatchPreviews,
 } from "@/lib/ai/visuals";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult } from "@/types/report";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 /**
  * POST /api/reports/[id]/visuals
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       error: null,
     }));
 
-    const [glassesPrevResults, hairstylePrevResults] = await Promise.all([
+    const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
       generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
         console.warn("[visuals/route] glasses previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer }[];
@@ -169,6 +170,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
         console.warn("[visuals/route] hairstyle previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; style: string }[];
+      }),
+      generateColorSwatchPreviews(buffer, colorResult, row.rekognition).catch((err) => {
+        console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
+        return [] as { index: number; buffer: Buffer; colorName: string }[];
       }),
     ]);
 
@@ -190,6 +195,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
       asset.status = upErr ? "failed" : "ready";
       if (upErr) asset.error = upErr.message;
+    }
+
+    for (const { index, buffer: imgBuf } of colorSwatchResults) {
+      const asset = visualAssets.assets.colorSwatchPreviews?.[index];
+      if (!asset) continue;
+      const { error: upErr } = await admin.storage
+        .from(env.supabase.bucket)
+        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+      asset.status = upErr ? "failed" : "ready";
+      if (upErr) asset.error = upErr.message;
+    }
+
+    // Mark any color swatch slots that didn't produce a result as "failed"
+    // so the UI stops spinning immediately instead of waiting forever.
+    if (visualAssets.assets.colorSwatchPreviews) {
+      for (const asset of visualAssets.assets.colorSwatchPreviews) {
+        if (asset.status === "missing") {
+          asset.status = "failed";
+          asset.error = "No preview generated";
+        }
+      }
     }
 
     // ── Persist ───────────────────────────────────────────────────────────────
