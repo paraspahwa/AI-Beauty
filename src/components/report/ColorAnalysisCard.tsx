@@ -822,9 +822,15 @@ export function ColorAnalysisCard({
   data,
   photoUrl,
   bestColorPreviewUrls,
+  swatchesGenerating = false,
 }: {
   data: ColorAnalysisResult;
   photoUrl?: string;
+  /**
+   * True while the visuals route is actively running.
+   * Only show the Generating skeleton during this window.
+   */
+  swatchesGenerating?: boolean;
   /**
    * Optional array of signed URLs for AI-inpainted clothing colour previews.
    * Index N maps to bestColors[N]. When present, the card renders real
@@ -1015,20 +1021,15 @@ export function ColorAnalysisCard({
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-          {bestSix.map((c, i) => {
-            const slotStatus = bestColorPreviewUrls !== undefined
-              ? (bestColorPreviewUrls[i] ? "ready" : "pending")
-              : "idle";
-            return (
-              <ColorSwatch
-                key={c.hex}
-                hex={c.hex}
-                name={c.name}
-                aiPreviewUrl={bestColorPreviewUrls?.[i]}
-                generating={slotStatus === "pending"}
-              />
-            );
-          })}
+          {bestSix.map((c, i) => (
+            <ColorSwatch
+              key={c.hex}
+              hex={c.hex}
+              name={c.name}
+              aiPreviewUrl={bestColorPreviewUrls?.[i]}
+              generating={swatchesGenerating && !bestColorPreviewUrls?.[i]}
+            />
+          ))}
         </div>
       </div>
 

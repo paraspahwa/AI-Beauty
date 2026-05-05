@@ -53,16 +53,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Idempotency: skip if already generated, unless ?force=1
+    // BUT always re-run if any color swatch slot is stuck in "pending" or "missing"
     if (!force) {
       const existingAssets = row.visual_assets as Record<string, unknown> | null;
-      const alreadyDone =
-        existingAssets &&
-        typeof existingAssets === "object" &&
-        existingAssets.assets &&
-        typeof existingAssets.assets === "object" &&
-        (existingAssets.assets as Record<string, unknown>).paletteBoard;
+      const assets = existingAssets?.assets as Record<string, unknown> | undefined;
+      const alreadyDone = !!assets?.paletteBoard;
       if (alreadyDone) {
-        return NextResponse.json({ ok: true, skipped: true });
+        // Check for stuck pending/missing color swatch slots
+        const swatches = (assets?.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
+        const hasStuckSlots = swatches.some(
+          (s) => s.status === "pending" || s.status === "missing",
+        );
+        if (!hasStuckSlots) {
+          return NextResponse.json({ ok: true, skipped: true });
+        }
+        // Fall through to re-generate only color swatches
       }
     }
 

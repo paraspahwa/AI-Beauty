@@ -57,11 +57,18 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
 
   // When the report is ready but visuals haven't been generated yet, trigger
   // the async visuals route and refresh once it finishes.
+  // Also re-trigger if color swatch slots are stuck in pending/missing.
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
+    if (visualsLoading) return;
+    const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
+    const hasStuckSwatches = swatches.some(
+      (s) => s.status === "pending" || s.status === "missing",
+    );
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
-    if (hasVisuals || visualsLoading) return;
-    triggerVisuals();
+    if (!hasVisuals || hasStuckSwatches) {
+      triggerVisuals();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.status, report.id, isReadOnly]);
 
@@ -347,6 +354,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <ColorAnalysisCard
                       data={report.colorAnalysis}
                       photoUrl={report.imageUrl}
+                      swatchesGenerating={visualsLoading}
                       bestColorPreviewUrls={
                         report.visualAssets?.assets.colorSwatchPreviews
                           ?.map((a) =>
