@@ -244,19 +244,47 @@ function FitGuideIllustration() {
 }
 
 // ── Main card ──────────────────────────────────────────────────────────────
+type PreviewSlot = { status: string; signedUrl?: string; styleName?: string };
+
 export function SpectaclesCard({
   data,
   photoUrl,
   previewUrls,
+  previewSlots,
+  reportId,
+  onRefresh,
   faceShape,
   faceTraits,
 }: {
   data: GlassesResult;
   photoUrl?: string;
+  /** @deprecated Use previewSlots instead (Phase 5.4) */
   previewUrls?: string[];
+  previewSlots?: PreviewSlot[];
+  reportId?: string;
+  onRefresh?: () => void;
   faceShape?: string;
   faceTraits?: string[];
 }) {
+  const [generatingSlots, setGeneratingSlots] = React.useState<Set<number>>(new Set());
+
+  async function generateSlot(index: number) {
+    if (!reportId || generatingSlots.has(index)) return;
+    setGeneratingSlots((prev) => new Set([...prev, index]));
+    try {
+      await fetch(`/api/reports/${reportId}/visuals?type=glasses&index=${index}`, { method: "POST" });
+      onRefresh?.();
+    } catch {
+      // non-fatal
+    } finally {
+      setGeneratingSlots((prev) => { const next = new Set(prev); next.delete(index); return next; });
+    }
+  }
+
+  // Resolve first ready signed URL (for hero photo)
+  const firstReadyUrl = previewSlots?.find((s) => s.status === "ready" && s.signedUrl)?.signedUrl
+    ?? (previewUrls?.[0]);
+
   const goalIcons = [Scale, IconFaceWithGlasses, Eye];
   const sectionTitle = "text-[10px] uppercase tracking-[0.18em] font-semibold text-center";
   const warmBrown = { color: "#9C7D5B" };
@@ -325,10 +353,10 @@ export function SpectaclesCard({
 
         {/* Centre: photo */}
         <div className="flex items-center justify-center p-4 min-h-[280px]" style={{ background: "#F5EFE7" }}>
-          {(previewUrls && previewUrls[0]) || photoUrl ? (
+          {firstReadyUrl || photoUrl ? (
             <div className="relative rounded-2xl overflow-hidden" style={{ maxWidth: 280, width: "100%" }}>
               <Image
-                src={(previewUrls && previewUrls[0]) || photoUrl!}
+                src={firstReadyUrl || photoUrl!}
                 alt="Your photo with glasses"
                 width={560}
                 height={700}
@@ -398,25 +426,31 @@ export function SpectaclesCard({
           <span style={{ color: "#C8A96E" }}>✦</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {data.recommended.slice(0, 5).map((r, i) => (
+          {data.recommended.slice(0, 5).map((r, i) => {
+            const slot = previewSlots?.[i];
+            const hasPreview = slot?.status === "ready" && slot.signedUrl;
+            const isGenerating = generatingSlots.has(i);
+            const canGenerate = i < 3 && reportId && (slot?.status === "missing" || slot?.status === "failed" || (!previewSlots && !previewUrls?.[i + 1]));
+            const legacyUrl = previewUrls?.[i + 1];
+            return (
             <div key={r.style} className="flex flex-col rounded-2xl overflow-hidden" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
               {/* Style name header */}
               <div className="text-center py-2 px-1" style={{ borderBottom: "1px solid #E8DDD0" }}>
                 <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#3D2B1F" }}>{r.style}</p>
               </div>
-              {/* Photo or frame illustration */}
+              {/* Photo or frame illustration or generate button */}
               <div className="flex items-center justify-center" style={{ aspectRatio: "3/4", background: "#EDE3D8", position: "relative" }}>
-                {(previewUrls && previewUrls[i + 1]) || photoUrl ? (
+                {(hasPreview || legacyUrl) && photoUrl ? (
                   <>
                     <Image
-                        src={(previewUrls && previewUrls[i + 1]) || photoUrl!}
+                        src={(hasPreview ? slot!.signedUrl! : legacyUrl) || photoUrl!}
                         alt={r.style} fill unoptimized
                         className="object-cover"
                         style={{ objectPosition: "top center" }}
                       />
                       {/* subtle warm tint */}
                       <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.06)" }} />
-                      {/* frame overlay at eye level — mix-blend-mode:multiply blends into skin tone */}
+                      {/* frame overlay at eye level */}
                       <div
                         className="absolute left-0 right-0 flex items-center justify-center"
                         style={{ top: "33%", mixBlendMode: "multiply" }}
@@ -424,6 +458,22 @@ export function SpectaclesCard({
                         <FrameIllustration style={r.style} size={90} animate delay={i * 0.08} />
                       </div>
                   </>
+                ) : isGenerating ? (
+                  <div className="flex flex-col items-center justify-center gap-2 p-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: "#E8DDD0", borderTopColor: "#9C7D5B" }} />
+                    <span style={{ color: "#9C7D5B", fontSize: 10 }}>Generating…</span>
+                  </div>
+                ) : canGenerate ? (
+                  <div className="flex flex-col items-center justify-center gap-2 p-3">
+                    <FrameIllustration style={r.style} size={40} />
+                    <button
+                      onClick={() => generateSlot(i)}
+                      className="rounded-full px-2 py-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
+                      style={{ background: "#9C7D5B", color: "#fff", border: "none", cursor: "pointer" }}
+                    >
+                      ✨ Generate Preview
+                    </button>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2 p-3">
                     <FrameIllustration style={r.style} size={56} />
@@ -437,7 +487,8 @@ export function SpectaclesCard({
                 <IconHeart />
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

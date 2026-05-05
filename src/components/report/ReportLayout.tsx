@@ -41,6 +41,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
   // Track which visual sections have been triggered (lazy generation, Phase 5.1)
+  // Removed: auto-trigger on tab switch. Phase 5.4 uses per-slot "Generate" buttons.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const triggeredSections = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
@@ -62,7 +64,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   // the async visuals route and refresh once it finishes.
   // Also re-trigger if color swatch slots are incomplete. Older reports may
   // have failed/missing/pending color assets from the old webhook-only path.
-  // NOTE: This only triggers palette + color swatches. Glasses/hairstyle are lazy.
+  // NOTE: This only triggers palette + color swatches. Glasses/hairstyle are lazy (Phase 5.4 per-slot buttons).
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
@@ -76,37 +78,6 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.status, report.id, report.visualAssets?.assets?.colorSwatchPreviews, isReadOnly]);
-
-  // Lazy visual generation on tab switch (Phase 5.1):
-  // Trigger glasses previews when "glasses" tab is first visited.
-  // Trigger hairstyle previews when "hair" tab is first visited.
-  React.useEffect(() => {
-    if (isReadOnly || report.status !== "ready") return;
-    if (activeTab === "glasses") {
-      const glassesPreviews = report.visualAssets?.assets?.glassesPreviews ?? [];
-      const allSettled = glassesPreviews.length > 0 && glassesPreviews.every(
-        (p) => p.status === "ready" || p.status === "failed",
-      );
-      if (!allSettled && !triggeredSections.current.has("glasses")) {
-        triggeredSections.current.add("glasses");
-        fetch(`/api/reports/${report.id}/visuals?type=glasses`, { method: "POST" })
-          .then(() => refresh())
-          .catch(() => { /* non-fatal */ });
-      }
-    } else if (activeTab === "hair") {
-      const hairstylePreviews = report.visualAssets?.assets?.hairstylePreviews ?? [];
-      const allSettled = hairstylePreviews.length > 0 && hairstylePreviews.every(
-        (p) => p.status === "ready" || p.status === "failed",
-      );
-      if (!allSettled && !triggeredSections.current.has("hairstyle")) {
-        triggeredSections.current.add("hairstyle");
-        fetch(`/api/reports/${report.id}/visuals?type=hairstyle`, { method: "POST" })
-          .then(() => refresh())
-          .catch(() => { /* non-fatal */ });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, report.status, report.id, isReadOnly]);
 
   // Poll every 12s while color swatches are still generating
   React.useEffect(() => {
@@ -407,11 +378,9 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <SpectaclesCard
                       data={report.glasses}
                       photoUrl={report.imageUrl}
-                      previewUrls={
-                        report.visualAssets?.assets.glassesPreviews
-                          ?.filter((a) => a.status === "ready" && a.signedUrl)
-                          .map((a) => a.signedUrl!)
-                      }
+                      previewSlots={report.visualAssets?.assets.glassesPreviews}
+                      reportId={report.id}
+                      onRefresh={refresh}
                       faceShape={report.faceShape?.shape}
                       faceTraits={report.faceShape?.traits}
                     />
@@ -439,11 +408,9 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <HairstyleCard
                       data={report.hairstyle}
                       photoUrl={report.imageUrl}
-                      previewUrls={
-                        report.visualAssets?.assets.hairstylePreviews
-                          ?.filter((a) => a.status === "ready" && a.signedUrl)
-                          .map((a) => a.signedUrl!)
-                      }
+                      previewSlots={report.visualAssets?.assets.hairstylePreviews}
+                      reportId={report.id}
+                      onRefresh={refresh}
                       faceShape={report.faceShape?.shape}
                       faceTraits={report.faceShape?.traits}
                       bestFeatures={

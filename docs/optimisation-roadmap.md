@@ -117,10 +117,10 @@ without removing any user-facing feature.
 ### Changes
 | Step | What | File | Status |
 |------|------|------|--------|
-| 5.1 | Lazy visual generation — trigger visuals only on tab switch, not report open | `src/components/report/ReportLayout.tsx`, `api/reports/[id]/visuals/route.ts` | ⬜ Pending |
-| 5.2 | Image hash deduplication — SHA-256 selfie before pipeline; reuse analysis on match | New DB migration, `src/lib/ai/pipeline.ts` | ⬜ Pending |
-| 5.3 | Replace summary LLM call with deterministic client-side template | `src/components/report/ReportLayout.tsx` | ⬜ Pending |
-| 5.4 | On-demand glasses/hair previews — generate per style on user click, not auto-trigger all | `api/reports/[id]/visuals/route.ts`, spectacles + hairstyle cards | ⬜ Pending |
+| 5.1 | Lazy visual generation — trigger visuals only on tab switch, not report open | `src/components/report/ReportLayout.tsx`, `api/reports/[id]/visuals/route.ts` | ✅ Done |
+| 5.2 | Image hash deduplication — SHA-256 selfie before pipeline; reuse analysis on match | New DB migration, `src/lib/ai/pipeline.ts` | ✅ Done |
+| 5.3 | Replace summary LLM call with deterministic client-side template | `src/components/report/ReportLayout.tsx` | ⬜ Skipped (saves ~$0.0002/report, not worth tradeoff) |
+| 5.4 | On-demand glasses/hair previews — generate per style on user click, not auto-trigger all | `api/reports/[id]/visuals/route.ts`, spectacles + hairstyle cards | ✅ Done |
 
 ### After Phase 5
 - Users who never visit Spectacles or Hairstyle tab pay $0 for those previews

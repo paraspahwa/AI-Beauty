@@ -192,11 +192,16 @@ export async function generateGlassesPreviews(
   selfieBuf: Buffer,
   glasses: GlassesResult,
   _rekognitionFace?: unknown,
+  /** If provided, only generate previews for these slot indices (Phase 5.4 per-click). */
+  indicesToGenerate?: number[],
 ): Promise<{ index: number; buffer: Buffer }[]> {
   const topStyles = glasses.recommended.slice(0, 3);
 
   if (env.replicate.isConfigured) {
-    const batchStyles = topStyles.map((s, i) => ({ index: i, name: s.style }));
+    const batchStyles = topStyles
+      .map((s, i) => ({ index: i, name: s.style }))
+      .filter((s) => !indicesToGenerate || indicesToGenerate.includes(s.index));
+    if (batchStyles.length === 0) return [];
     const results = await replicateGlassesPreviewBatch(
       selfieBuf,
       null,
@@ -223,12 +228,17 @@ export async function generateHairstylePreviews(
   selfieBuf: Buffer,
   hairstyle: HairstyleResult,
   _rekognitionFace?: unknown,
+  /** If provided, only generate previews for these slot indices (Phase 5.4 per-click). */
+  indicesToGenerate?: number[],
 ): Promise<{ index: number; buffer: Buffer; style: string }[]> {
   const flatteningStyles = hairstyle.styles.slice(0, 3);
   const hairHex          = hairstyle.colors[0]?.hex ?? "#3B1F0A";
 
   if (env.replicate.isConfigured) {
-    const batchStyles = flatteningStyles.map((s, i) => ({ index: i, name: s.name }));
+    const batchStyles = flatteningStyles
+      .map((s, i) => ({ index: i, name: s.name }))
+      .filter((s) => !indicesToGenerate || indicesToGenerate.includes(s.index));
+    if (batchStyles.length === 0) return [];
     return replicateHairPreviewBatch(
       selfieBuf,
       null,

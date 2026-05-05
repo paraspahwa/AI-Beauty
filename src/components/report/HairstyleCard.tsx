@@ -431,10 +431,15 @@ function LengthDiagram({ recommended }: { recommended: string }) {
 const HAIR_BENEFITS = ["Adds Volume", "Enhances Texture", "Frames Face Beautifully"];
 
 // ── Main card ─────────────────────────────────────────────────────────────────
+type PreviewSlot = { status: string; signedUrl?: string; styleName?: string };
+
 export function HairstyleCard({
   data,
   photoUrl,
   previewUrls,
+  previewSlots,
+  reportId,
+  onRefresh,
   faceShape,
   faceTraits,
   bestFeatures,
@@ -443,13 +448,31 @@ export function HairstyleCard({
 }: {
   data: HairstyleResult;
   photoUrl?: string;
+  /** @deprecated Use previewSlots instead (Phase 5.4) */
   previewUrls?: string[];
+  previewSlots?: PreviewSlot[];
+  reportId?: string;
+  onRefresh?: () => void;
   faceShape?: string;
   faceTraits?: string[];
   bestFeatures?: string[];
   stylingTips?: string[];
   hairType?: string;
 }) {
+  const [generatingSlots, setGeneratingSlots] = React.useState<Set<number>>(new Set());
+
+  async function generateSlot(index: number) {
+    if (!reportId || generatingSlots.has(index)) return;
+    setGeneratingSlots((prev) => new Set([...prev, index]));
+    try {
+      await fetch(`/api/reports/${reportId}/visuals?type=hairstyle&index=${index}`, { method: "POST" });
+      onRefresh?.();
+    } catch {
+      // non-fatal
+    } finally {
+      setGeneratingSlots((prev) => { const next = new Set(prev); next.delete(index); return next; });
+    }
+  }
   const flatteningStyles  = data.styles.slice(0, 5);
   const considerStyles    = data.avoid.slice(0, 4);
   // Hair colour from AI analysis — first recommended colour drives overlay tinting
@@ -618,7 +641,13 @@ export function HairstyleCard({
             <span style={{ color: "#C8A96E" }}>&#9825;</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {flatteningStyles.map((s, i) => (
+            {flatteningStyles.map((s, i) => {
+              const slot = previewSlots?.[i];
+              const hasPreview = slot?.status === "ready" && slot.signedUrl;
+              const isGenerating = generatingSlots.has(i);
+              const canGenerate = i < 3 && reportId && (slot?.status === "missing" || slot?.status === "failed" || (!previewSlots && !previewUrls?.[i]));
+              const legacyUrl = previewUrls?.[i];
+              return (
               <div
                 key={s.name}
                 className="style-card flex flex-col rounded-2xl overflow-hidden"
@@ -627,11 +656,33 @@ export function HairstyleCard({
                 {/* photo fills top, composited preview or photo + hair overlay */}
                 <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
                   {(() => {
-                    const src = previewUrls?.[i] ?? photoUrl;
-                    if (previewUrls?.[i]) {
+                    const src = hasPreview ? slot!.signedUrl! : (legacyUrl ?? photoUrl);
+                    if (hasPreview || legacyUrl) {
                       // Real AI-generated preview
                       return (
-                        <Image src={previewUrls[i]} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                        <Image src={hasPreview ? slot!.signedUrl! : legacyUrl!} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                      );
+                    }
+                    if (isGenerating) {
+                      return (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: "#E8DDD0", borderTopColor: "#9C7D5B" }} />
+                          <span style={{ color: "#9C7D5B", fontSize: 10 }}>Generating…</span>
+                        </div>
+                      );
+                    }
+                    if (canGenerate) {
+                      return (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
+                          <HairOverlay style={s.name} hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} />
+                          <button
+                            onClick={() => generateSlot(i)}
+                            className="rounded-full px-2 py-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
+                            style={{ background: "#9C7D5B", color: "#fff", border: "none", cursor: "pointer", zIndex: 10, position: "relative" }}
+                          >
+                            ✨ Generate Preview
+                          </button>
+                        </div>
                       );
                     }
                     if (src) {
@@ -661,7 +712,8 @@ export function HairstyleCard({
                   <p className="text-[11px] font-semibold leading-tight" style={{ color: "#3D2B1F" }}>{s.name}</p>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
