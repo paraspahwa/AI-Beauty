@@ -65,13 +65,32 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.status, report.id, isReadOnly]);
 
+  // Poll every 12s while color swatches are still generating
+  React.useEffect(() => {
+    if (isReadOnly || report.status !== "ready") return;
+    const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
+    const allReady = swatches.length >= 6 && swatches.every((s) => s.status === "ready");
+    if (allReady) return;
+    // Only poll if main visuals are done (paletteBoard ready)
+    if (!report.visualAssets?.assets?.paletteBoard) return;
+    const timer = setInterval(refresh, 12000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report.visualAssets?.assets?.colorSwatchPreviews, report.id, isReadOnly]);
+
   async function triggerVisuals() {
     setVisualsLoading(true);
     setVisualsFailed(false);
     try {
+      // Step 1: overlay + palette + glasses + hairstyle (no Replicate, fast ~30-60s)
       const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
-      if (res.ok) await refresh();
-      else setVisualsFailed(true);
+      if (!res.ok) { setVisualsFailed(true); return; }
+      await refresh();
+
+      // Step 2: AI clothing colour swatches — separate 120s budget via dedicated route
+      fetch(`/api/reports/${report.id}/visuals/colors`, { method: "POST" })
+        .then(async (r) => { if (r.ok) await refresh(); })
+        .catch(() => { /* non-critical */ });
     } catch {
       setVisualsFailed(true);
     } finally {

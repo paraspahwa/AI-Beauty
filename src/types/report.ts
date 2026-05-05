@@ -82,7 +82,7 @@ export interface HairstyleResult {
 
 export interface ReportVisualAsset {
   path: string;
-  status: "ready" | "failed" | "missing";
+  status: "ready" | "failed" | "missing" | "pending";
   mime: string;
   width?: number;
   height?: number;

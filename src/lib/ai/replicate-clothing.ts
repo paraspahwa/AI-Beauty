@@ -220,6 +220,78 @@ export async function replicateClothingPreview(
     .toBuffer();
 }
 
+// ── Async (webhook) batch — fires predictions without waiting ─────────────────
+const SDXL_VERSION =
+  "a5b13068cc81a89a4fbeefecf6d6fc5e529a5ecc6bde3f97867ef36429a56a69" as const;
+
+/**
+ * Queue all 6 colour predictions on Replicate without waiting for completion.
+ * Replicate calls `makeWebhookUrl(index)` when each prediction finishes.
+ * Returns immediately — safe to call from a short-lived serverless function.
+ */
+export async function replicateClothingBatchAsync(
+  selfieBuf: Buffer,
+  faceBox: FaceBox,
+  colors: { index: number; name: string; hex: string }[],
+  replicateToken: string,
+  makeWebhookUrl: (index: number) => string,
+): Promise<void> {
+  const client = getReplicateClient(replicateToken);
+
+  const padX   = faceBox.faceW * 0.55;
+  const padTop = faceBox.faceH * 0.50;
+  const padBot = faceBox.faceH * 1.20;
+  const img    = sharp(selfieBuf).rotate();
+  const meta   = await img.metadata();
+  const W      = meta.width  ?? 512;
+  const H      = meta.height ?? 768;
+
+  const cropL = Math.max(0, Math.round(faceBox.left   - padX));
+  const cropT = Math.max(0, Math.round(faceBox.top    - padTop));
+  const cropR = Math.min(W, Math.round(faceBox.right  + padX));
+  const cropB = Math.min(H, Math.round(faceBox.bottom + padBot));
+  const cropW = Math.max(1, cropR - cropL);
+  const cropH = Math.max(1, cropB - cropT);
+
+  const croppedPng = await sharp(selfieBuf)
+    .rotate()
+    .extract({ left: cropL, top: cropT, width: cropW, height: cropH })
+    .resize(INPAINT_SIZE, INPAINT_SIZE, { fit: "cover", position: "top" })
+    .removeAlpha()
+    .png()
+    .toBuffer();
+
+  const maskPng = await buildClothingMask(faceBox, cropL, cropT, cropW, cropH);
+  const imageDataUri = `data:image/png;base64,${croppedPng.toString("base64")}`;
+  const maskDataUri  = `data:image/png;base64,${maskPng.toString("base64")}`;
+
+  await Promise.all(
+    colors.map(async ({ index, name, hex }) => {
+      try {
+        const prediction = await client.predictions.create({
+          version: SDXL_VERSION,
+          input: {
+            image:               imageDataUri,
+            mask:                maskDataUri,
+            prompt:              buildPrompt(name, hex),
+            negative_prompt:     buildNegativePrompt(),
+            num_inference_steps: 30,
+            guidance_scale:      7.5,
+            strength:            0.65,
+            scheduler:           "DPM++2MKarras",
+            seed:                Math.floor(Math.random() * 9999999),
+          },
+          webhook:               makeWebhookUrl(index),
+          webhook_events_filter: ["completed"],
+        });
+        console.info(`[replicate-clothing] queued prediction ${prediction.id} slot ${index} "${name}"`);
+      } catch (err) {
+        console.warn(`[replicate-clothing] failed to queue slot ${index}:`, (err as Error).message);
+      }
+    }),
+  );
+}
+
 // ── Batch generator ───────────────────────────────────────────────────────────
 /**
  * Generate all colour swatch previews in parallel (up to MAX_CONCURRENCY).

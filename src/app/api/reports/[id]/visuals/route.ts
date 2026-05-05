@@ -7,7 +7,6 @@ import {
   generatePaletteBoard,
   generateGlassesPreviews,
   generateHairstylePreviews,
-  generateColorSwatchPreviews,
 } from "@/lib/ai/visuals";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult } from "@/types/report";
 
@@ -151,7 +150,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ...(typeof s.name === "string" ? { styleName: s.name } : {}),
     }));
 
-    // Up to 6 colour swatch previews: bestColors[0-5] inpainted onto the selfie
+    // Up to 6 colour swatch previews slots — initialised as "missing" here;
+    // the dedicated POST /visuals/colors route fills them in a separate invocation.
     const colorResult = row.color_analysis as ColorAnalysisResult;
     const bestSixColors = (colorResult?.palette ?? []).slice(0, 6);
     visualAssets.assets.colorSwatchPreviews = bestSixColors.map((c, i) => ({
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       error: null,
     }));
 
-    const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
+    const [glassesPrevResults, hairstylePrevResults] = await Promise.all([
       generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
         console.warn("[visuals/route] glasses previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer }[];
@@ -169,10 +169,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
         console.warn("[visuals/route] hairstyle previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; style: string }[];
-      }),
-      generateColorSwatchPreviews(buffer, colorResult, row.rekognition).catch((err) => {
-        console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; colorName: string }[];
       }),
     ]);
 
@@ -188,16 +184,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     for (const { index, buffer: imgBuf } of hairstylePrevResults) {
       const asset = visualAssets.assets.hairstylePreviews[index];
-      if (!asset) continue;
-      const { error: upErr } = await admin.storage
-        .from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-      asset.status = upErr ? "failed" : "ready";
-      if (upErr) asset.error = upErr.message;
-    }
-
-    for (const { index, buffer: imgBuf } of colorSwatchResults) {
-      const asset = visualAssets.assets.colorSwatchPreviews?.[index];
       if (!asset) continue;
       const { error: upErr } = await admin.storage
         .from(env.supabase.bucket)

@@ -5,8 +5,8 @@ const ContentSecurityPolicy = `
   script-src 'self' 'unsafe-inline' https://checkout.razorpay.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in;
-  connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://rekognition.*.amazonaws.com wss://*.supabase.co;
+  img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://replicate.delivery https://pbxt.replicate.delivery;
+  connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.openai.com https://rekognition.*.amazonaws.com wss://*.supabase.co https://api.replicate.com;
   frame-src https://api.razorpay.com;
   object-src 'none';
   base-uri 'self';
