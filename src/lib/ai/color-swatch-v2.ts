@@ -66,9 +66,10 @@ function buildKontextPrompt(colorName: string, colorHex: string): string {
   return (
 	`Recolor ONLY the fabric of the existing clothing to solid ${word} (${colorName}, hex ${colorHex}). ` +
 	`The dress/garment shape, neckline, cut, collar, sleeves, buttons, and all fabric details must remain IDENTICAL. ` +
-	`The person's face, eyes, nose, lips, skin tone, hair, and expression must remain IDENTICAL. ` +
+	`DO NOT change the hair color, hair style, or hair texture in any way — hair must remain EXACTLY as in the original. ` +
+	`The person's face, eyes, nose, lips, skin tone, and expression must remain IDENTICAL. ` +
 	`The background must remain IDENTICAL. ` +
-	`This is a fabric dye operation — ONLY the color of the cloth changes, nothing else in the image.`
+	`This is a fabric dye operation — ONLY the color of the cloth changes. Hair, face, background stay exactly the same.`
   );
 }
 

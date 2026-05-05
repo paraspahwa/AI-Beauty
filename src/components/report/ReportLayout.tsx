@@ -10,6 +10,7 @@ import { ColorAnalysisCard } from "./ColorAnalysisCard";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
+import { HairColorCard } from "./HairColorCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
 import { Paywall } from "@/components/Paywall";
 import { StyleChatDrawer } from "@/components/StyleChatDrawer";
@@ -437,6 +438,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       title="Hairstyle Guide"
                     />
                   )}
+                  {isPaid && <HairColorCard reportId={report.id} />}
                 </motion.div>
               )}
             </TabsContent>
