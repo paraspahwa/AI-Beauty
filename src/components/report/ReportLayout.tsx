@@ -40,10 +40,6 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
-  // Track which visual sections have been triggered (lazy generation, Phase 5.1)
-  // Removed: auto-trigger on tab switch. Phase 5.4 uses per-slot "Generate" buttons.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const triggeredSections = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
 
