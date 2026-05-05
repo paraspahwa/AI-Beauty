@@ -26,7 +26,10 @@ function client() {
 export async function detectFaceDetails(imageBytes: Buffer): Promise<FaceDetail | null> {
   const cmd = new DetectFacesCommand({
     Image: { Bytes: imageBytes },
-    Attributes: ["ALL"],
+    // Phase 1.4: DEFAULT returns BoundingBox + Confidence only — the only fields
+    // used downstream (faceBox geometry + confidence blending). ALL fetches 30+
+    // unused attributes (emotions, beard, smile, AgeRange) at the same price.
+    Attributes: ["DEFAULT"],
   });
   const result = await client().send(cmd);
   const faces = (result.FaceDetails ?? []).slice().sort(

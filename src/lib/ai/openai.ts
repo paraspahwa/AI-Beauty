@@ -29,7 +29,10 @@ export async function chatJSON<T>(opts: {
   if (opts.imageBase64) {
     userContent.push({
       type: "image_url",
-      image_url: { url: `data:image/jpeg;base64,${opts.imageBase64}`, detail: "high" },
+      // Phase 1.5: "low" detail — the image is already compressed to 512px by
+      // compressForAI() before reaching here. "high" would tile it unnecessarily
+      // and charge for extra tokens on a sub-512px input with no quality benefit.
+      image_url: { url: `data:image/jpeg;base64,${opts.imageBase64}`, detail: "low" },
     });
   }
 

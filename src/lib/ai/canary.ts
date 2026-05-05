@@ -48,8 +48,10 @@ Return JSON of shape:
   ],
   color_analysis: [
     {
+      // v1 disabled — v2 (dominant colour) is now the only active variant.
+      // Kept here for reference; weight 0 means it is never selected.
       id: "color_v1",
-      weight: 5,   // 5:1 toward v2 once stable; keep v1 for baseline comparison
+      weight: 0,
       prompt: `Perform a 12-season color analysis.
 Consider skin undertone, hair, and eye color from the photo.
 Ignore background. Focus only on the person.
@@ -67,10 +69,10 @@ Return JSON:
 }`,
     },
     {
-      // v2: prompt is built dynamically in pipeline.ts using server-extracted colours
-      // This variant exists to route traffic through the dominant-colour path.
+      // v2: prompt is built dynamically in pipeline.ts using server-extracted colours.
+      // This is now the sole active variant (weight 1).
       id: "color_v2_dominant",
-      weight: 5,
+      weight: 1,
       // Sentinel: pipeline.ts checks for this id and builds the prompt via buildColorAnalysisPrompt()
       prompt: "__dominant_color_variant__",
     },

@@ -164,7 +164,11 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
       "color_analysis",
       () =>
         chatJSON<unknown>({
-          model: env.openai.visionModel,
+          // Phase 1.2: downgraded from visionModel (gpt-4o) → miniModel (gpt-4o-mini).
+          // The season/undertone decision is a classification task; mini is sufficient
+          // and the static SEASON_PRESETS in ColorAnalysisCard handle the heavy UI lifting.
+          model: env.openai.miniModel,
+          temperature: 0.2,
           system: effectiveSystemBase,
           user: colorPrompt,
           imageBase64,
@@ -177,7 +181,10 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
       "skin_analysis",
       () =>
         chatJSON<unknown>({
-          model: env.openai.visionModel,
+          // Phase 1.3: downgraded from visionModel (gpt-4o) → miniModel (gpt-4o-mini).
+          // Skin type + concerns classification does not need the full gpt-4o capability.
+          model: env.openai.miniModel,
+          temperature: 0.2,
           system: effectiveSystemBase,
           user: skinVariant.prompt as string,
           imageBase64,
