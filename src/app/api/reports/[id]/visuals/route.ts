@@ -10,7 +10,7 @@ import {
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
-import type { GlassesResult, HairstyleResult, ColorAnalysisResult } from "@/types/report";
+import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -73,9 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const existingAssetsInner = (existingAssets?.assets ?? {}) as Record<string, unknown>;
 
       const previewsKey = sectionType === "glasses" ? "glassesPreviews" : "hairstylePreviews";
-      const existingPreviews = (existingAssetsInner[previewsKey] ?? []) as {
-        path: string; status: string; mime: string; error: string | null; styleName?: string;
-      }[];
+      const existingPreviews = (existingAssetsInner[previewsKey] ?? []) as ReportVisualAsset[];
 
       // Skip if the specific slot (or all slots) are already settled
       if (!force) {
