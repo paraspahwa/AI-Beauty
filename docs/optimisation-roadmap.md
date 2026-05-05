@@ -54,10 +54,10 @@ without removing any user-facing feature.
 ### Changes
 | Step | What | File | Status |
 |------|------|------|--------|
-| 2.1 | Cap glasses previews 5 → 3; remaining 2 are SVG-only with "Generate" button | `src/lib/ai/replicate-glasses.ts`, `SpectaclesCard.tsx` | ⬜ Pending |
-| 2.2 | Cap hairstyle previews 5 → 3; remaining 2 use SVG overlay | `src/lib/ai/replicate-hair.ts`, `HairstyleCard.tsx` | ⬜ Pending |
-| 2.3 | Color swatches 12 → 6 (best only); avoid colors rendered as CSS circles | `src/lib/ai/color-swatch-v2.ts`, `ColorAnalysisCard.tsx` | ⬜ Pending |
-| 2.4 | Hair color try-on: check storage for existing result before re-generating | `src/app/api/reports/[id]/hair-color/route.ts` | ⬜ Pending |
+| 2.1 | Cap glasses previews 5 → 3; remaining 2 are SVG-only with "Generate" button | `src/lib/ai/replicate-glasses.ts`, `SpectaclesCard.tsx` | ✅ Done |
+| 2.2 | Cap hairstyle previews 5 → 3; remaining 2 use SVG overlay | `src/lib/ai/replicate-hair.ts`, `HairstyleCard.tsx` | ✅ Done |
+| 2.3 | Color swatches 12 → 6 (best only); avoid colors rendered as CSS circles | `src/lib/ai/color-swatch-v2.ts`, `ColorAnalysisCard.tsx` | ✅ Done |
+| 2.4 | Hair color try-on: check storage for existing result before re-generating | `src/app/api/reports/[id]/hair-color/route.ts` | ✅ Done |
 
 ### After Phase 2
 | Component | New Cost |

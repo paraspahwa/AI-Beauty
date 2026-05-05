@@ -70,6 +70,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const rawBuf = Buffer.from(await imgData.arrayBuffer());
 
+    // Phase 2.4: Build storage path early so we can cache-check before calling Replicate
+    const slug = colorName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const storagePath = `users/${user.id}/reports/${id}/hair-color-${slug}.jpg`;
+
+    // Cache hit: return existing signed URL without calling Replicate
+    const { data: existingFile } = await admin.storage
+      .from(env.supabase.bucket)
+      .download(storagePath);
+    if (existingFile) {
+      const { data: cached } = await admin.storage
+        .from(env.supabase.bucket)
+        .createSignedUrl(storagePath, 3600);
+      if (cached?.signedUrl) {
+        return NextResponse.json({ signedUrl: cached.signedUrl, cached: true });
+      }
+    }
+
     // Downscale to 640px for faster upload + processing
     const smallBuf = await sharp(rawBuf)
       .rotate()
@@ -105,9 +122,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .jpeg({ quality: 90 })
       .toBuffer();
 
-    // Upload to storage with a short-lived name (overwritten each time)
-    const slug = colorName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const storagePath = `users/${user.id}/reports/${id}/hair-color-${slug}.jpg`;
     const { error: uploadErr } = await admin.storage
       .from(env.supabase.bucket)
       .upload(storagePath, finalBuf, { contentType: "image/jpeg", upsert: true });

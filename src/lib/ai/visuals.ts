@@ -313,7 +313,7 @@ export function createVisualAssetsSkeleton(userId: string, reportId: string, buc
  * Pipeline: Replicate SDXL inpainting with an eye-zone mask (identical pattern
  * to replicate-hair.ts and replicate-clothing.ts).
  *
- * - Slots 0–4: flattering styles (top 5 from glasses.recommended)
+ * - Slots 0–2: flattering styles (top 3 from glasses.recommended — Phase 2 cost cap)
  * - Falls back gracefully per-slot; failures are logged, not thrown.
  * - When Replicate is not configured the array is empty and SpectaclesCard
  *   falls back to its FrameIllustration SVG overlays automatically.
@@ -323,7 +323,7 @@ export async function generateGlassesPreviews(
   glasses: GlassesResult,
   rekognitionFace?: unknown,
 ): Promise<{ index: number; buffer: Buffer }[]> {
-  const topStyles   = glasses.recommended.slice(0, 5);
+  const topStyles   = glasses.recommended.slice(0, 3);
   const img         = sharp(selfieBuf).rotate();
   const meta        = await img.metadata();
   const W           = meta.width  ?? 512;
@@ -359,7 +359,7 @@ export async function generateGlassesPreviews(
  * Phase 2: Before compositing, paint a feathered erase ellipse over the original
  *          hair area (radial gradient, dark fill) so the new SVG style reads clearly.
  *
- * Returns up to 8 entries: indices 0-4 = flattering styles, 5-7 = avoid styles.
+ * Returns up to 3 entries: indices 0–2 = flattering styles (Phase 2: no avoid styles).
  * Falls back to DALL-E try-on for the first 2 styles when Rekognition data is missing.
  */
 export async function generateHairstylePreviews(
@@ -367,9 +367,8 @@ export async function generateHairstylePreviews(
   hairstyle: HairstyleResult,
   rekognitionFace?: unknown,
 ): Promise<{ index: number; buffer: Buffer; style: string }[]> {
-  const flatteningStyles = hairstyle.styles.slice(0, 5);
-  const avoidStyles      = hairstyle.avoid.slice(0, 4).map((a) => ({ name: a, description: a }));
-  const allStyles        = [...flatteningStyles, ...avoidStyles];
+  const flatteningStyles = hairstyle.styles.slice(0, 3);
+  const allStyles        = flatteningStyles;
   const hairHex          = hairstyle.colors[0]?.hex ?? "#3B1F0A";
 
   const img  = sharp(selfieBuf).rotate();

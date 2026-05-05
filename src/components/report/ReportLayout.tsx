@@ -64,7 +64,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const hasIncompleteSwatches = swatches.length < 12 || swatches.some(
+    const hasIncompleteSwatches = swatches.length < 6 || swatches.some(
       (s) => s.status !== "ready",
     );
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
@@ -79,7 +79,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     if (isReadOnly || report.status !== "ready") return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
     const allSettled =
-      swatches.length >= 12 &&
+      swatches.length >= 6 &&
       swatches.every((s) => s.status === "ready" || s.status === "failed");
     if (allSettled) return;
     // Only poll if the visuals route has run (paletteBoard is generated even if not displayed)
@@ -323,13 +323,6 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       bestColorPreviewUrls={
                         report.visualAssets?.assets.colorSwatchPreviews
                           ?.slice(0, 6)
-                          .map((a) =>
-                            a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
-                          )
-                      }
-                      avoidColorPreviewUrls={
-                        report.visualAssets?.assets.colorSwatchPreviews
-                          ?.slice(6, 12)
                           .map((a) =>
                             a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
                           )

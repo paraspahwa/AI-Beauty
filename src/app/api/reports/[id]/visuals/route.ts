@@ -63,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (alreadyDone) {
         // Check for incomplete color swatch slots.
         const swatches = (assets?.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
-        const hasIncompleteColorSlots = swatches.length < 12 || swatches.some(
+        const hasIncompleteColorSlots = swatches.length < 6 || swatches.some(
           (s) => s.status !== "ready",
         );
         if (!hasIncompleteColorSlots) {
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
     visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
-      .slice(0, 5)
+      .slice(0, 3)
       .map((s, i) => ({
         path: `${visualAssets.basePath}glasses-${i}.jpg`,
         status: "missing" as const,
@@ -145,10 +145,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         ...(typeof s.style === "string" ? { styleName: s.style } : {}),
       }));
 
-    // Up to 9 hairstyle previews: 5 flattering + 4 avoid
+    // Up to 3 hairstyle previews: top 3 flattering (Phase 2: avoid previews removed)
     const allHairStyles = [
-      ...(hairstyleResult?.styles ?? []).slice(0, 5),
-      ...(hairstyleResult?.avoid  ?? []).slice(0, 4).map((a) => ({ name: a, description: a })),
+      ...(hairstyleResult?.styles ?? []).slice(0, 3),
     ];
     visualAssets.assets.hairstylePreviews = allHairStyles.map((s, i) => ({
       path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
@@ -159,12 +158,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ...(typeof s.name === "string" ? { styleName: s.name } : {}),
     }));
 
-    // Up to 12 colour swatch preview slots (6 best + 6 avoid) from the canonical preset.
+    // 6 colour swatch preview slots (best colors only; avoid colors shown as CSS circles).
     const colorResult = row.color_analysis as ColorAnalysisResult;
     const seasonKey   = normalizeSeasonKey(colorResult?.season ?? "");
     const palette     = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
     const bestSix     = palette.best;
-    const avoidSix    = palette.avoid;
 
     // Carry over already-ready slots from the existing visual_assets so they
     // are never overwritten with "missing" and disappear from the UI.
@@ -178,11 +176,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const existing = existingSwatches?.[i];
         if (existing?.status === "ready") return { path: existing.path, status: "ready" as const, mime: existing.mime, error: existing.error };
         return { path: `${visualAssets.basePath}color-swatch-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
-      }),
-      ...avoidSix.map((_c, i) => {
-        const existing = existingSwatches?.[i + 6];
-        if (existing?.status === "ready") return { path: existing.path, status: "ready" as const, mime: existing.mime, error: existing.error };
-        return { path: `${visualAssets.basePath}color-swatch-${i + 6}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
       }),
     ];
 
@@ -205,7 +198,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       generateAllColorSwatchPreviews(
         buffer,
         bestSix,
-        avoidSix,
+        [],
         row.rekognition,
         env.replicate.apiToken,
         readySlotIndices,

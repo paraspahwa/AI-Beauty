@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     const assets = existingAssets?.assets as Record<string, unknown> | undefined;
     if (assets) {
       const swatches = (assets.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
-      const allReady = swatches.length >= 12 && swatches.every((s) => s.status === "ready");
+      const allReady = swatches.length >= 6 && swatches.every((s) => s.status === "ready");
       if (allReady) {
         return NextResponse.json({ skipped: true, reason: "already_complete" });
       }

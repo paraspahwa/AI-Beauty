@@ -145,16 +145,15 @@ export interface SwatchResult {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 /**
- * Generate all 12 color swatch previews (6 best + 6 avoid) using
- * prunaai/flux-kontext-fast. Requires only the selfie buffer and a Replicate
- * token — no faceBox or mask needed.
+ * Generate 6 best-color swatch previews using prunaai/flux-kontext-fast.
+ * Avoid colors are now rendered as CSS circles in the UI (Phase 2 cost reduction).
  * Returns only successfully generated slots; failed slots are skipped and
  * the UI falls back to static color circles.
  */
 export async function generateAllColorSwatchPreviews(
   selfieBuf: Buffer,
   bestColors: { name: string; hex: string }[],
-  avoidColors: { name: string; hex: string }[],
+  _avoidColors: { name: string; hex: string }[],  // unused — avoid colors are CSS-only
   _rekognitionFace: unknown,   // unused — Flux Kontext needs no face data
   replicateToken: string,
   skipSlots: Set<number> = new Set(), // already-ready slot indices to skip
@@ -165,8 +164,7 @@ export async function generateAllColorSwatchPreviews(
   }
 
   const jobs: SwatchColorEntry[] = [
-	...bestColors.slice(0, 6).map((c, i) => ({ index: i,      name: c.name, hex: c.hex, isBest: true  })),
-	...avoidColors.slice(0, 6).map((c, i) => ({ index: i + 6, name: c.name, hex: c.hex, isBest: false })),
+	...bestColors.slice(0, 6).map((c, i) => ({ index: i, name: c.name, hex: c.hex, isBest: true })),
   ].filter((job) => !skipSlots.has(job.index)); // skip already-ready slots
 
   const results: SwatchResult[] = [];
