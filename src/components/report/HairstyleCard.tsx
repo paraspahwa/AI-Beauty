@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import * as React from "react";
 import Image from "next/image";
 import { Check, Minus } from "lucide-react";
 import type { HairstyleResult } from "@/types/report";
