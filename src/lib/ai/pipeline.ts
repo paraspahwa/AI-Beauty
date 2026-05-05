@@ -15,7 +15,7 @@ import { PipelineStageError, classifyStageError, withRetry } from "./resilience"
 import { pickVariant } from "./canary";
 import { buildPersonalizedSystemBase } from "./memory";
 import { env } from "../env";
-import { SYSTEM_BASE, COMPILE_PROMPT, buildColorAnalysisPrompt } from "@/prompts";
+import { SYSTEM_BASE, COMPILE_PROMPT, buildColorAnalysisPrompt, buildFeaturesPrompt, buildGlassesPrompt, SKIN_VISION_PROMPT, buildSkinRoutinePrompt } from "@/prompts";
 import type {
   ColorAnalysisResult,
   FaceShapeResult,
@@ -78,7 +78,7 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
 
   // Server-side dominant clothing colour extraction (runs in parallel with Rekognition)
   const [rekognition, clothingInfo] = await Promise.all([
-    // 1) Rekognition for landmarks (uses original bytes — better signal)
+    // 1) Rekognition for landmarks + ALL attributes (uses original bytes — better signal)
     (async () => {
       const rekStart = Date.now();
       const result = await detectFaceDetails(rawImage).catch((err) => {
@@ -91,6 +91,13 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
     // Dominant clothing colours (uses raw buffer for full resolution)
     extractClothingColors(rawImage),
   ]);
+
+  // Extract Phase 4.1 rekognition attributes for injection into Features prompt
+  const rekAttrs = rekognition ? {
+    ageRange:          rekognition.AgeRange ? `${rekognition.AgeRange.Low}–${rekognition.AgeRange.High}` : undefined,
+    wearingGlasses:    rekognition.Eyeglasses?.Value === true,
+    wearingSunglasses: rekognition.Sunglasses?.Value === true,
+  } : undefined;
 
   // Personalized system base: fetches prior prefs from DB (soft prior for repeat users)
   const effectiveSystemBase = userId
@@ -145,9 +152,8 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
   // Mutate faceShape so downstream code (shapeForStyling, UI) sees the blended value
   faceShape = { ...faceShape, confidence: blendedConfidence };
 
-  // 3) + 4) Color & skin in parallel — these are the two highest-quality calls
+  // 3) + 4a) Color & skin vision in parallel
   const colorVariant = pickVariant("color_analysis");
-  const skinVariant = pickVariant("skin_analysis");
 
   // Build the color prompt: v2 (dominant-colour variant) gets pixel data injected;
   // v1 gets the prompt without clothing colours for baseline comparison.
@@ -159,14 +165,12 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
         })
       : (colorVariant.prompt as string);
 
-  const [colorAnalysis, skinAnalysis] = await Promise.all([
+  const [colorAnalysis, skinVisionResult] = await Promise.all([
     runNormalizedStage(
       "color_analysis",
       () =>
         chatJSON<unknown>({
           // Phase 1.2: downgraded from visionModel (gpt-4o) → miniModel (gpt-4o-mini).
-          // The season/undertone decision is a classification task; mini is sufficient
-          // and the static SEASON_PRESETS in ColorAnalysisCard handle the heavy UI lifting.
           model: env.openai.miniModel,
           temperature: 0.2,
           system: effectiveSystemBase,
@@ -177,21 +181,21 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
       {},
       colorVariant.id,
     ),
+    // Phase 4.4: Vision-only skin stage (type+concerns+zones, no routine).
+    // Routine is fetched separately as a cheap text-only call after this.
     runNormalizedStage(
-      "skin_analysis",
+      "skin_vision",
       () =>
         chatJSON<unknown>({
-          // Phase 1.3: downgraded from visionModel (gpt-4o) → miniModel (gpt-4o-mini).
-          // Skin type + concerns classification does not need the full gpt-4o capability.
           model: env.openai.miniModel,
           temperature: 0.2,
           system: effectiveSystemBase,
-          user: skinVariant.prompt as string,
+          user: SKIN_VISION_PROMPT,
           imageBase64,
         }),
-      normalizeSkinAnalysis,
+      normalizeSkinAnalysis,  // handles missing routine with safe defaults
       {},
-      skinVariant.id,
+      "skin_vision_v1",
     ),
   ]);
 
@@ -205,31 +209,63 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
     );
   }
 
-  // 5) Features, 6) Glasses, 7) Hairstyle in parallel (Mini)
+  // Phase 4.4 + 4.1: Run skin routine (text, no image) in parallel with Features (vision).
+  // Features runs before Glasses so eye/brow data can be injected into the Glasses prompt.
   const featuresVariant = pickVariant("features");
-  const glassesVariant = pickVariant("glasses");
-  const hairstyleVariant = pickVariant("hairstyle");
-  const [features, glasses, hairstyle] = await Promise.all([
+  const [skinRoutineRaw, features] = await Promise.all([
+    // Phase 4.4: Text-only routine call — no image tokens, very cheap
+    withRetry("skin_routine", () =>
+      chatJSON<unknown>({
+        model: env.openai.miniModel,
+        system: effectiveSystemBase,
+        user: buildSkinRoutinePrompt(skinVisionResult.type, skinVisionResult.concerns),
+      }), 2,
+    ).catch(() => null),
+    // Phase 4.1: Features vision call with Rekognition attributes injected
     runNormalizedStage(
       "features",
       () =>
         chatJSON<unknown>({
           model: env.openai.miniModel,
           system: effectiveSystemBase,
-          user: featuresVariant.prompt as string,
+          user: buildFeaturesPrompt(rekAttrs),
           imageBase64,
         }),
       normalizeFeatures,
       {},
       featuresVariant.id,
     ),
+  ]);
+
+  // Merge better text-routine into skin analysis if available
+  const skinAnalysis: SkinAnalysisResult = (() => {
+    if (!skinRoutineRaw) return skinVisionResult;
+    const rawRoutine = (skinRoutineRaw as Record<string, unknown>).routine;
+    if (!Array.isArray(rawRoutine)) return skinVisionResult;
+    const merged = rawRoutine
+      .map((item) => {
+        const obj = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+        return {
+          step:    typeof obj.step    === "string" ? obj.step    : "Care step",
+          product: typeof obj.product === "string" ? obj.product : "Appropriate product",
+        };
+      })
+      .slice(0, 6);
+    return { ...skinVisionResult, routine: merged.length >= 4 ? merged : skinVisionResult.routine };
+  })();
+
+  // 6) Glasses, 7) Hairstyle in parallel.
+  // Phase 4.3: Glasses now receives eye+brow features from stage 5 for personalized frame colors.
+  const glassesVariant = pickVariant("glasses");
+  const hairstyleVariant = pickVariant("hairstyle");
+  const [glasses, hairstyle] = await Promise.all([
     runNormalizedStage(
       "glasses",
       () =>
         chatJSON<unknown>({
           model: env.openai.miniModel,
           system: effectiveSystemBase,
-          user: (glassesVariant.prompt as (s: string) => string)(shapeForStyling),
+          user: buildGlassesPrompt(shapeForStyling, { eyes: features.eyes, eyebrows: features.eyebrows }),
         }),
       normalizeGlasses,
       {},

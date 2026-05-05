@@ -26,10 +26,10 @@ function client() {
 export async function detectFaceDetails(imageBytes: Buffer): Promise<FaceDetail | null> {
   const cmd = new DetectFacesCommand({
     Image: { Bytes: imageBytes },
-    // Phase 1.4: DEFAULT returns BoundingBox + Confidence only — the only fields
-    // used downstream (faceBox geometry + confidence blending). ALL fetches 30+
-    // unused attributes (emotions, beard, smile, AgeRange) at the same price.
-    Attributes: ["DEFAULT"],
+    // Phase 4.1: Use ALL attributes to get AgeRange, Eyeglasses, EyesOpen, Emotions
+    // for injection into the Features and Glasses prompts.
+    // Cost is identical to DEFAULT — only the response payload differs.
+    Attributes: ["ALL"],
   });
   const result = await client().send(cmd);
   const faces = (result.FaceDetails ?? []).slice().sort(

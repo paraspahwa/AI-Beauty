@@ -78,6 +78,94 @@ Return JSON:
   "routine": [{ "step": string, "product": string }]  // 4-6 steps
 }`;
 
+/**
+ * Phase 4.4 — vision-only portion of the split skin analysis.
+ * Returns type + concerns + zones; routine is fetched separately via buildSkinRoutinePrompt.
+ */
+export const SKIN_VISION_PROMPT = `Analyze skin type and visible concerns from the photo.
+Return JSON:
+{
+  "type": "Oily" | "Dry" | "Combination" | "Normal" | "Sensitive",
+  "concerns": string[],
+  "zones": [{ "zone": "T-Zone" | "Cheeks" | "Under-Eye" | "Jawline", "observation": string }]
+}`;
+
+/**
+ * Phase 4.4 — text-only routine generator. No image required.
+ * Call after the skin vision stage to produce a personalized routine.
+ */
+export function buildSkinRoutinePrompt(type: string, concerns: string[]): string {
+  const concernText = concerns.length > 0 ? concerns.join(", ") : "general maintenance";
+  return (
+    `Create a personalized 5-step daily skincare routine for ${type} skin with these concerns: ${concernText}. ` +
+    `Each step must be actionable with a specific product-type recommendation. ` +
+    `Return JSON: { "routine": [{ "step": string, "product": string }] }`
+  );
+}
+
+/**
+ * Phase 4.1 — build the features prompt, optionally injecting hard Rekognition data.
+ * Server-detected attributes (glasses, age range) are injected as hard evidence
+ * so the AI doesn't have to guess from the compressed image.
+ */
+export function buildFeaturesPrompt(rekAttrs?: {
+  ageRange?: string;
+  wearingGlasses?: boolean;
+  wearingSunglasses?: boolean;
+}): string {
+  const lines: string[] = [];
+  if (rekAttrs?.ageRange) lines.push(`  Estimated age range: ${rekAttrs.ageRange}`);
+  if (rekAttrs?.wearingGlasses) lines.push(`  Currently wearing prescription eyeglasses (describe the eye area accordingly).`);
+  if (rekAttrs?.wearingSunglasses) lines.push(`  Currently wearing sunglasses (limited eye visibility).`);
+  if (rekAttrs && !rekAttrs.wearingGlasses && !rekAttrs.wearingSunglasses) lines.push(`  No eyewear detected.`);
+
+  const rekBlock = lines.length > 0
+    ? `\n\nSERVER-DETECTED FACE ATTRIBUTES (hard evidence — incorporate into your feature descriptions):\n` + lines.join("\n")
+    : "";
+
+  return (
+    `Describe these 5 facial features briefly and professionally: eyebrows, eyes, nose, lips, cheeks. ` +
+    `For each feature provide shape (2-3 words) and notes (exactly 3 short styling-relevant bullet facts separated by ". "). ` +
+    `Include eye color in the eyes.notes field (e.g. "Warm brown iris. Almond-shaped with subtle upward tilt. Defined upper lash line."). ` +
+    `Include brow color and density in the eyebrows.notes field. ` +
+    `Return JSON:\n` +
+    `{\n` +
+    `  "eyebrows": { "shape": string, "notes": string },\n` +
+    `  "eyes":     { "shape": string, "notes": string },\n` +
+    `  "nose":     { "shape": string, "notes": string },\n` +
+    `  "lips":     { "shape": string, "notes": string },\n` +
+    `  "cheeks":   { "shape": string, "notes": string }\n` +
+    `}${rekBlock}`
+  );
+}
+
+/**
+ * Phase 4.3 — build the glasses prompt, optionally injecting eye and brow data
+ * from the Features stage so frame colors are personalized to the person's eye color.
+ */
+export function buildGlassesPrompt(
+  faceShape: string,
+  features?: { eyes?: { shape: string; notes: string }; eyebrows?: { shape: string; notes: string } },
+): string {
+  const featBlock = features
+    ? `\n\nDETECTED EYE & BROW FEATURES (use to personalize frame color and style recommendations):\n` +
+      (features.eyes ? `  Eye shape: ${features.eyes.shape}. ${features.eyes.notes}\n` : "") +
+      (features.eyebrows ? `  Eyebrow shape: ${features.eyebrows.shape}. ${features.eyebrows.notes}\n` : "")
+    : "";
+
+  return (
+    `Recommend spectacle frames for a ${faceShape} face.${featBlock}` +
+    `Return JSON:\n` +
+    `{\n` +
+    `  "goals": string[3],\n` +
+    `  "recommended": [{ "style": string, "reason": string }],  // exactly 5 styles\n` +
+    `  "avoid":       [{ "style": string, "reason": string }],  // 4 styles\n` +
+    `  "colors":      [{ "name": string, "hex": "#RRGGBB" }],   // 5 frame colors that complement eye color and skin tone\n` +
+    `  "fitTips":     string[3..5]\n` +
+    `}`
+  );
+}
+
 export const FEATURES_PROMPT = `Describe these facial features briefly and professionally:
 eyes, nose, lips, cheeks. Note shape and one styling-relevant detail per feature.
 Return JSON:

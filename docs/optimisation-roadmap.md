@@ -97,10 +97,10 @@ without removing any user-facing feature.
 ### Changes
 | Step | What | File | Status |
 |------|------|------|--------|
-| 4.1 | Feed Rekognition attributes (AgeRange, Smile, EyesOpen, Eyeglasses) into Features prompt | `src/lib/ai/pipeline.ts`, `src/prompts/index.ts` | ⬜ Pending |
-| 4.2 | Display `clothingObservation` field in Color card (returned by AI, currently ignored) | `src/components/report/ColorAnalysisCard.tsx` | ⬜ Pending |
-| 4.3 | Pass eye color + brow shape from Features into Glasses prompt for personalized frame colors | `src/lib/ai/pipeline.ts`, `src/prompts/index.ts` | ⬜ Pending |
-| 4.4 | Split Skin Analysis: vision call for type+concerns only; separate mini text call (no image) for routine | `src/lib/ai/pipeline.ts`, `src/prompts/index.ts` | ⬜ Pending |
+| 4.1 | Feed Rekognition attributes (AgeRange, Smile, EyesOpen, Eyeglasses) into Features prompt | `src/lib/ai/pipeline.ts`, `src/prompts/index.ts` | ✅ Done |
+| 4.2 | Display `clothingObservation` field in Color card (returned by AI, currently ignored) | `src/components/report/ColorAnalysisCard.tsx` | ✅ Done |
+| 4.3 | Pass eye color + brow shape from Features into Glasses prompt for personalized frame colors | `src/lib/ai/pipeline.ts`, `src/prompts/index.ts` | ✅ Done |
+| 4.4 | Split Skin Analysis: vision call for type+concerns only; separate mini text call (no image) for routine | `src/lib/ai/pipeline.ts`, `src/prompts/index.ts` | ✅ Done |
 
 ### After Phase 4
 - Features card uses hard Rekognition data (currently uses only GPT vision guesses)
