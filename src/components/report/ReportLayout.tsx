@@ -40,6 +40,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
+  // Track which visual sections have been triggered (lazy generation, Phase 5.1)
+  const triggeredSections = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
 
@@ -60,6 +62,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   // the async visuals route and refresh once it finishes.
   // Also re-trigger if color swatch slots are incomplete. Older reports may
   // have failed/missing/pending color assets from the old webhook-only path.
+  // NOTE: This only triggers palette + color swatches. Glasses/hairstyle are lazy.
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
@@ -73,6 +76,37 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report.status, report.id, report.visualAssets?.assets?.colorSwatchPreviews, isReadOnly]);
+
+  // Lazy visual generation on tab switch (Phase 5.1):
+  // Trigger glasses previews when "glasses" tab is first visited.
+  // Trigger hairstyle previews when "hair" tab is first visited.
+  React.useEffect(() => {
+    if (isReadOnly || report.status !== "ready") return;
+    if (activeTab === "glasses") {
+      const glassesPreviews = report.visualAssets?.assets?.glassesPreviews ?? [];
+      const allSettled = glassesPreviews.length > 0 && glassesPreviews.every(
+        (p) => p.status === "ready" || p.status === "failed",
+      );
+      if (!allSettled && !triggeredSections.current.has("glasses")) {
+        triggeredSections.current.add("glasses");
+        fetch(`/api/reports/${report.id}/visuals?type=glasses`, { method: "POST" })
+          .then(() => refresh())
+          .catch(() => { /* non-fatal */ });
+      }
+    } else if (activeTab === "hair") {
+      const hairstylePreviews = report.visualAssets?.assets?.hairstylePreviews ?? [];
+      const allSettled = hairstylePreviews.length > 0 && hairstylePreviews.every(
+        (p) => p.status === "ready" || p.status === "failed",
+      );
+      if (!allSettled && !triggeredSections.current.has("hairstyle")) {
+        triggeredSections.current.add("hairstyle");
+        fetch(`/api/reports/${report.id}/visuals?type=hairstyle`, { method: "POST" })
+          .then(() => refresh())
+          .catch(() => { /* non-fatal */ });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, report.status, report.id, isReadOnly]);
 
   // Poll every 12s while color swatches are still generating
   React.useEffect(() => {
@@ -93,7 +127,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     setVisualsLoading(true);
     setVisualsFailed(false);
     try {
-      // Step 1: overlay + palette + glasses + hairstyle + color swatches (all in one request)
+      // Trigger palette board + color swatches (glasses/hairstyle are now lazy)
       const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
       if (!res.ok) { setVisualsFailed(true); return; }
       await refresh();

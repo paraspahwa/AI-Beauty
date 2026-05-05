@@ -37,6 +37,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { id } = await params;
     const force = req.nextUrl.searchParams.get("force") === "1";
+    // ?type=glasses|hairstyle triggers lazy on-demand generation for a single section
+    const sectionType = req.nextUrl.searchParams.get("type") as "glasses" | "hairstyle" | null;
 
     const admin = createSupabaseAdminClient();
 
@@ -51,6 +53,72 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (rowErr || !row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     if (row.status !== "ready") {
       return NextResponse.json({ error: "Report is not ready yet" }, { status: 409 });
+    }
+
+    // ── Lazy partial generation for a single section (glasses | hairstyle) ───
+    // Called on-demand when the user first opens the Spectacles or Hairstyle tab.
+    if (sectionType === "glasses" || sectionType === "hairstyle") {
+      const existingAssets = row.visual_assets as Record<string, unknown> | null;
+      const existingAssetsInner = (existingAssets?.assets ?? {}) as Record<string, unknown>;
+
+      const previewsKey = sectionType === "glasses" ? "glassesPreviews" : "hairstylePreviews";
+      const existingPreviews = existingAssetsInner[previewsKey] as { status: string }[] | undefined;
+      const allReady = !force && existingPreviews && existingPreviews.length > 0 &&
+        existingPreviews.every((p) => p.status === "ready" || p.status === "failed");
+      if (allReady) return NextResponse.json({ ok: true, skipped: true });
+
+      const { data: imgData2, error: imgErr2 } = await admin.storage
+        .from(env.supabase.bucket).download(row.image_path as string);
+      if (imgErr2 || !imgData2) return NextResponse.json({ error: "Image unavailable" }, { status: 422 });
+      const sectionBuffer = Buffer.from(await imgData2.arrayBuffer());
+
+      const skeleton = createVisualAssetsSkeleton(user.id, id, env.supabase.bucket);
+      let newPreviews: { path: string; status: string; mime: string; error: string | null; styleName?: string }[] = [];
+
+      if (sectionType === "glasses") {
+        const glassesResult = row.glasses as GlassesResult;
+        skeleton.assets.glassesPreviews = (glassesResult?.recommended ?? []).slice(0, 3).map(
+          (s, i) => ({ path: `${skeleton.basePath}glasses-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null,
+            ...(typeof s.style === "string" ? { styleName: s.style } : {}) }),
+        );
+        const results = await generateGlassesPreviews(sectionBuffer, glassesResult, row.rekognition).catch(() => []);
+        for (const { index, buffer: imgBuf } of results) {
+          const asset = skeleton.assets.glassesPreviews[index];
+          if (!asset) continue;
+          const { error: upErr } = await admin.storage.from(env.supabase.bucket)
+            .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+          asset.status = upErr ? "failed" : "ready";
+          if (upErr) asset.error = upErr.message;
+        }
+        for (const asset of skeleton.assets.glassesPreviews) {
+          if (asset.status === "missing") { asset.status = "failed"; asset.error = "No preview generated"; }
+        }
+        newPreviews = skeleton.assets.glassesPreviews;
+      } else {
+        const hairstyleResult = row.hairstyle as HairstyleResult;
+        skeleton.assets.hairstylePreviews = (hairstyleResult?.styles ?? []).slice(0, 3).map(
+          (s, i) => ({ path: `${skeleton.basePath}hairstyle-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null,
+            ...(typeof s.name === "string" ? { styleName: s.name } : {}) }),
+        );
+        const results = await generateHairstylePreviews(sectionBuffer, hairstyleResult, row.rekognition).catch(() => []);
+        for (const { index, buffer: imgBuf } of results) {
+          const asset = skeleton.assets.hairstylePreviews[index];
+          if (!asset) continue;
+          const { error: upErr } = await admin.storage.from(env.supabase.bucket)
+            .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+          asset.status = upErr ? "failed" : "ready";
+          if (upErr) asset.error = upErr.message;
+        }
+        for (const asset of skeleton.assets.hairstylePreviews) {
+          if (asset.status === "missing") { asset.status = "failed"; asset.error = "No preview generated"; }
+        }
+        newPreviews = skeleton.assets.hairstylePreviews;
+      }
+
+      // Merge new previews into existing visual_assets
+      const merged = { ...(existingAssets ?? {}), assets: { ...existingAssetsInner, [previewsKey]: newPreviews } };
+      await admin.from("reports").update({ visual_assets: merged }).eq("id", id);
+      return NextResponse.json({ ok: true, skipped: false });
     }
 
     // Idempotency: skip if already generated, unless ?force=1.
@@ -131,32 +199,40 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       visualAssets.assets.paletteBoard!.error = (err as Error).message;
     }
 
-    // ── Try-on previews (glasses + hairstyle) ─────────────────────────────────
+    // ── Try-on previews ───────────────────────────────────────────────────────
+    // Glasses and hairstyle previews are now generated lazily via ?type=glasses
+    // and ?type=hairstyle when the user first opens those tabs (Phase 5.1).
+    // Pre-populate skeleton slots from existing visual_assets so they persist.
     const glassesResult   = row.glasses   as GlassesResult;
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
-    visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
-      .slice(0, 3)
-      .map((s, i) => ({
-        path: `${visualAssets.basePath}glasses-${i}.jpg`,
-        status: "missing" as const,
-        mime: "image/jpeg",
-        error: null,
-        ...(typeof s.style === "string" ? { styleName: s.style } : {}),
-      }));
+    const existingVA = row.visual_assets as Record<string, unknown> | null;
+    const existingVAInner = (existingVA?.assets ?? {}) as Record<string, unknown>;
 
-    // Up to 3 hairstyle previews: top 3 flattering (Phase 2: avoid previews removed)
-    const allHairStyles = [
-      ...(hairstyleResult?.styles ?? []).slice(0, 3),
-    ];
-    visualAssets.assets.hairstylePreviews = allHairStyles.map((s, i) => ({
-      path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
-      status: "missing" as const,
-      mime: "image/jpeg",
-      error: null,
-      // Store style name in a meta field so the card component can match index → style
-      ...(typeof s.name === "string" ? { styleName: s.name } : {}),
-    }));
+    const existingGlassesPreviews = existingVAInner.glassesPreviews as typeof visualAssets.assets.glassesPreviews | undefined;
+    const existingHairstylePreviews = existingVAInner.hairstylePreviews as typeof visualAssets.assets.hairstylePreviews | undefined;
+
+    // Preserve any already-generated glasses previews; otherwise mark slots as "missing"
+    visualAssets.assets.glassesPreviews = existingGlassesPreviews?.length
+      ? existingGlassesPreviews
+      : (glassesResult?.recommended ?? []).slice(0, 3).map((s, i) => ({
+          path: `${visualAssets.basePath}glasses-${i}.jpg`,
+          status: "missing" as const,
+          mime: "image/jpeg",
+          error: null,
+          ...(typeof s.style === "string" ? { styleName: s.style } : {}),
+        }));
+
+    // Preserve any already-generated hairstyle previews; otherwise mark slots as "missing"
+    visualAssets.assets.hairstylePreviews = existingHairstylePreviews?.length
+      ? existingHairstylePreviews
+      : (hairstyleResult?.styles ?? []).slice(0, 3).map((s, i) => ({
+          path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
+          status: "missing" as const,
+          mime: "image/jpeg",
+          error: null,
+          ...(typeof s.name === "string" ? { styleName: s.name } : {}),
+        }));
 
     // 6 colour swatch preview slots (best colors only; avoid colors shown as CSS circles).
     const colorResult = row.color_analysis as ColorAnalysisResult;
@@ -179,54 +255,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }),
     ];
 
-    // Only generate slots that are not already ready
+    // Only generate color swatch slots that are not already ready
     const readySlotIndices = new Set(
       (visualAssets.assets.colorSwatchPreviews ?? [])
         .map((s, i) => (s.status === "ready" ? i : -1))
         .filter((i) => i >= 0)
     );
 
-    const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
-      generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
-        console.warn("[visuals/route] glasses previews failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer }[];
-      }),
-      generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
-        console.warn("[visuals/route] hairstyle previews failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; style: string }[];
-      }),
-      generateAllColorSwatchPreviews(
-        buffer,
-        bestSix,
-        [],
-        row.rekognition,
-        env.replicate.apiToken,
-        readySlotIndices,
-      ).catch((err) => {
-        console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
-      }),
-    ]);
-
-    for (const { index, buffer: imgBuf } of glassesPrevResults) {
-      const asset = visualAssets.assets.glassesPreviews[index];
-      if (!asset) continue;
-      const { error: upErr } = await admin.storage
-        .from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-      asset.status = upErr ? "failed" : "ready";
-      if (upErr) asset.error = upErr.message;
-    }
-
-    for (const { index, buffer: imgBuf } of hairstylePrevResults) {
-      const asset = visualAssets.assets.hairstylePreviews[index];
-      if (!asset) continue;
-      const { error: upErr } = await admin.storage
-        .from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-      asset.status = upErr ? "failed" : "ready";
-      if (upErr) asset.error = upErr.message;
-    }
+    const colorSwatchResults = await generateAllColorSwatchPreviews(
+      buffer,
+      bestSix,
+      [],
+      row.rekognition,
+      env.replicate.apiToken,
+      readySlotIndices,
+    ).catch((err) => {
+      console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
+      return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
+    });
 
     for (const { index, buffer: imgBuf } of colorSwatchResults) {
       const asset = visualAssets.assets.colorSwatchPreviews?.[index];

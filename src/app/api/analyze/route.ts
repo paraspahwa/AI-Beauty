@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createHash } from "crypto";
 import sharp from "sharp";
 import { runAnalysisPipeline } from "@/lib/ai/pipeline";
 import { PipelineStageError } from "@/lib/ai/resilience";
@@ -129,6 +130,26 @@ export async function POST(req: NextRequest) {
 
     const admin = createSupabaseAdminClient();
 
+    // ── SHA-256 deduplication (Phase 5.2) ─────────────────────────────────────
+    // If this user already has a ready report with the same image bytes, return
+    // it immediately — skipping the entire AI pipeline and image generation cost.
+    const imageHash = createHash("sha256").update(buffer).digest("hex");
+
+    const { data: existingReport } = await admin
+      .from("reports")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("image_hash", imageHash)
+      .eq("status", "ready")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (existingReport?.id) {
+      // Return the cached report — no pipeline, no generation cost.
+      return NextResponse.json({ reportId: existingReport.id, visualsPending: false, cached: true });
+    }
+
     // ── Admin bypass: no rate or quota limits for allowlisted emails ──────────
     const isAdmin = env.auth.adminEmailAllowlist.includes(
       (user.email ?? "").toLowerCase(),
@@ -172,7 +193,7 @@ export async function POST(req: NextRequest) {
     // Atomic in-flight control is enforced by DB unique partial index.
     const { data: report, error: insertErr } = await admin
       .from("reports")
-      .insert({ user_id: user.id, image_path: "pending", status: "processing" })
+      .insert({ user_id: user.id, image_path: "pending", status: "processing", image_hash: imageHash })
       .select("id")
       .single();
     if (insertErr) {

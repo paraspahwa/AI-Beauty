@@ -20,8 +20,6 @@ import {
   createVisualAssetsSkeleton,
   generateLandmarkOverlay,
   generatePaletteBoard,
-  generateGlassesPreviews,
-  generateHairstylePreviews,
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
@@ -135,11 +133,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Try-on previews (glasses + hairstyle) ────────────────────────────────
+    // Phase 5.1: Glasses and hairstyle previews are now generated lazily on the
+    // client when the user first opens those tabs. Pre-populate skeleton slots
+    // with "missing" status so the client UI knows tabs need triggering.
     const glassesResult   = row.glasses   as GlassesResult;
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
     visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
-      .slice(0, 5)
+      .slice(0, 3)
       .map((s, i) => ({
         path: `${visualAssets.basePath}glasses-${i}.jpg`,
         status: "missing" as const,
@@ -148,11 +149,7 @@ export async function POST(req: NextRequest) {
         ...(typeof s.style === "string" ? { styleName: s.style } : {}),
       }));
 
-    const allHairStyles = [
-      ...(hairstyleResult?.styles ?? []).slice(0, 5),
-      ...(hairstyleResult?.avoid  ?? []).slice(0, 4).map((a) => ({ name: a, description: a })),
-    ];
-    visualAssets.assets.hairstylePreviews = allHairStyles.map((s, i) => ({
+    visualAssets.assets.hairstylePreviews = (hairstyleResult?.styles ?? []).slice(0, 3).map((s, i) => ({
       path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
       status: "missing" as const,
       mime: "image/jpeg",
@@ -161,29 +158,23 @@ export async function POST(req: NextRequest) {
     }));
 
     // ── Color swatches ───────────────────────────────────────────────────────
+    // Phase 2: Only generate 6 "best" color swatches. Avoid colors are shown as
+    // CSS circles only (no AI try-on image).
     const colorResult = row.color_analysis as ColorAnalysisResult;
     const seasonKey   = normalizeSeasonKey(colorResult?.season ?? "");
     const palette     = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
     const bestSix     = palette.best;
-    const avoidSix    = palette.avoid;
 
     const existingSwatches =
       (assets?.colorSwatchPreviews as
         { path: string; status: "pending" | "ready" | "failed" | "missing"; mime: string; error: string | null }[]
         | undefined);
 
-    visualAssets.assets.colorSwatchPreviews = [
-      ...bestSix.map((_c, i) => {
-        const ex = existingSwatches?.[i];
-        if (ex?.status === "ready") return { path: ex.path, status: "ready" as const, mime: ex.mime, error: ex.error };
-        return { path: `${visualAssets.basePath}color-swatch-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
-      }),
-      ...avoidSix.map((_c, i) => {
-        const ex = existingSwatches?.[i + 6];
-        if (ex?.status === "ready") return { path: ex.path, status: "ready" as const, mime: ex.mime, error: ex.error };
-        return { path: `${visualAssets.basePath}color-swatch-${i + 6}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
-      }),
-    ];
+    visualAssets.assets.colorSwatchPreviews = bestSix.map((_c, i) => {
+      const ex = existingSwatches?.[i];
+      if (ex?.status === "ready") return { path: ex.path, status: "ready" as const, mime: ex.mime, error: ex.error };
+      return { path: `${visualAssets.basePath}color-swatch-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
+    });
 
     const readySlotIndices = new Set(
       (visualAssets.assets.colorSwatchPreviews ?? [])
@@ -191,42 +182,14 @@ export async function POST(req: NextRequest) {
         .filter((i) => i >= 0),
     );
 
-    // Run all generation in parallel
-    const [glassesPrevResults, hairstylePrevResults, colorSwatchResults] = await Promise.all([
-      generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
-        console.warn("[trigger-visuals] glasses failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer }[];
-      }),
-      generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
-        console.warn("[trigger-visuals] hairstyle failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; style: string }[];
-      }),
-      generateAllColorSwatchPreviews(
-        buffer, bestSix, avoidSix, row.rekognition,
-        env.replicate.apiToken, readySlotIndices,
-      ).catch((err) => {
-        console.warn("[trigger-visuals] swatches failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
-      }),
-    ]);
-
-    for (const { index, buffer: imgBuf } of glassesPrevResults) {
-      const asset = visualAssets.assets.glassesPreviews[index];
-      if (!asset) continue;
-      const { error: upErr } = await admin.storage.from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-      asset.status = upErr ? "failed" : "ready";
-      if (upErr) asset.error = upErr.message;
-    }
-
-    for (const { index, buffer: imgBuf } of hairstylePrevResults) {
-      const asset = visualAssets.assets.hairstylePreviews[index];
-      if (!asset) continue;
-      const { error: upErr } = await admin.storage.from(env.supabase.bucket)
-        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-      asset.status = upErr ? "failed" : "ready";
-      if (upErr) asset.error = upErr.message;
-    }
+    // Generate only color swatches in the background (glasses/hairstyle are lazy)
+    const colorSwatchResults = await generateAllColorSwatchPreviews(
+      buffer, bestSix, [], row.rekognition,
+      env.replicate.apiToken, readySlotIndices,
+    ).catch((err) => {
+      console.warn("[trigger-visuals] swatches failed:", (err as Error).message);
+      return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
+    });
 
     for (const { index, buffer: imgBuf } of colorSwatchResults) {
       const asset = visualAssets.assets.colorSwatchPreviews?.[index];
