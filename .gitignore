@@ -40,3 +40,6 @@ pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 coverage/
+
+# env files with wrong extension
+.env.local.txt
