@@ -31,14 +31,15 @@ describe("pipeline confidence gating", () => {
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ summary: "ok" });
 
     await runAnalysisPipeline(Buffer.from("raw-image"));
 
-    expect(chatJSONMock).toHaveBeenCalledTimes(7);
+    expect(chatJSONMock).toHaveBeenCalledTimes(8);
 
-    const glassesUserPrompt = chatJSONMock.mock.calls[4]?.[0]?.user;
-    const hairstyleUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
+    const glassesUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
+    const hairstyleUserPrompt = chatJSONMock.mock.calls[6]?.[0]?.user;
 
     expect(glassesUserPrompt).toContain("Balanced face");
     expect(hairstyleUserPrompt).toContain("Balanced face");
@@ -52,12 +53,13 @@ describe("pipeline confidence gating", () => {
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ summary: "ok" });
 
     await runAnalysisPipeline(Buffer.from("raw-image"));
 
-    const glassesUserPrompt = chatJSONMock.mock.calls[4]?.[0]?.user;
-    const hairstyleUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
+    const glassesUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
+    const hairstyleUserPrompt = chatJSONMock.mock.calls[6]?.[0]?.user;
 
     expect(glassesUserPrompt).toContain("Round face");
     expect(hairstyleUserPrompt).toContain("Round face");
