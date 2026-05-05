@@ -81,7 +81,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       swatches.length >= 12 &&
       swatches.every((s) => s.status === "ready" || s.status === "failed");
     if (allSettled) return;
-    // Only poll if main visuals are done (paletteBoard ready)
+    // Only poll if the visuals route has run (paletteBoard is generated even if not displayed)
     if (!report.visualAssets?.assets?.paletteBoard) return;
     const timer = setInterval(refresh, 12000);
     return () => clearInterval(timer);
@@ -165,45 +165,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
             {report.summary}
           </motion.p>
         )}
-        {(report.visualAssets?.assets.landmarkOverlay?.signedUrl || report.visualAssets?.assets.paletteBoard?.signedUrl) && (
-          <motion.div
-            variants={fadeUp}
-            className="mx-auto mt-8 grid w-full max-w-2xl gap-4 sm:grid-cols-2"
-          >
-            {report.visualAssets?.assets.landmarkOverlay?.signedUrl && (
-              <div className="overflow-hidden rounded-2xl" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}>
-                <div className="relative h-52 w-full">
-                <Image
-                  src={report.visualAssets.assets.landmarkOverlay.signedUrl}
-                  alt="Face landmark overlay"
-                  fill
-                  unoptimized
-                  sizes="(max-width: 640px) 100vw, 50vw"
-                  className="object-cover"
-                />
-                </div>
-                <p className="px-3 py-2 text-xs font-medium" style={{ color: "#9C7D5B" }}>Face landmark map</p>
-              </div>
-            )}
-            {report.visualAssets?.assets.paletteBoard?.signedUrl && (
-              <div className="overflow-hidden rounded-2xl" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}>
-                <div className="relative h-52 w-full">
-                <Image
-                  src={report.visualAssets.assets.paletteBoard.signedUrl}
-                  alt="Color palette board"
-                  fill
-                  unoptimized
-                  sizes="(max-width: 640px) 100vw, 50vw"
-                  className="object-cover"
-                />
-                </div>
-                <p className="px-3 py-2 text-xs font-medium" style={{ color: "#9C7D5B" }}>Personal color board</p>
-              </div>
-            )}
-          </motion.div>
-        )}
-        {/* Visuals generating banner */}
-        {visualsLoading && !report.visualAssets?.assets?.paletteBoard && (
+        {/* Visuals generating banner — shown while color swatches are being created */}
+        {visualsLoading && (
           <motion.div
             variants={fadeUp}
             className="mx-auto mt-6 flex max-w-md items-center gap-3 rounded-2xl px-5 py-3 text-sm"
@@ -214,11 +177,11 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
             }}
           >
             <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            <span>Generating your visual style board — this takes ~30 seconds…</span>
+            <span>Generating your color previews — this takes ~60 seconds…</span>
           </motion.div>
         )}
         {/* Visuals failed banner */}
-        {visualsFailed && !visualsLoading && !report.visualAssets?.assets?.paletteBoard && (
+        {visualsFailed && !visualsLoading && (
           <motion.div
             variants={fadeUp}
             className="mx-auto mt-6 flex max-w-md items-center justify-between gap-3 rounded-2xl px-5 py-3 text-sm"
@@ -228,7 +191,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
               color: "#C06B3E",
             }}
           >
-            <span>Visual style board failed to generate.</span>
+            <span>Color previews failed to generate.</span>
             <button
               onClick={triggerVisuals}
               className="shrink-0 rounded-lg px-3 py-1 text-xs font-medium transition-colors hover:opacity-80"

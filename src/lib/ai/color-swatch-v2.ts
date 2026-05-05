@@ -21,8 +21,6 @@ import type { FaceBox } from "./replicate-hair";
 const SDXL_INPAINT_MODEL =
   "lucataco/sdxl-inpainting:a5b13068cc81a89a4fbeefecf6d6fc5e529a5ecc6bde3f97867ef36429a56a69" as const;
 
-const FLUX_SCHNELL_MODEL = "black-forest-labs/flux-schnell" as const;
-
 const INPAINT_SIZE = 1024;
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
@@ -84,26 +82,6 @@ function buildInpaintNegative(): string {
     "cartoon, painting, anime, CGI, 3d render, illustration, " +
     "blurry, low quality, deformed, bad anatomy, watermark, " +
     "pattern, print, stripes, graphic, logo, text, buttons, collar change"
-  );
-}
-
-function buildFluxPrompt(colorName: string, colorHex: string, isBest: boolean): string {
-  const word = hexToColorWord(colorHex);
-  const context = isBest
-    ? "wearing a flattering, color-coordinated outfit"
-    : "wearing a clashing outfit that looks unflattering on them";
-  return (
-    `Fashion editorial portrait of an attractive woman ${context} in a solid ${word} ${colorName} colored top. ` +
-    `Studio lighting, clean white background, beauty photography, DSLR, sharp focus, high resolution.`
-  );
-}
-
-function buildDallePrompt(colorName: string, colorHex: string, isBest: boolean): string {
-  const word = hexToColorWord(colorHex);
-  const context = isBest ? "a flattering" : "an unflattering";
-  return (
-    `A professional beauty portrait photo of a woman wearing ${context} solid ${word} ${colorName} colored top. ` +
-    `Fashion editorial style, studio lighting, clean background, photorealistic.`
   );
 }
 
@@ -236,84 +214,7 @@ async function tryOptionA(
   return resizeOutput(resultBuf);
 }
 
-// ── Option B: Replicate Flux Schnell ──────────────────────────────────────────
-async function tryOptionB(
-  colorName: string,
-  colorHex: string,
-  isBest: boolean,
-  replicateToken: string,
-): Promise<Buffer> {
-  const client = getReplicate(replicateToken);
-
-  const output = await client.run(FLUX_SCHNELL_MODEL, {
-    input: {
-      prompt:      buildFluxPrompt(colorName, colorHex, isBest),
-      num_outputs: 1,
-      aspect_ratio: "2:3",
-      output_format: "jpeg",
-      output_quality: 90,
-    },
-  });
-
-  // Flux Schnell returns an array of FileOutput objects or URL strings
-  let url: string;
-  if (Array.isArray(output) && output.length > 0) {
-    const first = output[0];
-    // Replicate SDK may return a ReadableStream or URL object — handle both
-    if (typeof first === "string") {
-      url = first;
-    } else if (first && typeof (first as { url?: () => Promise<URL> }).url === "function") {
-      url = (await (first as { url: () => Promise<URL> }).url()).toString();
-    } else {
-      url = String(first);
-    }
-  } else {
-    url = String(output);
-  }
-
-  if (!url) throw new Error("Flux Schnell returned no output URL");
-
-  const resultBuf = await fetchImageBuffer(url);
-  return resizeOutput(resultBuf);
-}
-
-// ── Option C: OpenAI DALL-E 3 ─────────────────────────────────────────────────
-async function tryOptionC(
-  colorName: string,
-  colorHex: string,
-  isBest: boolean,
-  openaiApiKey: string,
-): Promise<Buffer> {
-  const response = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${openaiApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "dall-e-3",
-      prompt: buildDallePrompt(colorName, colorHex, isBest),
-      n: 1,
-      size: "1024x1024",
-      quality: "standard",
-      response_format: "url",
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`DALL-E 3 request failed: ${response.status} ${err}`);
-  }
-
-  const json = await response.json() as { data: { url: string }[] };
-  const url = json.data?.[0]?.url;
-  if (!url) throw new Error("DALL-E 3 returned no image URL");
-
-  const resultBuf = await fetchImageBuffer(url);
-  return resizeOutput(resultBuf);
-}
-
-// ── Per-slot generation with A → B → C fallback chain ────────────────────────
+// ── Per-slot generation — Option A only (SDXL inpainting on real selfie) ──────
 export interface SwatchColorEntry {
   index: number;
   name: string;
@@ -328,55 +229,34 @@ export interface SwatchResult {
   isBest: boolean;
 }
 
+/**
+ * Attempt to generate one swatch preview via SDXL inpainting on the user's
+ * real selfie. Requires a valid faceBox from Rekognition.
+ * If it fails, throws — the caller skips the slot and the UI falls back to
+ * the static color circle already built into ColorSwatch.
+ * Options B and C (text-to-image without selfie) are intentionally removed:
+ * they produced a completely different person, which is worse than no image.
+ */
 async function generateOneSwatchPreview(
   selfieBuf: Buffer,
   faceBox: FaceBox | null,
   entry: SwatchColorEntry,
   replicateToken: string,
-  openaiApiKey: string,
 ): Promise<SwatchResult> {
-  // ── Option A: Replicate SDXL Inpainting (requires faceBox + selfieBuf)
-  if (replicateToken && faceBox) {
-    try {
-      const buf = await tryOptionA(selfieBuf, faceBox, entry.name, entry.hex, replicateToken);
-      console.info(`[swatch-v2] ✓ A slot ${entry.index} "${entry.name}" isBest=${entry.isBest}`);
-      return { index: entry.index, buffer: buf, colorName: entry.name, isBest: entry.isBest };
-    } catch (err) {
-      console.warn(`[swatch-v2] ✗ A slot ${entry.index} "${entry.name}":`, (err as Error).message);
-    }
-  }
+  if (!replicateToken) throw new Error("No Replicate token — cannot generate swatch");
+  if (!faceBox) throw new Error(`No faceBox for slot ${entry.index} "${entry.name}" — skipping`);
 
-  // ── Option B: Replicate Flux Schnell (text-to-image, no selfie needed)
-  if (replicateToken) {
-    try {
-      const buf = await tryOptionB(entry.name, entry.hex, entry.isBest, replicateToken);
-      console.info(`[swatch-v2] ✓ B slot ${entry.index} "${entry.name}" isBest=${entry.isBest}`);
-      return { index: entry.index, buffer: buf, colorName: entry.name, isBest: entry.isBest };
-    } catch (err) {
-      console.warn(`[swatch-v2] ✗ B slot ${entry.index} "${entry.name}":`, (err as Error).message);
-    }
-  }
-
-  // ── Option C: OpenAI DALL-E 3
-  if (openaiApiKey) {
-    try {
-      const buf = await tryOptionC(entry.name, entry.hex, entry.isBest, openaiApiKey);
-      console.info(`[swatch-v2] ✓ C slot ${entry.index} "${entry.name}" isBest=${entry.isBest}`);
-      return { index: entry.index, buffer: buf, colorName: entry.name, isBest: entry.isBest };
-    } catch (err) {
-      console.warn(`[swatch-v2] ✗ C slot ${entry.index} "${entry.name}":`, (err as Error).message);
-    }
-  }
-
-  throw new Error(`All providers failed for slot ${entry.index} "${entry.name}"`);
+  const buf = await tryOptionA(selfieBuf, faceBox, entry.name, entry.hex, replicateToken);
+  console.info(`[swatch-v2] ✓ slot ${entry.index} "${entry.name}" isBest=${entry.isBest}`);
+  return { index: entry.index, buffer: buf, colorName: entry.name, isBest: entry.isBest };
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 /**
- * Generate all 12 color swatch previews (6 best + 6 avoid) using the
- * A → B → C provider chain. Returns only successfully generated slots.
- *
- * Slots are processed with bounded concurrency (MAX_CONCURRENCY).
+ * Generate all 12 color swatch previews (6 best + 6 avoid) using SDXL
+ * inpainting on the user's real selfie. Returns only successfully generated
+ * slots — failed slots are skipped and the UI falls back to static color
+ * circles. No text-to-image fallback — that would show a different person.
  */
 export async function generateAllColorSwatchPreviews(
   selfieBuf: Buffer,
@@ -384,23 +264,26 @@ export async function generateAllColorSwatchPreviews(
   avoidColors: { name: string; hex: string }[],
   rekognitionFace: unknown,
   replicateToken: string,
-  openaiApiKey: string,
 ): Promise<SwatchResult[]> {
-  // Build unified job list: indices 0-5 = best, 6-11 = avoid
   const jobs: SwatchColorEntry[] = [
     ...bestColors.slice(0, 6).map((c, i) => ({ index: i,     name: c.name, hex: c.hex, isBest: true })),
     ...avoidColors.slice(0, 6).map((c, i) => ({ index: i + 6, name: c.name, hex: c.hex, isBest: false })),
   ];
 
-  // Resolve faceBox once (needs Sharp, lazy import OK here since we're in the server)
+  // Resolve faceBox from Rekognition data
   let faceBox: import("./replicate-hair").FaceBox | null = null;
   try {
     const { getFaceBox } = await import("./visuals");
     const sharp = (await import("sharp")).default;
     const meta  = await sharp(selfieBuf).rotate().metadata();
     faceBox = getFaceBox(rekognitionFace, meta.width ?? 512, meta.height ?? 768);
-  } catch {
-    // faceBox stays null — Option A will be skipped, B/C will be tried
+  } catch (err) {
+    console.warn("[swatch-v2] Could not resolve faceBox:", (err as Error).message);
+  }
+
+  if (!faceBox) {
+    console.warn("[swatch-v2] No faceBox available — all slots will be skipped (UI shows static circles)");
+    return [];
   }
 
   const results: SwatchResult[] = [];
@@ -411,16 +294,10 @@ export async function generateAllColorSwatchPreviews(
       const job = queue.shift();
       if (!job) break;
       try {
-        const result = await generateOneSwatchPreview(
-          selfieBuf,
-          faceBox,
-          job,
-          replicateToken,
-          openaiApiKey,
-        );
+        const result = await generateOneSwatchPreview(selfieBuf, faceBox, job, replicateToken);
         results.push(result);
       } catch (err) {
-        console.warn(`[swatch-v2] slot ${job.index} all providers failed:`, (err as Error).message);
+        console.warn(`[swatch-v2] slot ${job.index} "${job.name}" skipped:`, (err as Error).message);
       }
     }
   }

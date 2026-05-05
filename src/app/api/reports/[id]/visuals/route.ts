@@ -196,7 +196,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         avoidSix,
         row.rekognition,
         env.replicate.apiToken,
-        env.openai.apiKey,
       ).catch((err) => {
         console.warn("[visuals/route] color swatch previews failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
