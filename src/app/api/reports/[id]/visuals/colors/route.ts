@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
+import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
 import type { ColorAnalysisResult, ReportVisualAsset, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -57,7 +58,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const buffer = Buffer.from(await imgData.arrayBuffer());
 
     const colorResult = row.color_analysis as ColorAnalysisResult;
-    const bestSix = (colorResult?.palette ?? []).slice(0, 6);
+    const seasonKey = normalizeSeasonKey(colorResult?.season ?? "");
+    const palette   = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
+    const bestSix   = palette.best.slice(0, 6);
     const basePath = `users/${user.id}/reports/${id}/`;
 
     // Determine which slots are already ready so we can skip regenerating them

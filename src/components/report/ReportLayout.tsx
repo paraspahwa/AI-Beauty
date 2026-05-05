@@ -56,20 +56,24 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessing, report.id, isReadOnly]);
 
+  // Track whether a /visuals/colors call is currently in-flight to avoid
+  // firing concurrent Replicate batches.
+  const colorsRunning = React.useRef(false);
+
   // When the report is ready but visuals haven't been generated yet, trigger
   // the async visuals route and refresh once it finishes.
   // Also re-trigger if color swatch slots are incomplete. Older reports may
   // have failed/missing/pending color assets from the old webhook-only path.
-  // NOTE: This only triggers palette + color swatches. Glasses/hairstyle are lazy (Phase 5.4 per-slot buttons).
+  // NOTE: Glasses/hairstyle are lazy (Phase 5.4 per-slot buttons).
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const hasIncompleteSwatches = swatches.length < 6 || swatches.some(
-      (s) => s.status !== "ready",
+    const allSwatchesSettled = swatches.length >= 6 && swatches.every(
+      (s: { status: string }) => s.status === "ready" || s.status === "failed",
     );
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
-    if (!hasVisuals || hasIncompleteSwatches) {
+    if (!hasVisuals || !allSwatchesSettled) {
       triggerVisuals();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,7 +85,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
     const allSettled =
       swatches.length >= 6 &&
-      swatches.every((s) => s.status === "ready" || s.status === "failed");
+      swatches.every((s: { status: string }) => s.status === "ready" || s.status === "failed");
     if (allSettled) return;
     // Only poll if the visuals route has run (paletteBoard is generated even if not displayed)
     if (!report.visualAssets?.assets?.paletteBoard) return;
@@ -94,9 +98,19 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     setVisualsLoading(true);
     setVisualsFailed(false);
     try {
-      // Trigger palette board + color swatches (glasses/hairstyle are now lazy)
+      // Fast path: generates palette board + landmark overlay only (no Replicate).
       const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
       if (!res.ok) { setVisualsFailed(true); return; }
+      // Fire color swatches in background via the dedicated /visuals/colors endpoint.
+      // Each color swatch is a Replicate call (~20–60 s total); they run concurrently
+      // server-side. The 12 s polling effect below picks up slots as they become ready.
+      // colorsRunning prevents stacking concurrent batches during polling cycles.
+      if (!colorsRunning.current) {
+        colorsRunning.current = true;
+        fetch(`/api/reports/${report.id}/visuals/colors`, { method: "POST" })
+          .catch(() => { /* server logs the error; slots show as "failed" in UI */ })
+          .finally(() => { colorsRunning.current = false; });
+      }
       await refresh();
     } catch {
       setVisualsFailed(true);
