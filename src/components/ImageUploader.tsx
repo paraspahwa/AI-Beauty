@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import { Upload, ImageIcon, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,10 +36,29 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
     setPreview(URL.createObjectURL(f));
   }, []);
 
+  const onDropRejected = React.useCallback((rejections: FileRejection[]) => {
+    if (rejections.length > 1) {
+      setError("Please upload one photo at a time.");
+      return;
+    }
+    const firstCode = rejections[0]?.errors[0]?.code;
+    if (firstCode === "too-many-files") {
+      setError("Please upload one photo at a time.");
+    } else if (firstCode === "file-too-large") {
+      setError("File is too large. Maximum size is 8 MB.");
+    } else if (firstCode === "file-invalid-type") {
+      setError("Unsupported file type. Please upload a JPG, PNG or WEBP image.");
+    } else {
+      setError(rejections[0]?.errors[0]?.message ?? "File rejected. Please try another photo.");
+    }
+  }, []);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected,
     accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
     maxFiles: 1,
+    multiple: false,
     maxSize: 8 * 1024 * 1024,
   });
 
@@ -289,7 +308,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       </motion.div>
 
       <AnimatePresence>
-        {file && error && (
+        {error && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
