@@ -755,11 +755,11 @@ function ColorSwatch({
   // After 3 minutes stop spinning and fall back to color circle
   const [timedOut, setTimedOut] = React.useState(false);
   // Countdown timer — starts at 25s (expected generation time) and counts down
-  const [secondsLeft, setSecondsLeft] = React.useState(25);
+  const [secondsLeft, setSecondsLeft] = React.useState(15);
   React.useEffect(() => {
     if (!generating) { setSecondsLeft(25); return; }
     const timeout = setTimeout(() => setTimedOut(true), 3 * 60 * 1000);
-    setSecondsLeft(25);
+    setSecondsLeft(15);
     const tick = setInterval(() => {
       setSecondsLeft((s) => (s > 1 ? s - 1 : 1));
     }, 1000);

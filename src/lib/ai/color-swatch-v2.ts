@@ -18,7 +18,7 @@ const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
 
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
-const MAX_CONCURRENCY = 6;
+const MAX_CONCURRENCY = 12;
 
 // Selfie is resized to this before sending — smaller payload = faster upload
 // and faster model processing. 640px is sufficient for clothing color preview.
@@ -115,8 +115,8 @@ async function runFluxKontext(
 	  output_quality:     80,
 	  // Smallest output size — 512px is plenty for a 400×530 preview card
 	  image_size:         512,
-	  // Minimum steps for "Extra Juiced" speed mode — model is already fast
-	  num_inference_steps: 20,
+	  // Minimum steps — 4 is the floor for flux-based models; lower = faster but less detail
+	  num_inference_steps: 4,
 	},
   });
 
