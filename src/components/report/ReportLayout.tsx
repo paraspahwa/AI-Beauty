@@ -69,8 +69,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const allReady = swatches.length >= 6 && swatches.every((s) => s.status === "ready");
-    if (allReady) return;
+    const allSettled =
+      swatches.length >= 6 &&
+      swatches.every((s) => s.status === "ready" || s.status === "failed");
+    if (allSettled) return;
     // Only poll if main visuals are done (paletteBoard ready)
     if (!report.visualAssets?.assets?.paletteBoard) return;
     const timer = setInterval(refresh, 12000);
@@ -352,8 +354,9 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       photoUrl={report.imageUrl}
                       bestColorPreviewUrls={
                         report.visualAssets?.assets.colorSwatchPreviews
-                          ?.filter((a) => a.status === "ready" && a.signedUrl)
-                          .map((a) => a.signedUrl!)
+                          ?.map((a) =>
+                            a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
+                          )
                       }
                     />
                   ) : (

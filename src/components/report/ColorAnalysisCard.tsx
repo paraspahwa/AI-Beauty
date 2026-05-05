@@ -744,10 +744,12 @@ function ColorSwatch({
   hex,
   name,
   aiPreviewUrl,
+  generating = false,
 }: {
   hex: string;
   name: string;
   aiPreviewUrl?: string;
+  generating?: boolean;
 }) {
   const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
 
@@ -769,14 +771,22 @@ function ColorSwatch({
             className="object-cover"
             style={{ objectPosition: "top center" }}
           />
-        ) : (
-          /* Skeleton while AI preview is generating */
+        ) : generating ? (
+          /* Skeleton — only shown while actively waiting for AI preview */
           <div
             className="absolute inset-0 flex flex-col items-center justify-center gap-1"
             style={{ background: "#F5EFE7" }}
           >
             <div className="h-10 w-10 rounded-full animate-pulse" style={{ backgroundColor: hex, opacity: 0.6 }} />
             <span className="text-[8px] text-center px-1" style={{ color: "#9C7D5B" }}>Generating…</span>
+          </div>
+        ) : (
+          /* Static color circle — no AI preview available */
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: "#F5EFE7" }}
+          >
+            <div className="h-12 w-12 rounded-full" style={{ backgroundColor: hex }} />
           </div>
         )}
 
@@ -810,7 +820,7 @@ export function ColorAnalysisCard({
    * Index N maps to bestColors[N]. When present, the card renders real
    * inpainted photos instead of the CSS clip-path overlay.
    */
-  bestColorPreviewUrls?: string[];
+  bestColorPreviewUrls?: (string | undefined)[];
 }) {
   const presetKey = normalizeSeasonKey(data.season);
   // Guard: normalizeSeasonKey always returns a valid key (falls back to "Soft Autumn"),
@@ -995,14 +1005,20 @@ export function ColorAnalysisCard({
           <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-          {bestSix.map((c, i) => (
-            <ColorSwatch
-              key={c.hex}
-              hex={c.hex}
-              name={c.name}
-              aiPreviewUrl={bestColorPreviewUrls?.[i]}
-            />
-          ))}
+          {bestSix.map((c, i) => {
+            const slotStatus = bestColorPreviewUrls !== undefined
+              ? (bestColorPreviewUrls[i] ? "ready" : "pending")
+              : "idle";
+            return (
+              <ColorSwatch
+                key={c.hex}
+                hex={c.hex}
+                name={c.name}
+                aiPreviewUrl={bestColorPreviewUrls?.[i]}
+                generating={slotStatus === "pending"}
+              />
+            );
+          })}
         </div>
       </div>
 
