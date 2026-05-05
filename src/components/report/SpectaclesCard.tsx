@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Image from "next/image";
 import { Check, X, Scale, Eye } from "lucide-react";
 import type { GlassesResult } from "@/types/report";
