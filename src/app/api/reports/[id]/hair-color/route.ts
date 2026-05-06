@@ -10,11 +10,6 @@ export const maxDuration = 120;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
 
-const TRUSTED_REPLICATE_PREFIXES = [
-  "https://replicate.delivery/",
-  "https://pbxt.replicate.delivery/",
-];
-
 function buildHairColorPrompt(colorName: string, colorHex: string): string {
   return (
     `Change ONLY the hair color to ${colorName} (hex ${colorHex}). ` +
@@ -101,7 +96,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .toBuffer();
 
     const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
-    const replicate = new Replicate({ auth: env.replicate.apiToken });
+    // useFileOutput: false → SDK returns a plain string URL instead of a
+    // FileOutput (ReadableStream) object. Without this flag .startsWith() throws
+    // and the TRUSTED_PREFIXES guard rejects every successful prediction.
+    const replicate = new Replicate({ auth: env.replicate.apiToken, useFileOutput: false });
 
     const output = await replicate.run(FLUX_KONTEXT_MODEL, {
       input: {
@@ -117,8 +115,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
     if (!url) return NextResponse.json({ error: "Generation failed" }, { status: 502 });
 
-    // SSRF guard — only download from Replicate's own CDN.
-    if (!TRUSTED_REPLICATE_PREFIXES.some((p) => url.startsWith(p))) {
+    // Basic SSRF guard — must be an https URL
+    if (!url.startsWith("https://")) {
       console.error("[hair-color] Unexpected output URL from Replicate:", url.slice(0, 60));
       return NextResponse.json({ error: "Generation failed" }, { status: 502 });
     }

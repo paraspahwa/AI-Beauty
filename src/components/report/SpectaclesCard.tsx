@@ -282,6 +282,21 @@ export function SpectaclesCard({
     }
   }
 
+  // Auto-trigger generation for any missing slots when the card first mounts.
+  // This removes the need for the user to click "Generate Preview" manually.
+  const autoTriggered = React.useRef(false);
+  React.useEffect(() => {
+    if (!reportId || autoTriggered.current) return;
+    const missingSlots = [0, 1, 2].filter((i) => {
+      const slot = previewSlots?.[i];
+      return !slot || slot.status === "missing" || slot.status === "failed";
+    });
+    if (missingSlots.length === 0) return;
+    autoTriggered.current = true;
+    missingSlots.forEach((i) => generateSlot(i));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportId, previewSlots]);
+
   // Resolve first ready signed URL (for hero photo)
   const firstReadyUrl = previewSlots?.find((s) => s.status === "ready" && s.signedUrl)?.signedUrl
     ?? (previewUrls?.[0]);

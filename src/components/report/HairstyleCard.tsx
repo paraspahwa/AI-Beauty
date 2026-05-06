@@ -474,6 +474,21 @@ export function HairstyleCard({
       setGeneratingSlots((prev) => { const next = new Set(prev); next.delete(index); return next; });
     }
   }
+
+  // Auto-trigger generation for any missing slots when the card first mounts.
+  // This removes the need for the user to click "Generate Preview" manually.
+  const autoTriggered = React.useRef(false);
+  React.useEffect(() => {
+    if (!reportId || autoTriggered.current) return;
+    const missingSlots = [0, 1, 2].filter((i) => {
+      const slot = previewSlots?.[i];
+      return !slot || slot.status === "missing" || slot.status === "failed";
+    });
+    if (missingSlots.length === 0) return;
+    autoTriggered.current = true;
+    missingSlots.forEach((i) => generateSlot(i));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportId, previewSlots]);
   const flatteningStyles  = data.styles.slice(0, 5);
   const considerStyles    = data.avoid.slice(0, 4);
   // Hair colour from AI analysis — first recommended colour drives overlay tinting
