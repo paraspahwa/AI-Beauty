@@ -27,7 +27,10 @@ const SELFIE_SEND_SIZE = 640;
 // ── Replicate singleton ────────────────────────────────────────────────────────
 let _replicate: Replicate | null = null;
 function getReplicate(token: string): Replicate {
-  if (!_replicate) _replicate = new Replicate({ auth: token });
+  // useFileOutput: false → SDK returns plain string URLs instead of FileOutput
+  // objects (ReadableStream subclasses). FileOutput objects don't have
+  // .startsWith() so the URL validation and fetch both break silently.
+  if (!_replicate) _replicate = new Replicate({ auth: token, useFileOutput: false });
   return _replicate;
 }
 
@@ -74,14 +77,9 @@ function buildKontextPrompt(colorName: string, colorHex: string): string {
 }
 
 // ── Download URL → Buffer ──────────────────────────────────────────────────────
-const TRUSTED_REPLICATE_PREFIXES = [
-  "https://replicate.delivery/",
-  "https://pbxt.replicate.delivery/",
-];
-
 async function fetchImageBuffer(url: string): Promise<Buffer> {
-  if (!TRUSTED_REPLICATE_PREFIXES.some((p) => url.startsWith(p))) {
-    throw new Error("Unexpected output URL from Replicate");
+  if (!url.startsWith("https://")) {
+    throw new Error(`Unexpected output URL from Replicate: ${url.slice(0, 60)}`);
   }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);

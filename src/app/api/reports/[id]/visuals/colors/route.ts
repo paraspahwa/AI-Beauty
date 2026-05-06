@@ -98,38 +98,50 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .from(env.supabase.bucket)
       .upload(storagePath, imgBuf, { contentType: "image/jpeg", upsert: true });
 
-    const slotStatus = upErr ? "failed" : "ready";
+    const slotStatus: "ready" | "failed" = upErr ? "failed" : "ready";
     const slotError  = upErr ? upErr.message : null;
 
-    // Atomic-safe DB update: re-read current visual_assets right before writing
-    // to minimise the race window between the 6 concurrent slot invocations.
-    const { data: freshRow } = await admin
-      .from("reports")
-      .select("visual_assets")
-      .eq("id", id)
-      .single();
+    // Atomic slot update via RPC — uses a FOR UPDATE row lock so 6 concurrent
+    // invocations are serialised in the DB and cannot overwrite each other.
+    const slotData = { path: storagePath, status: slotStatus, mime: "image/jpeg", error: slotError };
+    const { error: rpcErr } = await admin.rpc("atomic_update_color_swatch_slot", {
+      p_report_id: id,
+      p_user_id:   user.id,
+      p_slot:      slotNum,
+      p_slot_data: slotData,
+    });
 
-    const freshVA = (freshRow?.visual_assets as ReportVisualAssets | null) ?? {
-      version: 1,
-      bucket: env.supabase.bucket,
-      basePath,
-      assets: {},
-    };
+    if (rpcErr) {
+      // RPC not yet applied (migration pending) — fall back to read-modify-write
+      console.warn("[visuals/colors] atomic RPC unavailable, using fallback:", rpcErr.message);
+      const { data: freshRow } = await admin
+        .from("reports")
+        .select("visual_assets")
+        .eq("id", id)
+        .single();
 
-    const freshSwatches: ReportVisualAsset[] = [
-      ...((freshVA.assets?.colorSwatchPreviews ?? []) as ReportVisualAsset[]),
-    ];
-    freshSwatches[slotNum] = { path: storagePath, status: slotStatus, mime: "image/jpeg", error: slotError };
+      const freshVA = (freshRow?.visual_assets as ReportVisualAssets | null) ?? {
+        version: 1,
+        bucket: env.supabase.bucket,
+        basePath,
+        assets: {},
+      };
 
-    await admin
-      .from("reports")
-      .update({
-        visual_assets: {
-          ...freshVA,
-          assets: { ...freshVA.assets, colorSwatchPreviews: freshSwatches },
-        },
-      })
-      .eq("id", id);
+      const freshSwatches: ReportVisualAsset[] = [
+        ...((freshVA.assets?.colorSwatchPreviews ?? []) as ReportVisualAsset[]),
+      ];
+      freshSwatches[slotNum] = slotData;
+
+      await admin
+        .from("reports")
+        .update({
+          visual_assets: {
+            ...freshVA,
+            assets: { ...freshVA.assets, colorSwatchPreviews: freshSwatches },
+          },
+        })
+        .eq("id", id);
+    }
 
     return NextResponse.json({ ok: true, slot: slotNum, status: slotStatus });
   } catch (err) {

@@ -32,7 +32,10 @@ export interface FaceBox {
 // ── Replicate client (lazy singleton) ─────────────────────────────────────────
 let _client: Replicate | null = null;
 function getClient(token: string): Replicate {
-  if (!_client) _client = new Replicate({ auth: token });
+  // useFileOutput: false → SDK returns plain string URLs instead of FileOutput
+  // objects (ReadableStream subclasses). FileOutput objects lack .startsWith()
+  // so URL validation and fetch both fail silently without this flag.
+  if (!_client) _client = new Replicate({ auth: token, useFileOutput: false });
   return _client;
 }
 
@@ -100,9 +103,9 @@ export async function replicateHairPreview(
   const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
   if (!url) throw new Error("Flux Kontext returned no output URL");
 
-  const TRUSTED_PREFIXES = ["https://replicate.delivery/", "https://pbxt.replicate.delivery/"];
+  const TRUSTED_PREFIXES = ["https://"];
   if (!TRUSTED_PREFIXES.some((p) => url.startsWith(p))) {
-    throw new Error("Unexpected output URL from Replicate");
+    throw new Error(`Unexpected output URL from Replicate: ${url.slice(0, 60)}`);
   }
 
   const resp = await fetch(url);
