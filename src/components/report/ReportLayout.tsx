@@ -71,7 +71,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const allSwatchesSettled = swatches.length >= 6 && swatches.every(
+    const allSwatchesSettled = swatches.length >= 12 && swatches.every(
       (s: { status: string }) => s.status === "ready" || s.status === "failed",
     );
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
@@ -86,7 +86,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     if (isReadOnly || report.status !== "ready") return;
     const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
     const allSettled =
-      swatches.length >= 6 &&
+      swatches.length >= 12 &&
       swatches.every((s: { status: string }) => s.status === "ready" || s.status === "failed");
     if (allSettled) return;
     // Only poll if the visuals route has run (paletteBoard is generated even if not displayed)
@@ -112,9 +112,10 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
         setColorsGenerating(true);
         // Fire one request per slot — each is a separate Vercel invocation (~15-30 s each),
         // so no single call can hit the 60 s function limit.
-        // All 6 run truly in parallel across 6 separate server instances.
+        // All 12 run truly in parallel across 12 separate server instances.
+        // Slots 0-5 = best colors, slots 6-11 = avoid colors.
         Promise.all(
-          Array.from({ length: 6 }, (_, slot) =>
+          Array.from({ length: 12 }, (_, slot) =>
             fetch(`/api/reports/${report.id}/visuals/colors?slot=${slot}`, { method: "POST" })
               .catch(() => { /* server logs error; this slot stays as CSS circle */ }),
           ),
@@ -347,6 +348,13 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       bestColorPreviewUrls={
                         report.visualAssets?.assets.colorSwatchPreviews
                           ?.slice(0, 6)
+                          .map((a: { status: string; signedUrl?: string }) =>
+                            a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
+                          )
+                      }
+                      avoidColorPreviewUrls={
+                        report.visualAssets?.assets.colorSwatchPreviews
+                          ?.slice(6, 12)
                           .map((a: { status: string; signedUrl?: string }) =>
                             a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
                           )

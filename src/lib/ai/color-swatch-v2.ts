@@ -34,45 +34,20 @@ function getReplicate(token: string): Replicate {
   return _replicate;
 }
 
-// ── Color word helper ──────────────────────────────────────────────────────────
-function hexToColorWord(hex: string): string {
-  const h = hex.replace("#", "").toLowerCase();
-  if (!h || h.length < 6) return "neutral";
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const chroma = max - min;
-  if (chroma < 30) {
-	if (brightness > 220) return "white";
-	if (brightness > 160) return "light gray";
-	if (brightness > 100) return "gray";
-	if (brightness > 50)  return "dark gray";
-	return "black";
-  }
-  if (r === max && r - b > 40 && r - g > 40) return brightness > 140 ? "red" : "dark red";
-  if (g === max && g - r > 40 && g - b > 20) return brightness > 140 ? "green" : "dark green";
-  if (b === max && b - r > 30 && b - g > 20) return brightness > 140 ? "blue" : "dark blue";
-  if (r > 180 && g > 140 && b < 100) return brightness > 180 ? "yellow" : "gold";
-  if (r > 160 && g < 120 && b > 140) return "purple";
-  if (r > 180 && g > 100 && b < 100) return brightness > 160 ? "orange" : "rust";
-  if (r > 150 && b > 130 && g < 120) return "pink";
-  if (g > 140 && b > 140 && r < 120) return "teal";
-  return "neutral";
-}
-
 // ── Prompt builder ─────────────────────────────────────────────────────────────
 function buildKontextPrompt(colorName: string, colorHex: string): string {
-  const word = hexToColorWord(colorHex);
   return (
-	`Recolor ONLY the fabric of the existing clothing to solid ${word} (${colorName}, hex ${colorHex}). ` +
-	`The dress/garment shape, neckline, cut, collar, sleeves, buttons, and all fabric details must remain IDENTICAL. ` +
-	`DO NOT change the hair color, hair style, or hair texture in any way — hair must remain EXACTLY as in the original. ` +
-	`The person's face, eyes, nose, lips, skin tone, and expression must remain IDENTICAL. ` +
-	`The background must remain IDENTICAL. ` +
-	`This is a fabric dye operation — ONLY the color of the cloth changes. Hair, face, background stay exactly the same.`
+    `Recolor ONLY the clothing and garment fabric in this photo to the color "${colorName}" (hex ${colorHex}). ` +
+    `STRICT RULES — the following must remain pixel-perfect identical to the original:\n` +
+    `• SKIN: every pixel of skin — face, forehead, nose, eyes, lips, chin, jaw, neck, collarbone, ` +
+    `shoulders, arms, hands, and any other body skin — must NOT change color at all.\n` +
+    `• HAIR: color, texture, style, and sheen of hair must remain exactly as in the original.\n` +
+    `• BACKGROUND: walls, floor, furniture, objects, and environment must remain exactly as in the original.\n` +
+    `• GARMENT STRUCTURE: the silhouette, cut, neckline, collar, sleeves, buttons, pockets, and ` +
+    `all structural details of the clothing must remain identical — only the fabric color changes.\n` +
+    `Think of this as applying professional fabric dye: the dye penetrates only textile fibers and ` +
+    `cannot touch skin, hair, or any non-fabric surface. ` +
+    `Apply the color "${colorName}" exclusively to the clothing/garment fabric.`
   );
 }
 
@@ -166,13 +141,15 @@ export async function runSingleColorSwatch(
 }
 
 /**
- * Generate 6 best-color swatch previews using prunaai/flux-kontext-fast.
+ * Generate color swatch previews using prunaai/flux-kontext-fast.
+ * Indices 0-5  = bestColors[0-5]  (isBest: true)
+ * Indices 6-11 = avoidColors[0-5] (isBest: false)
  * @deprecated Prefer calling runSingleColorSwatch per slot to avoid Vercel timeouts.
  */
 export async function generateAllColorSwatchPreviews(
   selfieBuf: Buffer,
   bestColors: { name: string; hex: string }[],
-  _avoidColors: { name: string; hex: string }[],  // unused — avoid colors are CSS-only
+  avoidColors: { name: string; hex: string }[],
   _rekognitionFace: unknown,   // unused — Flux Kontext needs no face data
   replicateToken: string,
   skipSlots: Set<number> = new Set(), // already-ready slot indices to skip
@@ -183,7 +160,8 @@ export async function generateAllColorSwatchPreviews(
   }
 
   const jobs: SwatchColorEntry[] = [
-	...bestColors.slice(0, 6).map((c, i) => ({ index: i, name: c.name, hex: c.hex, isBest: true })),
+	...bestColors.slice(0, 6).map((c, i) => ({ index: i,     name: c.name, hex: c.hex, isBest: true  })),
+	...avoidColors.slice(0, 6).map((c, i) => ({ index: i + 6, name: c.name, hex: c.hex, isBest: false })),
   ].filter((job) => !skipSlots.has(job.index)); // skip already-ready slots
 
   const results: SwatchResult[] = [];

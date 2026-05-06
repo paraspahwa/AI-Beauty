@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const assets = existingAssets?.assets as Record<string, unknown> | undefined;
     if (assets) {
       const swatches = (assets.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
-      const allReady = swatches.length >= 6 && swatches.every((s) => s.status === "ready");
+      const allReady = swatches.length >= 12 && swatches.every((s) => s.status === "ready");
       if (allReady) {
         return NextResponse.json({ skipped: true, reason: "already_complete" });
       }
@@ -171,16 +171,29 @@ export async function POST(req: NextRequest) {
     const seasonKey   = normalizeSeasonKey(colorResult?.season ?? "");
     const palette     = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
     const bestSix     = palette.best;
+    const avoidSix    = palette.avoid;
 
     const existingSwatches =
       (assets?.colorSwatchPreviews as
         { path: string; status: "pending" | "ready" | "failed" | "missing"; mime: string; error: string | null }[]
         | undefined);
 
-    visualAssets.assets.colorSwatchPreviews = bestSix.map((_c, i) => {
-      const ex = existingSwatches?.[i];
+    // Indices 0-5 = best colors, 6-11 = avoid colors
+    const allTwelve = [
+      ...bestSix.map((_c, i) => ({
+        index: i,
+        path: `${visualAssets.basePath}color-swatch-${i}.jpg`,
+      })),
+      ...avoidSix.map((_c, i) => ({
+        index: i + 6,
+        path: `${visualAssets.basePath}color-swatch-${i + 6}.jpg`,
+      })),
+    ];
+
+    visualAssets.assets.colorSwatchPreviews = allTwelve.map(({ index, path }) => {
+      const ex = existingSwatches?.[index];
       if (ex?.status === "ready") return { path: ex.path, status: "ready" as const, mime: ex.mime, error: ex.error };
-      return { path: `${visualAssets.basePath}color-swatch-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null };
+      return { path, status: "missing" as const, mime: "image/jpeg", error: null };
     });
 
     const readySlotIndices = new Set(
@@ -192,7 +205,7 @@ export async function POST(req: NextRequest) {
     // Run all three generation jobs concurrently to stay within maxDuration
     const [colorSwatchResults, glassesResults, hairstyleResults] = await Promise.all([
       generateAllColorSwatchPreviews(
-        buffer, bestSix, [], row.rekognition,
+        buffer, bestSix, avoidSix, row.rekognition,
         env.replicate.apiToken, readySlotIndices,
       ).catch((err) => {
         console.warn("[trigger-visuals] swatches failed:", (err as Error).message);

@@ -16,8 +16,9 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * POST /api/reports/[id]/visuals/colors?slot=N
  *
- * Generates exactly ONE color swatch (slot N, 0-5) per invocation using
- * Flux Kontext Fast. The client fires 6 parallel requests — each becomes a
+ * Generates exactly ONE color swatch (slot N, 0-11) per invocation using
+ * Flux Kontext Fast. Slots 0-5 = best colors, slots 6-11 = avoid colors.
+ * The client fires 12 parallel requests — each becomes a
  * separate Vercel function invocation so no single call can exceed the 60 s
  * function limit.
  *
@@ -32,11 +33,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params;
     if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // ?slot=N (0-5) — required
+    // ?slot=N (0-11) — required; 0-5 = best colors, 6-11 = avoid colors
     const slotParam = req.nextUrl.searchParams.get("slot");
-    const slotNum = slotParam !== null && /^[0-5]$/.test(slotParam) ? parseInt(slotParam, 10) : null;
+    const slotNum = slotParam !== null && /^(?:[0-9]|1[01])$/.test(slotParam) ? parseInt(slotParam, 10) : null;
     if (slotNum === null) {
-      return NextResponse.json({ error: "slot parameter (0-5) is required" }, { status: 400 });
+      return NextResponse.json({ error: "slot parameter (0-11) is required" }, { status: 400 });
     }
 
     const supabase = await createSupabaseServerClient();
@@ -69,8 +70,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const colorResult = row.color_analysis as ColorAnalysisResult;
     const seasonKey = normalizeSeasonKey(colorResult?.season ?? "");
     const palette   = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
-    const bestSix   = palette.best.slice(0, 6);
-    const color     = bestSix[slotNum];
+    // Slot 0-5 = best colors; slot 6-11 = avoid colors
+    const isBestSlot = slotNum < 6;
+    const color = isBestSlot
+      ? palette.best.slice(0, 6)[slotNum]
+      : palette.avoid.slice(0, 6)[slotNum - 6];
 
     if (!color) return NextResponse.json({ error: "Slot out of range for this season" }, { status: 400 });
 
