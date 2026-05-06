@@ -153,10 +153,23 @@ export interface SwatchResult {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 /**
+ * Generate a single color swatch preview for one slot.
+ * Used by POST /visuals/colors?slot=N — each call is its own Vercel invocation
+ * so we never risk hitting the 60 s function timeout.
+ */
+export async function runSingleColorSwatch(
+  selfieBuf: Buffer,
+  colorName: string,
+  colorHex: string,
+  replicateToken: string,
+): Promise<Buffer> {
+  if (!replicateToken) throw new Error("No Replicate token");
+  return runFluxKontext(selfieBuf, colorName, colorHex, replicateToken);
+}
+
+/**
  * Generate 6 best-color swatch previews using prunaai/flux-kontext-fast.
- * Avoid colors are now rendered as CSS circles in the UI (Phase 2 cost reduction).
- * Returns only successfully generated slots; failed slots are skipped and
- * the UI falls back to static color circles.
+ * @deprecated Prefer calling runSingleColorSwatch per slot to avoid Vercel timeouts.
  */
 export async function generateAllColorSwatchPreviews(
   selfieBuf: Buffer,

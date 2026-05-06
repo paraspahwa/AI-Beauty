@@ -110,9 +110,15 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       if (!colorsRunning.current) {
         colorsRunning.current = true;
         setColorsGenerating(true);
-        fetch(`/api/reports/${report.id}/visuals/colors`, { method: "POST" })
-          .catch(() => { /* server logs the error; slots show as "failed" in UI */ })
-          .finally(() => { colorsRunning.current = false; setColorsGenerating(false); });
+        // Fire one request per slot — each is a separate Vercel invocation (~15-30 s each),
+        // so no single call can hit the 60 s function limit.
+        // All 6 run truly in parallel across 6 separate server instances.
+        Promise.all(
+          Array.from({ length: 6 }, (_, slot) =>
+            fetch(`/api/reports/${report.id}/visuals/colors?slot=${slot}`, { method: "POST" })
+              .catch(() => { /* server logs error; this slot stays as CSS circle */ }),
+          ),
+        ).finally(() => { colorsRunning.current = false; setColorsGenerating(false); });
       }
       await refresh();
     } catch {
