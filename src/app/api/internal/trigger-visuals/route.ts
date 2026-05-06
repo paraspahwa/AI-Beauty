@@ -21,6 +21,8 @@ import {
   createVisualAssetsSkeleton,
   generateLandmarkOverlay,
   generatePaletteBoard,
+  generateGlassesPreviews,
+  generateHairstylePreviews,
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
@@ -139,13 +141,13 @@ export async function POST(req: NextRequest) {
       visualAssets.assets.paletteBoard!.error = (err as Error).message;
     }
 
-    // ── Try-on previews (glasses + hairstyle) ────────────────────────────────
-    // Phase 5.1: Glasses and hairstyle previews are now generated lazily on the
-    // client when the user first opens those tabs. Pre-populate skeleton slots
-    // with "missing" status so the client UI knows tabs need triggering.
+    // ── Try-on previews: EAGER pre-generation (glasses + hairstyle) ─────────
+    // All 3 glasses and 3 hairstyle previews are generated here at report-creation
+    // time so every tab is pre-populated. Runs concurrently with color swatches.
     const glassesResult   = row.glasses   as GlassesResult;
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
+    // Initialise skeleton slots (will be overwritten with "ready" on success)
     visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
       .slice(0, 3)
       .map((s, i) => ({
@@ -165,8 +167,6 @@ export async function POST(req: NextRequest) {
     }));
 
     // ── Color swatches ───────────────────────────────────────────────────────
-    // Phase 2: Only generate 6 "best" color swatches. Avoid colors are shown as
-    // CSS circles only (no AI try-on image).
     const colorResult = row.color_analysis as ColorAnalysisResult;
     const seasonKey   = normalizeSeasonKey(colorResult?.season ?? "");
     const palette     = SEASON_COLOR_PALETTES[seasonKey] ?? SEASON_COLOR_PALETTES["Soft Autumn"]!;
@@ -189,15 +189,26 @@ export async function POST(req: NextRequest) {
         .filter((i) => i >= 0),
     );
 
-    // Generate only color swatches in the background (glasses/hairstyle are lazy)
-    const colorSwatchResults = await generateAllColorSwatchPreviews(
-      buffer, bestSix, [], row.rekognition,
-      env.replicate.apiToken, readySlotIndices,
-    ).catch((err) => {
-      console.warn("[trigger-visuals] swatches failed:", (err as Error).message);
-      return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
-    });
+    // Run all three generation jobs concurrently to stay within maxDuration
+    const [colorSwatchResults, glassesResults, hairstyleResults] = await Promise.all([
+      generateAllColorSwatchPreviews(
+        buffer, bestSix, [], row.rekognition,
+        env.replicate.apiToken, readySlotIndices,
+      ).catch((err) => {
+        console.warn("[trigger-visuals] swatches failed:", (err as Error).message);
+        return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
+      }),
+      generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
+        console.warn("[trigger-visuals] glasses failed:", (err as Error).message);
+        return [] as { index: number; buffer: Buffer }[];
+      }),
+      generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
+        console.warn("[trigger-visuals] hairstyle failed:", (err as Error).message);
+        return [] as { index: number; buffer: Buffer; style: string }[];
+      }),
+    ]);
 
+    // Upload color swatches
     for (const { index, buffer: imgBuf } of colorSwatchResults) {
       const asset = visualAssets.assets.colorSwatchPreviews?.[index];
       if (!asset) continue;
@@ -206,13 +217,34 @@ export async function POST(req: NextRequest) {
       asset.status = upErr ? "failed" : "ready";
       if (upErr) asset.error = upErr.message;
     }
-
-    // Mark any still-missing swatch slots as failed so UI stops spinning
     for (const asset of visualAssets.assets.colorSwatchPreviews ?? []) {
-      if (asset.status === "missing") {
-        asset.status = "failed";
-        asset.error = "No AI preview generated";
-      }
+      if (asset.status === "missing") { asset.status = "failed"; asset.error = "No AI preview generated"; }
+    }
+
+    // Upload glasses previews
+    for (const { index, buffer: imgBuf } of glassesResults) {
+      const asset = visualAssets.assets.glassesPreviews?.[index];
+      if (!asset) continue;
+      const { error: upErr } = await admin.storage.from(env.supabase.bucket)
+        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+      asset.status = upErr ? "failed" : "ready";
+      if (upErr) asset.error = upErr.message;
+    }
+    for (const asset of visualAssets.assets.glassesPreviews ?? []) {
+      if (asset.status === "missing") { asset.status = "failed"; asset.error = "No AI preview generated"; }
+    }
+
+    // Upload hairstyle previews
+    for (const { index, buffer: imgBuf } of hairstyleResults) {
+      const asset = visualAssets.assets.hairstylePreviews?.[index];
+      if (!asset) continue;
+      const { error: upErr } = await admin.storage.from(env.supabase.bucket)
+        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+      asset.status = upErr ? "failed" : "ready";
+      if (upErr) asset.error = upErr.message;
+    }
+    for (const asset of visualAssets.assets.hairstylePreviews ?? []) {
+      if (asset.status === "missing") { asset.status = "failed"; asset.error = "No AI preview generated"; }
     }
 
     // ── Persist ──────────────────────────────────────────────────────────────

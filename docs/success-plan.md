@@ -51,7 +51,8 @@
 | Premium fallback | **gpt-4o** only on low-confidence retries | Spend the $0.01 only when the cheap path under-confidences. |
 | Face detection | **AWS Rekognition DetectFaces (DEFAULT attrs)** | $0.001/call; pipeline already degrades gracefully. |
 | Image gen (try-ons) | **Flux Kontext via Replicate** | ~30% cheaper than SDXL, better identity preservation. |
-| Caching | **SHA-256 selfie dedupe + lazy tab generation** | Most users never open all 5 tabs → don't pay for them. |
+| Caching | **SHA-256 selfie dedupe** | Same selfie = return cached report instantly, zero AI cost. |
+| Eager generation | **All 12 images pre-generated at report creation** | Colors (6) + Hairstyle (3) + Glasses (3) generated concurrently in trigger-visuals; every tab is pre-populated when user arrives. |
 | PDF | **Puppeteer-core + @sparticuz/chromium-min on Vercel** | Already wired; $0 marginal. |
 | CDN / Images | **Vercel + Supabase signed URLs** | $0 marginal at small scale. |
 | Email (magic links) | **Supabase built-in** initially → **Resend free tier** (3k/mo) when branding matters | $0. |
@@ -63,7 +64,8 @@
 
 | Item | $ / report |
 |------|-----------|
-| AI + Replicate (Phase 5) | 0.25 |
+| AI (GPT-4o-mini analysis + Rekognition) | 0.21 |
+| Replicate — 12 images × $0.003 (Flux Kontext Fast) | 0.036 |
 | Razorpay fee (~2%) | 0.20 |
 | Supabase + Vercel amortised (assume 1k reports/mo on Pro tiers $45/mo) | 0.05 |
 | **Total COGS** | **~$0.50** |
