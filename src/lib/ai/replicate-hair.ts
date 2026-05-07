@@ -1,18 +1,25 @@
 /**
- * Hairstyle try-on generation — v3 (Flux Kontext Fast)
+ * Hairstyle try-on generation — v4 (dual-model strategy)
  *
- * Replaces SDXL inpainting (v2) with prunaai/flux-kontext-fast:
- *   - No mask or faceBox geometry required
- *   - Instruction-based: "restyle hair to [style name]"
- *   - ~30% cheaper per prediction vs SDXL, better face preservation
+ * Primary:  black-forest-labs/flux-kontext-pro
+ *   - Instruction-based image editing, no mask required
+ *   - Best face preservation + photorealism
+ *   - Correct input param: input_image (not img_cond_path)
+ *
+ * Fallback: fofr/become-image (SDXL + IP-Adapter)
+ *   - Purpose-built for style-preserving face transfer
+ *   - Kicks in automatically if Pro fails or times out
  */
 
 import Replicate from "replicate";
 import sharp from "sharp";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
-const SELFIE_SEND_SIZE = 640;
+/** Primary: BFL's full-quality instruction-based editor */
+const FLUX_KONTEXT_PRO   = "black-forest-labs/flux-kontext-pro" as const;
+/** Fallback: SDXL + IP-Adapter face-preserving style transfer */
+const BECOME_IMAGE_MODEL = "fofr/become-image:4af11083a4e2c9dd1b1f18ce37ade3f4d38d21e8d3a62a9c3b7fcf1d8b53db8" as const;
+const SELFIE_SEND_SIZE = 768;
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
 const MAX_CONCURRENCY = 2;
@@ -56,22 +63,35 @@ function hexToColourWord(hex: string): string {
   return "black";
 }
 
-// ── Prompt builder ─────────────────────────────────────────────────────────────
-function buildPrompt(styleName: string, hairHex: string): string {
+// ── Prompt builders ─────────────────────────────────────────────────────────────
+function buildPromptPro(styleName: string, hairHex: string): string {
   const colour = hexToColourWord(hairHex);
   return (
-    `Restyle the hair to ${styleName} while keeping the same ${colour} hair color. ` +
-    `The person's face, eyes, nose, lips, skin tone, expression, clothing, and background must remain EXACTLY the same. ` +
-    `Only the hair style and shape changes — color and everything else stays identical. ` +
-    `Photorealistic beauty portrait, natural studio lighting.`
+    `Restyle the person's hair to ${styleName} with ${colour} hair color. ` +
+    `Apply realistic hair texture, natural volume, strand definition, and lifelike sheen for the ${styleName} style. ` +
+    `The hairline, part, and overall shape should match a professional ${styleName} cut. ` +
+    `The face, skin tone, eyes, nose, lips, beard, eyebrows, expression, clothing, accessories, and background must remain COMPLETELY UNCHANGED — pixel-perfect identity preservation. ` +
+    `Photorealistic beauty portrait, natural studio lighting, no cartoon or illustration style.`
+  );
+}
+
+function buildPromptFallback(styleName: string, hairHex: string): string {
+  const colour = hexToColourWord(hairHex);
+  return (
+    `A photorealistic portrait with ${styleName} hairstyle in ${colour} color. ` +
+    `Studio lighting, natural skin, sharp facial features.`
   );
 }
 
 // ── Single preview generator ───────────────────────────────────────────────────
 /**
- * Generate one photorealistic hairstyle try-on using Flux Kontext Fast.
- * No mask or faceBox required — the model handles the edit from the prompt.
- * _faceBox param kept for API compatibility with callers; it is unused.
+ * Generate one photorealistic hairstyle try-on.
+ *
+ * Strategy:
+ *  1. Try flux-kontext-pro (best quality, instruction-based)
+ *  2. On failure → fallback to fofr/become-image (IP-Adapter style transfer)
+ *
+ * _faceBox param kept for API compatibility with callers; it is unused here.
  */
 export async function replicateHairPreview(
   selfieBuf: Buffer,
@@ -83,30 +103,57 @@ export async function replicateHairPreview(
   const smallBuf = await sharp(selfieBuf)
     .rotate()
     .resize(SELFIE_SEND_SIZE, SELFIE_SEND_SIZE, { fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 80 })
+    .jpeg({ quality: 85 })
     .toBuffer();
 
   const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
   const client = getClient(replicateToken);
 
-  const output = await client.run(FLUX_KONTEXT_MODEL, {
-    input: {
-      img_cond_path:       imageDataUri,
-      prompt:              buildPrompt(styleName, hairHex),
-      output_format:       "jpg",
-      output_quality:      85,
-      image_size:          512,
-      num_inference_steps: 4,
-    },
-  });
-
-  const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
-  if (!url) throw new Error("Flux Kontext returned no output URL");
-
-  const TRUSTED_PREFIXES = ["https://"];
-  if (!TRUSTED_PREFIXES.some((p) => url.startsWith(p))) {
-    throw new Error(`Unexpected output URL from Replicate: ${url.slice(0, 60)}`);
+  // ── Option 1: flux-kontext-pro ───────────────────────────────────────────
+  let url: string | null = null;
+  try {
+    const output = await client.run(FLUX_KONTEXT_PRO, {
+      input: {
+        input_image:      imageDataUri,
+        prompt:           buildPromptPro(styleName, hairHex),
+        output_format:    "jpg",
+        output_quality:   92,
+        aspect_ratio:     "3:4",
+        safety_tolerance: 2,
+      },
+    });
+    const raw: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
+    if (raw?.startsWith("https://")) url = raw;
+    else console.warn(`[replicate-hair] flux-kontext-pro unexpected URL, falling back`);
+  } catch (err) {
+    console.warn(`[replicate-hair] flux-kontext-pro failed (${(err as Error).message}), trying fallback`);
   }
+
+  // ── Option 2: fofr/become-image (IP-Adapter fallback) ───────────────────
+  if (!url) {
+    try {
+      const output = await client.run(BECOME_IMAGE_MODEL, {
+        input: {
+          image:            imageDataUri,
+          prompt:           buildPromptFallback(styleName, hairHex),
+          image_strength:   0.55,       // preserve face identity
+          denoising_start:  0.45,
+          output_format:    "jpg",
+          output_quality:   90,
+          negative_prompt:  "deformed face, disfigured, cartoon, painting, low quality, blurry",
+        },
+      });
+      const raw: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
+      if (raw?.startsWith("https://")) {
+        url = raw;
+        console.info(`[replicate-hair] used fallback model for "${styleName}"`);
+      }
+    } catch (err) {
+      console.warn(`[replicate-hair] fallback also failed: ${(err as Error).message}`);
+    }
+  }
+
+  if (!url) throw new Error(`Both models failed for style "${styleName}"`);
 
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
@@ -120,10 +167,9 @@ export async function replicateHairPreview(
 
 // ── Batch generator with concurrency cap ───────────────────────────────────────
 /**
- * Generate up to 3 hairstyle previews in parallel.
- * Concurrency capped at MAX_CONCURRENCY to stay under Replicate rate limits.
+ * Generate up to 5 hairstyle previews (dual-model: pro + fallback per slot).
+ * Concurrency capped at MAX_CONCURRENCY to stay within Replicate rate limits.
  * Returns array of { index, buffer, style } for successful generations.
- * faceBox param kept for API compatibility; Flux Kontext does not use it.
  */
 export async function replicateHairPreviewBatch(
   selfieBuf: Buffer,
