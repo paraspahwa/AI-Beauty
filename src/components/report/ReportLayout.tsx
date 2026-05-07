@@ -346,14 +346,14 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       photoUrl={report.imageUrl}
                       swatchesGenerating={colorsGenerating}
                       bestColorPreviewUrls={
-                        report.visualAssets?.assets.colorSwatchPreviews
+                        report.visualAssets?.assets?.colorSwatchPreviews
                           ?.slice(0, 6)
                           .map((a: { status: string; signedUrl?: string }) =>
                             a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
                           )
                       }
                       avoidColorPreviewUrls={
-                        report.visualAssets?.assets.colorSwatchPreviews
+                        report.visualAssets?.assets?.colorSwatchPreviews
                           ?.slice(6, 12)
                           .map((a: { status: string; signedUrl?: string }) =>
                             a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
@@ -405,7 +405,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <SpectaclesCard
                       data={report.glasses}
                       photoUrl={report.imageUrl}
-                      previewSlots={report.visualAssets?.assets.glassesPreviews}
+                      previewSlots={report.visualAssets?.assets?.glassesPreviews}
                       reportId={report.id}
                       onRefresh={refresh}
                       faceShape={report.faceShape?.shape}
@@ -435,7 +435,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     <HairstyleCard
                       data={report.hairstyle}
                       photoUrl={report.imageUrl}
-                      previewSlots={report.visualAssets?.assets.hairstylePreviews}
+                      previewSlots={report.visualAssets?.assets?.hairstylePreviews}
                       reportId={report.id}
                       onRefresh={refresh}
                       faceShape={report.faceShape?.shape}

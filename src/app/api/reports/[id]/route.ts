@@ -37,21 +37,24 @@ async function resolveVisualAssets(
 
   if (!visualAssets) return undefined;
 
+  // Guard against malformed JSONB where assets could be null/undefined
+  const safeAssets = visualAssets.assets ?? ({} as typeof visualAssets.assets);
+
   const out: ReportVisualAssets = {
     ...visualAssets,
     assets: {
-      ...visualAssets.assets,
-      landmarkOverlay: visualAssets.assets.landmarkOverlay
-        ? { ...visualAssets.assets.landmarkOverlay }
+      ...safeAssets,
+      landmarkOverlay: safeAssets.landmarkOverlay
+        ? { ...safeAssets.landmarkOverlay }
         : undefined,
-      paletteBoard: visualAssets.assets.paletteBoard
-        ? { ...visualAssets.assets.paletteBoard }
+      paletteBoard: safeAssets.paletteBoard
+        ? { ...safeAssets.paletteBoard }
         : undefined,
-      glassesPreviews: visualAssets.assets.glassesPreviews
-        ? [...visualAssets.assets.glassesPreviews]
+      glassesPreviews: safeAssets.glassesPreviews
+        ? [...safeAssets.glassesPreviews]
         : undefined,
-      hairstylePreviews: visualAssets.assets.hairstylePreviews
-        ? [...visualAssets.assets.hairstylePreviews]
+      hairstylePreviews: safeAssets.hairstylePreviews
+        ? [...safeAssets.hairstylePreviews]
         : undefined,
     },
   };

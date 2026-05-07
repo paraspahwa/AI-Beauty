@@ -64,21 +64,24 @@ async function resolveVisualAssets(
 
   if (!visualAssets) return undefined;
 
+  // Guard against malformed JSONB where assets could be null/undefined
+  const safeAssets = visualAssets.assets ?? ({} as typeof visualAssets.assets);
+
   const out: ReportVisualAssets = {
     ...visualAssets,
     assets: {
-      ...visualAssets.assets,
-      landmarkOverlay: visualAssets.assets.landmarkOverlay
-        ? { ...visualAssets.assets.landmarkOverlay }
+      ...safeAssets,
+      landmarkOverlay: safeAssets.landmarkOverlay
+        ? { ...safeAssets.landmarkOverlay }
         : undefined,
-      paletteBoard: visualAssets.assets.paletteBoard
-        ? { ...visualAssets.assets.paletteBoard }
+      paletteBoard: safeAssets.paletteBoard
+        ? { ...safeAssets.paletteBoard }
         : undefined,
-      glassesPreviews: visualAssets.assets.glassesPreviews
-        ? [...visualAssets.assets.glassesPreviews]
+      glassesPreviews: safeAssets.glassesPreviews
+        ? [...safeAssets.glassesPreviews]
         : undefined,
-      hairstylePreviews: visualAssets.assets.hairstylePreviews
-        ? [...visualAssets.assets.hairstylePreviews]
+      hairstylePreviews: safeAssets.hairstylePreviews
+        ? [...safeAssets.hairstylePreviews]
         : undefined,
     },
   };
@@ -156,7 +159,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   }
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
-  const visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
+  let visualAssets: Awaited<ReturnType<typeof resolveVisualAssets>> = undefined;
+  try {
+    visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
+  } catch (vaErr) {
+    console.warn("[report/page] resolveVisualAssets failed — rendering without visuals:", (vaErr as Error).message);
+  }
 
   // Resolve pipeline_meta: prefer direct column, fall back to recommendations row
   let pipelineMeta = (row.pipeline_meta as CompiledReport["pipelineMeta"]) ?? undefined;
