@@ -461,6 +461,7 @@ export function HairstyleCard({
   hairType?: string;
 }) {
   const [generatingSlots, setGeneratingSlots] = React.useState<Set<number>>(new Set());
+  const [generatingAll, setGeneratingAll] = React.useState(false);
 
   async function generateSlot(index: number) {
     if (!reportId || generatingSlots.has(index)) return;
@@ -475,18 +476,34 @@ export function HairstyleCard({
     }
   }
 
+  async function generateAll() {
+    if (!reportId || generatingAll) return;
+    setGeneratingAll(true);
+    // Trigger all 5 slots in parallel — server handles caching (skips settled slots)
+    try {
+      await Promise.all(
+        [0, 1, 2, 3, 4].map((i) =>
+          fetch(`/api/reports/${reportId}/visuals?type=hairstyle&index=${i}`, { method: "POST" }).catch(() => {}),
+        ),
+      );
+      onRefresh?.();
+    } finally {
+      setGeneratingAll(false);
+    }
+  }
+
   // Auto-trigger generation for any missing slots when the card first mounts.
-  // This removes the need for the user to click "Generate Preview" manually.
   const autoTriggered = React.useRef(false);
   React.useEffect(() => {
     if (!reportId || autoTriggered.current) return;
-    const missingSlots = [0, 1, 2].filter((i) => {
+    const missingSlots = [0, 1, 2, 3, 4].filter((i) => {
       const slot = previewSlots?.[i];
       return !slot || slot.status === "missing" || slot.status === "failed";
     });
     if (missingSlots.length === 0) return;
     autoTriggered.current = true;
-    missingSlots.forEach((i) => generateSlot(i));
+    // Auto-generate all missing slots in one batch call (no index param = all missing)
+    generateAll();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId, previewSlots]);
   const flatteningStyles  = data.styles.slice(0, 5);
@@ -651,17 +668,46 @@ export function HairstyleCard({
 
         {/* ── Most Flattering Styles ── */}
         <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
-          <div className="flex items-center justify-center gap-3 mb-5">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <span style={{ color: "#C8A96E" }}>&#9825;</span>
             <p className={sectionTitle} style={sT}>Most Flattering Styles</p>
             <span style={{ color: "#C8A96E" }}>&#9825;</span>
           </div>
+
+          {/* Generate All button — shown when any slot is not yet ready */}
+          {reportId && (() => {
+            const anyMissing = [0, 1, 2, 3, 4].some((i) => {
+              const slot = previewSlots?.[i];
+              return !slot || slot.status === "missing" || slot.status === "failed";
+            });
+            const allReady = [0, 1, 2, 3, 4].every((i) => previewSlots?.[i]?.status === "ready");
+            if (allReady) return null;
+            return (
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={generateAll}
+                  disabled={generatingAll}
+                  className="flex items-center gap-2 rounded-full px-5 py-2 text-[12px] font-semibold transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{ background: "#9C7D5B", color: "#fff", border: "none", cursor: generatingAll ? "default" : "pointer" }}
+                >
+                  {generatingAll ? (
+                    <>
+                      <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Generating All…
+                    </>
+                  ) : (
+                    <>✨ {anyMissing ? "Generate All Previews" : "Regenerate All"}</>
+                  )}
+                </button>
+              </div>
+            );
+          })()}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {flatteningStyles.map((s, i) => {
               const slot = previewSlots?.[i];
               const hasPreview = slot?.status === "ready" && slot.signedUrl;
-              const isGenerating = generatingSlots.has(i);
-              const canGenerate = i < 3 && reportId && (slot?.status === "missing" || slot?.status === "failed" || (!previewSlots && !previewUrls?.[i]));
+              const isGenerating = generatingSlots.has(i) || generatingAll;
+              const canGenerate = i < 5 && reportId && (slot?.status === "missing" || slot?.status === "failed" || (!previewSlots && !previewUrls?.[i]));
               const legacyUrl = previewUrls?.[i];
               return (
               <div
@@ -691,13 +737,8 @@ export function HairstyleCard({
                       return (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
                           <HairOverlay style={s.name} hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} />
-                          <button
-                            onClick={() => generateSlot(i)}
-                            className="rounded-full px-2 py-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
-                            style={{ background: "#9C7D5B", color: "#fff", border: "none", cursor: "pointer", zIndex: 10, position: "relative" }}
-                          >
-                            ✨ Generate Preview
-                          </button>
+                          <div className="animate-spin rounded-full h-6 w-6 border-2" style={{ borderColor: "#E8DDD0", borderTopColor: "#9C7D5B", zIndex: 10, position: "relative" }} />
+                          <span style={{ color: "#9C7D5B", fontSize: 10, position: "relative", zIndex: 10 }}>Queued…</span>
                         </div>
                       );
                     }

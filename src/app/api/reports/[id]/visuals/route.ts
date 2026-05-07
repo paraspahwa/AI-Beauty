@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // ?index=N (0-2) restricts generation to that single slot within the section (Phase 5.4).
     const sectionType = req.nextUrl.searchParams.get("type") as "glasses" | "hairstyle" | null;
     const slotIndexParam = req.nextUrl.searchParams.get("index");
-    const slotIndex = slotIndexParam !== null && /^[0-9]$/.test(slotIndexParam)
+    const slotIndex = slotIndexParam !== null && /^[0-4]$/.test(slotIndexParam)
       ? parseInt(slotIndexParam, 10)
       : null; // null = generate all slots in section
 
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
       } else {
         const hairstyleResult = row.hairstyle as HairstyleResult;
-        const allSlots = (hairstyleResult?.styles ?? []).slice(0, 3).map(
+        const allSlots = (hairstyleResult?.styles ?? []).slice(0, 5).map(
           (s, i) => {
             const ex = existingPreviews[i];
             if (ex?.status === "ready" || ex?.status === "failed") return ex;

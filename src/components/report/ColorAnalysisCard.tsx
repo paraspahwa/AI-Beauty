@@ -790,21 +790,18 @@ function ColorSwatch({
         ) : showSkeleton ? (
           /* Skeleton — only shown while actively waiting for AI preview */
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-1"
-            style={{ background: "#F5EFE7" }}
+            className="absolute inset-0 flex flex-col items-end justify-end gap-0.5 pb-6 pr-1 animate-pulse"
+            style={{ backgroundColor: hex, opacity: 0.75 }}
           >
-            <div className="h-10 w-10 rounded-full animate-pulse" style={{ backgroundColor: hex, opacity: 0.6 }} />
-            <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#9C7D5B" }}>{secondsLeft}s</span>
-            <span className="text-[7px] text-center px-1" style={{ color: "#B8A898" }}>generating…</span>
+            <span className="text-[10px] font-semibold tabular-nums text-white drop-shadow" style={{ lineHeight: 1 }}>{secondsLeft}s</span>
+            <span className="text-[7px] text-white drop-shadow" style={{ opacity: 0.85 }}>generating…</span>
           </div>
         ) : (
-          /* Static color circle — no AI preview available */
+          /* Static color fill — no AI preview available; fill the entire card area */
           <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ background: "#F5EFE7" }}
-          >
-            <div className="h-12 w-12 rounded-full" style={{ backgroundColor: hex }} />
-          </div>
+            className="absolute inset-0"
+            style={{ backgroundColor: hex }}
+          />
         )}
 
         {/* Color name label */}

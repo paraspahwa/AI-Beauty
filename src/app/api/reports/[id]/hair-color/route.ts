@@ -8,17 +8,17 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
+const FLUX_KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro" as const;
 
 function buildHairColorPrompt(colorName: string, colorHex: string): string {
   return (
-    `Change ONLY the hair color to ${colorName} (hex ${colorHex}). ` +
-    `Every strand of hair should be recolored to ${colorName} while preserving the exact hair style, ` +
-    `texture, waves, curls, and volume. ` +
-    `The person's face, skin tone, eyes, nose, lips, makeup, expression must remain IDENTICAL. ` +
-    `The clothing color and style must remain IDENTICAL. ` +
-    `The background must remain IDENTICAL. ` +
-    `This is strictly a hair dye operation — ONLY the hair color changes, nothing else.`
+    `Realistically dye the hair to ${colorName}. ` +
+    `Apply ${colorName} (${colorHex}) uniformly across every hair strand with natural light reflection, ` +
+    `subtle highlights, depth variation, and lifelike texture — not a flat painted overlay. ` +
+    `Preserve the exact hairstyle shape, volume, waves, and strand definition. ` +
+    `The face, skin tone, eyebrows, beard, eyes, expression, and all facial features must remain completely unchanged. ` +
+    `The clothing, accessories, and background must remain completely unchanged. ` +
+    `Photorealistic result only — no cartoon, painting, or illustration style.`
   );
 }
 
@@ -103,12 +103,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const output = await replicate.run(FLUX_KONTEXT_MODEL, {
       input: {
-        img_cond_path:       imageDataUri,
-        prompt:              buildHairColorPrompt(colorName, colorHex),
-        output_format:       "jpg",
-        output_quality:      85,
-        image_size:          512,
-        num_inference_steps: 4,
+        input_image:    imageDataUri,
+        prompt:         buildHairColorPrompt(colorName, colorHex),
+        output_format:  "jpg",
+        output_quality: 90,
+        aspect_ratio:   "3:4",
+        safety_tolerance: 2,
       },
     });
 

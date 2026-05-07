@@ -231,7 +231,7 @@ export async function generateHairstylePreviews(
   /** If provided, only generate previews for these slot indices (Phase 5.4 per-click). */
   indicesToGenerate?: number[],
 ): Promise<{ index: number; buffer: Buffer; style: string }[]> {
-  const flatteningStyles = hairstyle.styles.slice(0, 3);
+  const flatteningStyles = hairstyle.styles.slice(0, 5);
   const hairHex          = hairstyle.colors[0]?.hex ?? "#3B1F0A";
 
   if (env.replicate.isConfigured) {
