@@ -1,10 +1,12 @@
 /**
- * Glasses try-on generation — v2 (Flux Kontext Fast)
+ * Glasses try-on generation — v3 (Flux Kontext Pro)
  *
- * Replaces SDXL inpainting (v1) with prunaai/flux-kontext-fast:
- *   - No mask or faceBox geometry required
- *   - Instruction-based: "add [style] glasses" to the selfie
- *   - ~30% cheaper per prediction vs SDXL, better identity preservation
+ * Upgraded from prunaai/flux-kontext-fast → black-forest-labs/flux-kontext-pro:
+ *   - Significantly better face identity preservation
+ *   - More accurate frame placement and shape rendering
+ *   - No mask or faceBox geometry required — instruction-based
+ *   - Note: flux-kontext-apps/glasses does not yet exist on Replicate;
+ *     swap to it when BFL publishes the dedicated app.
  */
 
 import Replicate from "replicate";
@@ -12,7 +14,7 @@ import sharp from "sharp";
 import type { FaceBox } from "./replicate-hair";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
+const FLUX_KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro" as const;
 const SELFIE_SEND_SIZE = 640;
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
@@ -78,12 +80,12 @@ export async function replicateGlassesPreview(
 
   const output = await client.run(FLUX_KONTEXT_MODEL, {
     input: {
-      img_cond_path:       imageDataUri,
-      prompt:              buildPrompt(styleName),
-      output_format:       "jpg",
-      output_quality:      85,
-      image_size:          512,
-      num_inference_steps: 4,
+      input_image:      imageDataUri,   // flux-kontext-pro uses input_image, not img_cond_path
+      prompt:           buildPrompt(styleName),
+      output_format:    "jpg",
+      output_quality:   92,
+      aspect_ratio:     "match_input_image",
+      safety_tolerance: 2,
     },
   });
 

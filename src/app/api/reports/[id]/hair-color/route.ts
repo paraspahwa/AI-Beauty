@@ -8,18 +8,54 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const FLUX_KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro" as const;
+const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
 
-function buildHairColorPrompt(colorName: string, colorHex: string): string {
-  return (
-    `Realistically dye the hair to ${colorName}. ` +
-    `Apply ${colorName} (${colorHex}) uniformly across every hair strand with natural light reflection, ` +
-    `subtle highlights, depth variation, and lifelike texture — not a flat painted overlay. ` +
-    `Preserve the exact hairstyle shape, volume, waves, and strand definition. ` +
-    `The face, skin tone, eyebrows, beard, eyes, expression, and all facial features must remain completely unchanged. ` +
-    `The clothing, accessories, and background must remain completely unchanged. ` +
-    `Photorealistic result only — no cartoon, painting, or illustration style.`
-  );
+// Maps a free-text color name to the supported hair_color enum for change-haircut.
+// Full supported list: Blonde, Golden Blonde, Honey Blonde, Ash Blonde, Platinum Blonde,
+// Strawberry Blonde, Brunette, Black, Jet Black, Blue-Black, Dark Brown, Medium Brown,
+// Light Brown, Ash Brown, Chestnut, Caramel, Auburn, Copper, Red, Mahogany, Burgundy,
+// Silver, White, Titanium, Rose Gold, Blue, Purple, Pink, Green
+const HAIR_COLOR_ENUM_MAP: Record<string, string> = {
+  "blonde":            "Blonde",
+  "golden blonde":     "Golden Blonde",
+  "honey blonde":      "Honey Blonde",
+  "ash blonde":        "Ash Blonde",
+  "platinum blonde":   "Platinum Blonde",
+  "strawberry blonde": "Strawberry Blonde",
+  "brunette":          "Brunette",
+  "black":             "Black",
+  "jet black":         "Jet Black",
+  "blue-black":        "Blue-Black",
+  "dark brown":        "Dark Brown",
+  "medium brown":      "Medium Brown",
+  "light brown":       "Light Brown",
+  "ash brown":         "Ash Brown",
+  "chestnut":          "Chestnut",
+  "caramel":           "Caramel",
+  "auburn":            "Auburn",
+  "copper":            "Copper",
+  "red":               "Red",
+  "mahogany":          "Mahogany",
+  "burgundy":          "Burgundy",
+  "silver":            "Silver",
+  "white":             "White",
+  "titanium":          "Titanium",
+  "rose gold":         "Rose Gold",
+  "blue":              "Blue",
+  "purple":            "Purple",
+  "pink":              "Pink",
+  "green":             "Green",
+};
+
+function mapToHairColorEnum(colorName: string): string {
+  const key = colorName.toLowerCase().trim();
+  if (HAIR_COLOR_ENUM_MAP[key]) return HAIR_COLOR_ENUM_MAP[key];
+  // Partial match — e.g. "warm auburn" → "Auburn"
+  for (const [k, v] of Object.entries(HAIR_COLOR_ENUM_MAP)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+  // Fallback: capitalise and pass as-is (model may still handle it)
+  return colorName.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 /**
@@ -101,13 +137,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // and the TRUSTED_PREFIXES guard rejects every successful prediction.
     const replicate = new Replicate({ auth: env.replicate.apiToken, useFileOutput: false });
 
-    const output = await replicate.run(FLUX_KONTEXT_MODEL, {
+    const hairColorEnum = mapToHairColorEnum(colorName);
+    console.info(`[hair-color] "${colorName}" → enum "${hairColorEnum}"`);
+
+    const output = await replicate.run(CHANGE_HAIRCUT_MODEL, {
       input: {
-        input_image:    imageDataUri,
-        prompt:         buildHairColorPrompt(colorName, colorHex),
-        output_format:  "jpg",
-        output_quality: 90,
-        aspect_ratio:   "3:4",
+        input_image:      imageDataUri,
+        haircut:          "No change",   // color-only — preserve existing style
+        hair_color:       hairColorEnum,
+        gender:           "none",
+        aspect_ratio:     "match_input_image",
+        output_format:    "jpg",
         safety_tolerance: 2,
       },
     });

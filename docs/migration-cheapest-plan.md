@@ -20,20 +20,23 @@ Total infra cost: **$3–10/month** vs $150–400/month for Kubernetes.
 | `OPENAI_VISION_MODEL` | `gpt-4o` | Configured but **no longer called** — all pipeline stages now use miniModel |
 | `OPENAI_MINI_MODEL` | `gpt-4o-mini` | **All 8 pipeline stages** (face shape, color, skin vision, skin routine, features, glasses, hairstyle, summary) |
 | `FLUX_KONTEXT_MODEL` (color-swatch-v2.ts) | `prunaai/flux-kontext-fast` | 12 color swatch images, `num_inference_steps: 4`, concurrency 12 |
-| `FLUX_KONTEXT_MODEL` (replicate-glasses.ts) | `prunaai/flux-kontext-fast` | Glasses try-on (on-demand, user-triggered) |
-| `FLUX_KONTEXT_PRO` (replicate-hair.ts) | `black-forest-labs/flux-kontext-pro` | Hairstyle try-on primary model (on-demand) |
-| `FLUX_KONTEXT_MODEL` (hair-color/route.ts) | `black-forest-labs/flux-kontext-pro` | Hair color try-on (on-demand, user-triggered) |
+| `FLUX_KONTEXT_MODEL` (replicate-glasses.ts) | `black-forest-labs/flux-kontext-pro` ✦ | Glasses try-on (on-demand, user-triggered) |
+| `CHANGE_HAIRCUT_MODEL` (replicate-hair.ts) | `flux-kontext-apps/change-haircut` ✦✦ | Hairstyle try-on — structured enum inputs (on-demand) |
+| `CHANGE_HAIRCUT_MODEL` (hair-color/route.ts) | `flux-kontext-apps/change-haircut` ✦✦ | Hair color try-on — `haircut: "No change"` (on-demand) |
 
 > **Important change:** Color analysis and skin analysis were previously on `gpt-4o` (~$0.011/call).
 > Both are now on `gpt-4o-mini` (~$0.0003/call). This is a **~37x cost reduction** on those stages.
 > Skin stage is also split: `skin_vision` (mini + image) + `skin_routine` (mini text-only, no image tokens).
 
-> ⚠️ **Two-tier Replicate model split (confirmed by code audit):**
-> - `prunaai/flux-kontext-fast` → used for **color swatches + glasses** (cheap, ~$0.001/image)
-> - `black-forest-labs/flux-kontext-pro` → used for **hair color + hairstyle try-ons** (expensive, ~$0.04/image)
+> ⚠️ **Three-tier Replicate model split (confirmed by code audit):**
+> - `prunaai/flux-kontext-fast` → used for **color swatches** (cheap, ~$0.001/image)
+> - `black-forest-labs/flux-kontext-pro` ✦ → used for **glasses try-on** (upgraded from fast, ~$0.04/image)
+> - `flux-kontext-apps/change-haircut` ✦✦ → used for **hair color + hairstyle** (purpose-built BFL app, structured enum inputs, ~$0.04/image)
 >
-> Hair/hairstyle try-ons are **on-demand only** (user explicitly clicks "try on") — they are NOT auto-generated at report creation, so they do not appear in the baseline per-report cost.
-> They are an additional optional cost incurred per user interaction.
+> ✦ Upgraded from `prunaai/flux-kontext-fast` — better face identity preservation for glasses.
+> ✦✦ Replaced raw `flux-kontext-pro` — dedicated app, uses `haircut`/`hair_color`/`gender` enum fields instead of free-text prompts.
+>
+> Hair/hairstyle/glasses try-ons are **on-demand only** (user explicitly clicks) — NOT auto-generated at report creation.
 
 ### Per-report cost breakdown (current codebase):
 
@@ -59,14 +62,14 @@ Total infra cost: **$3–10/month** vs $150–400/month for Kubernetes.
 
 | Feature | Model | Cost per click |
 |---------|-------|---------------|
-| Glasses try-on | `prunaai/flux-kontext-fast` | ~$0.001 |
-| Hair color try-on | `black-forest-labs/flux-kontext-pro` ⚠️ | ~$0.04 |
-| Hairstyle try-on | `black-forest-labs/flux-kontext-pro` ⚠️ | ~$0.04–0.08 (primary + possible fallback) |
+| Glasses try-on | `black-forest-labs/flux-kontext-pro` ✦ | ~$0.04 |
+| Hair color try-on | `flux-kontext-apps/change-haircut` ✦✦ | ~$0.04 |
+| Hairstyle try-on | `flux-kontext-apps/change-haircut` ✦✦ | ~$0.04 (+ fallback to `fofr/become-image` if needed) |
 
-> ⚠️ Hair-related try-ons use **BFL's Pro model** — 40× more expensive than fast.
-> At current volume (early stage), this is low risk. If these features are hit frequently,
-> consider switching hair-color/route.ts and replicate-hair.ts to `prunaai/flux-kontext-fast`
-> to cut per-click cost from ~$0.04 → ~$0.001 (accepting slightly lower quality).
+> ✦ Upgraded from `prunaai/flux-kontext-fast` for better frame fidelity and identity preservation.
+> ✦✦ Purpose-built BFL app — uses structured `haircut`/`hair_color` enum inputs instead of free-text prompts.
+> Hair color try-on passes `haircut: "No change"` to preserve existing style and only recolor.
+> When `flux-kontext-apps/glasses` launches on Replicate, glasses try-on will migrate to it.
 
 ### Replicate cost update:
 - `num_inference_steps` reduced **20 → 4** for color swatches (Replicate bills by GPU-second, ~80% cheaper per image)
