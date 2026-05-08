@@ -15,15 +15,25 @@ Total infra cost: **$3–10/month** vs $150–400/month for Kubernetes.
 
 ### Model versions actually in use:
 
-| Env var | Default | Used for |
-|---------|---------|---------|
-| `OPENAI_VISION_MODEL` | `gpt-4o` | Configured but **no longer called** — all stages now use miniModel |
+| Env var / Constant | Default / Value | Used for |
+|--------------------|-----------------|---------|
+| `OPENAI_VISION_MODEL` | `gpt-4o` | Configured but **no longer called** — all pipeline stages now use miniModel |
 | `OPENAI_MINI_MODEL` | `gpt-4o-mini` | **All 8 pipeline stages** (face shape, color, skin vision, skin routine, features, glasses, hairstyle, summary) |
-| Replicate | `prunaai/flux-kontext-fast` | 12 color swatch images, `num_inference_steps: 4`, concurrency 12 |
+| `FLUX_KONTEXT_MODEL` (color-swatch-v2.ts) | `prunaai/flux-kontext-fast` | 12 color swatch images, `num_inference_steps: 4`, concurrency 12 |
+| `FLUX_KONTEXT_MODEL` (replicate-glasses.ts) | `prunaai/flux-kontext-fast` | Glasses try-on (on-demand, user-triggered) |
+| `FLUX_KONTEXT_PRO` (replicate-hair.ts) | `black-forest-labs/flux-kontext-pro` | Hairstyle try-on primary model (on-demand) |
+| `FLUX_KONTEXT_MODEL` (hair-color/route.ts) | `black-forest-labs/flux-kontext-pro` | Hair color try-on (on-demand, user-triggered) |
 
 > **Important change:** Color analysis and skin analysis were previously on `gpt-4o` (~$0.011/call).
 > Both are now on `gpt-4o-mini` (~$0.0003/call). This is a **~37x cost reduction** on those stages.
 > Skin stage is also split: `skin_vision` (mini + image) + `skin_routine` (mini text-only, no image tokens).
+
+> ⚠️ **Two-tier Replicate model split (confirmed by code audit):**
+> - `prunaai/flux-kontext-fast` → used for **color swatches + glasses** (cheap, ~$0.001/image)
+> - `black-forest-labs/flux-kontext-pro` → used for **hair color + hairstyle try-ons** (expensive, ~$0.04/image)
+>
+> Hair/hairstyle try-ons are **on-demand only** (user explicitly clicks "try on") — they are NOT auto-generated at report creation, so they do not appear in the baseline per-report cost.
+> They are an additional optional cost incurred per user interaction.
 
 ### Per-report cost breakdown (current codebase):
 
@@ -39,16 +49,30 @@ Total infra cost: **$3–10/month** vs $150–400/month for Kubernetes.
 | Glasses recommendations | GPT-4o-mini text-only | ~500 | ~$0.00008 |
 | Hairstyle recommendations | GPT-4o-mini text-only | ~500 | ~$0.00008 |
 | Summary compilation | GPT-4o-mini text-only | ~800 | ~$0.00012 |
-| Color swatches (12×) | Replicate flux-kontext-fast (4 steps) | 12 parallel jobs | ~$0.012 |
-| **Total per analysis** | | | **~$0.015** |
+| Color swatches (12×) | Replicate flux-kontext-**fast** (4 steps) | 12 parallel jobs | ~$0.012 |
+| **Total per analysis (auto-generated)** | | | **~$0.015** |
 
 > ✱ Downgraded from `gpt-4o` to `gpt-4o-mini` — `color_analysis` stage now uses `env.openai.miniModel`
 > ✱✱ Skin routine split into a separate text-only call — no image tokens, very cheap
 
+### On-demand try-on costs (user-triggered, NOT in baseline):
+
+| Feature | Model | Cost per click |
+|---------|-------|---------------|
+| Glasses try-on | `prunaai/flux-kontext-fast` | ~$0.001 |
+| Hair color try-on | `black-forest-labs/flux-kontext-pro` ⚠️ | ~$0.04 |
+| Hairstyle try-on | `black-forest-labs/flux-kontext-pro` ⚠️ | ~$0.04–0.08 (primary + possible fallback) |
+
+> ⚠️ Hair-related try-ons use **BFL's Pro model** — 40× more expensive than fast.
+> At current volume (early stage), this is low risk. If these features are hit frequently,
+> consider switching hair-color/route.ts and replicate-hair.ts to `prunaai/flux-kontext-fast`
+> to cut per-click cost from ~$0.04 → ~$0.001 (accepting slightly lower quality).
+
 ### Replicate cost update:
-- `num_inference_steps` reduced **20 → 4** (Replicate bills by GPU-second, ~80% cheaper per image)
-- Previous estimate: 12 × $0.003 = **$0.036**
-- Current estimate: 12 × $0.001 = **$0.012** (4 steps runs ~3–4s vs ~15–18s at 20 steps)
+- `num_inference_steps` reduced **20 → 4** for color swatches (Replicate bills by GPU-second, ~80% cheaper per image)
+- Color swatch previous estimate: 12 × $0.003 = **$0.036**
+- Color swatch current estimate: 12 × $0.001 = **$0.012** (4 steps runs ~3–4s vs ~15–18s at 20 steps)
+- Hair/hairstyle try-ons use `flux-kontext-pro`: ~$0.04/call (on-demand only — not in baseline)
 
 ### Monthly AI cost at different user volumes (updated):
 
@@ -394,8 +418,10 @@ Add to Vercel: `next.config.js` rewrites `/api/reports/*/pdf` → `https://ai-be
 | GPT-4o-mini text | Glasses | 100 calls × ~500 tok | $0.008 |
 | GPT-4o-mini text | Hairstyle | 100 calls × ~500 tok | $0.008 |
 | GPT-4o-mini text | Summary | 100 calls × ~800 tok | $0.012 |
-| Replicate flux-kontext-fast (4 steps) | 12 swatches | 1200 jobs × ~$0.001 | $1.20 |
-| **Total AI / 100 reports** | | | **~$1.50** |
+| Replicate flux-kontext-**fast** (4 steps) | 12 color swatches | 1200 jobs × ~$0.001 | $1.20 |
+| **Total AI / 100 reports (baseline)** | | | **~$1.50** |
+| *(optional)* Replicate flux-kontext-**pro** | Hair color try-on (on-demand) | per user click × $0.04 | varies |
+| *(optional)* Replicate flux-kontext-**pro** | Hairstyle try-on (on-demand) | per user click × $0.04–0.08 | varies |
 
 > ✱ Previously `gpt-4o` at $0.006/call each — now `gpt-4o-mini` at ~$0.0003/call
 > ✱✱ New split stage — no image tokens, cheapest call in the pipeline
