@@ -4,6 +4,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { ChevronLeft, ShoppingBag } from "lucide-react";
 import { WardrobeCapsuleCard } from "@/components/WardrobeCapsuleCard";
 import type { ColorAnalysisResult, SkinAnalysisResult } from "@/types/report";
+import type { GeneratedCapsule } from "@/app/api/capsule/generate/route";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ type StylePrefsRow = {
   color_season: string | null;
   undertone: string | null;
   skin_type: string | null;
-  prefs: { metals?: string[]; palette?: string[] } | null;
+  prefs: Record<string, unknown> | null;
 };
 
 type LatestReportData = {
@@ -45,6 +46,9 @@ export default async function WardrobeCapsulePage() {
 
   const prefs = prefsRow as StylePrefsRow | null;
   const latest = latestRow as LatestReportData | null;
+
+  // Extract cached capsule from prefs JSONB for SSR pre-load (avoids a client round-trip)
+  const initialCapsule = (prefs?.prefs?.generatedCapsule as GeneratedCapsule | undefined) ?? null;
 
   const hasData = !!prefs?.color_season || !!latest?.color_analysis;
 
@@ -90,7 +94,7 @@ export default async function WardrobeCapsulePage() {
           </Link>
         </div>
       ) : (
-        <WardrobeCapsuleCard prefs={prefs} latest={latest} />
+        <WardrobeCapsuleCard prefs={prefs} latest={latest} initialCapsule={initialCapsule} />
       )}
     </main>
   );

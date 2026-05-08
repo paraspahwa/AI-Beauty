@@ -83,6 +83,22 @@ export const env = {
     // Set INTERNAL_API_SECRET in .env.local and Vercel env vars.
     secret: optional(process.env.INTERNAL_API_SECRET),
   },
+  /**
+   * Affiliate programme identifiers.
+   *
+   * Amazon India Associates:
+   *   Register at https://associates.amazon.in → get your Associate Tag (e.g. "yoursite-21")
+   *   Set NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG=yoursite-21 in Vercel env vars
+   *
+   * Myntra (via affiliate networks):
+   *   Options: Admitad (admitad.com), VCommission (vcommission.com), or Cuelinks (cuelinks.com)
+   *   After approval, set NEXT_PUBLIC_MYNTRA_AFFILIATE_SID=<your tracking SID>
+   *   Update myntraUrl() in WardrobeCapsuleCard.tsx with the full deep-link pattern from your network.
+   */
+  affiliate: {
+    amazonTag: optional(process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG, ""),
+    myntraSid: optional(process.env.NEXT_PUBLIC_MYNTRA_AFFILIATE_SID, ""),
+  },
   /** Throws if any required server-side secret is missing. Call from server code. */
   assertServer() {
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);
