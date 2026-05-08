@@ -9,36 +9,63 @@ Total infra cost: **$3–10/month** vs $150–400/month for Kubernetes.
 
 ---
 
-## Current AI Cost Per Analysis (Actual Numbers)
+## Current AI Cost Per Analysis (Actual Numbers — Updated)
 
-### Per-report cost breakdown (one user submits one selfie):
+> Last audited against codebase: `src/lib/ai/pipeline.ts` + `src/lib/ai/color-swatch-v2.ts`
 
-| Step | Service | What Happens | Est. Cost |
-|------|---------|--------------|-----------|
-| Image compression | Sharp (free) | Resize to 512px | $0 |
-| Face detection | AWS Rekognition `DetectFaces` | 1 API call | ~$0.001 |
-| Face shape | GPT-4o-mini Vision | ~800 input tokens + image | ~$0.002 |
-| Color analysis | GPT-4o Vision | ~1200 input tokens + image | ~$0.006 |
-| Skin analysis | GPT-4o Vision | ~1000 input tokens + image | ~$0.005 |
-| Features (eyes/nose/lips) | GPT-4o-mini | ~600 input tokens | ~$0.001 |
-| Glasses recommendations | GPT-4o-mini | ~500 input tokens | ~$0.001 |
-| Hairstyle recommendations | GPT-4o-mini | ~500 input tokens | ~$0.001 |
-| Summary compilation | GPT-4o-mini | ~800 input tokens | ~$0.001 |
-| Color swatch previews (12x) | Replicate flux-kontext-fast | 12 × ~$0.003 | ~$0.036 |
-| **Total per analysis** | | | **~$0.054** |
+### Model versions actually in use:
 
-### Monthly AI cost at different user volumes:
+| Env var | Default | Used for |
+|---------|---------|---------|
+| `OPENAI_VISION_MODEL` | `gpt-4o` | Configured but **no longer called** — all stages now use miniModel |
+| `OPENAI_MINI_MODEL` | `gpt-4o-mini` | **All 8 pipeline stages** (face shape, color, skin vision, skin routine, features, glasses, hairstyle, summary) |
+| Replicate | `prunaai/flux-kontext-fast` | 12 color swatch images, `num_inference_steps: 4`, concurrency 12 |
+
+> **Important change:** Color analysis and skin analysis were previously on `gpt-4o` (~$0.011/call).
+> Both are now on `gpt-4o-mini` (~$0.0003/call). This is a **~37x cost reduction** on those stages.
+> Skin stage is also split: `skin_vision` (mini + image) + `skin_routine` (mini text-only, no image tokens).
+
+### Per-report cost breakdown (current codebase):
+
+| Step | Model | Tokens (approx) | Est. Cost |
+|------|-------|-----------------|-----------|
+| Image compression | Sharp (free) | — | $0 |
+| Face detection | AWS Rekognition DetectFaces | 1 API call | ~$0.001 |
+| Face shape | GPT-4o-mini Vision | ~800 + image (512px) | ~$0.0002 |
+| Color analysis | GPT-4o-mini Vision ✱ | ~1,200 + image (512px) | ~$0.0003 |
+| Skin vision | GPT-4o-mini Vision | ~1,000 + image (512px) | ~$0.0002 |
+| Skin routine | GPT-4o-mini text-only ✱✱ | ~500 (no image) | ~$0.00008 |
+| Features (eyes/nose/lips) | GPT-4o-mini Vision | ~600 + image (512px) | ~$0.0002 |
+| Glasses recommendations | GPT-4o-mini text-only | ~500 | ~$0.00008 |
+| Hairstyle recommendations | GPT-4o-mini text-only | ~500 | ~$0.00008 |
+| Summary compilation | GPT-4o-mini text-only | ~800 | ~$0.00012 |
+| Color swatches (12×) | Replicate flux-kontext-fast (4 steps) | 12 parallel jobs | ~$0.012 |
+| **Total per analysis** | | | **~$0.015** |
+
+> ✱ Downgraded from `gpt-4o` to `gpt-4o-mini` — `color_analysis` stage now uses `env.openai.miniModel`
+> ✱✱ Skin routine split into a separate text-only call — no image tokens, very cheap
+
+### Replicate cost update:
+- `num_inference_steps` reduced **20 → 4** (Replicate bills by GPU-second, ~80% cheaper per image)
+- Previous estimate: 12 × $0.003 = **$0.036**
+- Current estimate: 12 × $0.001 = **$0.012** (4 steps runs ~3–4s vs ~15–18s at 20 steps)
+
+### Monthly AI cost at different user volumes (updated):
 
 | Users/Month | Reports | AI Cost | Infra Cost | Total Cost |
 |-------------|---------|---------|------------|------------|
-| 50 | 50 | ~$2.70 | $3–5 | **~$6–8** |
-| 200 | 200 | ~$10.80 | $5–8 | **~$16–19** |
-| 500 | 500 | ~$27.00 | $8–10 | **~$35–37** |
-| 1,000 | 1,000 | ~$54.00 | $10–15 | **~$64–69** |
-| 5,000 | 5,000 | ~$270.00 | $15–25 | **~$285–295** |
+| 50 | 50 | ~$0.75 | $3–5 | **~$4–6** |
+| 200 | 200 | ~$3.00 | $5–8 | **~$8–11** |
+| 500 | 500 | ~$7.50 | $8–10 | **~$16–18** |
+| 1,000 | 1,000 | ~$15.00 | $10–15 | **~$25–30** |
+| 5,000 | 5,000 | ~$75.00 | $15–25 | **~$90–100** |
 
-> **Key insight:** At current scale, AI costs dominate — infra is almost free.
-> Break-even at ₹99/report India or $2.99/report abroad needs only ~2 users/month.
+> **Key insight:** Cost per report dropped from ~$0.054 → **~$0.015** (3.6× cheaper) due to:
+> - All GPT stages now on gpt-4o-mini instead of gpt-4o
+> - Replicate inference steps cut from 20 → 4
+> - Skin routine separated into a cheaper text-only call
+>
+> Break-even at ₹99/report needs only **1 paying user every 5 months** of infra cost.
 
 ---
 
@@ -354,27 +381,38 @@ Add to Vercel: `next.config.js` rewrites `/api/reports/*/pdf` → `https://ai-be
 | Fly.io pdf-service (optional) | shared-cpu-1x 1GB | **$5–10** |
 | **Total infra** | | **$3–15/mo** |
 
-### AI Costs Per 100 Reports
+### AI Costs Per 100 Reports (Updated)
 
-| Model | Usage | Cost/100 reports |
-|-------|-------|-----------------|
-| AWS Rekognition | 100 DetectFaces calls | $0.10 |
-| GPT-4o (color + skin) | 200 calls × ~1100 tokens | $1.10 |
-| GPT-4o-mini (others) | 500 calls × ~650 tokens | $0.20 |
-| Replicate flux-kontext-fast | 1200 image jobs × $0.003 | $3.60 |
-| **Total AI / 100 reports** | | **~$5.00** |
+| Model | Stage | Usage | Cost/100 reports |
+|-------|-------|-------|-----------------|
+| AWS Rekognition | Face detection | 100 calls | $0.10 |
+| GPT-4o-mini Vision | Face shape | 100 calls × ~800 tok + img | $0.02 |
+| GPT-4o-mini Vision | Color analysis ✱ | 100 calls × ~1200 tok + img | $0.03 |
+| GPT-4o-mini Vision | Skin vision ✱ | 100 calls × ~1000 tok + img | $0.02 |
+| GPT-4o-mini text | Skin routine ✱✱ | 100 calls × ~500 tok | $0.008 |
+| GPT-4o-mini Vision | Features | 100 calls × ~600 tok + img | $0.02 |
+| GPT-4o-mini text | Glasses | 100 calls × ~500 tok | $0.008 |
+| GPT-4o-mini text | Hairstyle | 100 calls × ~500 tok | $0.008 |
+| GPT-4o-mini text | Summary | 100 calls × ~800 tok | $0.012 |
+| Replicate flux-kontext-fast (4 steps) | 12 swatches | 1200 jobs × ~$0.001 | $1.20 |
+| **Total AI / 100 reports** | | | **~$1.50** |
 
-> **Cost per report: ~$0.05** (5 cents USD / ₹4.2)
+> ✱ Previously `gpt-4o` at $0.006/call each — now `gpt-4o-mini` at ~$0.0003/call
+> ✱✱ New split stage — no image tokens, cheapest call in the pipeline
+
+> **Cost per report: ~$0.015** (1.5 cents USD / ₹1.25)
+> Previous cost was ~$0.054 — **3.6× cheaper after model optimisations**
 
 ---
 
 ## Pricing Strategy — What Plans to Sell
 
-### Guiding Principle
-- Your cost per report: **~₹4.2 / $0.05**
-- Minimum viable margin: **10x cost = ₹42 / $0.50**
-- Healthy margin: **20x cost = ₹84 / $1.00**
-- Premium margin: **50x cost = ₹210 / $2.50**
+### Guiding Principle (Updated)
+- Your cost per report: **~₹1.25 / $0.015** (was ₹4.5 — now 3.6× cheaper)
+- Minimum viable margin: **10x cost = ₹12.5 / $0.15**
+- Healthy margin: **20x cost = ₹25 / $0.30**
+- Premium margin: **66x cost = ₹99 / $1.00**
+- At ₹99/report: you keep **₹97.75 gross margin per report (98.7%)**
 
 ---
 
@@ -383,16 +421,16 @@ Add to Vercel: `next.config.js` rewrites `/api/reports/*/pdf` → `https://ai-be
 #### Option A — Pay Per Report (Recommended to start)
 | Plan | Price | Your Cost | Margin | Who Buys |
 |------|-------|-----------|--------|----------|
-| Single Report | ₹99 | ₹4.2 | 23x | Curious first-timers |
-| 3 Reports | ₹249 | ₹12.6 | 20x | Users who retake after haircut/makeover |
-| 5 Reports | ₹349 | ₹21 | 17x | Gift packs, families |
+| Single Report | ₹99 | ₹1.25 | 79x | Curious first-timers |
+| 3 Reports | ₹249 | ₹3.75 | 66x | Users who retake after haircut/makeover |
+| 5 Reports | ₹349 | ₹6.25 | 56x | Gift packs, families |
 
 #### Option B — Subscription (Add after 200+ users)
 | Plan | Price/Month | Reports/Month | Your Cost | Margin |
 |------|-------------|---------------|-----------|--------|
-| Basic | ₹199/mo | 2 | ₹8.4 | 24x |
-| Pro | ₹499/mo | 8 | ₹33.6 | 15x |
-| Salon | ₹1,499/mo | 30 | ₹126 | 12x |
+| Basic | ₹199/mo | 2 | ₹2.50 | 80x |
+| Pro | ₹499/mo | 8 | ₹10 | 50x |
+| Salon | ₹1,499/mo | 30 | ₹37.50 | 40x |
 
 > **Salon plan** is for beauty parlours / makeup artists running analysis for clients.
 > This is a B2B segment with much less price sensitivity.
@@ -410,16 +448,16 @@ Add to Vercel: `next.config.js` rewrites `/api/reports/*/pdf` → `https://ai-be
 #### Option A — Pay Per Report
 | Plan | Price | Your Cost | Margin | Who Buys |
 |------|-------|-----------|--------|----------|
-| Single Report | $2.99 | $0.05 | 60x | Anyone curious |
-| 3 Reports | $6.99 | $0.15 | 47x | Seasonal refresh |
-| 5 Reports | $9.99 | $0.25 | 40x | Gift / family |
+| Single Report | $2.99 | $0.015 | 199x | Anyone curious |
+| 3 Reports | $6.99 | $0.045 | 155x | Seasonal refresh |
+| 5 Reports | $9.99 | $0.075 | 133x | Gift / family |
 
 #### Option B — Subscription
 | Plan | Price/Month | Reports/Month | Your Cost | Margin |
 |------|-------------|---------------|-----------|--------|
-| Starter | $4.99/mo | 2 | $0.10 | 50x |
-| Pro | $9.99/mo | 8 | $0.40 | 25x |
-| Studio | $29.99/mo | 40 | $2.00 | 15x |
+| Starter | $4.99/mo | 2 | $0.03 | 166x |
+| Pro | $9.99/mo | 8 | $0.12 | 83x |
+| Studio | $29.99/mo | 40 | $0.60 | 50x |
 
 #### Recommended Launch Strategy (International):
 1. **Launch at $2.99/report** — impulse buy price point
@@ -449,17 +487,17 @@ Add to Vercel: `next.config.js` rewrites `/api/reports/*/pdf` → `https://ai-be
 #### Conservative (India focus, ₹99/report):
 | Month | Users | Paying (10%) | Revenue | AI Cost | Infra | Profit |
 |-------|-------|-------------|---------|---------|-------|--------|
-| 1 | 50 | 5 | ₹495 | ₹21 | ₹420 | **₹54** |
-| 3 | 200 | 20 | ₹1,980 | ₹84 | ₹420 | **₹1,476** |
-| 6 | 800 | 80 | ₹7,920 | ₹336 | ₹840 | **₹6,744** |
-| 12 | 3,000 | 300 | ₹29,700 | ₹1,260 | ₹840 | **₹27,600** |
+| 1 | 50 | 5 | ₹495 | ₹6.25 | ₹420 | **₹68.75** |
+| 3 | 200 | 20 | ₹1,980 | ₹25 | ₹420 | **₹1,535** |
+| 6 | 800 | 80 | ₹7,920 | ₹100 | ₹840 | **₹6,980** |
+| 12 | 3,000 | 300 | ₹29,700 | ₹375 | ₹840 | **₹28,485** |
 
 #### Optimistic (India + International mix):
 | Month | India Revenue | International Revenue | Total | Cost | Profit |
 |-------|-------------|----------------------|-------|------|--------|
-| 3 | ₹4,000 | $200 (~₹16,700) | ₹20,700 | ₹2,000 | **₹18,700** |
-| 6 | ₹12,000 | $600 (~₹50,100) | ₹62,100 | ₹5,000 | **₹57,100** |
-| 12 | ₹40,000 | $2,000 (~₹1,67,000) | ₹2,07,000 | ₹15,000 | **₹1,92,000** |
+| 3 | ₹4,000 | $200 (~₹16,700) | ₹20,700 | ₹700 | **₹20,000** |
+| 6 | ₹12,000 | $600 (~₹50,100) | ₹62,100 | ₹1,800 | **₹60,300** |
+| 12 | ₹40,000 | $2,000 (~₹1,67,000) | ₹2,07,000 | ₹5,500 | **₹2,01,500** |
 
 ---
 
