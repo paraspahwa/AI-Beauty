@@ -66,7 +66,7 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "How accurate is the AI analysis?",
-    a: "Our AI combines AWS Rekognition for facial detection with GPT-4 for color and style analysis. While highly accurate, results work best with clear, well-lit front-facing photos."
+    a: "Our AI combines AWS Rekognition for facial detection with advanced GPT models for color and style analysis. While highly accurate, results work best with clear, well-lit front-facing photos."
   },
   {
     q: "Is my photo stored or shared?",
@@ -109,9 +109,14 @@ function MockReportCard() {
           </div>
           <span className="font-serif text-sm text-ink">StyleAI Report</span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs rounded-full px-2 py-0.5 font-medium" style={{ background: "rgba(255,255,255,0.06)", color: "#888", border: "1px solid rgba(255,255,255,0.08)" }}>
+            Sample
+          </span>
           <span className="text-xs rounded-full px-3 py-1 font-medium" style={{ background: "rgba(201,149,107,0.15)", color: "#E8C990", border: "1px solid rgba(201,149,107,0.25)" }}>
           Soft Autumn
           </span>
+        </div>
       </div>
 
       {/* Photo + face shape */}

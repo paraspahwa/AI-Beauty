@@ -1,34 +1,43 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Sparkles, Palette, FileText, Check } from "lucide-react";
+import { Camera, Sparkles, Palette, Glasses, FileText, Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/animations";
 
+/**
+ * Steps mirror the actual server pipeline:
+ * 1. AWS Rekognition — face landmark detection
+ * 2. GPT — face shape + facial features mapping
+ * 3. GPT — 12-season color analysis + undertone
+ * 4. GPT — skin routine, glasses fit, hairstyle match
+ * 5. GPT — summary compilation + report persistence
+ */
 const ANALYSIS_STEPS = [
   {
     icon: Camera,
-    label: "Detecting face",
-    description: "Finding your facial features",
-    duration: 3000,
+    label: "Scanning your photo",
+    description: "Detecting facial landmarks and proportions",
   },
   {
     icon: Sparkles,
-    label: "Analyzing features",
-    description: "Mapping your unique characteristics",
-    duration: 6000,
+    label: "Reading your features",
+    description: "Classifying face shape, eyes, brows & more",
   },
   {
     icon: Palette,
-    label: "Matching colors",
-    description: "Finding your perfect palette",
-    duration: 10000,
+    label: "Finding your colors",
+    description: "Mapping your 12-season palette and undertone",
+  },
+  {
+    icon: Glasses,
+    label: "Building your style profile",
+    description: "Personalising skin routine, glasses & hairstyles",
   },
   {
     icon: FileText,
-    label: "Generating report",
-    description: "Creating your personalized guide",
-    duration: 15000,
+    label: "Compiling your report",
+    description: "Writing your personalised beauty guide",
   },
 ];
 
@@ -47,7 +56,8 @@ interface AnalysisLoadingProps {
 
 export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadingProps) {
   const currentFact = FUN_FACTS[currentStep % FUN_FACTS.length];
-  const elapsedTime = Math.floor((progress / 100) * 20);
+  // Pipeline takes ~35 s on average; scale elapsed from progress %
+  const secondsLeft = Math.max(Math.round(35 * (1 - progress / 100)), 1);
 
   return (
     <motion.div
@@ -70,7 +80,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
               Analyzing your beauty profile
             </h2>
             <p className="text-ink-stone">
-              About {Math.max(20 - elapsedTime, 1)} seconds remaining
+              About {secondsLeft} second{secondsLeft !== 1 ? "s" : ""} remaining
             </p>
           </motion.div>
 

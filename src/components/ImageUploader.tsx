@@ -25,8 +25,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Derived step for AnalysisLoading (4 steps, equally spaced across 0-100%)
-  const currentStep = Math.min(3, Math.floor(progress / 25));
+  // Derived step for AnalysisLoading (5 steps, equally spaced across 0-100%)
+  const currentStep = Math.min(4, Math.floor(progress / 20));
 
   const onDrop = React.useCallback((accepted: File[]) => {
     const f = accepted[0];
