@@ -134,14 +134,20 @@ export function MakeupCard({ colorAnalysis, makeupPreviews, isPaid }: Props) {
         {/* 4-up grid */}
         {isPaid && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {MAKEUP_LOOKS.map((look) => (
-              <PreviewTile
-                key={look.index}
-                index={look.index}
-                label={look.label}
-                asset={makeupPreviews?.[look.index]}
-              />
-            ))}
+            {MAKEUP_LOOKS.map((look) => {
+              const asset = makeupPreviews?.[look.index];
+              // Prefer label stored on the asset (set at generation time) so future
+              // label renames don't silently mismatch persisted data.
+              const label = asset?.styleName ?? look.label;
+              return (
+                <PreviewTile
+                  key={look.index}
+                  index={look.index}
+                  label={label}
+                  asset={asset}
+                />
+              );
+            })}
           </div>
         )}
 

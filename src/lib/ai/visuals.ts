@@ -3,6 +3,7 @@ import type { ColorAnalysisResult, GlassesResult, HairstyleResult, ReportVisualA
 import { replicateHairPreviewBatch } from "./replicate-hair";
 import { replicateGlassesPreviewBatch } from "./replicate-glasses";
 import { replicateMakeupPreviewBatch } from "./replicate-makeup";
+import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import { env } from "@/lib/env";
 
 type LandmarkPoint = {
@@ -179,6 +180,15 @@ export function createVisualAssetsSkeleton(userId: string, reportId: string, buc
         mime: "image/png",
         error: null,
       },
+      // Makeup slots pre-declared so the shape is always complete.
+      // trigger-visuals overwrites these with slot-preserved values before generation.
+      makeupPreviews: MAKEUP_LOOKS.map((look) => ({
+        path: `${basePath}makeup-${look.index}.jpg`,
+        status: "missing" as const,
+        mime: "image/jpeg",
+        error: null,
+        styleName: look.label,
+      })),
     },
   };
 }

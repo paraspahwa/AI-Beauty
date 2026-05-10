@@ -83,6 +83,12 @@ async function resolveVisualAssets(
       hairstylePreviews: safeAssets.hairstylePreviews
         ? [...safeAssets.hairstylePreviews]
         : undefined,
+      colorSwatchPreviews: safeAssets.colorSwatchPreviews
+        ? [...safeAssets.colorSwatchPreviews]
+        : undefined,
+      makeupPreviews: safeAssets.makeupPreviews
+        ? [...safeAssets.makeupPreviews]
+        : undefined,
     },
   };
 

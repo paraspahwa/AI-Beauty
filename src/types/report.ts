@@ -88,6 +88,8 @@ export interface ReportVisualAsset {
   height?: number;
   error?: string | null;
   signedUrl?: string;
+  /** Human-readable name of the style/look this asset represents (e.g. "Bold Lip", "Aviator"). */
+  styleName?: string;
 }
 
 export interface ReportVisualAssets {

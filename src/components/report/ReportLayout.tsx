@@ -36,7 +36,9 @@ interface Props {
 
 export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   const [report, setReport] = React.useState(initial);
-  const [activeTab, setActiveTab] = React.useState("face");
+  const [activeTab, setActiveTab] = React.useState<"face"|"color"|"skin"|"glasses"|"hair"|"makeup"|"shop">("face");
+  // Radix Tabs passes onValueChange as (value: string) — cast to keep the union type safe
+  const handleTabChange = (value: string) => setActiveTab(value as "face"|"color"|"skin"|"glasses"|"hair"|"makeup"|"shop");
   const [copied, setCopied] = React.useState(false);
   const [shareLoading, setShareLoading] = React.useState(false);
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
@@ -280,7 +282,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <div className="flex justify-center mb-8">
             <TabsList
               className="backdrop-blur-sm rounded-2xl p-1.5 gap-1"
