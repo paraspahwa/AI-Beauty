@@ -255,16 +255,3 @@ export async function generateHairstylePreviews(
   return [];
 }
 
-/**
- * Generate per-colour clothing try-on previews.
- * @deprecated Use generateAllColorSwatchPreviews from color-swatch-v2.ts instead.
- * This stub is kept only so existing callers that import this name don't break at
- * compile time — it always returns an empty array.
- */
-export async function generateColorSwatchPreviews(
-  _selfieBuf: Buffer,
-  _colorAnalysis: ColorAnalysisResult,
-  _rekognitionFace?: unknown,
-): Promise<{ index: number; buffer: Buffer; colorName: string }[]> {
-  return [];
-}
