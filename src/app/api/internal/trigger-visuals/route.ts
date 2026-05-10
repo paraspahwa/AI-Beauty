@@ -23,9 +23,11 @@ import {
   generatePaletteBoard,
   generateGlassesPreviews,
   generateHairstylePreviews,
+  generateMakeupPreviews,
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
+import { MAKEUP_LOOKS } from "@/lib/ai/replicate-makeup";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -184,6 +186,23 @@ export async function POST(req: NextRequest) {
       };
     });
 
+    // ── Makeup previews (premium) ─────────────────────────────────────────────
+    // 4 looks derived from the user's seasonal palette. Slot-preserved on retry.
+    const existingMakeupPreviews = (assets?.makeupPreviews as
+      { path: string; status: string; mime: string; error: string | null; styleName?: string }[]
+      | undefined);
+    visualAssets.assets.makeupPreviews = MAKEUP_LOOKS.map((look) => {
+      const ex = existingMakeupPreviews?.[look.index];
+      if (ex?.status === "ready" || ex?.status === "failed") return ex as ReportVisualAsset;
+      return {
+        path: `${visualAssets.basePath}makeup-${look.index}.jpg`,
+        status: "missing" as const,
+        mime: "image/jpeg",
+        error: null,
+        styleName: look.label,
+      };
+    });
+
     // ── Color swatches ───────────────────────────────────────────────────────
     const colorResult = row.color_analysis as ColorAnalysisResult;
     const seasonKey   = normalizeSeasonKey(colorResult?.season ?? "");
@@ -225,9 +244,11 @@ export async function POST(req: NextRequest) {
       .map((s, i) => (s.status === "missing" ? i : -1)).filter((i) => i >= 0);
     const missingHairstyleIndices = (visualAssets.assets.hairstylePreviews ?? [])
       .map((s, i) => (s.status === "missing" ? i : -1)).filter((i) => i >= 0);
+    const missingMakeupIndices = (visualAssets.assets.makeupPreviews ?? [])
+      .map((s, i) => (s.status === "missing" ? i : -1)).filter((i) => i >= 0);
 
-    // Run all three generation jobs concurrently to stay within maxDuration
-    const [colorSwatchResults, glassesResults, hairstyleResults] = await Promise.all([
+    // Run all four generation jobs concurrently to stay within maxDuration
+    const [colorSwatchResults, glassesResults, hairstyleResults, makeupResults] = await Promise.all([
       generateAllColorSwatchPreviews(
         buffer, bestSix, avoidSix, row.rekognition,
         env.replicate.apiToken, readySlotIndices,
@@ -247,6 +268,12 @@ export async function POST(req: NextRequest) {
             return [] as { index: number; buffer: Buffer; style: string }[];
           })
         : Promise.resolve([] as { index: number; buffer: Buffer; style: string }[]),
+      missingMakeupIndices.length > 0
+        ? generateMakeupPreviews(buffer, colorResult, missingMakeupIndices).catch((err) => {
+            console.warn("[trigger-visuals] makeup failed:", (err as Error).message);
+            return [] as { index: number; buffer: Buffer; label: string }[];
+          })
+        : Promise.resolve([] as { index: number; buffer: Buffer; label: string }[]),
     ]);
 
     // Upload color swatches
@@ -285,6 +312,19 @@ export async function POST(req: NextRequest) {
       if (upErr) asset.error = upErr.message;
     }
     for (const asset of visualAssets.assets.hairstylePreviews ?? []) {
+      if (asset.status === "missing") { asset.status = "failed"; asset.error = "No AI preview generated"; }
+    }
+
+    // Upload makeup previews
+    for (const { index, buffer: imgBuf } of makeupResults) {
+      const asset = visualAssets.assets.makeupPreviews?.[index];
+      if (!asset) continue;
+      const { error: upErr } = await admin.storage.from(env.supabase.bucket)
+        .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+      asset.status = upErr ? "failed" : "ready";
+      if (upErr) asset.error = upErr.message;
+    }
+    for (const asset of visualAssets.assets.makeupPreviews ?? []) {
       if (asset.status === "missing") { asset.status = "failed"; asset.error = "No AI preview generated"; }
     }
 

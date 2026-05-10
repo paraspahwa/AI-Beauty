@@ -12,6 +12,7 @@ import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
 import { HairColorCard } from "./HairColorCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
+import { MakeupCard } from "./MakeupCard";
 import { Paywall } from "@/components/Paywall";
 import { StyleChatDrawer } from "@/components/StyleChatDrawer";
 import type { CompiledReport } from "@/types/report";
@@ -23,6 +24,7 @@ const TABS = [
   { value: "skin",    label: "Skin" },
   { value: "glasses", label: "Spectacles" },
   { value: "hair",    label: "Hairstyle" },
+  { value: "makeup",  label: "💄 Makeup" },
   { value: "shop",    label: "🛍 Shop" },
 ] as const;
 
@@ -460,6 +462,24 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     />
                   )}
                   {isPaid && <HairColorCard reportId={report.id} />}
+                </motion.div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="makeup" className="mt-0">
+              {activeTab === "makeup" && (
+                <motion.div
+                  key="makeup"
+                  variants={tabContent}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  <MakeupCard
+                    colorAnalysis={report.colorAnalysis}
+                    makeupPreviews={report.visualAssets?.assets?.makeupPreviews}
+                    isPaid={isPaid}
+                  />
                 </motion.div>
               )}
             </TabsContent>

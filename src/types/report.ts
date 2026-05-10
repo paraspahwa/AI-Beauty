@@ -105,6 +105,15 @@ export interface ReportVisualAssets {
      * Indices 6-11 = avoidColors[0-5]
      */
     colorSwatchPreviews?: ReportVisualAsset[];
+    /**
+     * AI-generated makeup try-on previews (premium only).
+     * Index 0 — Everyday Natural
+     * Index 1 — Bold Lip
+     * Index 2 — Smoky Eye
+     * Index 3 — Full Glam
+     * Colors are derived from the user's seasonal palette.
+     */
+    makeupPreviews?: ReportVisualAsset[];
   };
 }
 

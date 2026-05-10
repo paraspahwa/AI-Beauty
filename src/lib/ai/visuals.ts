@@ -2,6 +2,7 @@ import sharp from "sharp";
 import type { ColorAnalysisResult, GlassesResult, HairstyleResult, ReportVisualAssets } from "@/types/report";
 import { replicateHairPreviewBatch } from "./replicate-hair";
 import { replicateGlassesPreviewBatch } from "./replicate-glasses";
+import { replicateMakeupPreviewBatch } from "./replicate-makeup";
 import { env } from "@/lib/env";
 
 type LandmarkPoint = {
@@ -253,5 +254,41 @@ export async function generateHairstylePreviews(
 
   console.warn("[visuals] Replicate not configured — hairstyle previews skipped");
   return [];
+}
+
+/**
+ * Generate 4 photorealistic makeup try-on previews using the user's seasonal
+ * palette colors. Premium-only: call only when isPaid is confirmed.
+ *
+ * Looks generated:
+ *   0 — Everyday Natural
+ *   1 — Bold Lip
+ *   2 — Smoky Eye
+ *   3 — Full Glam
+ *
+ * Falls back to empty array when Replicate is not configured.
+ */
+export async function generateMakeupPreviews(
+  selfieBuf: Buffer,
+  colorAnalysis: ColorAnalysisResult,
+  /** If provided, only generate previews for these slot indices. */
+  indicesToGenerate?: number[],
+): Promise<{ index: number; buffer: Buffer; label: string }[]> {
+  if (!env.replicate.isConfigured) {
+    console.warn("[visuals] Replicate not configured — makeup previews skipped");
+    return [];
+  }
+
+  const palette = colorAnalysis.palette ?? [];
+
+  return replicateMakeupPreviewBatch(
+    selfieBuf,
+    palette,
+    env.replicate.apiToken,
+    indicesToGenerate,
+  ).catch((err) => {
+    console.warn("[visuals] makeup Replicate batch failed:", (err as Error).message);
+    return [] as { index: number; buffer: Buffer; label: string }[];
+  });
 }
 
