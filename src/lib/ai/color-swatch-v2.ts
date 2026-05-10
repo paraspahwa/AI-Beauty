@@ -65,9 +65,9 @@ async function fetchImageBuffer(url: string): Promise<Buffer> {
 async function resizeOutput(buf: Buffer): Promise<Buffer> {
   const sharp = (await import("sharp")).default;
   return sharp(buf)
-	.resize(OUTPUT_W, OUTPUT_H, { fit: "cover", position: "top" })
-	.jpeg({ quality: 92 })
-	.toBuffer();
+  .resize(OUTPUT_W, OUTPUT_H, { fit: "cover", position: "top" })
+  .jpeg({ quality: 92 })
+  .toBuffer();
 }
 
 // ── Flux Kontext Fast ──────────────────────────────────────────────────────────
@@ -81,25 +81,25 @@ async function runFluxKontext(
   // payload size and model processing time significantly.
   const sharp = (await import("sharp")).default;
   const smallBuf = await sharp(selfieBuf)
-	.rotate()
-	.resize(SELFIE_SEND_SIZE, SELFIE_SEND_SIZE, { fit: "inside", withoutEnlargement: true })
-	.jpeg({ quality: 80 })
-	.toBuffer();
+  .rotate()
+  .resize(SELFIE_SEND_SIZE, SELFIE_SEND_SIZE, { fit: "inside", withoutEnlargement: true })
+  .jpeg({ quality: 80 })
+  .toBuffer();
 
   const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
 
   const client = getReplicate(replicateToken);
   const output = await client.run(FLUX_KONTEXT_MODEL, {
-	input: {
-	  img_cond_path:      imageDataUri,
-	  prompt:             buildKontextPrompt(colorName, colorHex),
-	  output_format:      "jpg",
-	  output_quality:     80,
-	  // Smallest output size — 512px is plenty for a 400×530 preview card
-	  image_size:         512,
-	  // Minimum steps — 4 is the floor for flux-based models; lower = faster but less detail
-	  num_inference_steps: 4,
-	},
+  input: {
+    img_cond_path:       imageDataUri,
+    prompt:              buildKontextPrompt(colorName, colorHex),
+    output_format:       "jpg",
+    output_quality:      80,
+    // Smallest output size — 512px is plenty for a 400×530 preview card
+    image_size:          512,
+    // Minimum steps — 4 is the floor for flux-based models; lower = faster but less detail
+    num_inference_steps: 4,
+  },
   });
 
   const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
@@ -155,34 +155,34 @@ export async function generateAllColorSwatchPreviews(
   skipSlots: Set<number> = new Set(), // already-ready slot indices to skip
 ): Promise<SwatchResult[]> {
   if (!replicateToken) {
-	console.error("[swatch-v2] No Replicate token — skipping all slots");
-	return [];
+  console.error("[swatch-v2] No Replicate token — skipping all slots");
+  return [];
   }
 
   const jobs: SwatchColorEntry[] = [
-	...bestColors.slice(0, 6).map((c, i) => ({ index: i,     name: c.name, hex: c.hex, isBest: true  })),
-	...avoidColors.slice(0, 6).map((c, i) => ({ index: i + 6, name: c.name, hex: c.hex, isBest: false })),
+  ...bestColors.slice(0, 6).map((c, i) => ({ index: i,     name: c.name, hex: c.hex, isBest: true  })),
+  ...avoidColors.slice(0, 6).map((c, i) => ({ index: i + 6, name: c.name, hex: c.hex, isBest: false })),
   ].filter((job) => !skipSlots.has(job.index)); // skip already-ready slots
 
   const results: SwatchResult[] = [];
   const queue = [...jobs];
 
   async function worker() {
-	while (queue.length > 0) {
-	  const job = queue.shift();
-	  if (!job) break;
-	  try {
-		const buffer = await runFluxKontext(selfieBuf, job.name, job.hex, replicateToken);
-		console.info(`[swatch-v2] ✓ slot ${job.index} "${job.name}" isBest=${job.isBest}`);
-		results.push({ index: job.index, buffer, colorName: job.name, isBest: job.isBest });
-	  } catch (err) {
-		console.warn(`[swatch-v2] ✗ slot ${job.index} "${job.name}" skipped:`, (err as Error).message);
-	  }
-	}
+  while (queue.length > 0) {
+    const job = queue.shift();
+    if (!job) break;
+    try {
+    const buffer = await runFluxKontext(selfieBuf, job.name, job.hex, replicateToken);
+    console.info(`[swatch-v2] ✓ slot ${job.index} "${job.name}" isBest=${job.isBest}`);
+    results.push({ index: job.index, buffer, colorName: job.name, isBest: job.isBest });
+    } catch (err) {
+    console.warn(`[swatch-v2] ✗ slot ${job.index} "${job.name}" skipped:`, (err as Error).message);
+    }
+  }
   }
 
   await Promise.all(
-	Array.from({ length: Math.min(MAX_CONCURRENCY, jobs.length) }, () => worker()),
+  Array.from({ length: Math.min(MAX_CONCURRENCY, jobs.length) }, () => worker()),
   );
 
   return results;

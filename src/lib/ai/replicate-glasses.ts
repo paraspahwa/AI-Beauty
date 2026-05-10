@@ -59,7 +59,7 @@ function buildPrompt(styleName: string): string {
 
 // ── Single preview generator ───────────────────────────────────────────────────
 /**
- * Generate one photorealistic glasses try-on using Flux Kontext Fast.
+ * Generate one photorealistic glasses try-on using Flux Kontext Pro.
  * No mask or faceBox required — the model handles placement from the prompt.
  * _faceBox param kept for API compatibility with callers; it is unused.
  */

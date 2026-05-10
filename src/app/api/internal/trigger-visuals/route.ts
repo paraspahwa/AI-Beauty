@@ -26,7 +26,7 @@ import {
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
-import type { GlassesResult, HairstyleResult, ColorAnalysisResult } from "@/types/report";
+import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -142,29 +142,47 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Try-on previews: EAGER pre-generation (glasses + hairstyle) ─────────
-    // All 3 glasses and 3 hairstyle previews are generated here at report-creation
+    // All 3 glasses and 5 hairstyle previews are generated here at report-creation
     // time so every tab is pre-populated. Runs concurrently with color swatches.
     const glassesResult   = row.glasses   as GlassesResult;
     const hairstyleResult = row.hairstyle as HairstyleResult;
 
-    // Initialise skeleton slots (will be overwritten with "ready" on success)
+    // Preserve any already-settled glasses previews from a prior run.
+    // Only reset slots that are genuinely missing — prevents re-generating
+    // previews that were already ready/failed on a retry invocation.
+    const existingGlassesPreviews = (assets?.glassesPreviews as
+      { path: string; status: string; mime: string; error: string | null; styleName?: string }[]
+      | undefined);
     visualAssets.assets.glassesPreviews = (glassesResult?.recommended ?? [])
       .slice(0, 3)
-      .map((s, i) => ({
-        path: `${visualAssets.basePath}glasses-${i}.jpg`,
+      .map((s, i) => {
+        const ex = existingGlassesPreviews?.[i];
+        if (ex?.status === "ready" || ex?.status === "failed") return ex as ReportVisualAsset;
+        return {
+          path: `${visualAssets.basePath}glasses-${i}.jpg`,
+          status: "missing" as const,
+          mime: "image/jpeg",
+          error: null,
+          ...(typeof s.style === "string" ? { styleName: s.style } : {}),
+        };
+      });
+
+    // Preserve any already-settled hairstyle previews from a prior run.
+    // slice(0, 5) matches generateHairstylePreviews which generates up to 5 styles.
+    const existingHairstylePreviews = (assets?.hairstylePreviews as
+      { path: string; status: string; mime: string; error: string | null; styleName?: string }[]
+      | undefined);
+    visualAssets.assets.hairstylePreviews = (hairstyleResult?.styles ?? []).slice(0, 5).map((s, i) => {
+      const ex = existingHairstylePreviews?.[i];
+      if (ex?.status === "ready" || ex?.status === "failed") return ex as ReportVisualAsset;
+      return {
+        path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
         status: "missing" as const,
         mime: "image/jpeg",
         error: null,
-        ...(typeof s.style === "string" ? { styleName: s.style } : {}),
-      }));
-
-    visualAssets.assets.hairstylePreviews = (hairstyleResult?.styles ?? []).slice(0, 3).map((s, i) => ({
-      path: `${visualAssets.basePath}hairstyle-${i}.jpg`,
-      status: "missing" as const,
-      mime: "image/jpeg",
-      error: null,
-      ...(typeof s.name === "string" ? { styleName: s.name } : {}),
-    }));
+        ...(typeof s.name === "string" ? { styleName: s.name } : {}),
+      };
+    });
 
     // ── Color swatches ───────────────────────────────────────────────────────
     const colorResult = row.color_analysis as ColorAnalysisResult;
@@ -202,6 +220,12 @@ export async function POST(req: NextRequest) {
         .filter((i) => i >= 0),
     );
 
+    // Only generate previews for slots that are genuinely missing (not already ready/failed)
+    const missingGlassesIndices = (visualAssets.assets.glassesPreviews ?? [])
+      .map((s, i) => (s.status === "missing" ? i : -1)).filter((i) => i >= 0);
+    const missingHairstyleIndices = (visualAssets.assets.hairstylePreviews ?? [])
+      .map((s, i) => (s.status === "missing" ? i : -1)).filter((i) => i >= 0);
+
     // Run all three generation jobs concurrently to stay within maxDuration
     const [colorSwatchResults, glassesResults, hairstyleResults] = await Promise.all([
       generateAllColorSwatchPreviews(
@@ -211,14 +235,18 @@ export async function POST(req: NextRequest) {
         console.warn("[trigger-visuals] swatches failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
       }),
-      generateGlassesPreviews(buffer, glassesResult, row.rekognition).catch((err) => {
-        console.warn("[trigger-visuals] glasses failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer }[];
-      }),
-      generateHairstylePreviews(buffer, hairstyleResult, row.rekognition).catch((err) => {
-        console.warn("[trigger-visuals] hairstyle failed:", (err as Error).message);
-        return [] as { index: number; buffer: Buffer; style: string }[];
-      }),
+      missingGlassesIndices.length > 0
+        ? generateGlassesPreviews(buffer, glassesResult, row.rekognition, missingGlassesIndices).catch((err) => {
+            console.warn("[trigger-visuals] glasses failed:", (err as Error).message);
+            return [] as { index: number; buffer: Buffer }[];
+          })
+        : Promise.resolve([] as { index: number; buffer: Buffer }[]),
+      missingHairstyleIndices.length > 0
+        ? generateHairstylePreviews(buffer, hairstyleResult, row.rekognition, missingHairstyleIndices).catch((err) => {
+            console.warn("[trigger-visuals] hairstyle failed:", (err as Error).message);
+            return [] as { index: number; buffer: Buffer; style: string }[];
+          })
+        : Promise.resolve([] as { index: number; buffer: Buffer; style: string }[]),
     ]);
 
     // Upload color swatches
