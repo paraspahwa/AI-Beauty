@@ -7,7 +7,9 @@ import {
   generatePaletteBoard,
   generateGlassesPreviews,
   generateHairstylePreviews,
+  generateMakeupPreviews,
 } from "@/lib/ai/visuals";
+import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import { isAdminUserEmail } from "@/lib/auth/access";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
@@ -39,9 +41,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     const force = req.nextUrl.searchParams.get("force") === "1" && isAdminUserEmail(user.email);
-    // ?type=glasses|hairstyle triggers lazy on-demand generation for a single section.
+    // ?type=glasses|hairstyle|makeup triggers lazy on-demand generation for a single section.
     // ?index=N (0-2) restricts generation to that single slot within the section (Phase 5.4).
-    const sectionType = req.nextUrl.searchParams.get("type") as "glasses" | "hairstyle" | null;
+    const sectionType = req.nextUrl.searchParams.get("type") as "glasses" | "hairstyle" | "makeup" | null;
     const slotIndexParam = req.nextUrl.searchParams.get("index");
     const slotIndex = slotIndexParam !== null && /^[0-4]$/.test(slotIndexParam)
       ? parseInt(slotIndexParam, 10)
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // ?type=glasses&index=0     → generate only slot 0 (Phase 5.4: per-click)
     // ?type=hairstyle           → generate all 3 hairstyle previews
     // ?type=hairstyle&index=1   → generate only slot 1
-    if (sectionType === "glasses" || sectionType === "hairstyle") {
+    if (sectionType === "glasses" || sectionType === "hairstyle" || sectionType === "makeup") {
       const existingAssets = row.visual_assets as Record<string, unknown> | null;
       const existingAssetsInner = (existingAssets?.assets ?? {}) as Record<string, unknown>;
 
@@ -134,7 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             }
           }
         }
-      } else {
+      } else if (sectionType === "hairstyle") {
         const hairstyleResult = row.hairstyle as HairstyleResult;
         const allSlots = (hairstyleResult?.styles ?? []).slice(0, 5).map(
           (s, i) => {
@@ -169,14 +171,57 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             }
           }
         }
+      } else {
+        // sectionType === "makeup"
+        const colorAnalysis = row.color_analysis as import("@/types/report").ColorAnalysisResult;
+        const allSlots = MAKEUP_LOOKS.map((look) => {
+          const ex = (existingPreviews as ReportVisualAsset[])[look.index];
+          if (ex?.status === "ready" || ex?.status === "failed") return ex;
+          return {
+            path: `${skeleton.basePath}makeup-${look.index}.jpg`,
+            status: "missing" as const,
+            mime: "image/jpeg",
+            error: null,
+            styleName: look.label,
+          };
+        });
+        skeleton.assets.makeupPreviews = allSlots;
+
+        const indicesToGenerate = slotIndex !== null
+          ? [slotIndex].filter((i) => i < allSlots.length && allSlots[i]?.status === "missing")
+          : allSlots.map((s, i) => s.status === "missing" ? i : -1).filter((i) => i >= 0);
+
+        if (indicesToGenerate.length > 0) {
+          const results = await generateMakeupPreviews(
+            sectionBuffer, colorAnalysis, indicesToGenerate,
+          ).catch(() => [] as { index: number; buffer: Buffer; label: string }[]);
+          for (const { index, buffer: imgBuf } of results) {
+            const asset = skeleton.assets.makeupPreviews?.[index];
+            if (!asset) continue;
+            const { error: upErr } = await admin.storage.from(env.supabase.bucket)
+              .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
+            asset.status = upErr ? "failed" : "ready";
+            if (upErr) asset.error = upErr.message;
+          }
+          for (const idx of indicesToGenerate) {
+            if (skeleton.assets.makeupPreviews?.[idx]?.status === "missing") {
+              skeleton.assets.makeupPreviews[idx]!.status = "failed";
+              skeleton.assets.makeupPreviews[idx]!.error = "No preview generated";
+            }
+          }
+        }
       }
 
-      const newPreviews = sectionType === "glasses"
-        ? skeleton.assets.glassesPreviews
-        : skeleton.assets.hairstylePreviews;
+      const previewsKey2 = sectionType === "glasses" ? "glassesPreviews"
+        : sectionType === "hairstyle" ? "hairstylePreviews"
+        : "makeupPreviews";
+      const newPreviews =
+        sectionType === "glasses"   ? skeleton.assets.glassesPreviews
+        : sectionType === "hairstyle" ? skeleton.assets.hairstylePreviews
+        : skeleton.assets.makeupPreviews;
 
       // Merge updated previews into existing visual_assets
-      const merged = { ...(existingAssets ?? {}), assets: { ...existingAssetsInner, [previewsKey]: newPreviews } };
+      const merged = { ...(existingAssets ?? {}), assets: { ...existingAssetsInner, [previewsKey2]: newPreviews } };
       await admin.from("reports").update({ visual_assets: merged }).eq("id", id);
       return NextResponse.json({ ok: true, skipped: false });
     }
@@ -288,6 +333,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (existingColorSwatches) {
       visualAssets.assets.colorSwatchPreviews =
         existingColorSwatches as typeof visualAssets.assets.colorSwatchPreviews;
+    }
+
+    // Preserve any already-generated makeup previews so completed looks are not
+    // overwritten when this route re-runs (e.g. on a palette-board retry).
+    const existingMakeupPreviews = existingVAInner.makeupPreviews as typeof visualAssets.assets.makeupPreviews | undefined;
+    if (existingMakeupPreviews?.length) {
+      visualAssets.assets.makeupPreviews = existingMakeupPreviews;
     }
 
     // ── Persist ───────────────────────────────────────────────────────────────

@@ -56,6 +56,12 @@ async function resolveVisualAssets(
       hairstylePreviews: safeAssets.hairstylePreviews
         ? [...safeAssets.hairstylePreviews]
         : undefined,
+      colorSwatchPreviews: safeAssets.colorSwatchPreviews
+        ? [...safeAssets.colorSwatchPreviews]
+        : undefined,
+      makeupPreviews: safeAssets.makeupPreviews
+        ? [...safeAssets.makeupPreviews]
+        : undefined,
     },
   };
 
@@ -96,6 +102,18 @@ async function resolveVisualAssets(
   if (out.assets.colorSwatchPreviews) {
     out.assets.colorSwatchPreviews = await Promise.all(
       out.assets.colorSwatchPreviews.map(async (asset) => {
+        if (asset.path && asset.status === "ready") {
+          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
+          return { ...asset, signedUrl: data?.signedUrl };
+        }
+        return asset;
+      }),
+    );
+  }
+
+  if (out.assets.makeupPreviews) {
+    out.assets.makeupPreviews = await Promise.all(
+      out.assets.makeupPreviews.map(async (asset) => {
         if (asset.path && asset.status === "ready") {
           const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
           return { ...asset, signedUrl: data?.signedUrl };
