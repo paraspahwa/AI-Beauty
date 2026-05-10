@@ -1,0 +1,50 @@
+name: Prompt Eval
+
+# Runs weekly on Sunday at 02:00 UTC and on manual trigger.
+# Uses real OpenAI calls against stub fixtures — costs ~$0.01 per run.
+# Requires OPENAI_API_KEY to be set in repo secrets (Settings → Secrets → Actions).
+# If the secret is absent the job is skipped gracefully.
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"   # every Sunday 02:00 UTC
+  workflow_dispatch:        # manual trigger from GitHub Actions UI
+
+jobs:
+  eval:
+    name: Pipeline Prompt Eval
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Skip if API key is absent
+        id: check-key
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⚠️  OPENAI_API_KEY secret not set — skipping eval run."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run eval — all stages, 2 runs each
+        if: steps.check-key.outputs.skip == 'false'
+        run: npx tsx scripts/eval-pipeline.ts --runs 2
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MINI_MODEL: gpt-4o-mini
+
+      - name: Run eval — face_shape only (smoke, no API key needed for schema check)
+        if: steps.check-key.outputs.skip == 'true'
+        run: echo "Eval skipped — add OPENAI_API_KEY to repo secrets to enable."

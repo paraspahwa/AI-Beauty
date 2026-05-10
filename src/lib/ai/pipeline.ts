@@ -56,13 +56,13 @@ export interface PipelineResult {
  * Run the full analysis pipeline on a raw image buffer.
  * Order:
  *  1. AWS Rekognition DetectFaces (landmarks)
- *  2. GPT-4o-mini Vision  → face shape
- *  3. GPT-4o Vision       → color analysis
- *  4. GPT-4o Vision       → skin analysis
- *  5. GPT-4o-mini         → eyes/nose/lips/cheeks (parallel-ready, single call here)
- *  6. GPT-4o-mini         → glasses (uses face shape)
- *  7. GPT-4o-mini         → hairstyle (uses face shape)
- *  8. GPT-4o-mini         → compile final summary
+ *  2. gpt-4o-mini  → face shape (vision)
+ *  3. gpt-4o-mini  → color analysis (vision)
+ *  4. gpt-4o-mini  → skin analysis (vision)
+ *  5. gpt-4o-mini  → eyes/nose/lips/cheeks (parallel-ready, single call here)
+ *  6. gpt-4o-mini  → glasses (uses face shape)
+ *  7. gpt-4o-mini  → hairstyle (uses face shape)
+ *  8. gpt-4o-mini  → compile final summary
  *
  * @param rawImage - raw image buffer (JPEG/PNG/WEBP)
  * @param userId   - optional Supabase user id; when provided the pipeline
@@ -169,10 +169,9 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
     runNormalizedStage(
       "color_analysis",
       () =>
-        chatJSON<unknown>({
-          // Phase 1.2: downgraded from visionModel (gpt-4o) → miniModel (gpt-4o-mini).
-          model: env.openai.miniModel,
-          temperature: 0.2,
+      chatJSON<unknown>({
+        model: env.openai.miniModel,
+        temperature: 0.2,
           system: effectiveSystemBase,
           user: colorPrompt,
           imageBase64,
