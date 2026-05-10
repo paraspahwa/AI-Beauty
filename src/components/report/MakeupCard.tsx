@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { Sparkles, Lock, Loader2 } from "lucide-react";
 import type { ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
-import { MAKEUP_LOOKS } from "@/lib/ai/replicate-makeup";
+import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 
 // ── Animation CSS ─────────────────────────────────────────────────────────────
 const MAKEUP_CSS = `

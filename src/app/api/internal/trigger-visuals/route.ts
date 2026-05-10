@@ -27,7 +27,7 @@ import {
 } from "@/lib/ai/visuals";
 import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
-import { MAKEUP_LOOKS } from "@/lib/ai/replicate-makeup";
+import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -79,13 +79,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true, reason: "not_ready" });
     }
 
-    // Idempotency: skip if all 12 swatches are already ready
+    // Idempotency: skip only when BOTH swatches AND makeup are fully settled.
+    // Checking both prevents an early exit that would leave makeup un-generated
+    // if swatches happened to finish on a prior call.
     const existingAssets = row.visual_assets as Record<string, unknown> | null;
     const assets = existingAssets?.assets as Record<string, unknown> | undefined;
     if (assets) {
       const swatches = (assets.colorSwatchPreviews as { status: string }[] | undefined) ?? [];
-      const allReady = swatches.length >= 12 && swatches.every((s) => s.status === "ready");
-      if (allReady) {
+      const makeup   = (assets.makeupPreviews      as { status: string }[] | undefined) ?? [];
+      const swatchesReady = swatches.length >= 12 && swatches.every((s) => s.status === "ready");
+      const makeupReady   = makeup.length   >= 4  && makeup.every((s)   =>
+        s.status === "ready" || s.status === "failed",
+      );
+      if (swatchesReady && makeupReady) {
         return NextResponse.json({ skipped: true, reason: "already_complete" });
       }
     }

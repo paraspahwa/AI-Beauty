@@ -19,6 +19,9 @@
 
 import Replicate from "replicate";
 import sharp from "sharp";
+import { MAKEUP_LOOKS, type MakeupLook } from "@/lib/makeup-looks";
+export type { MakeupLook } from "@/lib/makeup-looks";
+export { MAKEUP_LOOKS };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const FLUX_KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro" as const;
@@ -33,36 +36,6 @@ function getClient(token: string): Replicate {
   if (!_client) _client = new Replicate({ auth: token, useFileOutput: false });
   return _client;
 }
-
-// ── Look definitions ──────────────────────────────────────────────────────────
-export type MakeupLook = {
-  index: number;
-  label: string;
-  description: string;
-};
-
-export const MAKEUP_LOOKS: MakeupLook[] = [
-  {
-    index: 0,
-    label: "Everyday Natural",
-    description: "Light coverage, natural lip tint and soft blush",
-  },
-  {
-    index: 1,
-    label: "Bold Lip",
-    description: "Statement lip color, defined brows, minimal eye",
-  },
-  {
-    index: 2,
-    label: "Smoky Eye",
-    description: "Complementary eyeshadow, mascara, nude lip",
-  },
-  {
-    index: 3,
-    label: "Full Glam",
-    description: "Lip color, eyeshadow, blush, and highlight",
-  },
-];
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
 /**
