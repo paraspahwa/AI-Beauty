@@ -96,12 +96,14 @@ export async function POST(
     const { createFalClient } = await import("@fal-ai/client");
     const falClient = createFalClient({ credentials: env.fal.apiKey });
 
+    // fal-ai/image-apps-v2/virtual-try-on expects person_image_url + clothing_image_url
+    // Cast through unknown to satisfy the union type without eslint-disable
+    const tryonInput = {
+      person_image_url: selfieUri,
+      clothing_image_url: clothUri,
+    } as unknown as Parameters<typeof falClient.run<"fal-ai/image-apps-v2/virtual-try-on">>[1]["input"];
     const falResult = await falClient.run("fal-ai/image-apps-v2/virtual-try-on", {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      input: {
-        human_image_url: selfieUri,
-        garment_image_url: clothUri,
-      } as any,
+      input: tryonInput,
     }) as { image?: { url: string }; images?: { url: string }[] };
 
     const resultUrl: string =
