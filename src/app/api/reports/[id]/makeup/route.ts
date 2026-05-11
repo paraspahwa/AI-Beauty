@@ -93,18 +93,11 @@ export async function POST(
   }
   const imgBuf = Buffer.from(await imgData.arrayBuffer());
 
-  // ── Upload to a temp-accessible public URL for FAL ──────────────────────────
-  const uploadPath = `makeup-temp/${user.id}/${id}-${Date.now()}.jpg`;
-  const { error: upTempErr } = await admin.storage
-    .from(env.supabase.bucket)
-    .upload(uploadPath, imgBuf, { contentType: "image/jpeg", upsert: true });
-  if (upTempErr) {
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
-  }
-  const { data: publicData } = admin.storage
-    .from(env.supabase.bucket)
-    .getPublicUrl(uploadPath);
-  const imageUrl = publicData.publicUrl;
+  // ── Pass the image to FAL as a base64 data URI ──────────────────────────────
+  // The bucket is private; getPublicUrl() would return a URL FAL cannot fetch.
+  // Encoding as data URI avoids any storage access policy issues entirely.
+  const imgBase64 = imgBuf.toString("base64");
+  const imageUrl  = `data:image/jpeg;base64,${imgBase64}`;
 
   // ── FAL makeup-application ───────────────────────────────────────────────
   if (!env.fal?.isConfigured) {
