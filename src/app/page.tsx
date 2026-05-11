@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   Sparkles,
   Camera,
-  Palette,
   Glasses,
   Scissors,
   ShieldCheck,
@@ -86,16 +85,6 @@ const FAQS = [
     q: "Can I get a refund?",
     a: "Yes! We offer a 30-day money-back guarantee. If you're not satisfied with your full report, contact us for a full refund."
   },
-];
-
-// Mock colour palette for the hero preview card
-const MOCK_PALETTE = [
-  { hex: "#C17A5F", label: "Terracotta" },
-  { hex: "#C4A882", label: "Camel" },
-  { hex: "#9CAF88", label: "Sage" },
-  { hex: "#7A8450", label: "Olive" },
-  { hex: "#D9C8A8", label: "Linen" },
-  { hex: "#A85E47", label: "Rust" },
 ];
 
 function MockReportCard() {
@@ -391,45 +380,88 @@ export default function HomePage() {
           <motion.div variants={fadeUp} className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl text-ink mb-4">How StyleAI works</h2>
             <p className="text-ink-stone max-w-2xl mx-auto">
-              Three simple steps to unlock your personalized beauty profile
+              One selfie. Four steps. A complete personal style profile in minutes.
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
-              { step: "01", title: "Upload", desc: "Take or upload a clear selfie", icon: Camera },
-              { step: "02", title: "AI Analyzes", desc: "Our AI studies your features", icon: Sparkles },
-              { step: "03", title: "Get Report", desc: "Receive your personalized guide", icon: Palette },
+              {
+                step: "01",
+                icon: Camera,
+                title: "Upload your selfie",
+                desc: "Take or upload a clear, well-lit front-facing photo. Takes 10 seconds.",
+                accent: "#C9956B",
+              },
+              {
+                step: "02",
+                icon: Sparkles,
+                title: "AI reads your features",
+                desc: "Face shape, skin tone, eye shape, and 20+ unique facial traits are analysed instantly.",
+                accent: "#7B6E9E",
+              },
+              {
+                step: "03",
+                icon: ShoppingBag,
+                title: "Try on clothes & makeup",
+                desc: "Upload any garment or choose a makeup style — see AI previews on your actual photo.",
+                accent: "#C9956B",
+              },
+              {
+                step: "04",
+                icon: Scissors,
+                title: "Get your style blueprint",
+                desc: "Spectacles, hairstyle, hair color, skin routine, and a downloadable PDF — all personalised.",
+                accent: "#7B6E9E",
+              },
             ].map((item, i) => (
               <motion.div
                 key={i}
                 variants={fadeUp}
-                className="relative text-center group"
+                className="relative group"
               >
-                <div className="card-soft hover:shadow-premium transition-all duration-300 group-hover:-translate-y-2">
-                  <div className="mb-6 relative">
-                  <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-obsidian shadow-glow"
-                    style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}
-                  >
-                    <item.icon className="h-8 w-8" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-card"
-                    style={{ background: "#1A1A26", border: "1px solid rgba(201,149,107,0.3)", color: "#C9956B" }}
-                  >
+                <div className="card-soft h-full hover:shadow-premium transition-all duration-300 group-hover:-translate-y-2">
+                  {/* Step number + icon */}
+                  <div className="mb-5 relative">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-glow"
+                      style={{ background: `linear-gradient(135deg, ${item.accent}22, ${item.accent}44)`, border: `1px solid ${item.accent}44` }}
+                    >
+                      <item.icon className="h-6 w-6" style={{ color: item.accent }} />
+                    </div>
+                    <div
+                      className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-card"
+                      style={{ background: "#1A1A26", border: "1px solid rgba(201,149,107,0.3)", color: "#C9956B" }}
+                    >
                       {item.step}
                     </div>
                   </div>
-                  <h3 className="text-xl text-ink mb-2">{item.title}</h3>
-                  <p className="text-sm text-ink-stone">{item.desc}</p>
+                  <h3 className="text-base font-semibold text-ink mb-2">{item.title}</h3>
+                  <p className="text-sm text-ink-stone leading-relaxed">{item.desc}</p>
                 </div>
 
-                {/* Connecting line */}
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-1/3 left-full w-full h-0.5 bg-gradient-to-r from-terracotta/30 to-transparent -z-10" />
+                {/* Connecting arrow — hidden on mobile */}
+                {i < 3 && (
+                  <div className="hidden lg:flex absolute top-1/3 -right-3 z-10 items-center justify-center w-6 h-6 rounded-full"
+                    style={{ background: "#1A1A26", border: "1px solid rgba(201,149,107,0.2)" }}
+                  >
+                    <ArrowRight className="h-3 w-3" style={{ color: "#C9956B" }} />
+                  </div>
                 )}
               </motion.div>
             ))}
           </div>
+
+          {/* Bottom CTA nudge */}
+          <motion.div variants={fadeUp} className="mt-12 text-center">
+            <Button asChild size="lg" variant="accent" className="group">
+              <Link href="/upload">
+                <Camera className="h-4 w-4" />
+                Try it free — no card needed
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          </motion.div>
         </motion.div>
       </section>
 
