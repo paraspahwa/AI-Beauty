@@ -9,6 +9,7 @@ export const maxDuration = 120;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
+const FAL_HAIR_MODEL       = "fal-ai/image-apps-v2/hair-change" as const;
 
 // Maps a free-text color name to the supported hair_color enum for change-haircut.
 // Full supported list: Blonde, Golden Blonde, Honey Blonde, Ash Blonde, Platinum Blonde,
@@ -76,16 +77,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await req.json() as { colorName?: string; colorHex?: string };
-    // Limit length to prevent prompt injection / DoS; strip non-printable chars
+    const body = await req.json() as { colorName?: string; colorHex?: string; styleName?: string };
     const colorName = (body.colorName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E]/g, "");
-    const colorHex = (body.colorHex ?? "").trim();
-    if (!colorName || !/^#[0-9a-f]{6}$/i.test(colorHex)) {
-      return NextResponse.json({ error: "colorName and valid colorHex (#rrggbb) are required" }, { status: 400 });
+    const styleName = (body.styleName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E_]/g, "");
+    if (!colorName) {
+      return NextResponse.json({ error: "colorName is required" }, { status: 400 });
     }
 
-    if (!env.replicate.isConfigured) {
-      return NextResponse.json({ error: "Replicate not configured" }, { status: 503 });
+    if (!env.fal?.isConfigured && !env.replicate.isConfigured) {
+      return NextResponse.json({ error: "No AI service configured" }, { status: 503 });
     }
 
     const admin = createSupabaseAdminClient();
@@ -107,8 +107,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const rawBuf = Buffer.from(await imgData.arrayBuffer());
 
-    // Phase 2.4: Build storage path early so we can cache-check before calling Replicate
-    const slug = colorName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    // Phase 2.4: Build storage path early so we can cache-check before calling the model
+    const slug = `${styleName ? styleName + "-" : ""}${colorName}`
+      .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-_]/g, "").slice(0, 80);
     const storagePath = `users/${user.id}/reports/${id}/hair-color-${slug}.jpg`;
 
     // Cache hit: return existing signed URL without calling Replicate
@@ -132,34 +133,54 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .toBuffer();
 
     const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
-    // useFileOutput: false → SDK returns a plain string URL instead of a
-    // FileOutput (ReadableStream) object. Without this flag .startsWith() throws
-    // and the TRUSTED_PREFIXES guard rejects every successful prediction.
-    const replicate = new Replicate({ auth: env.replicate.apiToken, useFileOutput: false });
 
     const hairColorEnum = mapToHairColorEnum(colorName);
-    console.info(`[hair-color] "${colorName}" → enum "${hairColorEnum}"`);
+    console.info(`[hair-color] style="${styleName || 'No change'}" color="${colorName}" => enum "${hairColorEnum}"`);
 
-    const output = await replicate.run(CHANGE_HAIRCUT_MODEL, {
-      input: {
-        input_image:      imageDataUri,
-        haircut:          "No change",   // color-only — preserve existing style
-        hair_color:       hairColorEnum,
-        gender:           "none",
-        aspect_ratio:     "match_input_image",
-        output_format:    "jpg",
-        safety_tolerance: 2,
-      },
-    });
+    let url: string | null = null;
 
-    const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
-    if (!url) return NextResponse.json({ error: "Generation failed" }, { status: 502 });
-
-    // Basic SSRF guard — must be an https URL
-    if (!url.startsWith("https://")) {
-      console.error("[hair-color] Unexpected output URL from Replicate:", url.slice(0, 60));
-      return NextResponse.json({ error: "Generation failed" }, { status: 502 });
+    // Option 1: fal-ai/image-apps-v2/hair-change (when FAL_KEY configured)
+    if (env.fal?.isConfigured) {
+      try {
+        const { createFalClient } = await import("@fal-ai/client");
+        const fal = createFalClient({ credentials: env.fal.apiKey });
+        const falInput: Record<string, unknown> = { image_url: imageDataUri };
+        if (styleName && styleName !== "No change") falInput["hair_style"] = styleName;
+        if (hairColorEnum && hairColorEnum !== "No change") falInput["hair_color"] = hairColorEnum;
+        // @ts-expect-error -- dynamic Record into strict generic
+        const result = await fal.run(FAL_HAIR_MODEL, { input: falInput }) as { image?: { url?: string }; images?: { url?: string }[]; url?: string };
+        const raw = result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
+        if (raw?.startsWith("https://")) {
+          url = raw;
+          console.info(`[hair-color] FAL OK for "${slug}"`);
+        }
+      } catch (err) {
+        console.warn(`[hair-color] FAL failed, falling back to Replicate: ${(err as Error).message}`);
+      }
     }
+
+    // Option 2: flux-kontext-apps/change-haircut (Replicate fallback)
+    if (!url) {
+      if (!env.replicate.isConfigured) {
+        return NextResponse.json({ error: "No AI service configured" }, { status: 503 });
+      }
+      const replicate = new Replicate({ auth: env.replicate.apiToken, useFileOutput: false });
+      const output = await replicate.run(CHANGE_HAIRCUT_MODEL, {
+        input: {
+          input_image:      imageDataUri,
+          haircut:          styleName && styleName !== "No change" ? styleName : "No change",
+          hair_color:       hairColorEnum,
+          gender:           "none",
+          aspect_ratio:     "match_input_image",
+          output_format:    "jpg",
+          safety_tolerance: 2,
+        },
+      });
+      const raw: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
+      if (raw?.startsWith("https://")) url = raw;
+    }
+
+    if (!url) return NextResponse.json({ error: "Generation failed" }, { status: 502 });
 
     // Download result from Replicate — 30 s timeout to avoid indefinite hangs
     const dlController = new AbortController();

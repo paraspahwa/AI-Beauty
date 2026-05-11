@@ -492,20 +492,7 @@ export function HairstyleCard({
     }
   }
 
-  // Auto-trigger generation for any missing slots when the card first mounts.
-  const autoTriggered = React.useRef(false);
-  React.useEffect(() => {
-    if (!reportId || autoTriggered.current) return;
-    const missingSlots = [0, 1, 2, 3, 4].filter((i) => {
-      const slot = previewSlots?.[i];
-      return !slot || slot.status === "missing" || slot.status === "failed";
-    });
-    if (missingSlots.length === 0) return;
-    autoTriggered.current = true;
-    // Auto-generate all missing slots in one batch call (no index param = all missing)
-    generateAll();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportId, previewSlots]);
+  // No auto-trigger — previews are generated per-slot on user click.
   const flatteningStyles  = data.styles.slice(0, 5);
   const considerStyles    = data.avoid.slice(0, 4);
   // Hair colour from AI analysis — first recommended colour drives overlay tinting
@@ -718,43 +705,51 @@ export function HairstyleCard({
                 {/* photo fills top, composited preview or photo + hair overlay */}
                 <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
                   {(() => {
-                    const src = hasPreview ? slot!.signedUrl! : (legacyUrl ?? photoUrl);
-                    if (hasPreview || legacyUrl) {
-                      // Real AI-generated preview
+                      // ── AI preview ready ──
+                      if (hasPreview || legacyUrl) {
+                        return (
+                          <>
+                            <Image src={hasPreview ? slot!.signedUrl! : legacyUrl!} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                            <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.05)" }} />
+                            <div className="absolute top-2 right-2 rounded-full px-2 py-0.5 text-[9px] font-semibold" style={{ background: "rgba(61,43,31,0.65)", color: "#E8C990" }}>✨ AI</div>
+                          </>
+                        );
+                      }
+                      // ── Photo + hair overlay baseline (always shown when photo available) ──
+                      if (photoUrl) {
+                        return (
+                          <>
+                            <Image src={photoUrl} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
+                            <svg viewBox="0 0 100 140" className="absolute inset-0 w-full h-full pointer-events-none" style={{ mixBlendMode: "multiply", zIndex: 5 }}>
+                              <HairOverlay style={s.name} animate={!isGenerating} hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
+                            </svg>
+                            {canGenerate && !isGenerating && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); generateSlot(i); }}
+                                className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-semibold whitespace-nowrap transition-opacity hover:opacity-90"
+                                style={{ background: "rgba(61,43,31,0.78)", color: "#E8C990", border: "1px solid rgba(232,201,144,0.4)", zIndex: 10 }}
+                              >
+                                ✨ AI Preview
+                              </button>
+                            )}
+                            {isGenerating && (
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: "rgba(61,43,31,0.78)", zIndex: 10 }}>
+                                <div className="animate-spin rounded-full h-3 w-3 border-2" style={{ borderColor: "rgba(232,201,144,0.3)", borderTopColor: "#E8C990" }} />
+                                <span style={{ color: "#E8C990", fontSize: 10 }}>Generating…</span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      }
+                      // ── No photo: SVG illustration only ──
                       return (
-                        <Image src={hasPreview ? slot!.signedUrl! : legacyUrl!} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                      );
-                    }
-                    if (isGenerating) {
-                      return (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                          <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: "#E8DDD0", borderTopColor: "#9C7D5B" }} />
-                          <span style={{ color: "#9C7D5B", fontSize: 10 }}>Generating…</span>
+                        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }}>
+                          <svg viewBox="0 0 100 140" style={{ width: 70, height: 98 }}>
+                            <HairOverlay style={s.name} animate hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
+                          </svg>
                         </div>
                       );
-                    }
-                    if (canGenerate) {
-                      return (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
-                          <HairOverlay style={s.name} hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} />
-                          <div className="animate-spin rounded-full h-6 w-6 border-2" style={{ borderColor: "#E8DDD0", borderTopColor: "#9C7D5B", zIndex: 10, position: "relative" }} />
-                          <span style={{ color: "#9C7D5B", fontSize: 10, position: "relative", zIndex: 10 }}>Queued…</span>
-                        </div>
-                      );
-                    }
-                    if (src) {
-                      // Fallback: base photo + hair shape overlay for visual distinction
-                      return (
-                        <>
-                          <Image src={src} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                          <HairOverlay style={s.name} animate hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
-                        </>
-                      );
-                    }
-                    return (
-                      <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }} />
-                    );
-                  })()}
+                    })()}
                   {/* green check badge */}
                   <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#7BA05B" }}>
                     <Check className="h-3.5 w-3.5 text-white" />
@@ -795,9 +790,11 @@ export function HairstyleCard({
                         return (
                           <>
                             <Image src={photoUrl} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                            <HairOverlay style={a} animate hairColor={data.colors[(i + 2) % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
+                            <svg viewBox="0 0 100 140" className="absolute inset-0 w-full h-full pointer-events-none" style={{ mixBlendMode: "multiply", zIndex: 5 }}>
+                              <HairOverlay style={a} animate hairColor={data.colors[(i + 2) % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
+                            </svg>
                             {/* warm red-orange tint to signal "avoid" */}
-                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.12)" }} />
+                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.12)", zIndex: 6 }} />
                           </>
                         );
                       }
