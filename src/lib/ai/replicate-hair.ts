@@ -1,29 +1,32 @@
-/**
- * Hairstyle try-on generation — v5 (flux-kontext-apps/change-haircut)
+﻿/**
+ * Hairstyle try-on generation - v6 (fal-ai/image-apps-v2/hair-change)
  *
- * Primary:  flux-kontext-apps/change-haircut
- *   - Purpose-built BFL app for hair style + color changes
- *   - Uses structured enum inputs: haircut, hair_color, gender
- *   - Powered by FLUX.1 Kontext [pro] — best identity preservation
+ * Primary:  fal-ai/image-apps-v2/hair-change
+ *   - Purpose-built FAL specialised app for hair style + color changes
+ *   - Structured inputs: image_url, hair_style, hair_color
+ *   - $0.04/image - requires FAL_KEY env var
  *
- * Fallback: fofr/become-image (SDXL + IP-Adapter)
- *   - Kicks in automatically if primary fails or times out
+ * Fallback 1: flux-kontext-apps/change-haircut (Replicate BFL app)
+ *   - Purpose-built BFL app, structured enum inputs: haircut, hair_color, gender
+ *   - Kicks in when FAL_KEY is absent or the FAL call fails
+ *
+ * Fallback 2: fofr/become-image (SDXL + IP-Adapter)
+ *   - Last resort if both primary and fallback 1 fail
  */
 
 import Replicate from "replicate";
 import sharp from "sharp";
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-/** Primary: BFL's purpose-built hairstyle + hair color app */
+// -- Constants -----------------------------------------------------------------
+const FAL_HAIR_MODEL       = "fal-ai/image-apps-v2/hair-change" as const;
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
-/** Fallback: SDXL + IP-Adapter face-preserving style transfer */
 const BECOME_IMAGE_MODEL   = "fofr/become-image:4af11083a4e2c9dd1b1f18ce37ade3f4d38d21e8d3a62a9c3b7fcf1d8b53db8" as const;
 const SELFIE_SEND_SIZE = 768;
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
 const MAX_CONCURRENCY = 2;
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 export interface FaceBox {
   left: number;
   top: number;
@@ -35,29 +38,26 @@ export interface FaceBox {
   faceH: number;
 }
 
-// ── Replicate client (lazy singleton) ─────────────────────────────────────────
+interface FalHairOutput {
+  image?: { url?: string };
+  images?: { url?: string }[];
+  url?: string;
+}
+
+// -- Replicate client (lazy singleton) ----------------------------------------
 let _client: Replicate | null = null;
 function getClient(token: string): Replicate {
-  // useFileOutput: false → SDK returns plain string URLs instead of FileOutput
-  // objects (ReadableStream subclasses). FileOutput objects lack .startsWith()
-  // so URL validation and fetch both fail silently without this flag.
   if (!_client) _client = new Replicate({ auth: token, useFileOutput: false });
   return _client;
 }
 
-// ── Enum maps ─────────────────────────────────────────────────────────────────
-// Supported haircut values for flux-kontext-apps/change-haircut
-// Full list: Bob, Pixie Cut, Layered, Messy Bun, High Ponytail, Low Ponytail,
-// Braided Ponytail, French Braid, Dutch Braid, Undercut, Mohawk, Crew Cut,
-// Slicked Back, Side-Parted, Shag, Lob, Angled Bob, Straight, Wavy, Curly, etc.
+// -- Enum maps -----------------------------------------------------------------
 const HAIRCUT_ENUM_MAP: Record<string, string> = {
-  // straight / wavy / curly texture
   "straight":        "Straight",
   "wavy":            "Wavy",
   "curly":           "Curly",
   "soft waves":      "Soft Waves",
   "glamorous waves": "Glamorous Waves",
-  // short styles
   "pixie":           "Pixie Cut",
   "pixie cut":       "Pixie Cut",
   "bob":             "Bob",
@@ -66,20 +66,16 @@ const HAIRCUT_ENUM_MAP: Record<string, string> = {
   "crew cut":        "Crew Cut",
   "undercut":        "Undercut",
   "shag":            "Shag",
-  // medium / long
   "layered":         "Layered",
   "feathered":       "Feathered",
-  // updos / buns
   "bun":             "Messy Bun",
   "messy bun":       "Messy Bun",
   "top knot":        "Top Knot",
   "chignon":         "Chignon",
   "updo":            "Updo",
-  // ponytails
   "ponytail":        "High Ponytail",
   "high ponytail":   "High Ponytail",
   "low ponytail":    "Low Ponytail",
-  // braids
   "braid":           "French Braid",
   "braided":         "French Braid",
   "french braid":    "French Braid",
@@ -88,69 +84,75 @@ const HAIRCUT_ENUM_MAP: Record<string, string> = {
   "box braids":      "Box Braids",
   "cornrows":        "Cornrows",
   "dreadlocks":      "Dreadlocks",
-  // other
   "mohawk":          "Mohawk",
   "faux hawk":       "Faux Hawk",
 };
 
-// Supported hair_color values for flux-kontext-apps/change-haircut
-const HAIR_COLOR_ENUM_MAP: Record<string, string> = {
-  "blonde":             "Blonde",
-  "golden blonde":      "Golden Blonde",
-  "honey blonde":       "Honey Blonde",
-  "ash blonde":         "Ash Blonde",
-  "platinum blonde":    "Platinum Blonde",
-  "strawberry blonde":  "Strawberry Blonde",
-  "brunette":           "Brunette",
-  "black":              "Black",
-  "jet black":          "Jet Black",
-  "blue-black":         "Blue-Black",
-  "dark brown":         "Dark Brown",
-  "medium brown":       "Medium Brown",
-  "light brown":        "Light Brown",
-  "ash brown":          "Ash Brown",
-  "chestnut":           "Chestnut",
-  "caramel":            "Caramel",
-  "auburn":             "Auburn",
-  "copper":             "Copper",
-  "red":                "Red",
-  "mahogany":           "Mahogany",
-  "burgundy":           "Burgundy",
-  "silver":             "Silver",
-  "white":              "White",
-  "titanium":           "Titanium",
-  "rose gold":          "Rose Gold",
-  "blue":               "Blue",
-  "purple":             "Purple",
-  "pink":               "Pink",
-  "green":              "Green",
+// FAL's exact hair_color enum values (from ImageAppsV2HairChangeInput)
+type FalHairColor =
+  | "blonde" | "black" | "auburn" | "red" | "silver"
+  | "blue" | "purple" | "pink" | "green"
+  | "dark_brown" | "light_brown" | "platinum_blonde"
+  | "gray" | "rainbow" | "natural" | "highlights" | "ombre" | "balayage";
+
+const HAIR_COLOR_ENUM_MAP: Record<string, FalHairColor> = {
+  // blondes
+  "blonde":             "blonde",
+  "golden blonde":      "blonde",
+  "honey blonde":       "blonde",
+  "ash blonde":         "blonde",
+  "strawberry blonde":  "blonde",
+  "platinum blonde":    "platinum_blonde",
+  // browns
+  "brunette":           "dark_brown",
+  "dark brown":         "dark_brown",
+  "medium brown":       "dark_brown",
+  "light brown":        "light_brown",
+  "ash brown":          "light_brown",
+  "chestnut":           "dark_brown",
+  "caramel":            "light_brown",
+  // reds/auburns
+  "auburn":             "auburn",
+  "copper":             "auburn",
+  "red":                "red",
+  "mahogany":           "auburn",
+  "burgundy":           "auburn",
+  // blacks
+  "black":              "black",
+  "jet black":          "black",
+  "blue-black":         "black",
+  // other
+  "silver":             "silver",
+  "gray":               "gray",
+  "grey":               "gray",
+  "white":              "platinum_blonde",
+  "titanium":           "gray",
+  "rose gold":          "balayage",
+  "blue":               "blue",
+  "purple":             "purple",
+  "pink":               "pink",
+  "green":              "green",
+  "rainbow":            "rainbow",
+  "highlights":         "highlights",
+  "ombre":              "ombre",
+  "balayage":           "balayage",
+  "natural":            "natural",
 };
 
-/**
- * Map a free-text style name to a supported haircut enum value.
- * Falls back to "No change" if no match found.
- */
 function mapToHaircutEnum(styleName: string): string {
   const key = styleName.toLowerCase().trim();
   return HAIRCUT_ENUM_MAP[key] ?? "No change";
 }
 
-/**
- * Map a free-text color name to a supported hair_color enum value.
- * Falls back to "No change" if no match found.
- */
-function mapToHairColorEnum(colorName: string): string {
+function mapToHairColorEnum(colorName: string): FalHairColor | "No change" {
   const key = colorName.toLowerCase().trim();
-  // Direct match
   if (HAIR_COLOR_ENUM_MAP[key]) return HAIR_COLOR_ENUM_MAP[key];
-  // Partial match — e.g. "warm auburn" → "Auburn"
   for (const [k, v] of Object.entries(HAIR_COLOR_ENUM_MAP)) {
     if (key.includes(k) || k.includes(key)) return v;
   }
   return "No change";
 }
 
-/** Kept for fallback prompt — free-text description of the colour */
 function hexToColourWord(hex: string): string {
   const h = hex.replace("#", "").toLowerCase();
   if (!h || h.length < 6) return "natural brown";
@@ -158,7 +160,7 @@ function hexToColourWord(hex: string): string {
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  const isReddish = r > g + 25 && r > b + 20;
+  const isReddish  = r > g + 25 && r > b + 20;
   if (brightness > 200) return "golden blonde";
   if (brightness > 165) return "light honey brown";
   if (brightness > 130) return "medium chestnut brown";
@@ -167,7 +169,6 @@ function hexToColourWord(hex: string): string {
   return "black";
 }
 
-// ── Prompt builder (fallback only) ───────────────────────────────────────────
 function buildPromptFallback(styleName: string, hairHex: string): string {
   const colour = hexToColourWord(hairHex);
   return (
@@ -176,15 +177,16 @@ function buildPromptFallback(styleName: string, hairHex: string): string {
   );
 }
 
-// ── Single preview generator ───────────────────────────────────────────────────
+// -- Single preview generator --------------------------------------------------
 /**
  * Generate one photorealistic hairstyle try-on.
  *
  * Strategy:
- *  1. Try flux-kontext-apps/change-haircut (purpose-built app, structured enum inputs)
- *  2. On failure → fallback to fofr/become-image (IP-Adapter style transfer)
+ *  1. fal-ai/image-apps-v2/hair-change  (primary, when falApiKey provided)
+ *  2. flux-kontext-apps/change-haircut  (fallback 1, Replicate)
+ *  3. fofr/become-image                 (fallback 2, last resort)
  *
- * _faceBox param kept for API compatibility with callers; it is unused here.
+ * _faceBox is kept for API compatibility with callers; unused by any model.
  */
 export async function replicateHairPreview(
   selfieBuf: Buffer,
@@ -192,8 +194,9 @@ export async function replicateHairPreview(
   styleName: string,
   hairHex: string,
   replicateToken: string,
-  hairColorName?: string,   // optional explicit color name (preferred over hex mapping)
+  hairColorName?: string,
   gender?: "none" | "male" | "female",
+  falApiKey?: string,
 ): Promise<Buffer> {
   const smallBuf = await sharp(selfieBuf)
     .rotate()
@@ -202,65 +205,93 @@ export async function replicateHairPreview(
     .toBuffer();
 
   const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
-  const client = getClient(replicateToken);
 
-  // Map free-text names to the model's supported enum values
   const haircutEnum   = mapToHaircutEnum(styleName);
-  const hairColorEnum = hairColorName
-    ? mapToHairColorEnum(hairColorName)
-    : "No change";
+  const hairColorEnum = hairColorName ? mapToHairColorEnum(hairColorName) : "No change";
 
   console.info(
-    `[replicate-hair] "${styleName}" → haircut="${haircutEnum}" | ` +
-    `color="${hairColorName ?? "(none)"}" → "${hairColorEnum}"`
+    `[hair] "${styleName}" => hair_style="${haircutEnum}" | ` +
+    `color="${hairColorName ?? "(none)"}" => "${hairColorEnum}"`,
   );
 
-  // ── Option 1: flux-kontext-apps/change-haircut ──────────────────────────
   let url: string | null = null;
-  try {
-    const output = await client.run(CHANGE_HAIRCUT_MODEL, {
-      input: {
-        input_image:      imageDataUri,
-        haircut:          haircutEnum,
-        hair_color:       hairColorEnum,
-        gender:           gender ?? "none",
-        aspect_ratio:     "match_input_image",
-        output_format:    "jpg",
-        safety_tolerance: 2,
-      },
-    });
-    const raw: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
-    if (raw?.startsWith("https://")) url = raw;
-    else console.warn(`[replicate-hair] change-haircut unexpected URL, falling back`);
-  } catch (err) {
-    console.warn(`[replicate-hair] change-haircut failed (${(err as Error).message}), trying fallback`);
+
+  // Option 1: fal-ai/image-apps-v2/hair-change (primary) ----------------------
+  if (falApiKey) {
+    try {
+      const { createFalClient } = await import("@fal-ai/client");
+      const fal = createFalClient({ credentials: falApiKey });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const falInput: Record<string, any> = { image_url: imageDataUri };
+      if (haircutEnum   !== "No change") falInput["hair_style"] = haircutEnum;
+      if (hairColorEnum !== "No change") falInput["hair_color"] = hairColorEnum;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await fal.run(FAL_HAIR_MODEL, { input: falInput as any }) as FalHairOutput;
+      const raw = result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
+      if (raw?.startsWith("https://")) {
+        url = raw;
+        console.info(`[hair] fal primary OK for "${styleName}"`);
+      } else {
+        console.warn(`[hair] fal returned unexpected output, falling back`);
+      }
+    } catch (err) {
+      console.warn(`[hair] fal failed (${(err as Error).message}), falling back to Replicate`);
+    }
   }
 
-  // ── Option 2: fofr/become-image (IP-Adapter fallback) ───────────────────
+  // Option 2: flux-kontext-apps/change-haircut (Replicate fallback 1) ---------
   if (!url) {
     try {
-      const output = await client.run(BECOME_IMAGE_MODEL, {
+      const client = getClient(replicateToken);
+      const output = await client.run(CHANGE_HAIRCUT_MODEL, {
         input: {
-          image:            imageDataUri,
-          prompt:           buildPromptFallback(styleName, hairHex),
-          image_strength:   0.55,
-          denoising_start:  0.45,
+          input_image:      imageDataUri,
+          haircut:          haircutEnum,
+          hair_color:       hairColorEnum,
+          gender:           gender ?? "none",
+          aspect_ratio:     "match_input_image",
           output_format:    "jpg",
-          output_quality:   90,
-          negative_prompt:  "deformed face, disfigured, cartoon, painting, low quality, blurry",
+          safety_tolerance: 2,
         },
       });
       const raw: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
       if (raw?.startsWith("https://")) {
         url = raw;
-        console.info(`[replicate-hair] used fallback model for "${styleName}"`);
+        console.info(`[hair] Replicate change-haircut OK for "${styleName}"`);
+      } else {
+        console.warn(`[hair] change-haircut unexpected URL, trying last-resort`);
       }
     } catch (err) {
-      console.warn(`[replicate-hair] fallback also failed: ${(err as Error).message}`);
+      console.warn(`[hair] change-haircut failed (${(err as Error).message}), trying last-resort`);
     }
   }
 
-  if (!url) throw new Error(`Both models failed for style "${styleName}"`);
+  // Option 3: fofr/become-image (last resort) ----------------------------------
+  if (!url) {
+    try {
+      const client = getClient(replicateToken);
+      const output = await client.run(BECOME_IMAGE_MODEL, {
+        input: {
+          image:           imageDataUri,
+          prompt:          buildPromptFallback(styleName, hairHex),
+          image_strength:  0.55,
+          denoising_start: 0.45,
+          output_format:   "jpg",
+          output_quality:  90,
+          negative_prompt: "deformed face, disfigured, cartoon, painting, low quality, blurry",
+        },
+      });
+      const raw: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
+      if (raw?.startsWith("https://")) {
+        url = raw;
+        console.info(`[hair] become-image last-resort OK for "${styleName}"`);
+      }
+    } catch (err) {
+      console.warn(`[hair] become-image also failed: ${(err as Error).message}`);
+    }
+  }
+
+  if (!url) throw new Error(`All models failed for style "${styleName}"`);
 
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
@@ -272,11 +303,12 @@ export async function replicateHairPreview(
     .toBuffer();
 }
 
-// ── Batch generator with concurrency cap ───────────────────────────────────────
+// -- Batch generator with concurrency cap -------------------------------------
 /**
- * Generate up to 5 hairstyle previews (dual-model: pro + fallback per slot).
- * Concurrency capped at MAX_CONCURRENCY to stay within Replicate rate limits.
- * Returns array of { index, buffer, style } for successful generations.
+ * Generate up to 5 hairstyle previews.
+ * Primary: fal-ai/image-apps-v2/hair-change (when falApiKey provided).
+ * Fallback 1: flux-kontext-apps/change-haircut.
+ * Fallback 2: fofr/become-image.
  */
 export async function replicateHairPreviewBatch(
   selfieBuf: Buffer,
@@ -286,6 +318,7 @@ export async function replicateHairPreviewBatch(
   replicateToken: string,
   hairColorName?: string,
   gender?: "none" | "male" | "female",
+  falApiKey?: string,
 ): Promise<{ index: number; buffer: Buffer; style: string }[]> {
   const results: { index: number; buffer: Buffer; style: string }[] = [];
   const queue = [...styles];
@@ -296,12 +329,12 @@ export async function replicateHairPreviewBatch(
       if (!item) break;
       try {
         const buf = await replicateHairPreview(
-          selfieBuf, faceBox, item.name, hairHex, replicateToken, hairColorName, gender,
+          selfieBuf, faceBox, item.name, hairHex, replicateToken, hairColorName, gender, falApiKey,
         );
         results.push({ index: item.index, buffer: buf, style: item.name });
-        console.info(`[replicate-hair] ✓ slot ${item.index} "${item.name}"`);
+        console.info(`[hair] slot ${item.index} "${item.name}" done`);
       } catch (err) {
-        console.warn(`[replicate-hair] ✗ slot ${item.index} "${item.name}":`, (err as Error).message);
+        console.warn(`[hair] slot ${item.index} "${item.name}" failed:`, (err as Error).message);
       }
     }
   }
@@ -309,4 +342,3 @@ export async function replicateHairPreviewBatch(
   await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENCY, styles.length) }, () => worker()));
   return results;
 }
-
