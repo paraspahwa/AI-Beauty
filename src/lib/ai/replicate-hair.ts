@@ -221,12 +221,11 @@ export async function replicateHairPreview(
     try {
       const { createFalClient } = await import("@fal-ai/client");
       const fal = createFalClient({ credentials: falApiKey });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const falInput: Record<string, any> = { image_url: imageDataUri };
+      const falInput: Record<string, unknown> = { image_url: imageDataUri };
       if (haircutEnum   !== "No change") falInput["hair_style"] = haircutEnum;
       if (hairColorEnum !== "No change") falInput["hair_color"] = hairColorEnum;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await fal.run(FAL_HAIR_MODEL, { input: falInput as any }) as FalHairOutput;
+      // @ts-expect-error -- cast required to pass dynamic Record into strict generic RunOptions
+      const result = await fal.run(FAL_HAIR_MODEL, { input: falInput }) as FalHairOutput;
       const raw = result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
       if (raw?.startsWith("https://")) {
         url = raw;
