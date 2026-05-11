@@ -84,6 +84,9 @@ export async function replicateGlassesPreview(
       prompt:           buildPrompt(styleName),
       output_format:    "jpg",
       output_quality:   92,
+      // "0.25" = preview/cost-saving tier — ~4× cheaper than "1" MP.
+      // Glasses try-on cards are 400×530 px; 0.25 MP (~512×512) is sufficient.
+      megapixels:       "0.25",
       aspect_ratio:     "match_input_image",
       safety_tolerance: 2,
     },
