@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Check, X } from "lucide-react";
+import { Check, X, Loader2, Sparkles } from "lucide-react";
 import type { ColorAnalysisResult } from "@/types/report";
 
 /* ─── helpers ──────────────────────────────────────────────────────────── */
@@ -738,28 +738,31 @@ function normalizeSeasonKey(season: string): string {
  * Comparison thumbnail.
  * Priority:
  *   1. aiPreviewUrl — real Replicate SDXL inpainted photo (best quality)
- *   2. photoUrl + CSS clip overlay — deterministic CSS clothing recolour
- *   3. Solid colour block fallback (no photo available)
+ *   2. Solid colour block fallback
+ *
+ * Shows a "✨ Preview" button on hover when no preview exists and onGenerate is provided.
  */
 function ColorSwatch({
   hex,
   name,
   aiPreviewUrl,
   generating = false,
+  onGenerate,
 }: {
   hex: string;
   name: string;
   aiPreviewUrl?: string;
   generating?: boolean;
+  onGenerate?: () => void;
 }) {
   // After 3 minutes stop spinning and fall back to color circle
   const [timedOut, setTimedOut] = React.useState(false);
   // Countdown timer — starts at 25s (expected generation time) and counts down
-  const [secondsLeft, setSecondsLeft] = React.useState(15);
+  const [secondsLeft, setSecondsLeft] = React.useState(25);
   React.useEffect(() => {
-    if (!generating) { setSecondsLeft(25); return; }
+    if (!generating) { setSecondsLeft(25); setTimedOut(false); return; }
     const timeout = setTimeout(() => setTimedOut(true), 3 * 60 * 1000);
-    setSecondsLeft(15);
+    setSecondsLeft(25);
     const tick = setInterval(() => {
       setSecondsLeft((s) => (s > 1 ? s - 1 : 1));
     }, 1000);
@@ -767,6 +770,7 @@ function ColorSwatch({
   }, [generating]);
 
   const showSkeleton = generating && !timedOut;
+  const showButton   = !aiPreviewUrl && !showSkeleton && !!onGenerate;
   const shades = [hex, lightenHex(hex, 0.18), lightenHex(hex, 0.36), lightenHex(hex, 0.55)];
 
   return (
@@ -790,18 +794,32 @@ function ColorSwatch({
         ) : showSkeleton ? (
           /* Skeleton — only shown while actively waiting for AI preview */
           <div
-            className="absolute inset-0 flex flex-col items-end justify-end gap-0.5 pb-6 pr-1 animate-pulse"
-            style={{ backgroundColor: hex, opacity: 0.75 }}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-1 animate-pulse"
+            style={{ backgroundColor: hex, opacity: 0.85 }}
           >
+            <Loader2 className="h-4 w-4 text-white animate-spin" />
             <span className="text-[10px] font-semibold tabular-nums text-white drop-shadow" style={{ lineHeight: 1 }}>{secondsLeft}s</span>
-            <span className="text-[7px] text-white drop-shadow" style={{ opacity: 0.85 }}>generating…</span>
           </div>
         ) : (
-          /* Static color fill — no AI preview available; fill the entire card area */
+          /* Static color fill */
           <div
             className="absolute inset-0"
             style={{ backgroundColor: hex }}
           />
+        )}
+
+        {/* ✨ Generate Preview button — shown on hover when no preview exists */}
+        {showButton && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ background: "rgba(0,0,0,0.28)" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onGenerate(); }}
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              style={{ background: "rgba(255,255,255,0.22)", border: "1px solid rgba(255,255,255,0.5)", backdropFilter: "blur(4px)" }}
+            >
+              <Sparkles className="h-3 w-3" />
+              Preview
+            </button>
+          </div>
         )}
 
         {/* Color name label */}
@@ -828,6 +846,8 @@ export function ColorAnalysisCard({
   bestColorPreviewUrls,
   avoidColorPreviewUrls,
   swatchesGenerating = false,
+  generatingSlots,
+  onGenerateSwatch,
 }: {
   data: ColorAnalysisResult;
   photoUrl?: string;
@@ -836,6 +856,10 @@ export function ColorAnalysisCard({
    * Only show the Generating skeleton during this window.
    */
   swatchesGenerating?: boolean;
+  /** Set of slot indices currently being generated (0-5 best, 6-11 avoid). */
+  generatingSlots?: Set<number>;
+  /** Called when the user clicks "Preview" on a swatch. slot = 0-11. */
+  onGenerateSwatch?: (slot: number) => void;
   /**
    * Optional array of signed URLs for AI-generated clothing colour previews.
    * Index N maps to bestColors[N]. Indices 0-5 = best colors.
@@ -1036,7 +1060,8 @@ export function ColorAnalysisCard({
               hex={c.hex}
               name={c.name}
               aiPreviewUrl={bestColorPreviewUrls?.[i]}
-              generating={swatchesGenerating && !bestColorPreviewUrls?.[i]}
+              generating={(swatchesGenerating && !bestColorPreviewUrls?.[i]) || generatingSlots?.has(i)}
+              onGenerate={onGenerateSwatch && !bestColorPreviewUrls?.[i] ? () => onGenerateSwatch(i) : undefined}
             />
           ))}
         </div>
@@ -1060,7 +1085,8 @@ export function ColorAnalysisCard({
               hex={c.hex}
               name={c.name}
               aiPreviewUrl={avoidColorPreviewUrls?.[i]}
-              generating={swatchesGenerating && !avoidColorPreviewUrls?.[i]}
+              generating={(swatchesGenerating && !avoidColorPreviewUrls?.[i]) || generatingSlots?.has(i + 6)}
+              onGenerate={onGenerateSwatch && !avoidColorPreviewUrls?.[i] ? () => onGenerateSwatch(i + 6) : undefined}
             />
           ))}
         </div>

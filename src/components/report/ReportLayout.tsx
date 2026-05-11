@@ -60,45 +60,53 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessing, report.id, isReadOnly]);
 
-  // True while /visuals/colors is in-flight; drives the loading skeleton in ColorAnalysisCard.
-  const [colorsGenerating, setColorsGenerating] = React.useState(false);
-  // Ref copy used inside the fire-and-forget fetch to prevent stacking concurrent batches
-  // without a stale-closure dependency on the state value.
-  const colorsRunning = React.useRef(false);
+  // Per-slot generating state: Set of slot indices (0-11) currently in-flight.
+  const [generatingSlots, setGeneratingSlots] = React.useState<Set<number>>(new Set());
+  // colorsGenerating is true when ANY slot is generating (drives banner)
+  const colorsGenerating = generatingSlots.size > 0;
 
-  // When the report is ready but visuals haven't been generated yet, trigger
-  // the async visuals route and refresh once it finishes.
-  // Also re-trigger if color swatch slots are incomplete. Older reports may
-  // have failed/missing/pending color assets from the old webhook-only path.
-  // NOTE: Glasses/hairstyle are lazy (Phase 5.4 per-slot buttons).
+  // When the report is ready but palette/landmark visuals haven't been generated yet,
+  // trigger ONLY the fast non-Replicate visuals route (palette board + landmark overlay).
+  // Color swatches are now click-to-generate (per-slot) — no auto-fire on load.
   React.useEffect(() => {
     if (isReadOnly || report.status !== "ready") return;
     if (visualsLoading) return;
-    const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const allSwatchesSettled = swatches.length >= 12 && swatches.every(
-      (s: { status: string }) => s.status === "ready" || s.status === "failed",
-    );
     const hasVisuals = !!report.visualAssets?.assets?.paletteBoard;
-    if (!hasVisuals || !allSwatchesSettled) {
+    if (!hasVisuals) {
       triggerVisuals();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report.status, report.id, report.visualAssets?.assets?.colorSwatchPreviews, isReadOnly]);
+  }, [report.status, report.id, isReadOnly]);
 
-  // Poll every 12s while color swatches are still generating
+  // Poll every 8s while any slot is actively generating (to pick up completed results)
   React.useEffect(() => {
-    if (isReadOnly || report.status !== "ready") return;
-    const swatches = report.visualAssets?.assets?.colorSwatchPreviews ?? [];
-    const allSettled =
-      swatches.length >= 12 &&
-      swatches.every((s: { status: string }) => s.status === "ready" || s.status === "failed");
-    if (allSettled) return;
-    // Only poll if the visuals route has run (paletteBoard is generated even if not displayed)
-    if (!report.visualAssets?.assets?.paletteBoard) return;
-    const timer = setInterval(refresh, 12000);
+    if (generatingSlots.size === 0) return;
+    const timer = setInterval(refresh, 8000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report.visualAssets?.assets?.colorSwatchPreviews, report.id, isReadOnly]);
+  }, [generatingSlots.size, report.id]);
+
+  /** Generate a single color swatch slot on user click. */
+  async function generateSwatchSlot(slot: number) {
+    if (generatingSlots.has(slot)) return; // already running
+    // Check if already ready
+    const existing = report.visualAssets?.assets?.colorSwatchPreviews?.[slot];
+    if (existing?.status === "ready") return;
+
+    setGeneratingSlots((prev) => new Set(prev).add(slot));
+    try {
+      await fetch(`/api/reports/${report.id}/visuals/colors?slot=${slot}`, { method: "POST" });
+      await refresh();
+    } catch {
+      /* slot stays as color circle — no crash */
+    } finally {
+      setGeneratingSlots((prev) => {
+        const next = new Set(prev);
+        next.delete(slot);
+        return next;
+      });
+    }
+  }
 
   async function triggerVisuals() {
     setVisualsLoading(true);
@@ -107,24 +115,6 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
       // Fast path: generates palette board + landmark overlay only (no Replicate).
       const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
       if (!res.ok) { setVisualsFailed(true); return; }
-      // Fire color swatches in background via the dedicated /visuals/colors endpoint.
-      // Each color swatch is a Replicate call (~20–60 s total); they run concurrently
-      // server-side. The 12 s polling effect below picks up slots as they become ready.
-      // colorsRunning prevents stacking concurrent batches during polling cycles.
-      if (!colorsRunning.current) {
-        colorsRunning.current = true;
-        setColorsGenerating(true);
-        // Fire one request per slot — each is a separate Vercel invocation (~15-30 s each),
-        // so no single call can hit the 60 s function limit.
-        // All 12 run truly in parallel across 12 separate server instances.
-        // Slots 0-5 = best colors, slots 6-11 = avoid colors.
-        Promise.all(
-          Array.from({ length: 12 }, (_, slot) =>
-            fetch(`/api/reports/${report.id}/visuals/colors?slot=${slot}`, { method: "POST" })
-              .catch(() => { /* server logs error; this slot stays as CSS circle */ }),
-          ),
-        ).finally(() => { colorsRunning.current = false; setColorsGenerating(false); });
-      }
       await refresh();
     } catch {
       setVisualsFailed(true);
@@ -349,6 +339,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       data={report.colorAnalysis}
                       photoUrl={report.imageUrl}
                       swatchesGenerating={colorsGenerating}
+                      generatingSlots={generatingSlots}
+                      onGenerateSwatch={isReadOnly ? undefined : generateSwatchSlot}
                       bestColorPreviewUrls={
                         report.visualAssets?.assets?.colorSwatchPreviews
                           ?.slice(0, 6)
