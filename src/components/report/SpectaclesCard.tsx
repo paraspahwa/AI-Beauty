@@ -456,41 +456,59 @@ export function SpectaclesCard({
               </div>
               {/* Photo or frame illustration or generate button */}
               <div className="flex items-center justify-center" style={{ aspectRatio: "3/4", background: "#EDE3D8", position: "relative" }}>
-                {(hasPreview || legacyUrl) && photoUrl ? (
+                {/* ── AI-generated preview (slots 0-2 when ready) ── */}
+                {hasPreview || legacyUrl ? (
                   <>
                     <Image
-                        src={(hasPreview ? slot!.signedUrl! : legacyUrl) || photoUrl!}
-                        alt={r.style} fill unoptimized
-                        className="object-cover"
-                        style={{ objectPosition: "top center" }}
-                      />
-                      {/* subtle warm tint */}
-                      <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.06)" }} />
-                      {/* frame overlay at eye level */}
-                      <div
-                        className="absolute left-0 right-0 flex items-center justify-center"
-                        style={{ top: "33%", mixBlendMode: "multiply" }}
-                      >
-                        <FrameIllustration style={r.style} size={90} animate delay={i * 0.08} />
-                      </div>
+                      src={(hasPreview ? slot!.signedUrl! : legacyUrl) || photoUrl!}
+                      alt={r.style} fill unoptimized
+                      className="object-cover"
+                      style={{ objectPosition: "top center" }}
+                    />
+                    <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.06)" }} />
+                    {/* AI badge */}
+                    <div className="absolute top-2 right-2 rounded-full px-2 py-0.5 text-[9px] font-semibold"
+                      style={{ background: "rgba(61,43,31,0.65)", color: "#E8C990" }}>
+                      ✨ AI
+                    </div>
                   </>
-                ) : isGenerating ? (
-                  <div className="flex flex-col items-center justify-center gap-2 p-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-2" style={{ borderColor: "#E8DDD0", borderTopColor: "#9C7D5B" }} />
-                    <span style={{ color: "#9C7D5B", fontSize: 10 }}>Generating…</span>
-                  </div>
-                ) : canGenerate ? (
-                  <div className="flex flex-col items-center justify-center gap-2 p-3">
-                    <FrameIllustration style={r.style} size={40} />
-                    <button
-                      onClick={() => generateSlot(i)}
-                      className="rounded-full px-2 py-1 text-[10px] font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: "#9C7D5B", color: "#fff", border: "none", cursor: "pointer" }}
+                ) : photoUrl ? (
+                  /* ── Phase 1: always show user photo + SVG frame overlay ── */
+                  <>
+                    <Image
+                      src={photoUrl}
+                      alt={r.style} fill unoptimized
+                      className="object-cover"
+                      style={{ objectPosition: "top center" }}
+                    />
+                    <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.04)" }} />
+                    {/* Frame SVG overlay at eye level */}
+                    <div
+                      className="absolute left-0 right-0 flex items-center justify-center pointer-events-none"
+                      style={{ top: "33%", mixBlendMode: "multiply" }}
                     >
-                      ✨ Generate Preview
-                    </button>
-                  </div>
+                      <FrameIllustration style={r.style} size={90} animate delay={i * 0.08} />
+                    </div>
+                    {/* Generate AI preview button — only for slots 0-2 */}
+                    {canGenerate && !isGenerating && (
+                      <button
+                        onClick={() => generateSlot(i)}
+                        className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
+                        style={{ background: "rgba(61,43,31,0.75)", color: "#E8C990", border: "1px solid rgba(232,201,144,0.4)", cursor: "pointer" }}
+                      >
+                        ✨ AI Preview
+                      </button>
+                    )}
+                    {isGenerating && (
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-3 py-1"
+                        style={{ background: "rgba(61,43,31,0.75)" }}>
+                        <div className="animate-spin rounded-full h-3 w-3 border-2" style={{ borderColor: "rgba(232,201,144,0.3)", borderTopColor: "#E8C990" }} />
+                        <span style={{ color: "#E8C990", fontSize: 10 }}>Generating…</span>
+                      </div>
+                    )}
+                  </>
                 ) : (
+                  /* ── Fallback: no photo available ── */
                   <div className="flex flex-col items-center gap-2 p-3">
                     <FrameIllustration style={r.style} size={56} />
                     <span style={{ color: "#9C7D5B", fontSize: 11, textAlign: "center" }}>{r.style}</span>
