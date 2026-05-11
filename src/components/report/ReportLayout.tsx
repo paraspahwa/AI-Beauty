@@ -473,6 +473,8 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     colorAnalysis={report.colorAnalysis}
                     makeupPreviews={report.visualAssets?.assets?.makeupPreviews}
                     isPaid={isPaid}
+                    reportId={report.id}
+                    photoUrl={report.imageUrl}
                   />
                 </motion.div>
               )}

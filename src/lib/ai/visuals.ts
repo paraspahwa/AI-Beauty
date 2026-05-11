@@ -230,9 +230,10 @@ export async function generateGlassesPreviews(
 }
 
 /**
- * Generate photorealistic hairstyle try-on previews for top 3 flattering styles.
- * Uses Flux Kontext Fast — no mask or faceBox required.
- * Falls back to empty array when Replicate is not configured; HairstyleCard
+ * Generate photorealistic hairstyle try-on previews for top 5 flattering styles.
+ * Primary: fal-ai/image-apps-v2/hair-change (when FAL_KEY is configured).
+ * Fallbacks: flux-kontext-apps/change-haircut → fofr/become-image.
+ * Falls back to empty array when neither service is configured; HairstyleCard
  * uses its built-in HairOverlay SVG fallbacks.
  */
 export async function generateHairstylePreviews(
@@ -245,7 +246,7 @@ export async function generateHairstylePreviews(
   const flatteningStyles = hairstyle.styles.slice(0, 5);
   const hairHex          = hairstyle.colors[0]?.hex ?? "#3B1F0A";
 
-  if (env.replicate.isConfigured) {
+  if (env.fal.isConfigured || env.replicate.isConfigured) {
     const batchStyles = flatteningStyles
       .map((s, i) => ({ index: i, name: s.name }))
       .filter((s) => !indicesToGenerate || indicesToGenerate.includes(s.index));
@@ -256,13 +257,16 @@ export async function generateHairstylePreviews(
       batchStyles,
       hairHex,
       env.replicate.apiToken,
+      undefined,
+      undefined,
+      env.fal.isConfigured ? env.fal.apiKey : undefined,
     ).catch((err) => {
-      console.warn("[visuals] hair Replicate batch failed:", (err as Error).message);
+      console.warn("[visuals] hair batch failed:", (err as Error).message);
       return [] as { index: number; buffer: Buffer; style: string }[];
     });
   }
 
-  console.warn("[visuals] Replicate not configured — hairstyle previews skipped");
+  console.warn("[visuals] Neither FAL_KEY nor REPLICATE_API_TOKEN configured — hairstyle previews skipped");
   return [];
 }
 

@@ -52,6 +52,11 @@ export const env = {
     /** true only when a token is actually configured */
     isConfigured: optional(process.env.REPLICATE_API_TOKEN).length > 0,
   },
+  fal: {
+    apiKey: optional(process.env.FAL_KEY),
+    /** true only when a FAL_KEY is configured */
+    isConfigured: optional(process.env.FAL_KEY).length > 0,
+  },
   aws: {
     region: optional(process.env.AWS_REGION, "us-east-1"),
     accessKeyId: optional(process.env.AWS_ACCESS_KEY_ID),
