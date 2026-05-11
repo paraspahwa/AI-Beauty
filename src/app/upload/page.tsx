@@ -9,8 +9,8 @@ import { OnboardingGate } from "@/components/OnboardingModal";
 
 const TIPS = [
   "Look straight into the camera, hair off your forehead",
-  "Use natural light if possible — avoid heavy filters",
-  "One face per photo gives the most accurate report",
+  "Use natural light — avoid heavy filters for accurate results",
+  "One face per photo · you'll upload garment photos inside the try-on tab",
 ];
 
 export default function UploadPage() {
@@ -32,8 +32,8 @@ export default function UploadPage() {
             Upload your selfie
           </h1>
           <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
-            A clear, well-lit, front-facing photo gives the best results. Your image is private
-            and secure.
+            One selfie unlocks your full AI beauty report: face shape, virtual clothing try-on,
+            makeup try-on, spectacles, and hairstyle guide. Private and secure.
           </p>
         </motion.header>
 

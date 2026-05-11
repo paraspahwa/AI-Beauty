@@ -15,50 +15,52 @@ import {
   ArrowRight,
   ChevronDown,
   Lock,
+  ShoppingBag,
+  Wand2,
 } from "lucide-react";
 import { useState } from "react";
 import { staggerContainer, fadeUp, slideIn, scaleIn } from "@/lib/animations";
 
 const FEATURES = [
   {
-    icon: Palette,
-    title: "Color Season",
-    body: "12-season analysis with a custom palette, metals, and makeup recommendations."
+    icon: ShoppingBag,
+    title: "Virtual Try-On",
+    body: "Upload any garment photo and see it on you instantly — powered by AI."
   },
   {
-    icon: Sparkles,
-    title: "Face Features",
-    body: "Identify your shape and discover your most flattering characteristics."
+    icon: Wand2,
+    title: "Makeup Try-On",
+    body: "Try everyday natural to full glam looks with AI applied directly to your photo."
   },
   {
     icon: Glasses,
-    title: "Spectacles",
-    body: "Perfect frame styles, fit guide, and colors tailored to your face."
+    title: "Spectacles Guide",
+    body: "Perfect frame styles, AI previews, fit tips and colors tailored to your face."
   },
   {
     icon: Scissors,
-    title: "Hairstyle",
-    body: "Cuts, lengths, and colors specifically made for your unique features."
+    title: "Hairstyle & Hair Color",
+    body: "Cuts, lengths, and AI hair-color previews made for your unique features."
   },
 ];
 
 const TESTIMONIALS = [
   {
     name: "Sarah K.",
-    season: "Soft Autumn",
-    quote: "Finally understand which colors make me glow! This changed my entire wardrobe.",
+    tag: "Virtual Try-On",
+    quote: "I tried on 10 outfits without leaving my house. The try-on is shockingly accurate!",
     rating: 5,
   },
   {
     name: "Priya M.",
-    season: "Deep Winter",
-    quote: "The hairstyle recommendations were spot-on. Best $10 I've spent on myself.",
+    tag: "Makeup Try-On",
+    quote: "Seeing the smoky eye look on MY face before buying anything — absolute game changer.",
     rating: 5,
   },
   {
     name: "Emma L.",
-    season: "Light Spring",
-    quote: "My glasses shopping is so much easier now. I know exactly what to look for!",
+    tag: "Hairstyle Guide",
+    quote: "The AI hairstyle previews saved me from a bad cut. Best $10 I've spent on myself.",
     rating: 5,
   },
 ];
@@ -74,7 +76,11 @@ const FAQS = [
   },
   {
     q: "What's included in the free preview?",
-    a: "You'll get your color season analysis with a custom palette, face shape identification, and personalized intro. Upgrade unlocks skin analysis, spectacles guide, hairstyles, and PDF download."
+    a: "You'll get face shape identification and a personalized introduction. Upgrade unlocks skin analysis, spectacles guide with AI frame previews, hairstyle guide, virtual clothing try-on, makeup try-on, and PDF download."
+  },
+  {
+    q: "How does Virtual Try-On work?",
+    a: "Upload a flat-lay or mannequin photo of any garment. Our AI places it on your selfie using the fal-ai virtual try-on model. Results are saved to your report for 1 hour and can be downloaded."
   },
   {
     q: "Can I get a refund?",
@@ -141,28 +147,28 @@ function MockReportCard() {
         </div>
       </div>
 
-      {/* Colour palette */}
-      <div className="mb-5">
-        <p className="text-xs uppercase tracking-widest text-ink-mist font-medium mb-2.5">
-          Your colour palette
-        </p>
-        <div className="flex gap-2">
-          {MOCK_PALETTE.map((c) => (
-            <motion.div
-              key={c.hex}
-              whileHover={{ y: -4, scale: 1.1 }}
-              transition={{ duration: 0.2 }}
-              title={c.label}
-              className="flex-1 aspect-square rounded-xl shadow-card border-2 border-white/80"
-              style={{ backgroundColor: c.hex }}
-            />
-          ))}
+      {/* Virtual Try-On teaser */}
+      <div className="mb-4 rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <ShoppingBag className="h-3.5 w-3.5" style={{ color: "#C9956B" }} />
+          <p className="text-xs font-medium" style={{ color: "#E8C990" }}>Virtual Try-On</p>
+          <span className="ml-auto text-[10px] rounded-full px-2 py-0.5 font-medium" style={{ background: "rgba(201,149,107,0.15)", color: "#C8A96E" }}>Premium</span>
+        </div>
+        <div className="flex items-center gap-3 px-3 py-3">
+          <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(201,149,107,0.12)" }}>
+            <Camera className="h-5 w-5" style={{ color: "#C9956B" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="h-2 w-3/4 rounded-full mb-1.5" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <div className="h-2 w-1/2 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }} />
+          </div>
+          <Wand2 className="h-4 w-4 shrink-0" style={{ color: "#C8A96E" }} />
         </div>
       </div>
 
       {/* Locked premium sections */}
       <div className="space-y-2">
-        {["Skin Analysis", "Spectacles Guide", "Hairstyle Guide"].map((section) => (
+        {["Makeup Try-On", "Spectacles Guide", "Hairstyle & Hair Color"].map((section) => (
           <div
             key={section}
             className="flex items-center justify-between rounded-xl px-4 py-2.5"
@@ -318,8 +324,8 @@ export default function HomePage() {
               variants={fadeUp}
               className="mt-6 text-base sm:text-lg text-ink-stone leading-relaxed max-w-xl mx-auto lg:mx-0"
             >
-              Upload a selfie and unlock a personalized beauty report: face shape, color season,
-              skin care, glasses, and hairstyle recommendations—all powered by AI.
+              Upload a selfie and get a full beauty report: face shape, virtual clothing try-on,
+              makeup try-on, spectacles guide, and hairstyle recommendations — all powered by AI.
             </motion.p>
 
             <motion.div variants={fadeUp} className="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start">
@@ -500,7 +506,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="font-medium text-ink text-sm">{testimonial.name}</p>
-                    <p className="text-xs text-ink-mist">{testimonial.season}</p>
+                    <p className="text-xs text-ink-mist">{testimonial.tag}</p>
                   </div>
                 </div>
               </motion.div>
@@ -529,7 +535,7 @@ export default function HomePage() {
               <p className="text-xs uppercase tracking-widest text-ink-mist mb-2">Free preview</p>
               <p className="font-serif text-5xl text-ink mb-6">$0</p>
               <ul className="space-y-3 text-sm text-ink-stone mb-6">
-                {["Color season + custom palette", "Face shape identification", "Personalized introduction"].map((item) => (
+                {["Face shape identification", "Personalized style introduction", "Free forever — no card needed"].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
                     {item}
@@ -556,9 +562,11 @@ export default function HomePage() {
               <ul className="space-y-3 text-sm text-ink-stone mb-6">
                 {[
                   "Everything in Free, plus:",
+                  "👗 Virtual clothing try-on (any garment)",
+                  "💄 Makeup try-on (6 styles × intensities)",
+                  "Spectacles guide with AI frame previews",
+                  "Hairstyle & AI hair-color previews",
                   "Skin analysis & custom routine",
-                  "Spectacles guide",
-                  "Hairstyle recommendations",
                   "Downloadable PDF report",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
@@ -672,7 +680,7 @@ export default function HomePage() {
 
           <div className="pt-6 border-t border-cream-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-mist">
             <p>© {new Date().getFullYear()} StyleAI. All rights reserved.</p>
-            <p>Crafted with care · Powered by GPT-4o &amp; AWS Rekognition</p>
+            <p>Crafted with care · Powered by GPT-4o, AWS Rekognition &amp; FAL AI</p>
           </div>
         </div>
       </footer>
