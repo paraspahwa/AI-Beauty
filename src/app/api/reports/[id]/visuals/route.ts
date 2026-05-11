@@ -97,42 +97,73 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
       const skeleton = createVisualAssetsSkeleton(user.id, id, env.supabase.bucket);
 
+      // ── Helper: atomic per-slot DB write (prevents concurrent-write race) ──
+      async function writeSlotAtomic(
+        section: string,
+        slotIdx: number,
+        slotPath: string,
+        status: "ready" | "failed",
+        styleName?: string,
+        errorMsg?: string,
+      ) {
+        const slotData = {
+          path: slotPath,
+          status,
+          mime: "image/jpeg",
+          error: errorMsg ?? null,
+          ...(styleName ? { styleName } : {}),
+        };
+        await admin.rpc("atomic_update_preview_slot", {
+          p_report_id: id,
+          p_user_id:   user!.id,
+          p_section:   section,
+          p_slot:      slotIdx,
+          p_slot_data: slotData,
+        });
+      }
+
       // Build the full slots array (preserving existing ready/failed slots)
       if (sectionType === "glasses") {
         const glassesResult = row.glasses as GlassesResult;
         const allSlots = (glassesResult?.recommended ?? []).slice(0, 3).map(
           (s, i) => {
             const ex = existingPreviews[i];
-            // Preserve already-settled slots; only mark target slot(s) as missing
             if (ex?.status === "ready" || ex?.status === "failed") return ex;
             return { path: `${skeleton.basePath}glasses-${i}.jpg`, status: "missing" as const, mime: "image/jpeg", error: null,
               ...(typeof s.style === "string" ? { styleName: s.style } : {}) };
           }
         );
-        skeleton.assets.glassesPreviews = allSlots;
 
-        // Generate only the target slot(s)
         const indicesToGenerate = slotIndex !== null
           ? [slotIndex].filter((i) => i < allSlots.length && allSlots[i]?.status === "missing")
           : allSlots.map((s, i) => s.status === "missing" ? i : -1).filter((i) => i >= 0);
 
         if (indicesToGenerate.length > 0) {
+          const batchStyles = indicesToGenerate.map((i) => ({
+            index: i,
+            name: (allSlots[i] as { styleName?: string })?.styleName
+              ?? (glassesResult?.recommended?.[i]?.style ?? `Style ${i}`),
+          }));
           const results = await generateGlassesPreviews(
             sectionBuffer, glassesResult, row.rekognition, indicesToGenerate,
           ).catch(() => [] as { index: number; buffer: Buffer }[]);
+
+          // Upload and atomically write each slot independently
           for (const { index, buffer: imgBuf } of results) {
-            const asset = skeleton.assets.glassesPreviews[index];
-            if (!asset) continue;
+            const slotPath = allSlots[index]?.path ?? `${skeleton.basePath}glasses-${index}.jpg`;
+            const styleName = batchStyles.find((s) => s.index === index)?.name;
             const { error: upErr } = await admin.storage.from(env.supabase.bucket)
-              .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-            asset.status = upErr ? "failed" : "ready";
-            if (upErr) asset.error = upErr.message;
+              .upload(slotPath, imgBuf, { contentType: "image/jpeg", upsert: true });
+            await writeSlotAtomic("glassesPreviews", index, slotPath,
+              upErr ? "failed" : "ready", styleName, upErr?.message);
           }
-          // Mark any still-missing generated slots as failed
+          // Mark slots that got no result as failed
+          const succeededIndices = new Set(results.map((r) => r.index));
           for (const idx of indicesToGenerate) {
-            if (skeleton.assets.glassesPreviews[idx]?.status === "missing") {
-              skeleton.assets.glassesPreviews[idx]!.status = "failed";
-              skeleton.assets.glassesPreviews[idx]!.error = "No preview generated";
+            if (!succeededIndices.has(idx)) {
+              const slotPath = allSlots[idx]?.path ?? `${skeleton.basePath}glasses-${idx}.jpg`;
+              const styleName = batchStyles.find((s) => s.index === idx)?.name;
+              await writeSlotAtomic("glassesPreviews", idx, slotPath, "failed", styleName, "No preview generated");
             }
           }
         }
@@ -146,28 +177,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               ...(typeof s.name === "string" ? { styleName: s.name } : {}) };
           }
         );
-        skeleton.assets.hairstylePreviews = allSlots;
 
         const indicesToGenerate = slotIndex !== null
           ? [slotIndex].filter((i) => i < allSlots.length && allSlots[i]?.status === "missing")
           : allSlots.map((s, i) => s.status === "missing" ? i : -1).filter((i) => i >= 0);
 
         if (indicesToGenerate.length > 0) {
+          const batchStyles = indicesToGenerate.map((i) => ({
+            index: i,
+            name: (allSlots[i] as { styleName?: string })?.styleName
+              ?? (hairstyleResult?.styles?.[i]?.name ?? `Style ${i}`),
+          }));
           const results = await generateHairstylePreviews(
             sectionBuffer, hairstyleResult, row.rekognition, indicesToGenerate,
           ).catch(() => [] as { index: number; buffer: Buffer; style: string }[]);
+
           for (const { index, buffer: imgBuf } of results) {
-            const asset = skeleton.assets.hairstylePreviews[index];
-            if (!asset) continue;
+            const slotPath = allSlots[index]?.path ?? `${skeleton.basePath}hairstyle-${index}.jpg`;
+            const styleName = batchStyles.find((s) => s.index === index)?.name;
             const { error: upErr } = await admin.storage.from(env.supabase.bucket)
-              .upload(asset.path, imgBuf, { contentType: "image/jpeg", upsert: true });
-            asset.status = upErr ? "failed" : "ready";
-            if (upErr) asset.error = upErr.message;
+              .upload(slotPath, imgBuf, { contentType: "image/jpeg", upsert: true });
+            await writeSlotAtomic("hairstylePreviews", index, slotPath,
+              upErr ? "failed" : "ready", styleName, upErr?.message);
           }
+          const succeededIndices = new Set(results.map((r) => r.index));
           for (const idx of indicesToGenerate) {
-            if (skeleton.assets.hairstylePreviews[idx]?.status === "missing") {
-              skeleton.assets.hairstylePreviews[idx]!.status = "failed";
-              skeleton.assets.hairstylePreviews[idx]!.error = "No preview generated";
+            if (!succeededIndices.has(idx)) {
+              const slotPath = allSlots[idx]?.path ?? `${skeleton.basePath}hairstyle-${idx}.jpg`;
+              const styleName = batchStyles.find((s) => s.index === idx)?.name;
+              await writeSlotAtomic("hairstylePreviews", idx, slotPath, "failed", styleName, "No preview generated");
             }
           }
         }
@@ -209,20 +247,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               skeleton.assets.makeupPreviews[idx]!.error = "No preview generated";
             }
           }
+          // Makeup still uses full merge (no concurrent calls for makeup)
+          const merged = { ...(existingAssets ?? {}), assets: { ...existingAssetsInner, makeupPreviews: skeleton.assets.makeupPreviews } };
+          await admin.from("reports").update({ visual_assets: merged }).eq("id", id);
         }
       }
 
-      const previewsKey2 = sectionType === "glasses" ? "glassesPreviews"
-        : sectionType === "hairstyle" ? "hairstylePreviews"
-        : "makeupPreviews";
-      const newPreviews =
-        sectionType === "glasses"   ? skeleton.assets.glassesPreviews
-        : sectionType === "hairstyle" ? skeleton.assets.hairstylePreviews
-        : skeleton.assets.makeupPreviews;
-
-      // Merge updated previews into existing visual_assets
-      const merged = { ...(existingAssets ?? {}), assets: { ...existingAssetsInner, [previewsKey2]: newPreviews } };
-      await admin.from("reports").update({ visual_assets: merged }).eq("id", id);
       return NextResponse.json({ ok: true, skipped: false });
     }
 
