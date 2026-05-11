@@ -1,0 +1,16 @@
+{
+  "name": "StyleAI",
+  "short_name": "StyleAI",
+  "description": "Your AI-powered personal stylist",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#C9956B",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
