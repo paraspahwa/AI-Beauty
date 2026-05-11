@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Share2, Sparkles, Lock, Loader2, X } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
-import { ColorAnalysisCard } from "./ColorAnalysisCard";
+import { VirtualTryOnCard } from "./VirtualTryOnCard";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
@@ -20,7 +20,7 @@ import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
 
 const TABS = [
   { value: "face",    label: "Face" },
-  { value: "color",   label: "Color" },
+  { value: "color",   label: "👗 Try-On" },
   { value: "skin",    label: "Skin" },
   { value: "glasses", label: "Spectacles" },
   { value: "hair",    label: "Hairstyle" },
@@ -334,31 +334,11 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                   animate="visible"
                   exit="exit"
                 >
-                  {report.colorAnalysis ? (
-                    <ColorAnalysisCard
-                      data={report.colorAnalysis}
-                      photoUrl={report.imageUrl}
-                      swatchesGenerating={colorsGenerating}
-                      generatingSlots={generatingSlots}
-                      onGenerateSwatch={isReadOnly ? undefined : generateSwatchSlot}
-                      bestColorPreviewUrls={
-                        report.visualAssets?.assets?.colorSwatchPreviews
-                          ?.slice(0, 6)
-                          .map((a: { status: string; signedUrl?: string }) =>
-                            a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
-                          )
-                      }
-                      avoidColorPreviewUrls={
-                        report.visualAssets?.assets?.colorSwatchPreviews
-                          ?.slice(6, 12)
-                          .map((a: { status: string; signedUrl?: string }) =>
-                            a.status === "ready" && a.signedUrl ? a.signedUrl : undefined
-                          )
-                      }
-                    />
-                  ) : (
-                    <Empty />
-                  )}
+                  <VirtualTryOnCard
+                    reportId={report.id}
+                    photoUrl={report.imageUrl}
+                    isPaid={isPaid}
+                  />
                 </motion.div>
               )}
             </TabsContent>
