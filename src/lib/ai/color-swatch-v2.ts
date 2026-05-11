@@ -1,10 +1,11 @@
 /**
  * Color swatch preview generation — v2
  *
- * Single provider: prunaai/flux-kontext-fast
+ * Single provider: black-forest-labs/flux-kontext-pro
  *   - Input: user selfie (base64) + natural-language edit prompt
  *   - Context-aware image editing — no mask, no faceBox required
  *   - Identity-preserving by design (face/hair/background unchanged)
+ *   - megapixels: "0.25" — preview quality tier (~4× cheaper than full 1 MP)
  *
  * All 12 swatches are generated (6 best + 6 avoid).
  * If generation fails for a slot, it is skipped — the UI falls back to the
@@ -14,11 +15,14 @@
 import Replicate from "replicate";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const FLUX_KONTEXT_MODEL = "prunaai/flux-kontext-fast" as const;
+// Pro model — higher quality, identity-preserving, supports megapixels param.
+const FLUX_KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro" as const;
 
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
-const MAX_CONCURRENCY = 12;
+// Pro model is slower than fast; keep concurrency low to avoid Replicate
+// rate-limit errors and stay within Vercel function-duration limits.
+const MAX_CONCURRENCY = 3;
 
 // Selfie is resized to this before sending — smaller payload = faster upload
 // and faster model processing. 640px is sufficient for clothing color preview.
@@ -70,7 +74,7 @@ async function resizeOutput(buf: Buffer): Promise<Buffer> {
   .toBuffer();
 }
 
-// ── Flux Kontext Fast ──────────────────────────────────────────────────────────
+// ── Flux Kontext Pro ──────────────────────────────────────────────────────────
 async function runFluxKontext(
   selfieBuf: Buffer,
   colorName: string,
@@ -90,16 +94,18 @@ async function runFluxKontext(
 
   const client = getReplicate(replicateToken);
   const output = await client.run(FLUX_KONTEXT_MODEL, {
-  input: {
-    img_cond_path:       imageDataUri,
-    prompt:              buildKontextPrompt(colorName, colorHex),
-    output_format:       "jpg",
-    output_quality:      80,
-    // Smallest output size — 512px is plenty for a 400×530 preview card
-    image_size:          512,
-    // Minimum steps — 4 is the floor for flux-based models; lower = faster but less detail
-    num_inference_steps: 4,
-  },
+    input: {
+      // flux-kontext-pro uses `input_image` (not `img_cond_path`)
+      input_image:      imageDataUri,
+      prompt:           buildKontextPrompt(colorName, colorHex),
+      output_format:    "jpg",
+      output_quality:   85,
+      // "0.25" = preview/cost-saving tier — generates ~512×512 equivalent,
+      // which is plenty for a 400×530 swatch card. Approx 4× cheaper than "1".
+      megapixels:       "0.25",
+      aspect_ratio:     "match_input_image",
+      safety_tolerance: 2,
+    },
   });
 
   const url: string = Array.isArray(output) ? (output[0] as string) : (output as unknown as string);
