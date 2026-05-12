@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
-import { Lock, Sparkles, Check, Shield, Zap, Award } from "lucide-react";
+import { Lock, Sparkles, Check, Shield, Zap, Award, Droplets, Glasses, Scissors, FileDown, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +16,7 @@ import {
 import { publicEnv } from "@/lib/public-env";
 import { formatCurrency } from "@/lib/utils";
 import { detectCurrency, type SupportedCurrency } from "@/lib/currency";
-import { modalVariants, backdropVariants, fadeUp, staggerContainer } from "@/lib/animations";
+import { fadeUp, staggerContainer } from "@/lib/animations";
 
 /** Subset of the Razorpay Checkout success response we actually use. */
 interface RazorpayPaymentResponse {
@@ -48,29 +48,29 @@ interface PaywallProps {
 
 const PERKS = [
   {
-    icon: Sparkles,
+    icon: Droplets,
     text: "Full skin analysis with custom routine",
   },
   {
-    icon: Sparkles,
+    icon: Glasses,
     text: "Spectacles guide tailored to your face shape",
   },
   {
-    icon: Sparkles,
+    icon: Scissors,
     text: "Hairstyle, length & color recommendations",
   },
   {
-    icon: Sparkles,
+    icon: FileDown,
     text: "Downloadable PDF for stylists & shopping",
   },
   {
-    icon: Sparkles,
+    icon: Share2,
     text: "Shareable preview cards for socials",
   },
 ];
 
 const SOCIAL_PROOF = [
-  { icon: Award, text: "2,847 unlocked today" },
+  { icon: Award, text: "50,000+ analyses done" },
   { icon: Sparkles, text: "4.9/5 stars" },
   { icon: Shield, text: "30-day refund" },
 ];
@@ -102,7 +102,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
       const res = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId, currency }),
+        body: JSON.stringify({ reportId, currencyHint: currency }),
       });
       const payload = await res.json();
       if (!res.ok) {
@@ -281,7 +281,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                         transition={{ delay: 0.1 * index, type: "spring" }}
                         className="shrink-0"
                       >
-                        <Check className="h-5 w-5" style={{ color: "#C9956B" }} />
+                        <perk.icon className="h-5 w-5" style={{ color: "#C9956B" }} />
                       </motion.div>
                       <span>{perk.text}</span>
                     </motion.li>

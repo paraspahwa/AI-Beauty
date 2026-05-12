@@ -22,6 +22,7 @@ export function verifyCheckoutSignature(args: {
   paymentId: string;
   signature: string;
 }): boolean {
+  if (!env.razorpay.keySecret) return false; // never accept with missing key
   const expected = createHmac("sha256", env.razorpay.keySecret)
     .update(`${args.orderId}|${args.paymentId}`)
     .digest("hex");

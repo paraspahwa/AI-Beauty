@@ -9,8 +9,29 @@ export const maxDuration = 30;
 
 const Body = z.object({
   reportId: z.string().uuid(),
-  currency: z.enum(["INR", "USD"]).optional().default("INR"),
+  // currencyHint is informational only — server derives the authoritative currency
+  // from Cloudflare/Vercel geo headers so the client cannot underpay by sending "INR".
+  currencyHint: z.enum(["INR", "USD"]).optional(),
 });
+
+/**
+ * Derive the authoritative charge currency from server-side geo signals.
+ * Cloudflare sets `CF-IPCountry`; Vercel sets `X-Vercel-IP-Country`.
+ * Falls back to currencyHint then INR.
+ */
+function deriveServerCurrency(
+  req: NextRequest,
+  hint?: "INR" | "USD",
+): "INR" | "USD" {
+  const cfCountry =
+    req.headers.get("CF-IPCountry") ??
+    req.headers.get("X-Vercel-IP-Country") ??
+    "";
+  if (cfCountry.toUpperCase() === "IN") return "INR";
+  if (cfCountry.length > 0) return "USD"; // any other geolocated country → USD
+  // No geo header (local dev) — trust the hint so dev/test still works
+  return hint ?? "INR";
+}
 
 /**
  * POST /api/payments/create
@@ -56,10 +77,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const amountMinor = body.currency === "USD"
+    const currency = deriveServerCurrency(req, body.currencyHint);
+    const amountMinor = currency === "USD"
       ? Math.round(env.razorpay.priceUSD * 100) // USD cents
       : Math.round(env.razorpay.priceINR * 100); // INR paise
-    const currency = body.currency;
     const admin = createSupabaseAdminClient();
 
     // Idempotent reuse: if we already created an order for this report, return it.

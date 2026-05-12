@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
     console.error("[webhook/razorpay] RAZORPAY_WEBHOOK_SECRET is not set");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
+  if (!env.razorpay.keySecret) {
+    console.error("[webhook/razorpay] RAZORPAY_KEY_SECRET is not set");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  }
 
   const signature = req.headers.get("x-razorpay-signature") ?? "";
   const raw = await req.text();
