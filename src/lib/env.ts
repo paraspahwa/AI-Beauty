@@ -67,7 +67,7 @@ export const env = {
     keySecret: optional(process.env.RAZORPAY_KEY_SECRET),
     webhookSecret: optional(process.env.RAZORPAY_WEBHOOK_SECRET),
     priceUSD: Number(process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "9.99"),
-    priceINR: Number(process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "829"),
+    priceINR: Number(process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "399"),
     isConfigured:
       optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID).length > 0 &&
       optional(process.env.RAZORPAY_KEY_SECRET).length > 0 &&

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { publicEnv } from "@/lib/public-env";
 import { formatCurrency } from "@/lib/utils";
+import { detectCurrency, type SupportedCurrency } from "@/lib/currency";
 import { modalVariants, backdropVariants, fadeUp, staggerContainer } from "@/lib/animations";
 
 /** Subset of the Razorpay Checkout success response we actually use. */
@@ -85,6 +86,15 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Detect currency once on mount (client-side only)
+  const [currency, setCurrency] = React.useState<SupportedCurrency>("INR");
+  React.useEffect(() => { setCurrency(detectCurrency()); }, []);
+
+  const priceMinor = currency === "INR"
+    ? Math.round(publicEnv.razorpay.priceINR * 100)
+    : Math.round(publicEnv.razorpay.priceUSD * 100);
+  const priceLabel = formatCurrency(priceMinor, currency);
+
   async function startCheckout() {
     setLoading(true);
     setError(null);
@@ -92,7 +102,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
       const res = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId }),
+        body: JSON.stringify({ reportId, currency }),
       });
       const payload = await res.json();
       if (!res.ok) {
@@ -102,7 +112,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
         throw new Error(message);
       }
 
-      const { orderId, amount, currency, keyId, mode, requiresRealCheckout } = payload as CreatePaymentResponse;
+      const { orderId, amount, currency: orderCurrency, keyId, mode, requiresRealCheckout } = payload as CreatePaymentResponse;
 
       if (mode === "test" || requiresRealCheckout === false) {
         const verify = await fetch("/api/payments/verify", {
@@ -129,7 +139,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
       const rz = new window.Razorpay({
         key: keyId,
         amount,
-        currency,
+        currency: orderCurrency,
         order_id: orderId,
         name: "StyleAI",
         description: "Full Beauty Report",
@@ -185,7 +195,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
             />
             <span className="relative flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Unlock Full Report — {formatCurrency(publicEnv.razorpay.priceINR * 100, "INR")}
+              Unlock Full Report — {priceLabel}
               <Zap className="h-4 w-4 animate-pulse-slow" />
             </span>
           </Button>
@@ -240,12 +250,14 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                 >
                   <div className="flex items-center justify-center gap-3 mb-2">
                     <span className="font-serif text-5xl" style={{ color: "#F0E8D8" }}>
-                      {formatCurrency(publicEnv.razorpay.priceINR * 100, "INR")}
+                      {priceLabel}
                     </span>
                     <div className="flex flex-col items-start">
-                      <span className="text-sm text-ink-mist line-through">$29.99</span>
+                      <span className="text-sm text-ink-mist line-through">
+                        {currency === "INR" ? "₹999" : "$29.99"}
+                      </span>
                       <span className="inline-block text-obsidian text-xs font-bold px-2 py-0.5 rounded" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
-                        67% OFF
+                        {currency === "INR" ? "60% OFF" : "67% OFF"}
                       </span>
                     </div>
                   </div>
@@ -322,7 +334,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                       ) : (
                         <>
                           <Sparkles className="h-5 w-5" />
-                          Unlock Full Report — {formatCurrency(publicEnv.razorpay.priceINR * 100, "INR")}
+                          Unlock Full Report — {priceLabel}
                         </>
                       )}
                     </span>

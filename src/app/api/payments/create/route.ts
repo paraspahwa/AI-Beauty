@@ -7,7 +7,10 @@ import { env } from "@/lib/env";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const Body = z.object({ reportId: z.string().uuid() });
+const Body = z.object({
+  reportId: z.string().uuid(),
+  currency: z.enum(["INR", "USD"]).optional().default("INR"),
+});
 
 /**
  * POST /api/payments/create
@@ -53,8 +56,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const amountMinor = Math.round(env.razorpay.priceINR * 100); // INR paise
-    const currency = "INR";
+    const amountMinor = body.currency === "USD"
+      ? Math.round(env.razorpay.priceUSD * 100) // USD cents
+      : Math.round(env.razorpay.priceINR * 100); // INR paise
+    const currency = body.currency;
     const admin = createSupabaseAdminClient();
 
     // Idempotent reuse: if we already created an order for this report, return it.
