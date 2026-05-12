@@ -400,40 +400,7 @@ export function HairstyleCard({
   stylingTips?: string[];
   hairType?: string;
 }) {
-  const [generatingSlots, setGeneratingSlots] = React.useState<Set<number>>(new Set());
-  const [generatingAll, setGeneratingAll] = React.useState(false);
-
-  async function generateSlot(index: number) {
-    if (!reportId || generatingSlots.has(index)) return;
-    setGeneratingSlots((prev) => new Set([...prev, index]));
-    try {
-      await fetch(`/api/reports/${reportId}/visuals?type=hairstyle&index=${index}`, { method: "POST" });
-      onRefresh?.();
-    } catch {
-      // non-fatal
-    } finally {
-      setGeneratingSlots((prev) => { const next = new Set(prev); next.delete(index); return next; });
-    }
-  }
-
-  async function generateAll() {
-    if (!reportId || generatingAll) return;
-    setGeneratingAll(true);
-    // Trigger all 5 slots in parallel — server handles caching (skips settled slots)
-    try {
-      await Promise.all(
-        [0, 1, 2, 3, 4].map((i) =>
-          fetch(`/api/reports/${reportId}/visuals?type=hairstyle&index=${i}`, { method: "POST" }).catch(() => {}),
-        ),
-      );
-      onRefresh?.();
-    } finally {
-      setGeneratingAll(false);
-    }
-  }
-
-  // No auto-trigger — previews are generated per-slot on user click.
-  // Hair colour from AI analysis — first recommended colour drives overlay tinting
+  // No auto-generation — previews are generated on-demand via AI Beauty Studio
   const primaryHairColor  = data.colors[0]?.hex;
   const resolvedHairType  = hairType ?? data.hairType ?? "Wavy / Curly";
   const resolvedFaceShape = faceShape ?? "Oval";

@@ -6,13 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Share2, Sparkles, Lock, Loader2, X } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
-import { VirtualTryOnCard } from "./VirtualTryOnCard";
+import { AIBeautyStudio } from "./AIBeautyStudio";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
-import { HairColorCard } from "./HairColorCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
-import { MakeupCard } from "./MakeupCard";
 import { Paywall } from "@/components/Paywall";
 import { StyleChatDrawer } from "@/components/StyleChatDrawer";
 import type { CompiledReport } from "@/types/report";
@@ -20,11 +18,10 @@ import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
 
 const TABS = [
   { value: "face",    label: "Face" },
-  { value: "color",   label: "👗 Try-On" },
   { value: "skin",    label: "Skin" },
   { value: "glasses", label: "Spectacles" },
   { value: "hair",    label: "Hairstyle" },
-  { value: "makeup",  label: "💄 Makeup" },
+  { value: "studio",  label: "✨ AI Studio" },
   { value: "shop",    label: "🛍 Shop" },
 ] as const;
 
@@ -36,9 +33,9 @@ interface Props {
 
 export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
   const [report, setReport] = React.useState(initial);
-  const [activeTab, setActiveTab] = React.useState<"face"|"color"|"skin"|"glasses"|"hair"|"makeup"|"shop">("face");
+  const [activeTab, setActiveTab] = React.useState<"face"|"skin"|"glasses"|"hair"|"studio"|"shop">("face");
   // Radix Tabs passes onValueChange as (value: string) — cast to keep the union type safe
-  const handleTabChange = (value: string) => setActiveTab(value as "face"|"color"|"skin"|"glasses"|"hair"|"makeup"|"shop");
+  const handleTabChange = (value: string) => setActiveTab(value as "face"|"skin"|"glasses"|"hair"|"studio"|"shop");
   const [copied, setCopied] = React.useState(false);
   const [shareLoading, setShareLoading] = React.useState(false);
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
@@ -280,7 +277,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
             >
               {TABS.map((t) => {
                 const isLocked =
-                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "shop");
+                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "studio" || t.value === "shop");
 
                 return (
                   <TabsTrigger
@@ -325,19 +322,20 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
               )}
             </TabsContent>
 
-            <TabsContent value="color" className="mt-0">
-              {activeTab === "color" && (
+            <TabsContent value="studio" className="mt-0">
+              {activeTab === "studio" && (
                 <motion.div
-                  key="color"
+                  key="studio"
                   variants={tabContent}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
                 >
-                  <VirtualTryOnCard
+                  <AIBeautyStudio
                     reportId={report.id}
                     photoUrl={report.imageUrl}
                     isPaid={isPaid}
+                    colorAnalysis={report.colorAnalysis}
                   />
                 </motion.div>
               )}
@@ -435,27 +433,6 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                       title="Hairstyle Guide"
                     />
                   )}
-                  {isPaid && <HairColorCard reportId={report.id} />}
-                </motion.div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="makeup" className="mt-0">
-              {activeTab === "makeup" && (
-                <motion.div
-                  key="makeup"
-                  variants={tabContent}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                >
-                  <MakeupCard
-                    colorAnalysis={report.colorAnalysis}
-                    makeupPreviews={report.visualAssets?.assets?.makeupPreviews}
-                    isPaid={isPaid}
-                    reportId={report.id}
-                    photoUrl={report.imageUrl}
-                  />
                 </motion.div>
               )}
             </TabsContent>
