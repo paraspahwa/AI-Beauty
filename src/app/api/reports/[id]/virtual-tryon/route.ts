@@ -3,11 +3,10 @@
  *
  * Virtual clothing try-on using fal-ai/image-apps-v2/virtual-try-on.
  *
- * Body (multipart/form-data OR JSON):
- *   - clothImage: File  (multipart) | clothUrl: string (JSON)
- *
- * The user's selfie is read from storage (the report's image_path).
- * The garment image is accepted as an upload from the client.
+ * Body (multipart/form-data):
+ *   - clothImage:  File  (required)  — garment photo (flat-lay or mannequin)
+ *   - personImage: File  (optional)  — full-body photo; overrides the stored selfie
+ *                                      for better draping accuracy
  *
  * Returns: { url: string } — signed URL (1 h) of the result stored in Supabase.
  */
@@ -52,41 +51,48 @@ export async function POST(
       return NextResponse.json({ error: "FAL not configured" }, { status: 503 });
     }
 
-    // ── Read garment image from multipart upload ────────────────────────────
-    let clothBuf: Buffer;
-    let clothMime = "image/jpeg";
+    // ── Read form data ──────────────────────────────────────────────────────
     const contentType = req.headers.get("content-type") ?? "";
+    if (!contentType.includes("multipart/form-data")) {
+      return NextResponse.json({ error: "multipart/form-data required" }, { status: 415 });
+    }
 
-    if (contentType.includes("multipart/form-data")) {
-      const form = await req.formData();
-      const file = form.get("clothImage") as File | null;
-      if (!file) return NextResponse.json({ error: "clothImage is required" }, { status: 400 });
-      if (!ALLOWED_MIME.has(file.type)) {
-        return NextResponse.json({ error: "Unsupported image type" }, { status: 415 });
+    const form = await req.formData();
+
+    // Required: garment image
+    const clothFile = form.get("clothImage") as File | null;
+    if (!clothFile) return NextResponse.json({ error: "clothImage is required" }, { status: 400 });
+    if (!ALLOWED_MIME.has(clothFile.type)) {
+      return NextResponse.json({ error: "Unsupported garment image type" }, { status: 415 });
+    }
+    if (clothFile.size > MAX_CLOTH_BYTES) {
+      return NextResponse.json({ error: "Garment image too large (max 10 MB)" }, { status: 413 });
+    }
+    const clothBuf  = Buffer.from(await clothFile.arrayBuffer());
+    const clothMime = clothFile.type;
+
+    // Optional: full-body person photo (overrides stored selfie)
+    const personFile = form.get("personImage") as File | null;
+    let selfieBuf: Buffer;
+
+    if (personFile) {
+      if (!ALLOWED_MIME.has(personFile.type)) {
+        return NextResponse.json({ error: "Unsupported person image type" }, { status: 415 });
       }
-      if (file.size > MAX_CLOTH_BYTES) {
-        return NextResponse.json({ error: "Garment image too large (max 10 MB)" }, { status: 413 });
+      if (personFile.size > MAX_CLOTH_BYTES) {
+        return NextResponse.json({ error: "Person image too large (max 10 MB)" }, { status: 413 });
       }
-      clothBuf = Buffer.from(await file.arrayBuffer());
-      clothMime = file.type;
+      selfieBuf = Buffer.from(await personFile.arrayBuffer());
     } else {
-      // JSON body with a public clothUrl (e.g. a previously uploaded garment)
-      const body = (await req.json().catch(() => ({}))) as { clothUrl?: string };
-      if (!body.clothUrl) return NextResponse.json({ error: "clothImage or clothUrl is required" }, { status: 400 });
-      const dlRes = await fetch(body.clothUrl);
-      if (!dlRes.ok) return NextResponse.json({ error: "Could not fetch cloth URL" }, { status: 422 });
-      clothBuf = Buffer.from(await dlRes.arrayBuffer());
-      clothMime = dlRes.headers.get("content-type") ?? "image/jpeg";
+      // ── Load the stored selfie from private storage ──────────────────────
+      const { data: selfieData, error: selfieErr } = await admin.storage
+        .from(env.supabase.bucket)
+        .download(row.image_path as string);
+      if (selfieErr || !selfieData) {
+        return NextResponse.json({ error: "Selfie unavailable" }, { status: 422 });
+      }
+      selfieBuf = Buffer.from(await selfieData.arrayBuffer());
     }
-
-    // ── Load the selfie from private storage ───────────────────────────────
-    const { data: selfieData, error: selfieErr } = await admin.storage
-      .from(env.supabase.bucket)
-      .download(row.image_path as string);
-    if (selfieErr || !selfieData) {
-      return NextResponse.json({ error: "Selfie unavailable" }, { status: 422 });
-    }
-    const selfieBuf = Buffer.from(await selfieData.arrayBuffer());
 
     // ── Encode both images as base64 data URIs (private bucket safe) ───────
     const selfieUri = `data:image/jpeg;base64,${selfieBuf.toString("base64")}`;

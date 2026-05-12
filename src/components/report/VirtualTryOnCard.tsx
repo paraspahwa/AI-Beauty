@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Sparkles, Upload, Wand2, Loader2, RefreshCw, ShoppingBag, Lock, X, History } from "lucide-react";
+import { Sparkles, Upload, Wand2, Loader2, RefreshCw, ShoppingBag, Lock, X, History, UserRound, Info } from "lucide-react";
 
 // ── Animation CSS ─────────────────────────────────────────────────────────────
 const TRYON_CSS = `
@@ -29,16 +29,21 @@ interface Props {
 }
 
 type TryonStatus = "idle" | "loading" | "done" | "error";
+type PhotoMode = "selfie" | "full";
 
 // ── Drag-and-drop / click upload zone ────────────────────────────────────────
 function UploadZone({
   onFile,
   preview,
   disabled,
+  label,
+  hint,
 }: {
   onFile: (f: File) => void;
   preview: string | null;
   disabled?: boolean;
+  label: string;
+  hint: string;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
@@ -69,13 +74,7 @@ function UploadZone({
       }}
     >
       {preview ? (
-        <Image
-          src={preview}
-          alt="Garment preview"
-          fill
-          className="object-contain p-3"
-          unoptimized
-        />
+        <Image src={preview} alt={label} fill className="object-contain p-3" unoptimized />
       ) : (
         <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
           <div
@@ -84,12 +83,8 @@ function UploadZone({
           >
             <Upload className="h-5 w-5" style={{ color: "#C8A96E" }} />
           </div>
-          <p className="text-sm font-medium" style={{ color: "#3D2B1F" }}>
-            Upload garment photo
-          </p>
-          <p className="text-xs leading-snug" style={{ color: "#9C7D5B" }}>
-            Drag & drop or click<br />JPG / PNG / WEBP · max 10 MB
-          </p>
+          <p className="text-sm font-medium" style={{ color: "#3D2B1F" }}>{label}</p>
+          <p className="text-xs leading-snug" style={{ color: "#9C7D5B" }}>{hint}</p>
         </div>
       )}
       <input
@@ -201,12 +196,20 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
   const [history, setHistory] = React.useState<string[]>([]);
   const [showHistory, setShowHistory] = React.useState(false);
 
-  // Revoke object URL on cleanup
-  React.useEffect(() => {
-    return () => { if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview); };
-  }, [clothPreview]);
+  // Full-body photo state
+  const [photoMode, setPhotoMode] = React.useState<PhotoMode>("selfie");
+  const [fullBodyFile, setFullBodyFile] = React.useState<File | null>(null);
+  const [fullBodyPreview, setFullBodyPreview] = React.useState<string | null>(null);
 
-  function handleFile(f: File) {
+  // Revoke object URLs on cleanup
+  React.useEffect(() => {
+    return () => {
+      if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview);
+      if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
+    };
+  }, [clothPreview, fullBodyPreview]);
+
+  function handleClothFile(f: File) {
     if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview);
     setClothFile(f);
     setClothPreview(URL.createObjectURL(f));
@@ -222,6 +225,26 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
     setStatus("idle");
   }
 
+  function handleFullBodyFile(f: File) {
+    if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
+    setFullBodyFile(f);
+    setFullBodyPreview(URL.createObjectURL(f));
+    setResultUrl(null);
+    setStatus("idle");
+  }
+
+  function clearFullBody() {
+    if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
+    setFullBodyFile(null);
+    setFullBodyPreview(null);
+  }
+
+  function handleModeSwitch(mode: PhotoMode) {
+    setPhotoMode(mode);
+    setResultUrl(null);
+    setStatus("idle");
+  }
+
   async function generate() {
     if (!clothFile) return;
     setStatus("loading");
@@ -229,6 +252,9 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
     try {
       const form = new FormData();
       form.append("clothImage", clothFile);
+      if (photoMode === "full" && fullBodyFile) {
+        form.append("personImage", fullBodyFile);
+      }
       const res = await fetch(`/api/reports/${reportId}/virtual-tryon`, {
         method: "POST",
         body: form,
@@ -318,22 +344,80 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
 
         {/* Body: 2-col on md+ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
-          {/* Left: selfie + garment upload */}
+          {/* Left: person photo */}
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>
-              Your Photo
-            </p>
-            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
-              <Image
-                src={photoUrl}
-                alt="Your photo"
-                fill
-                className="object-cover"
-                unoptimized
-              />
+            {/* Photo mode toggle */}
+            <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: "#F0E8DF" }}>
+              <button
+                onClick={() => handleModeSwitch("selfie")}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all"
+                style={photoMode === "selfie"
+                  ? { background: "#FDFAF6", color: "#3D2B1F", boxShadow: "0 1px 4px rgba(61,43,31,0.12)" }
+                  : { background: "transparent", color: "#9C7D5B" }}
+              >
+                <Sparkles className="h-3.5 w-3.5" /> My Selfie
+              </button>
+              <button
+                onClick={() => handleModeSwitch("full")}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all"
+                style={photoMode === "full"
+                  ? { background: "#FDFAF6", color: "#3D2B1F", boxShadow: "0 1px 4px rgba(61,43,31,0.12)" }
+                  : { background: "transparent", color: "#9C7D5B" }}
+              >
+                <UserRound className="h-3.5 w-3.5" /> Full Body ✦
+              </button>
             </div>
+
+            {photoMode === "selfie" ? (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>
+                  Your Photo
+                </p>
+                <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
+                  <Image src={photoUrl} alt="Your photo" fill className="object-cover" unoptimized />
+                </div>
+                {/* Tip nudge */}
+                <div className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: "rgba(200,169,110,0.08)", border: "1px solid rgba(200,169,110,0.2)" }}>
+                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#C8A96E" }} />
+                  <p className="text-[11px] leading-snug" style={{ color: "#9C7D5B" }}>
+                    For better draping, switch to <strong>Full Body</strong> and upload a standing photo.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>
+                    Full Body Photo
+                  </p>
+                  {fullBodyFile && (
+                    <button
+                      onClick={clearFullBody}
+                      className="flex items-center gap-1 text-xs transition-colors hover:opacity-70"
+                      style={{ color: "#C06B3E" }}
+                    >
+                      <X className="h-3 w-3" /> Clear
+                    </button>
+                  )}
+                </div>
+                <UploadZone
+                  onFile={handleFullBodyFile}
+                  preview={fullBodyPreview}
+                  disabled={status === "loading"}
+                  label="Upload full-body photo"
+                  hint={"Standing, front-facing · plain background\nJPG / PNG / WEBP · max 10 MB"}
+                />
+                <div className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: "rgba(123,160,91,0.08)", border: "1px solid rgba(123,160,91,0.2)" }}>
+                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#7BA05B" }} />
+                  <p className="text-[11px] leading-snug" style={{ color: "#7BA05B" }}>
+                    Full-body photos give significantly more accurate garment draping results.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
+          {/* Right: garment upload + generate */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>
@@ -349,11 +433,17 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
                 </button>
               )}
             </div>
-            <UploadZone onFile={handleFile} preview={clothPreview} disabled={status === "loading"} />
+            <UploadZone
+              onFile={handleClothFile}
+              preview={clothPreview}
+              disabled={status === "loading"}
+              label="Upload garment photo"
+              hint={"Drag & drop or click\nJPG / PNG / WEBP · max 10 MB"}
+            />
 
             <button
               onClick={generate}
-              disabled={!clothFile || status === "loading"}
+              disabled={!clothFile || status === "loading" || (photoMode === "full" && !fullBodyFile)}
               className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
             >
@@ -363,6 +453,11 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
                 <><Wand2 className="h-4 w-4" /> Try It On</>
               )}
             </button>
+            {photoMode === "full" && !fullBodyFile && (
+              <p className="text-center text-[11px]" style={{ color: "#C06B3E" }}>
+                Please upload a full-body photo to continue
+              </p>
+            )}
           </div>
         </div>
 
@@ -380,9 +475,9 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
           style={{ borderTop: "1px solid #F0E8DF", background: "rgba(200,169,110,0.04)" }}
         >
           {[
-            "Use a flat-lay or mannequin photo for best results",
-            "Clear background improves accuracy",
-            "Avoid heavily patterned backgrounds",
+            "Full-body standing photo gives the best draping results",
+            "Use a flat-lay or mannequin photo for the garment",
+            "Plain background improves AI accuracy",
           ].map((tip) => (
             <p key={tip} className="text-[11px]" style={{ color: "#B8A898" }}>
               ✦ {tip}
