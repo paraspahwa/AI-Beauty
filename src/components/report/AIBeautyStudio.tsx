@@ -519,160 +519,168 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
 
         {/* ── MAKEUP mode ── */}
         {mode === "makeup" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5">
+          <div className="flex flex-col sm:grid sm:grid-cols-[1fr_220px] gap-0">
 
-            {/* ── Left: controls ── */}
-            <div className="flex flex-col gap-4 overflow-y-auto" style={{ maxHeight: 560 }}>
+            {/* ── Left: scrollable controls ── */}
+            <div className="flex flex-col gap-5 p-5 sm:overflow-y-auto sm:max-h-[640px]"
+              style={{ borderRight: "1px solid #F0E8DF" }}>
 
               {/* Lip Colour */}
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Lip Colour</p>
-                <div className="flex flex-wrap gap-2">
+              <section className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Lip Colour</p>
+                <div className="flex flex-wrap gap-2.5">
                   {LIP_COLORS.map((c) => (
                     <button key={c.value} title={c.label}
                       onClick={() => { setMkLip(c.value); resetMakeupResult(); }}
                       disabled={status === "loading"}
-                      className="h-7 w-7 rounded-full transition-transform hover:scale-110 focus:outline-none disabled:opacity-40"
+                      className="h-8 w-8 rounded-full transition-transform hover:scale-110 focus:outline-none disabled:opacity-40 shrink-0"
                       style={{
                         background: c.hex,
-                        border: mkLip === c.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.15)",
-                        boxShadow: mkLip === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : "0 1px 3px rgba(0,0,0,0.15)",
+                        border: mkLip === c.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.12)",
+                        boxShadow: mkLip === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : "0 1px 3px rgba(0,0,0,0.18)",
                       }} />
                   ))}
                 </div>
-                <p className="text-[11px]" style={{ color: "#9C7D5B" }}>
-                  {LIP_COLORS.find((c) => c.value === mkLip)?.label}
+                <p className="text-[11px] font-medium" style={{ color: "#C9956B" }}>
+                  {LIP_COLORS.find((c) => c.value === mkLip)?.label ?? "—"}
                 </p>
-              </div>
+              </section>
 
               {/* Eyeshadow Palette */}
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Eyeshadow Palette</p>
-                <div className="flex flex-wrap gap-2">
+              <section className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Eyeshadow Palette</p>
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2">
                   {EYESHADOW_PALETTES.map((e) => (
                     <button key={e.value} title={e.description}
                       onClick={() => { setMkEye(e.value); resetMakeupResult(); }}
                       disabled={status === "loading"}
-                      className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-medium transition-all hover:opacity-80 disabled:opacity-40"
+                      className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-medium transition-all hover:opacity-80 disabled:opacity-40 w-full"
                       style={{
-                        background: mkEye === e.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F0E8DF",
+                        background: mkEye === e.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F5EDE4",
                         color: mkEye === e.value ? "#3D2B1F" : "#6B5344",
-                        border: mkEye === e.value ? "none" : "1px solid #E0CEBC",
+                        border: mkEye === e.value ? "1.5px solid transparent" : "1.5px solid #E0CEBC",
                       }}>
-                      {e.swatches.length > 0 && (
-                        <span className="flex gap-0.5">
-                          {e.swatches.map((h) => (
-                            <span key={h} className="h-3 w-3 rounded-full" style={{ background: h }} />
-                          ))}
-                        </span>
-                      )}
-                      {e.label}
+                      <span className="flex gap-0.5 shrink-0">
+                        {e.swatches.length > 0
+                          ? e.swatches.map((h) => (
+                              <span key={h} className="h-3.5 w-3.5 rounded-full" style={{ background: h }} />
+                            ))
+                          : <span className="h-3.5 w-3.5 rounded-full" style={{ background: "#E0CEBC" }} />}
+                      </span>
+                      <span className="truncate text-left">{e.label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
+              </section>
 
               {/* Blush */}
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Blush</p>
-                <div className="flex flex-wrap gap-2 mb-1">
+              <section className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Blush</p>
+                <div className="flex flex-wrap gap-3">
                   {BLUSH_COLORS.map((b) => (
                     <button key={b.value} title={b.label}
                       onClick={() => { setMkBlush(b.value); resetMakeupResult(); }}
                       disabled={status === "loading"}
-                      className="flex flex-col items-center gap-0.5 transition-transform hover:scale-110 focus:outline-none disabled:opacity-40">
-                      <div className="h-7 w-7 rounded-full"
+                      className="flex flex-col items-center gap-1 transition-transform hover:scale-110 focus:outline-none disabled:opacity-40">
+                      <div className="h-8 w-8 rounded-full flex items-center justify-center"
                         style={{
-                          background: b.hex || "#F0E8DF",
-                          border: mkBlush === b.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.1)",
-                          boxShadow: mkBlush === b.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : undefined,
-                        }} />
-                      <span className="text-[7px]" style={{ color: mkBlush === b.value ? "#C9956B" : "#B8A898" }}>
-                        {b.label.split(" ")[0]}
+                          background: b.hex || "#E8DDD0",
+                          border: mkBlush === b.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.08)",
+                          boxShadow: mkBlush === b.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : "0 1px 3px rgba(0,0,0,0.12)",
+                        }}>
+                        {!b.hex && <span className="text-[8px]" style={{ color: "#9C7D5B" }}>✕</span>}
+                      </div>
+                      <span className="text-[9px] text-center w-10 leading-tight"
+                        style={{ color: mkBlush === b.value ? "#C9956B" : "#9C7D5B" }}>
+                        {b.label}
                       </span>
                     </button>
                   ))}
                 </div>
                 {mkBlush !== "no_blush" && (
-                  <div className="flex gap-1.5">
+                  <div className="grid grid-cols-4 gap-1.5 mt-0.5">
                     {BLUSH_INTENSITIES.map((b) => (
                       <button key={b.value}
                         onClick={() => { setMkBlushInt(b.value); resetMakeupResult(); }}
                         disabled={status === "loading"}
-                        className="flex-1 rounded-lg py-1 text-[10px] font-semibold transition-all disabled:opacity-40"
+                        className="rounded-lg py-1.5 text-[10px] font-semibold transition-all disabled:opacity-40"
                         style={{
-                          background: mkBlushInt === b.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F0E8DF",
+                          background: mkBlushInt === b.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F5EDE4",
                           color: mkBlushInt === b.value ? "#3D2B1F" : "#9C7D5B",
+                          border: mkBlushInt === b.value ? "none" : "1px solid #E0CEBC",
                         }}>
                         {b.label}
                       </button>
                     ))}
                   </div>
                 )}
-              </div>
+              </section>
 
-              {/* Foundation */}
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Foundation Shade</p>
-                <div className="flex flex-wrap gap-2">
+              {/* Foundation Shade */}
+              <section className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Foundation Shade</p>
+                <div className="flex flex-wrap gap-3">
                   {FOUNDATION_SHADES.map((f) => (
                     <button key={f.value} title={f.label}
                       onClick={() => { setMkFoundation(f.value); resetMakeupResult(); }}
                       disabled={status === "loading"}
-                      className="flex flex-col items-center gap-0.5 transition-transform hover:scale-110 focus:outline-none disabled:opacity-40">
-                      <div className="h-7 w-7 rounded-full"
+                      className="flex flex-col items-center gap-1 transition-transform hover:scale-110 focus:outline-none disabled:opacity-40">
+                      <div className="h-8 w-8 rounded-full"
                         style={{
                           background: f.hex,
-                          border: mkFoundation === f.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.1)",
-                          boxShadow: mkFoundation === f.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : undefined,
+                          border: mkFoundation === f.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.08)",
+                          boxShadow: mkFoundation === f.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : "0 1px 3px rgba(0,0,0,0.12)",
                         }} />
-                      <span className="text-[7px]" style={{ color: mkFoundation === f.value ? "#C9956B" : "#B8A898" }}>
-                        {f.label.split("-")[0]}
+                      <span className="text-[9px] text-center w-10 leading-tight"
+                        style={{ color: mkFoundation === f.value ? "#C9956B" : "#9C7D5B" }}>
+                        {f.label}
                       </span>
                     </button>
                   ))}
                 </div>
-              </div>
+              </section>
 
               {/* Contour toggle */}
-              <div className="flex items-center justify-between rounded-xl px-3.5 py-2.5"
-                style={{ background: "#F0E8DF", border: "1.5px solid #E0CEBC" }}>
-                <div>
-                  <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Contour &amp; Highlight</p>
-                  <p className="text-[10px]" style={{ color: "#9C7D5B" }}>Sculpt cheekbones and nose bridge</p>
+              <section>
+                <div className="flex items-center justify-between rounded-xl px-4 py-3"
+                  style={{ background: "#F5EDE4", border: "1.5px solid #E0CEBC" }}>
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Contour &amp; Highlight</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: "#9C7D5B" }}>Sculpt cheekbones and nose bridge</p>
+                  </div>
+                  <button onClick={() => { setMkContour((v) => !v); resetMakeupResult(); }}
+                    disabled={status === "loading"}
+                    className="relative ml-4 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40"
+                    style={{ background: mkContour ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#D8CEC4" }}>
+                    <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+                      style={{ transform: mkContour ? "translateX(22px)" : "translateX(2px)" }} />
+                  </button>
                 </div>
-                <button onClick={() => { setMkContour((v) => !v); resetMakeupResult(); }}
-                  disabled={status === "loading"}
-                  className="relative h-6 w-11 rounded-full transition-colors disabled:opacity-40"
-                  style={{ background: mkContour ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#D8CEC4" }}>
-                  <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
-                    style={{ transform: mkContour ? "translateX(22px)" : "translateX(2px)" }} />
-                </button>
-              </div>
+              </section>
 
-              {/* Eyeliner */}
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Eyeliner Style</p>
+              {/* Eyeliner Style */}
+              <section className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Eyeliner Style</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {EYELINER_STYLES.map((l) => (
                     <button key={l.value} title={l.description}
                       onClick={() => { setMkEyeliner(l.value); resetMakeupResult(); }}
                       disabled={status === "loading"}
-                      className="rounded-xl py-2 px-2 text-[11px] font-semibold text-center transition-all disabled:opacity-40"
+                      className="rounded-xl py-2.5 px-2 text-[11px] font-semibold text-center transition-all disabled:opacity-40"
                       style={{
-                        background: mkEyeliner === l.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F0E8DF",
+                        background: mkEyeliner === l.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F5EDE4",
                         color: mkEyeliner === l.value ? "#3D2B1F" : "#6B5344",
-                        border: mkEyeliner === l.value ? "none" : "1px solid #E0CEBC",
+                        border: mkEyeliner === l.value ? "1.5px solid transparent" : "1.5px solid #E0CEBC",
                       }}>
                       {l.label}
                     </button>
                   ))}
                 </div>
-              </div>
+              </section>
 
               {/* Generate button */}
               <button onClick={generateMakeup} disabled={status === "loading"}
-                className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mt-1"
+                className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
                 {status === "loading"
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
@@ -680,21 +688,21 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
               </button>
             </div>
 
-            {/* ── Right: photo + colour season hint ── */}
-            <div className="flex flex-col gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Your Photo</p>
-              <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
+            {/* ── Right: sticky photo + season hint ── */}
+            <div className="flex flex-col gap-3 p-5 sm:sticky sm:top-0 sm:self-start">
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Your Photo</p>
+              <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 <Image src={photoUrl} alt="Your photo" fill className="object-cover" unoptimized />
               </div>
               {colorAnalysis && colorAnalysis.palette.length > 0 && (
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+                <div className="flex flex-wrap items-center gap-1.5 rounded-xl px-3 py-2"
                   style={{ background: "rgba(200,169,110,0.08)", border: "1px solid rgba(200,169,110,0.2)" }}>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold shrink-0" style={{ color: "#B8A898" }}>
+                  <p className="text-[9px] uppercase tracking-wider font-bold shrink-0" style={{ color: "#B8A898" }}>
                     {colorAnalysis.season}
                   </p>
                   {colorAnalysis.palette.slice(0, 5).map((c) => (
                     <span key={c.hex} title={c.name}
-                      className="h-5 w-5 rounded-full border-2 border-white shadow-sm"
+                      className="h-4 w-4 rounded-full border border-white shadow-sm shrink-0"
                       style={{ background: c.hex }} />
                   ))}
                 </div>
