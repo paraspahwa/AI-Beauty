@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { Check, X } from "lucide-react";
+import { Check, ExternalLink, ShoppingBag, X } from "lucide-react";
 import type { SkinAnalysisResult } from "@/types/report";
+import { getAffiliateProducts } from "@/lib/affiliates";
 
 const ZONE_ANIMATION_CSS = `
 @keyframes skin-draw-zone {
@@ -296,17 +297,81 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
           {data.routine.length > 0 && (
             <div className="mt-6">
               <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>Recommended Routine</p>
-              <ol className="space-y-2.5">
-                {data.routine.map((r, i) => (
-                  <li key={r.step} className="flex items-start gap-3 text-sm">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
-                    <div>
-                      <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
-                      <span style={{ color: "#9C7D5B" }}> - {r.product}</span>
-                    </div>
-                  </li>
-                ))}
+              <ol className="space-y-4">
+                {data.routine.map((r, i) => {
+                  const products = getAffiliateProducts(r.step, skinType);
+                  return (
+                    <li key={r.step}>
+                      {/* Step label */}
+                      <div className="flex items-start gap-3 text-sm mb-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
+                        <div>
+                          <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
+                          <span style={{ color: "#9C7D5B" }}> — {r.product}</span>
+                        </div>
+                      </div>
+
+                      {/* Affiliate product cards */}
+                      {products.length > 0 && (
+                        <div className="ml-9 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {products.map((p) => (
+                            <a
+                              key={p.url}
+                              href={p.url}
+                              target="_blank"
+                              rel="noopener noreferrer sponsored"
+                              className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                              style={{
+                                background: "#F5EFE7",
+                                border: "1px solid #E8DDD0",
+                                textDecoration: "none",
+                              }}
+                            >
+                              {/* Icon */}
+                              <span
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                style={{ background: "#EDE3D8", color: "#9C7D5B" }}
+                              >
+                                <ShoppingBag className="h-4 w-4" />
+                              </span>
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-semibold truncate" style={{ color: "#3D2B1F" }}>{p.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[10px]" style={{ color: "#9C7D5B" }}>{p.brand}</span>
+                                  {p.badge && (
+                                    <span
+                                      className="text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
+                                      style={{ background: "#EDE3D8", color: "#7B5E3A" }}
+                                    >
+                                      {p.badge}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Price + arrow */}
+                              <div className="flex flex-col items-end shrink-0">
+                                <span className="text-[11px] font-bold" style={{ color: "#3D2B1F" }}>₹{p.priceINR}</span>
+                                <ExternalLink
+                                  className="h-3 w-3 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity"
+                                  style={{ color: "#9C7D5B" }}
+                                />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
+
+              {/* Affiliate disclosure */}
+              <p className="mt-4 text-[9px] leading-relaxed" style={{ color: "#B8A898" }}>
+                * Product links are affiliate links. We may earn a small commission if you purchase through these links — at no extra cost to you. Prices are approximate and may vary.
+              </p>
             </div>
           )}
         </div>
