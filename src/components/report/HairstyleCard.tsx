@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Check, Minus } from "lucide-react";
+import { Check } from "lucide-react";
 import type { HairstyleResult } from "@/types/report";
 
 // ── Animation CSS ────────────────────────────────────────────────────────────
@@ -367,67 +367,7 @@ const MAINTENANCE_COLORS: Record<1 | 2 | 3, { filled: string; empty: string }> =
 };
 
 // ── Length diagram ────────────────────────────────────────────────────────────
-// Length levels mapped to SVG y-coordinates inside viewBox 0 0 80 200
-// Silhouette: head centre y=36, chin y=62, shoulders y=76, body extends to y=190
-const LENGTH_LEVELS = [
-  { label: "Short",          y: 72  },   // chin/jaw
-  { label: "Collarbone",     y: 95  },   // collarbone
-  { label: "Below Shoulder", y: 120 },   // below shoulder
-  { label: "Mid Back",       y: 155 },   // mid-back
-];
 
-function LengthDiagram({ recommended }: { recommended: string }) {
-  return (
-    <div className="flex flex-col items-center">
-      <svg viewBox="0 0 180 230" fill="none" className="h-56 w-auto">
-        {/* ── Minimal side-profile silhouette (black ink, reference style) ── */}
-        {/* Head — simple side oval */}
-        <ellipse cx="68" cy="46" rx="28" ry="34"
-          stroke="#3D2B1F" strokeWidth="1.5" fill="none" />
-        {/* Neck */}
-        <line x1="56" y1="79" x2="54" y2="96" stroke="#3D2B1F" strokeWidth="1.5" />
-        <line x1="80" y1="79" x2="82" y2="96" stroke="#3D2B1F" strokeWidth="1.5" />
-        {/* Shoulders */}
-        <path d="M54 96 C44 102 32 114 28 132" stroke="#3D2B1F" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-        <path d="M82 96 C92 102 104 114 108 132" stroke="#3D2B1F" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-        {/* Hair flowing down — simple filled dark shape */}
-        <path d="M40 28 C32 36 28 58 28 88 C28 118 30 148 30 178 C32 196 34 210 34 222"
-          stroke="#3D2B1F" strokeWidth="8" strokeLinecap="round" fill="none" opacity="0.85" />
-        <path d="M68 13 C54 10 40 18 36 28 C38 20 48 14 68 13 Z" fill="#3D2B1F" opacity="0.85" />
-
-        {/* ── Horizontal length lines (right side) ── */}
-        {LENGTH_LEVELS.map(({ label, y }) => {
-          const isRec = recommended.toLowerCase().includes(label.toLowerCase().split(" ")[0]);
-          const py = y + 12; // shift to align with body
-          return (
-            <g key={label}>
-              {isRec ? (
-                <>
-                  {/* highlighted recommended line */}
-                  <line x1="24" y1={py} x2="116" y2={py}
-                    stroke="#9C7D5B" strokeWidth="1.5" strokeDasharray="6 3"
-                    className="length-rec-glow" />
-                  <line x1="116" y1={py - 4} x2="116" y2={py + 4}
-                    stroke="#9C7D5B" strokeWidth="1.5" strokeLinecap="round" />
-                  <text x="120" y={py - 1} fontSize="7" fill="#9C7D5B" fontWeight="700">&#9825; {label}</text>
-                  <text x="120" y={py + 8} fontSize="6" fill="#A89070">recommended</text>
-                </>
-              ) : (
-                <>
-                  <line x1="24" y1={py} x2="116" y2={py}
-                    stroke="#C8B89A" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.6" />
-                  <line x1="116" y1={py - 3} x2="116" y2={py + 3}
-                    stroke="#C8B89A" strokeWidth="0.8" opacity="0.6" />
-                  <text x="120" y={py + 2} fontSize="6.5" fill="#B8A888">{label}</text>
-                </>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
 
 const HAIR_BENEFITS = ["Adds Volume", "Enhances Texture", "Frames Face Beautifully"];
 
@@ -493,11 +433,8 @@ export function HairstyleCard({
   }
 
   // No auto-trigger — previews are generated per-slot on user click.
-  const flatteningStyles  = data.styles.slice(0, 5);
-  const considerStyles    = data.avoid.slice(0, 4);
   // Hair colour from AI analysis — first recommended colour drives overlay tinting
   const primaryHairColor  = data.colors[0]?.hex;
-  const bestLength        = data.lengths[1]?.name ?? "Collarbone to Below Shoulder";
   const resolvedHairType  = hairType ?? data.hairType ?? "Wavy / Curly";
   const resolvedFaceShape = faceShape ?? "Oval";
   const resolvedTraits    = (faceTraits ?? ["Full cheeks", "Soft jawline", "Balanced proportions"]).slice(0, 3);
@@ -653,174 +590,7 @@ export function HairstyleCard({
           </div>
         </div>
 
-        {/* ── Most Flattering Styles ── */}
-        <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <span style={{ color: "#C8A96E" }}>&#9825;</span>
-            <p className={sectionTitle} style={sT}>Most Flattering Styles</p>
-            <span style={{ color: "#C8A96E" }}>&#9825;</span>
-          </div>
 
-          {/* Generate All button — shown when any slot is not yet ready */}
-          {reportId && (() => {
-            const anyMissing = [0, 1, 2, 3, 4].some((i) => {
-              const slot = previewSlots?.[i];
-              return !slot || slot.status === "missing" || slot.status === "failed";
-            });
-            const allReady = [0, 1, 2, 3, 4].every((i) => previewSlots?.[i]?.status === "ready");
-            if (allReady) return null;
-            return (
-              <div className="flex justify-center mb-4">
-                <button
-                  onClick={generateAll}
-                  disabled={generatingAll}
-                  className="flex items-center gap-2 rounded-full px-5 py-2 text-[12px] font-semibold transition-opacity hover:opacity-80 disabled:opacity-50"
-                  style={{ background: "#9C7D5B", color: "#fff", border: "none", cursor: generatingAll ? "default" : "pointer" }}
-                >
-                  {generatingAll ? (
-                    <>
-                      <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      Generating All…
-                    </>
-                  ) : (
-                    <>✨ {anyMissing ? "Generate All Previews" : "Regenerate All"}</>
-                  )}
-                </button>
-              </div>
-            );
-          })()}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {flatteningStyles.map((s, i) => {
-              const slot = previewSlots?.[i];
-              const hasPreview = slot?.status === "ready" && slot.signedUrl;
-              const isGenerating = generatingSlots.has(i) || generatingAll;
-              const canGenerate = i < 5 && reportId && (slot?.status === "missing" || slot?.status === "failed" || (!previewSlots && !previewUrls?.[i]));
-              const legacyUrl = previewUrls?.[i];
-              return (
-              <div
-                key={s.name}
-                className="style-card flex flex-col rounded-2xl overflow-hidden"
-                style={{ border: "1px solid #E8DDD0", background: "#FFFFFF" }}
-              >
-                {/* photo fills top, composited preview or photo + hair overlay */}
-                <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
-                  {(() => {
-                      // ── AI preview ready ──
-                      if (hasPreview || legacyUrl) {
-                        return (
-                          <>
-                            <Image src={hasPreview ? slot!.signedUrl! : legacyUrl!} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                            <div className="absolute inset-0" style={{ background: "rgba(61,43,31,0.05)" }} />
-                            <div className="absolute top-2 right-2 rounded-full px-2 py-0.5 text-[9px] font-semibold" style={{ background: "rgba(61,43,31,0.65)", color: "#E8C990" }}>✨ AI</div>
-                          </>
-                        );
-                      }
-                      // ── Photo + hair overlay baseline (always shown when photo available) ──
-                      if (photoUrl) {
-                        return (
-                          <>
-                            <Image src={photoUrl} alt={s.name} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                            <svg viewBox="0 0 100 140" className="absolute inset-0 w-full h-full pointer-events-none" style={{ mixBlendMode: "multiply", zIndex: 5 }}>
-                              <HairOverlay style={s.name} animate={!isGenerating} hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
-                            </svg>
-                            {canGenerate && !isGenerating && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); generateSlot(i); }}
-                                className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-semibold whitespace-nowrap transition-opacity hover:opacity-90"
-                                style={{ background: "rgba(61,43,31,0.78)", color: "#E8C990", border: "1px solid rgba(232,201,144,0.4)", zIndex: 10 }}
-                              >
-                                ✨ AI Preview
-                              </button>
-                            )}
-                            {isGenerating && (
-                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: "rgba(61,43,31,0.78)", zIndex: 10 }}>
-                                <div className="animate-spin rounded-full h-3 w-3 border-2" style={{ borderColor: "rgba(232,201,144,0.3)", borderTopColor: "#E8C990" }} />
-                                <span style={{ color: "#E8C990", fontSize: 10 }}>Generating…</span>
-                              </div>
-                            )}
-                          </>
-                        );
-                      }
-                      // ── No photo: SVG illustration only ──
-                      return (
-                        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }}>
-                          <svg viewBox="0 0 100 140" style={{ width: 70, height: 98 }}>
-                            <HairOverlay style={s.name} animate hairColor={data.colors[i % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
-                          </svg>
-                        </div>
-                      );
-                    })()}
-                  {/* green check badge */}
-                  <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#7BA05B" }}>
-                    <Check className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  {/* hover description */}
-                  <div className="desc-overlay absolute inset-0 flex items-end" style={{ background: "linear-gradient(to top, rgba(30,18,10,0.82) 0%, rgba(30,18,10,0.0) 55%)" }}>
-                    <p className="text-[9px] text-white leading-tight p-2 pb-3">{s.description}</p>
-                  </div>
-                </div>
-                {/* style name below image */}
-                <div className="px-2 py-2 text-center" style={{ borderTop: "1px solid #F0E8DF" }}>
-                  <p className="text-[11px] font-semibold leading-tight" style={{ color: "#3D2B1F" }}>{s.name}</p>
-                </div>
-              </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Styles to Consider + Best Length ── */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_260px]" style={{ borderBottom: "1px solid #E8DDD0" }}>
-
-          {/* Styles to Consider — 4 cards horizontal */}
-          <div className="px-6 py-6" style={{ borderRight: "1px solid #E8DDD0" }}>
-            <p className={sectionTitle} style={sT}>Styles to Consider</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {considerStyles.map((a, i) => (
-                <div key={i} className="flex flex-col rounded-2xl overflow-hidden" style={{ border: "1px solid #F0D8CC", background: "#FFFFFF" }}>
-                  <div className="relative w-full" style={{ aspectRatio: "3/4", background: "#EDE3D8" }}>
-                    {(() => {
-                      const avoidIdx = 5 + i;
-                      if (previewUrls?.[avoidIdx]) {
-                        return (
-                          <Image src={previewUrls[avoidIdx]} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                        );
-                      }
-                      if (photoUrl) {
-                        return (
-                          <>
-                            <Image src={photoUrl} alt={a} fill unoptimized className="object-cover" style={{ objectPosition: "top center" }} />
-                            <svg viewBox="0 0 100 140" className="absolute inset-0 w-full h-full pointer-events-none" style={{ mixBlendMode: "multiply", zIndex: 5 }}>
-                              <HairOverlay style={a} animate hairColor={data.colors[(i + 2) % data.colors.length]?.hex ?? primaryHairColor} delay={i * 0.06} />
-                            </svg>
-                            {/* warm red-orange tint to signal "avoid" */}
-                            <div className="absolute inset-0" style={{ background: "rgba(192,107,62,0.12)", zIndex: 6 }} />
-                          </>
-                        );
-                      }
-                      return (
-                        <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#E8DDD0,#D0C0B0)" }} />
-                      );
-                    })()}
-                    <div className="absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "#C06B3E" }}>
-                      <Minus className="h-3.5 w-3.5 text-white" />
-                    </div>
-                  </div>
-                  <div className="px-2 py-2 text-center" style={{ borderTop: "1px solid #F0D8CC" }}>
-                    <p className="text-[11px] font-semibold leading-tight" style={{ color: "#3D2B1F" }}>{a}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Best Length */}
-          <div className="px-6 py-6">
-            <p className={sectionTitle} style={sT}>Best Length</p>
-            <LengthDiagram recommended={bestLength} />
-            <p className="text-xs text-center mt-2 font-semibold" style={{ color: "#9C7D5B" }}>&#9825; {bestLength}</p>
-          </div>
-        </div>
 
         {/* ── Hair Type Match + Color Direction ── */}
         <div className="grid grid-cols-1 md:grid-cols-2" style={{ borderBottom: "1px solid #E8DDD0" }}>
@@ -895,7 +665,7 @@ export function HairstyleCard({
             className="px-6 py-2.5 rounded-full text-xs font-semibold tracking-[0.14em] uppercase text-center"
             style={{ background: "#F0E4D2", color: "#9C7D5B", border: "1px solid #E0CEBC" }}
           >
-            &#9825;&nbsp;{flatteningStyles[0]?.name ?? "Natural Layers"} + {flatteningStyles[1]?.name ?? "Soft Waves"} = Your Best Look&nbsp;&#10022;
+            &#9825;&nbsp;{data.styles[0]?.name ?? "Natural Layers"} · Your Personalised Style Guide&nbsp;&#10022;
           </div>
         </div>
       </div>
