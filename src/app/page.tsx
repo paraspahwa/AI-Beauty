@@ -18,7 +18,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { useState } from "react";
-import { staggerContainer, fadeUp, slideIn, scaleIn } from "@/lib/animations";
+import { staggerContainer, fadeUp, slideIn, scaleIn, blurIn, springPop } from "@/lib/animations";
 
 const FEATURES = [
   {
@@ -186,8 +186,7 @@ function MockReportCard() {
       <motion.div
         animate={{ y: [0, -6, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -right-4 top-1/4 rounded-2xl shadow-premium px-3 py-2 text-center min-w-[80px]"
-        style={{ background: "linear-gradient(145deg, #1A1A26, #12121A)", border: "1px solid rgba(255,255,255,0.08)" }}
+        className="absolute -right-4 top-1/4 stat-badge min-w-[80px]"
       >
         <p className="font-bold text-lg leading-none" style={{ color: "#C9956B" }}>50k+</p>
         <p className="text-ink-mist text-xs mt-0.5">Analyses</p>
@@ -195,8 +194,7 @@ function MockReportCard() {
       <motion.div
         animate={{ y: [0, 6, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute -left-4 bottom-1/4 rounded-2xl shadow-premium px-3 py-2 text-center min-w-[72px]"
-        style={{ background: "linear-gradient(145deg, #1A1A26, #12121A)", border: "1px solid rgba(255,255,255,0.08)" }}
+        className="absolute -left-4 bottom-1/4 stat-badge min-w-[72px]"
       >
         <p className="font-bold text-lg leading-none" style={{ color: "#B8C4CC" }}>4.9★</p>
         <p className="text-ink-mist text-xs mt-0.5">Rating</p>
@@ -261,36 +259,6 @@ function FAQ() {
 export default function HomePage() {
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Animated gradient background — obsidian with chrome/iris orbs */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-25"
-          style={{ background: "radial-gradient(circle, #C9956B 0%, transparent 60%)" }}
-          animate={{ y: [0, 30, 0], x: [0, -20, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #7B6E9E 0%, transparent 70%)" }}
-          animate={{ y: [0, -40, 0], x: [0, 30, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-1/3 w-80 h-80 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #E8C990 0%, transparent 70%)" }}
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-      </div>
-
       {/* ── Hero Section ── */}
       <section className="container max-w-6xl pt-10 pb-16 sm:pt-16 sm:pb-24">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
@@ -302,7 +270,7 @@ export default function HomePage() {
             className="text-center lg:text-left"
           >
             <motion.span
-              variants={fadeUp}
+              variants={springPop}
               className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-widest font-medium chrome-border"
               style={{ color: "#E8C990", background: "rgba(201,149,107,0.08)" }}
             >
@@ -310,7 +278,7 @@ export default function HomePage() {
             </motion.span>
 
             <motion.h1
-              variants={fadeUp}
+              variants={blurIn}
               className="mt-6 text-4xl sm:text-5xl lg:text-6xl text-ink leading-tight"
             >
               Discover the styles that{" "}
@@ -495,7 +463,7 @@ export default function HomePage() {
                 key={feature.title}
                 variants={fadeUp}
                 whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                className="card-soft text-center cursor-pointer group"
+                className="card-beam text-center cursor-pointer group"
               >
                 <div
                   className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full group-hover:scale-110 transition-transform"

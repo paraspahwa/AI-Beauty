@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ImageUploader } from "@/components/ImageUploader";
-import { CheckCircle2 } from "lucide-react";
-import { fadeUp, staggerContainer } from "@/lib/animations";
+import { CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { blurIn, cascadeContainer, fadeUp, springPop, staggerContainer } from "@/lib/animations";
 import { OnboardingGate } from "@/components/OnboardingModal";
 
 const TIPS = [
@@ -18,69 +18,82 @@ export default function UploadPage() {
 
   return (
     <OnboardingGate>
-    <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.header variants={fadeUp} className="mb-12 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] font-medium mb-3" style={{ color: "#C9956B" }}>
-            Step 1 of 2
-          </p>
-          <h1 className="text-4xl sm:text-5xl text-ink mb-4">
-            Upload your selfie
-          </h1>
-          <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
-            One selfie unlocks your full AI beauty report: face shape, virtual clothing try-on,
-            makeup try-on, spectacles, and hairstyle guide. Private and secure.
-          </p>
-        </motion.header>
+      <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
 
-        <motion.div variants={fadeUp}>
-          <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
-        </motion.div>
+          {/* ── Hero header ── */}
+          <motion.header variants={blurIn} className="mb-12 text-center">
+            {/* Step badge */}
+            <motion.span
+              variants={springPop}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs uppercase tracking-[0.25em] font-semibold mb-5 chrome-border"
+              style={{ background: "rgba(201,149,107,0.08)", color: "#E8C990" }}
+            >
+              <Sparkles className="h-3 w-3" />
+              Step 1 of 2
+            </motion.span>
 
-        <motion.div
-          variants={staggerContainer}
-          className="mx-auto mt-12 max-w-md"
-        >
-          <motion.h3
+            <h1 className="text-4xl sm:text-5xl text-ink mb-4">
+              Upload your{" "}
+              <span className="gradient-text font-bold">selfie</span>
+            </h1>
+            <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
+              One selfie unlocks your full AI beauty report: face shape, virtual clothing try-on,
+              makeup try-on, spectacles, and hairstyle guide.
+            </p>
+          </motion.header>
+
+          {/* ── Upload zone with spinning ring ── */}
+          <motion.div variants={fadeUp} className="upload-ring rounded-3xl">
+            <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
+          </motion.div>
+
+          {/* ── Tips ── */}
+          <motion.div variants={cascadeContainer} className="mx-auto mt-14 max-w-md">
+            <motion.h3
+              variants={fadeUp}
+              className="text-center text-xs font-semibold text-ink mb-5 uppercase tracking-[0.2em] section-label justify-center"
+            >
+              Tips for best results
+            </motion.h3>
+            <motion.ul className="space-y-3">
+              {TIPS.map((tip, index) => (
+                <motion.li
+                  key={index}
+                  variants={fadeUp}
+                  className="card-beam flex items-start gap-3 text-sm text-ink-stone !p-4"
+                >
+                  <CheckCircle2
+                    className="h-5 w-5 shrink-0 mt-0.5 animate-glow-pulse"
+                    style={{ color: "#C9956B" }}
+                  />
+                  <span>{tip}</span>
+                </motion.li>
+              ))}
+            </motion.ul>
+          </motion.div>
+
+          {/* ── Privacy card ── */}
+          <motion.div
             variants={fadeUp}
-            className="text-center text-sm font-medium text-ink mb-4 uppercase tracking-widest"
+            className="mx-auto mt-8 max-w-md aurora-card text-center"
           >
-            Tips for best results
-          </motion.h3>
-          <motion.ul className="space-y-3">
-            {TIPS.map((tip, index) => (
-              <motion.li
-                key={index}
-                variants={fadeUp}
-                className="flex items-start gap-3 text-sm text-ink-stone"
-              >
-                <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#C9956B" }} />
-                <span>{tip}</span>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </motion.div>
+            <div className="relative z-10">
+              <motion.div variants={springPop} className="inline-flex mb-3">
+                <ShieldCheck className="h-7 w-7" style={{ color: "#7B6E9E" }} />
+              </motion.div>
+              <p className="text-xs uppercase tracking-[0.2em] font-semibold mb-2" style={{ color: "#7B6E9E" }}>
+                Your Privacy Matters
+              </p>
+              <p className="text-sm text-ink-stone leading-relaxed">
+                Your photo is encrypted and stored securely. Only you can access your report. We never
+                share your data with third parties.
+              </p>
+            </div>
+          </motion.div>
 
-        {/* Privacy reassurance */}
-        <motion.div
-          variants={fadeUp}
-          className="mx-auto mt-12 max-w-md rounded-2xl p-6 text-center"
-          style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <p className="text-xs uppercase tracking-widest font-medium mb-2" style={{ color: "#7B6E9E" }}>
-            Your Privacy Matters
-          </p>
-          <p className="text-sm text-ink-stone leading-relaxed">
-            Your photo is encrypted and stored securely. Only you can access your report. We never
-            share your data with third parties.
-          </p>
         </motion.div>
-      </motion.div>
-    </main>
+      </main>
     </OnboardingGate>
   );
 }

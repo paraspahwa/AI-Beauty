@@ -54,25 +54,37 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
+        "sticky top-0 z-50 w-full transition-all duration-500",
         scrolled || !isHome
-          ? "border-b border-white/5 backdrop-blur-xl shadow-premium"
+          ? "backdrop-blur-2xl shadow-premium"
           : "backdrop-blur-sm",
-        "bg-obsidian-50/90",
+        "bg-obsidian-50/80",
       )}
     >
+      {/* Shimmer border line — appears on scroll */}
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 right-0 h-px transition-opacity duration-500",
+          scrolled || !isHome ? "opacity-100" : "opacity-0",
+        )}
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(201,149,107,0.4) 30%, rgba(232,201,144,0.5) 50%, rgba(201,149,107,0.4) 70%, transparent 100%)",
+        }}
+      />
       <div className="container max-w-6xl flex h-16 items-center justify-between gap-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group shrink-0">
           <motion.div
-            whileHover={{ rotate: 20 }}
+            whileHover={{ rotate: 20, scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full shadow-glow"
+            className="flex h-8 w-8 items-center justify-center rounded-full shadow-glow animate-glow-pulse"
             style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)" }}
           >
             <Sparkles className="h-4 w-4 text-obsidian" />
           </motion.div>
-          <span className="font-serif text-xl text-ink group-hover:text-chrome transition-colors">
+          <span className="font-serif text-xl text-ink group-hover:text-chrome transition-colors duration-300">
             StyleAI
           </span>
         </Link>

@@ -193,3 +193,93 @@ export const tabContent: Variants = {
     },
   },
 };
+
+// ── New enhanced variants ───────────────────────────────────────────────────
+
+/** Blur + fade + rise — use for hero headings */
+export const blurIn: Variants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(12px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.7,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+};
+
+/** Spring-pop — bouncy entry for icons, badges, avatars */
+export const springPop: Variants = {
+  hidden: { opacity: 0, scale: 0.6 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 380,
+      damping: 20,
+    },
+  },
+};
+
+/** Floating card — combines enter + perpetual subtle float */
+export const floatCard: Variants = {
+  hidden: { opacity: 0, y: 40, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+};
+
+/** Glow entrance — scales up with a glow shadow */
+export const glowIn: Variants = {
+  hidden: { opacity: 0, scale: 0.9, filter: "brightness(0.5)" },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    filter: "brightness(1)",
+    transition: {
+      duration: 0.55,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+};
+
+/** Cascade stagger — tighter children delay for lists */
+export const cascadeContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.07,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+/** Slide in from bottom with spring — for modals, toasts */
+export const slideUp: Variants = {
+  hidden: { opacity: 0, y: 48 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 340,
+      damping: 28,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: 32,
+    transition: { duration: 0.2, ease: "easeIn" as const },
+  },
+};
+
