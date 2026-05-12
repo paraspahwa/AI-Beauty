@@ -8,8 +8,11 @@ import {
 } from "lucide-react";
 import type { ColorAnalysisResult } from "@/types/report";
 import {
-  MAKEUP_STYLES, MAKEUP_INTENSITIES, MAKEUP_STYLE_LABELS, MAKEUP_INTENSITY_LABELS,
-  type MakeupStyleValue, type MakeupIntensityValue,
+  LIP_COLORS, EYESHADOW_PALETTES, BLUSH_COLORS, BLUSH_INTENSITIES,
+  FOUNDATION_SHADES, EYELINER_STYLES,
+  type LipColorValue, type EyeshadowValue, type BlushColorValue,
+  type BlushIntensityValue, type FoundationShadeValue, type EyelinerStyleValue,
+  type MakeupGranularControls,
 } from "@/lib/makeup-options";
 
 // ── Shared animation CSS ──────────────────────────────────────────────────────
@@ -210,21 +213,6 @@ const HAIR_COLORS = [
 ] as const;
 type HairColorValue = (typeof HAIR_COLORS)[number]["value"];
 
-// ── Makeup style descriptions ─────────────────────────────────────────────────
-const MAKEUP_DESCRIPTIONS: Record<MakeupStyleValue, string> = {
-  natural:       "Light, everyday coverage. Enhances your features without looking overdone.",
-  glamorous:     "Full glam with bold lips, defined eyes, and sculpted cheeks.",
-  smoky_eyes:    "Dramatic smoky eyeshadow blended for depth; nude or soft lip.",
-  bold_lips:     "Statement lip color with minimal eye makeup — clean and striking.",
-  no_makeup:     "Skin-first look: even skin tone with a polished, no-makeup finish.",
-  remove_makeup: "Simulates a clean, bare-faced look.",
-  dramatic:      "High-contrast, editorial-style look with bold definition throughout.",
-  bridal:        "Timeless bridal look: rosy blush, defined eyes, classic lip.",
-  professional:  "Polished, neutral-toned look appropriate for a workplace setting.",
-  korean_style:  "Dewy, glass-skin finish with gradient lips and puppy-eye liner.",
-  artistic:      "Creative, expressive look with unique color placement.",
-};
-
 // ── History strip ─────────────────────────────────────────────────────────────
 function HistoryStrip({ history, currentUrl, onSelect, onClear }: {
   history: string[]; currentUrl: string | null;
@@ -273,9 +261,16 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
   const [fullBodyFile, setFullBodyFile]     = React.useState<File | null>(null);
   const [fullBodyPreview, setFullBodyPreview] = React.useState<string | null>(null);
 
-  // ── Makeup state ──
-  const [mkStyle, setMkStyle]       = React.useState<MakeupStyleValue>("natural");
-  const [mkIntensity, setMkIntensity] = React.useState<MakeupIntensityValue>("medium");
+  // ── Makeup state (granular controls) ──
+  const [mkLip, setMkLip]               = React.useState<LipColorValue>("nude_beige");
+  const [mkEye, setMkEye]               = React.useState<EyeshadowValue>("neutral");
+  const [mkBlush, setMkBlush]           = React.useState<BlushColorValue>("peach");
+  const [mkBlushInt, setMkBlushInt]     = React.useState<BlushIntensityValue>("soft");
+  const [mkFoundation, setMkFoundation] = React.useState<FoundationShadeValue>("medium");
+  const [mkContour, setMkContour]       = React.useState(false);
+  const [mkEyeliner, setMkEyeliner]     = React.useState<EyelinerStyleValue>("classic");
+
+  function resetMakeupResult() { setModeResult("makeup", null); setModeStatus("makeup", "idle"); }
 
   // ── Hair state ──
   const [hairStyle, setHairStyle]   = React.useState<HairStyleValue>("No change");
@@ -342,10 +337,19 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
 
   async function generateMakeup() {
     setModeStatus("makeup", "loading"); setModeResult("makeup", null);
+    const controls: MakeupGranularControls = {
+      lipColor:       mkLip,
+      eyeshadow:      mkEye,
+      blushColor:     mkBlush,
+      blushIntensity: mkBlushInt,
+      foundation:     mkFoundation,
+      contour:        mkContour,
+      eyeliner:       mkEyeliner,
+    };
     try {
       const res  = await fetch(`/api/reports/${reportId}/makeup`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ style: mkStyle, intensity: mkIntensity }),
+        body: JSON.stringify(controls),
       });
       const json = await res.json() as { url?: string; error?: string };
       if (!res.ok || !json.url) throw new Error(json.error ?? "Generation failed");
@@ -516,48 +520,185 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
         {/* ── MAKEUP mode ── */}
         {mode === "makeup" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5">
-            {/* Left: controls */}
-            <div className="flex flex-col gap-4">
-              <StyledDropdown
-                label="Makeup Style" value={mkStyle}
-                options={MAKEUP_STYLES.map((v) => ({ value: v, label: MAKEUP_STYLE_LABELS[v] }))}
-                onChange={(v) => { setMkStyle(v); setModeResult("makeup", null); setModeStatus("makeup", "idle"); }}
-                disabled={status === "loading"}
-              />
-              <StyledDropdown
-                label="Intensity" value={mkIntensity}
-                options={MAKEUP_INTENSITIES.map((v) => ({ value: v, label: MAKEUP_INTENSITY_LABELS[v] }))}
-                onChange={(v) => { setMkIntensity(v); setModeResult("makeup", null); setModeStatus("makeup", "idle"); }}
-                disabled={status === "loading"}
-              />
-              <p className="text-xs leading-relaxed" style={{ color: "#9C7D5B" }}>
-                {MAKEUP_DESCRIPTIONS[mkStyle]}
-              </p>
-              {colorAnalysis && colorAnalysis.palette.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#B8A898" }}>Palette</p>
-                  {colorAnalysis.palette.slice(0, 5).map((c) => (
-                    <span key={c.hex} title={c.name}
-                      className="h-5 w-5 rounded-full border-2 border-white shadow-sm"
-                      style={{ background: c.hex }} />
+
+            {/* ── Left: controls ── */}
+            <div className="flex flex-col gap-4 overflow-y-auto" style={{ maxHeight: 560 }}>
+
+              {/* Lip Colour */}
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Lip Colour</p>
+                <div className="flex flex-wrap gap-2">
+                  {LIP_COLORS.map((c) => (
+                    <button key={c.value} title={c.label}
+                      onClick={() => { setMkLip(c.value); resetMakeupResult(); }}
+                      disabled={status === "loading"}
+                      className="h-7 w-7 rounded-full transition-transform hover:scale-110 focus:outline-none disabled:opacity-40"
+                      style={{
+                        background: c.hex,
+                        border: mkLip === c.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.15)",
+                        boxShadow: mkLip === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : "0 1px 3px rgba(0,0,0,0.15)",
+                      }} />
                   ))}
-                  <span className="text-[10px]" style={{ color: "#B8A898" }}>{colorAnalysis.season}</span>
                 </div>
-              )}
+                <p className="text-[11px]" style={{ color: "#9C7D5B" }}>
+                  {LIP_COLORS.find((c) => c.value === mkLip)?.label}
+                </p>
+              </div>
+
+              {/* Eyeshadow Palette */}
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Eyeshadow Palette</p>
+                <div className="flex flex-wrap gap-2">
+                  {EYESHADOW_PALETTES.map((e) => (
+                    <button key={e.value} title={e.description}
+                      onClick={() => { setMkEye(e.value); resetMakeupResult(); }}
+                      disabled={status === "loading"}
+                      className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-medium transition-all hover:opacity-80 disabled:opacity-40"
+                      style={{
+                        background: mkEye === e.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F0E8DF",
+                        color: mkEye === e.value ? "#3D2B1F" : "#6B5344",
+                        border: mkEye === e.value ? "none" : "1px solid #E0CEBC",
+                      }}>
+                      {e.swatches.length > 0 && (
+                        <span className="flex gap-0.5">
+                          {e.swatches.map((h) => (
+                            <span key={h} className="h-3 w-3 rounded-full" style={{ background: h }} />
+                          ))}
+                        </span>
+                      )}
+                      {e.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Blush */}
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Blush</p>
+                <div className="flex flex-wrap gap-2 mb-1">
+                  {BLUSH_COLORS.map((b) => (
+                    <button key={b.value} title={b.label}
+                      onClick={() => { setMkBlush(b.value); resetMakeupResult(); }}
+                      disabled={status === "loading"}
+                      className="flex flex-col items-center gap-0.5 transition-transform hover:scale-110 focus:outline-none disabled:opacity-40">
+                      <div className="h-7 w-7 rounded-full"
+                        style={{
+                          background: b.hex || "#F0E8DF",
+                          border: mkBlush === b.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.1)",
+                          boxShadow: mkBlush === b.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : undefined,
+                        }} />
+                      <span className="text-[7px]" style={{ color: mkBlush === b.value ? "#C9956B" : "#B8A898" }}>
+                        {b.label.split(" ")[0]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {mkBlush !== "no_blush" && (
+                  <div className="flex gap-1.5">
+                    {BLUSH_INTENSITIES.map((b) => (
+                      <button key={b.value}
+                        onClick={() => { setMkBlushInt(b.value); resetMakeupResult(); }}
+                        disabled={status === "loading"}
+                        className="flex-1 rounded-lg py-1 text-[10px] font-semibold transition-all disabled:opacity-40"
+                        style={{
+                          background: mkBlushInt === b.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F0E8DF",
+                          color: mkBlushInt === b.value ? "#3D2B1F" : "#9C7D5B",
+                        }}>
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Foundation */}
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Foundation Shade</p>
+                <div className="flex flex-wrap gap-2">
+                  {FOUNDATION_SHADES.map((f) => (
+                    <button key={f.value} title={f.label}
+                      onClick={() => { setMkFoundation(f.value); resetMakeupResult(); }}
+                      disabled={status === "loading"}
+                      className="flex flex-col items-center gap-0.5 transition-transform hover:scale-110 focus:outline-none disabled:opacity-40">
+                      <div className="h-7 w-7 rounded-full"
+                        style={{
+                          background: f.hex,
+                          border: mkFoundation === f.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.1)",
+                          boxShadow: mkFoundation === f.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : undefined,
+                        }} />
+                      <span className="text-[7px]" style={{ color: mkFoundation === f.value ? "#C9956B" : "#B8A898" }}>
+                        {f.label.split("-")[0]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contour toggle */}
+              <div className="flex items-center justify-between rounded-xl px-3.5 py-2.5"
+                style={{ background: "#F0E8DF", border: "1.5px solid #E0CEBC" }}>
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Contour &amp; Highlight</p>
+                  <p className="text-[10px]" style={{ color: "#9C7D5B" }}>Sculpt cheekbones and nose bridge</p>
+                </div>
+                <button onClick={() => { setMkContour((v) => !v); resetMakeupResult(); }}
+                  disabled={status === "loading"}
+                  className="relative h-6 w-11 rounded-full transition-colors disabled:opacity-40"
+                  style={{ background: mkContour ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#D8CEC4" }}>
+                  <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+                    style={{ transform: mkContour ? "translateX(22px)" : "translateX(2px)" }} />
+                </button>
+              </div>
+
+              {/* Eyeliner */}
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Eyeliner Style</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {EYELINER_STYLES.map((l) => (
+                    <button key={l.value} title={l.description}
+                      onClick={() => { setMkEyeliner(l.value); resetMakeupResult(); }}
+                      disabled={status === "loading"}
+                      className="rounded-xl py-2 px-2 text-[11px] font-semibold text-center transition-all disabled:opacity-40"
+                      style={{
+                        background: mkEyeliner === l.value ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#F0E8DF",
+                        color: mkEyeliner === l.value ? "#3D2B1F" : "#6B5344",
+                        border: mkEyeliner === l.value ? "none" : "1px solid #E0CEBC",
+                      }}>
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Generate button */}
               <button onClick={generateMakeup} disabled={status === "loading"}
-                className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed mt-1"
                 style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
                 {status === "loading"
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Apply Makeup</>}
               </button>
             </div>
-            {/* Right: your photo preview + result */}
+
+            {/* ── Right: photo + colour season hint ── */}
             <div className="flex flex-col gap-3">
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Your Photo</p>
               <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 <Image src={photoUrl} alt="Your photo" fill className="object-cover" unoptimized />
               </div>
+              {colorAnalysis && colorAnalysis.palette.length > 0 && (
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+                  style={{ background: "rgba(200,169,110,0.08)", border: "1px solid rgba(200,169,110,0.2)" }}>
+                  <p className="text-[10px] uppercase tracking-wider font-semibold shrink-0" style={{ color: "#B8A898" }}>
+                    {colorAnalysis.season}
+                  </p>
+                  {colorAnalysis.palette.slice(0, 5).map((c) => (
+                    <span key={c.hex} title={c.name}
+                      className="h-5 w-5 rounded-full border-2 border-white shadow-sm"
+                      style={{ background: c.hex }} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

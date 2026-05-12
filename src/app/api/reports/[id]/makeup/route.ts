@@ -1,10 +1,10 @@
 /**
  * POST /api/reports/[id]/makeup
  *
- * Generate a makeup try-on preview for a specific style + intensity combination.
- * Uses fal-ai/image-apps-v2/makeup-application as the primary model.
+ * Generate a makeup try-on preview. Accepts granular controls that are
+ * composed into a prompt description + FAL preset.
  *
- * Body: { style: MakeupStyleValue; intensity: MakeupIntensityValue }
+ * Body: MakeupGranularControls (see src/lib/makeup-options.ts)
  *
  * Returns: { url: string } — signed URL of the generated image.
  */
@@ -13,10 +13,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import {
-  MAKEUP_STYLES,
-  MAKEUP_INTENSITIES,
-  type MakeupStyleValue,
-  type MakeupIntensityValue,
+  type MakeupGranularControls,
+  deriveStyle,
+  buildMakeupPrompt,
+  makeupCacheKey,
 } from "@/lib/makeup-options";
 
 export const runtime = "nodejs";
@@ -53,22 +53,13 @@ export async function POST(
   }
 
   // ── Parse body ──────────────────────────────────────────────────────────────
-  const body = (await req.json().catch(() => ({}))) as {
-    style?: string;
-    intensity?: string;
-  };
-  const style = (body.style ?? "natural") as MakeupStyleValue;
-  const intensity = (body.intensity ?? "medium") as MakeupIntensityValue;
-
-  if (!MAKEUP_STYLES.includes(style)) {
-    return NextResponse.json({ error: "Invalid style" }, { status: 400 });
-  }
-  if (!MAKEUP_INTENSITIES.includes(intensity)) {
-    return NextResponse.json({ error: "Invalid intensity" }, { status: 400 });
-  }
+  const controls = (await req.json().catch(() => ({}))) as MakeupGranularControls;
+  const style    = deriveStyle(controls);
+  const intensity = controls.intensity ?? "medium";
+  const prompt   = buildMakeupPrompt(controls);
+  const cacheSlug = makeupCacheKey(controls);
 
   // ── Cache check: if already generated for this combo, return existing ───────
-  const cacheSlug = `${style}__${intensity}`;
   const existingAssets = row.visual_assets as Record<string, unknown> | null;
   const makeupCache = (existingAssets?.makeupCache ?? {}) as Record<
     string,
@@ -110,8 +101,10 @@ export async function POST(
       image_url: imageUrl,
       makeup_style: style,
       intensity,
+      // style_description is not part of the typed input; log it for debugging.
     },
   }) as { image?: { url: string }; images?: { url: string }[] };
+  console.info("[makeup route] prompt:", prompt);
   const resultUrl: string =
     falResult?.image?.url ??
     (falResult?.images as { url: string }[] | undefined)?.[0]?.url ?? "";
