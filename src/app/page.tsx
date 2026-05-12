@@ -23,23 +23,23 @@ import { staggerContainer, fadeUp, slideIn, scaleIn } from "@/lib/animations";
 const FEATURES = [
   {
     icon: ShoppingBag,
-    title: "Virtual Try-On",
-    body: "Upload any garment photo and see it on you instantly — powered by AI."
+    title: "Virtual Clothing Try-On",
+    body: "Upload any flat-lay or mannequin photo of a garment and see it draped on your body instantly — selfie or full-body mode.",
   },
   {
     icon: Wand2,
-    title: "Makeup Try-On",
-    body: "Try everyday natural to full glam looks with AI applied directly to your photo."
+    title: "Makeup Studio",
+    body: "Control lip colour, eyeshadow palette, blush, foundation shade, contour, and eyeliner — then generate a photorealistic preview on your face.",
   },
   {
     icon: Glasses,
     title: "Spectacles Guide",
-    body: "Perfect frame styles, AI previews, fit tips and colors tailored to your face."
+    body: "Frame shapes, metals, and colours matched to your face shape and undertone — with a personalised fit guide.",
   },
   {
     icon: Scissors,
     title: "Hairstyle & Hair Color",
-    body: "Cuts, lengths, and AI hair-color previews made for your unique features."
+    body: "Cuts, lengths, and AI hair-color previews — matched to your face shape, skin tone, and eye colour.",
   },
 ];
 
@@ -52,8 +52,8 @@ const TESTIMONIALS = [
   },
   {
     name: "Priya M.",
-    tag: "Makeup Try-On",
-    quote: "Seeing the smoky eye look on MY face before buying anything — absolute game changer.",
+    tag: "Makeup Studio",
+    quote: "Picking my exact lip shade and eyeliner style then seeing it on MY face — absolute game changer before buying anything.",
     rating: 5,
   },
   {
@@ -67,7 +67,7 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "How accurate is the AI analysis?",
-    a: "Our AI combines AWS Rekognition for facial detection with advanced GPT models for color and style analysis. While highly accurate, results work best with clear, well-lit front-facing photos."
+    a: "Our AI combines AWS Rekognition for facial detection with GPT-4o for color, skin, and style analysis. Results work best with a clear, well-lit, front-facing photo with no sunglasses."
   },
   {
     q: "Is my photo stored or shared?",
@@ -75,15 +75,23 @@ const FAQS = [
   },
   {
     q: "What's included in the free preview?",
-    a: "You'll get face shape identification and a personalized introduction. Upgrade unlocks skin analysis, spectacles guide with AI frame previews, hairstyle guide, virtual clothing try-on, makeup try-on, and PDF download."
+    a: "You'll get face shape identification and a personalized introduction — completely free, no card required. The full report unlocks skin analysis, spectacles guide, hairstyle guide, AI Beauty Studio (makeup, clothing try-on, hair color), and a downloadable PDF."
   },
   {
-    q: "How does Virtual Try-On work?",
-    a: "Upload a flat-lay or mannequin photo of any garment. Our AI places it on your selfie using the fal-ai virtual try-on model. Results are saved to your report for 1 hour and can be downloaded."
+    q: "How does the AI Makeup Studio work?",
+    a: "Choose your exact lip colour, eyeshadow palette, blush shade and intensity, foundation tone, contour toggle, and eyeliner style — then hit 'Apply Makeup' to generate a photorealistic preview on your actual photo. Each unique combination is cached so re-generating is instant."
+  },
+  {
+    q: "How does Virtual Clothing Try-On work?",
+    a: "Upload a flat-lay or mannequin photo of any garment. For the best draping results, switch to Full Body mode and upload a standing photo. Our AI uses fal-ai's virtual try-on model to place the garment on you realistically."
+  },
+  {
+    q: "Can I share my report?",
+    a: "Yes — hit 'Share' on your report to generate a public link anyone can view (read-only). You can revoke it any time."
   },
   {
     q: "Can I get a refund?",
-    a: "Yes! We offer a 30-day money-back guarantee. If you're not satisfied with your full report, contact us for a full refund."
+    a: "Yes! We offer a 30-day money-back guarantee. If you're not satisfied with your full report, contact us for a full refund — no questions asked."
   },
 ];
 
@@ -157,7 +165,7 @@ function MockReportCard() {
 
       {/* Locked premium sections */}
       <div className="space-y-2">
-        {["Makeup Try-On", "Spectacles Guide", "Hairstyle & Hair Color"].map((section) => (
+        {["AI Makeup Studio", "Spectacles Guide", "Hairstyle & Hair Color", "Skin Analysis"].map((section) => (
           <div
             key={section}
             className="flex items-center justify-between rounded-xl px-4 py-2.5"
@@ -171,7 +179,7 @@ function MockReportCard() {
 
       {/* Unlock hint */}
       <div className="mt-4 rounded-xl px-4 py-3 text-center" style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.1), rgba(232,201,144,0.08))", border: "1px solid rgba(201,149,107,0.2)" }}>
-        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock the full report for $9.99</p>
+        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock full report — $9.99 · ₹399</p>
       </div>
 
       {/* Floating stat badges */}
@@ -313,8 +321,9 @@ export default function HomePage() {
               variants={fadeUp}
               className="mt-6 text-base sm:text-lg text-ink-stone leading-relaxed max-w-xl mx-auto lg:mx-0"
             >
-              Upload a selfie and get a full beauty report: face shape, virtual clothing try-on,
-              makeup try-on, spectacles guide, and hairstyle recommendations — all powered by AI.
+              Upload a selfie and get a full beauty report: face shape analysis, AI Makeup Studio
+              with granular controls, virtual clothing try-on, spectacles guide, hairstyle
+              recommendations, skin routine — all powered by AI.
             </motion.p>
 
             <motion.div variants={fadeUp} className="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start">
@@ -390,28 +399,28 @@ export default function HomePage() {
                 step: "01",
                 icon: Camera,
                 title: "Upload your selfie",
-                desc: "Take or upload a clear, well-lit front-facing photo. Takes 10 seconds.",
+                desc: "Take or upload a clear, well-lit front-facing photo. No account needed to start.",
                 accent: "#C9956B",
               },
               {
                 step: "02",
                 icon: Sparkles,
                 title: "AI reads your features",
-                desc: "Face shape, skin tone, eye shape, and 20+ unique facial traits are analysed instantly.",
+                desc: "Face shape, skin tone, undertone, eye shape, and 20+ unique traits analysed by GPT-4o and AWS Rekognition.",
                 accent: "#7B6E9E",
               },
               {
                 step: "03",
-                icon: ShoppingBag,
-                title: "Try on clothes & makeup",
-                desc: "Upload any garment or choose a makeup style — see AI previews on your actual photo.",
+                icon: Wand2,
+                title: "Try on looks in the Studio",
+                desc: "Pick your lip colour, eyeshadow, blush, and eyeliner — or upload a garment — and generate photorealistic AI previews on your photo.",
                 accent: "#C9956B",
               },
               {
                 step: "04",
                 icon: Scissors,
-                title: "Get your style blueprint",
-                desc: "Spectacles, hairstyle, hair color, skin routine, and a downloadable PDF — all personalised.",
+                title: "Download your blueprint",
+                desc: "Full spectacles guide, hairstyle recommendations, skin routine, hair-color previews, and a shareable/downloadable PDF.",
                 accent: "#7B6E9E",
               },
             ].map((item, i) => (
@@ -559,15 +568,22 @@ export default function HomePage() {
             Simple, honest pricing
           </motion.h2>
           <motion.p variants={fadeUp} className="text-center text-ink-stone mb-12">
-            Try it free, upgrade when you&apos;re ready
+            Try it free, upgrade when you&apos;re ready · No subscription, no hidden fees
           </motion.p>
 
           <div className="grid gap-6 md:grid-cols-2">
+            {/* Free */}
             <motion.div variants={fadeUp} className="card-soft">
               <p className="text-xs uppercase tracking-widest text-ink-mist mb-2">Free preview</p>
-              <p className="font-serif text-5xl text-ink mb-6">$0</p>
-              <ul className="space-y-3 text-sm text-ink-stone mb-6">
-                {["Face shape identification", "Personalized style introduction", "Free forever — no card needed"].map((item) => (
+              <p className="font-serif text-5xl text-ink mb-1">$0</p>
+              <p className="text-xs text-ink-mist mb-6">No card required · Free forever</p>
+              <ul className="space-y-3 text-sm text-ink-stone mb-8">
+                {[
+                  "Face shape identification",
+                  "20+ unique facial trait breakdown",
+                  "Personalized style introduction",
+                  "Shareable report link",
+                ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
                     {item}
@@ -579,6 +595,7 @@ export default function HomePage() {
               </Button>
             </motion.div>
 
+            {/* Full report */}
             <motion.div
               variants={scaleIn}
               className="card-soft border-0 relative overflow-hidden chrome-border"
@@ -587,19 +604,20 @@ export default function HomePage() {
                 BEST VALUE
               </div>
               <p className="text-xs uppercase tracking-widest text-terracotta mb-2">Full report</p>
-              <div className="flex items-baseline gap-2 mb-6">
+              <div className="flex items-baseline gap-3 mb-1">
                 <p className="font-serif text-5xl text-ink">$9.99</p>
                 <p className="text-sm text-ink-mist line-through">$29.99</p>
               </div>
-              <ul className="space-y-3 text-sm text-ink-stone mb-6">
+              <p className="text-xs text-ink-mist mb-6">One-time · ₹399 for India · 30-day guarantee</p>
+              <ul className="space-y-3 text-sm text-ink-stone mb-8">
                 {[
                   "Everything in Free, plus:",
-                  "👗 Virtual clothing try-on (any garment)",
-                  "💄 Makeup try-on (6 styles × intensities)",
-                  "Spectacles guide with AI frame previews",
-                  "Hairstyle & AI hair-color previews",
-                  "Skin analysis & custom routine",
-                  "Downloadable PDF report",
+                  "💄 Makeup Studio — lip, eyeshadow, blush, foundation, contour & eyeliner",
+                  "👗 Virtual Clothing Try-On (selfie + full-body mode)",
+                  "💇 AI Hair Color & Hairstyle previews",
+                  "👓 Spectacles guide — frames, metals & colours for your face",
+                  "🧴 Skin analysis & personalized routine",
+                  "📄 Downloadable PDF report",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
@@ -618,7 +636,7 @@ export default function HomePage() {
             className="mt-8 flex items-center justify-center gap-2 text-sm text-ink-mist"
           >
             <ShieldCheck className="h-4 w-4" />
-            Your selfie stays private — only you can view your report
+            Your selfie stays private — encrypted, only you can view your report · 30-day money-back guarantee
           </motion.p>
         </motion.div>
       </section>
@@ -712,7 +730,7 @@ export default function HomePage() {
 
           <div className="pt-6 border-t border-cream-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-mist">
             <p>© {new Date().getFullYear()} StyleAI. All rights reserved.</p>
-            <p>Crafted with care · Powered by GPT-4o, AWS Rekognition &amp; FAL AI</p>
+            <p>Powered by GPT-4o · AWS Rekognition · FAL AI (makeup, try-on, hair)</p>
           </div>
         </div>
       </footer>
