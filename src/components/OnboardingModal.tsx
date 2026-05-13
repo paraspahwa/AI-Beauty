@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Zap, Sparkles, Shield, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "styleai_onboarded_v1";
+const STORAGE_KEY = "renovaara_onboarded_v1";
 
 const STEPS = [
   {
     icon: Sparkles,
-    title: "Welcome to StyleAI ✨",
+    title: "Welcome to Renovaara ✨",
     body: "Your personal AI stylist — ready to analyse your face shape, color season, skin type, and give you a complete style guide. Let's show you how it works.",
     accent: "#C9956B",
   },

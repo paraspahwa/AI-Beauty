@@ -10,7 +10,7 @@
 ### 1. Add `public/og-image.png`
 - **Size:** 1200 × 630 px
 - **Purpose:** Shown when the link is shared on WhatsApp, Twitter/X, LinkedIn, iMessage, etc.
-- **Recommended content:** StyleAI logo + tagline + a mock report card screenshot on dark obsidian background
+- **Recommended content:** Renovaara logo + tagline + a mock report card screenshot on dark obsidian background
 - **Tools:** Figma, Canva, or export from the landing page at 2×
 
 ### 2. Add `public/favicon.ico` + `public/apple-touch-icon.png`
@@ -21,7 +21,7 @@
 ### 3. Set `NEXT_PUBLIC_APP_URL` in Vercel
 - Go to **Vercel → Project → Settings → Environment Variables**
 - Add: `NEXT_PUBLIC_APP_URL = https://<your-production-domain>`
-- Without this, sitemap and robots.txt URLs fall back to `https://styleai.app` (the placeholder)
+- Without this, sitemap and robots.txt URLs fall back to `https://renovaara.in` (the placeholder)
 - **Redeploy** after adding
 
 ---
@@ -48,7 +48,7 @@ verification: {
 ### 5. Add Google OAuth Authorised Domain
 - If you use Google Sign-In (Supabase Auth with Google provider):
   1. [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → OAuth consent screen
-  2. Scroll to **Authorised domains** → Add your production domain (e.g. `styleai.app`)
+  2. Scroll to **Authorised domains** → Add your production domain (e.g. `renovaara.in`)
   3. Save → Wait up to 24 hours for propagation
 
 ### 6. Add Per-Page `metadata` Exports
@@ -79,7 +79,7 @@ Add `SoftwareApplication` and `FAQPage` schema to improve Google rich results:
 	__html: JSON.stringify({
 	  "@context": "https://schema.org",
 	  "@type": "SoftwareApplication",
-	  "name": "StyleAI",
+	  "name": "Renovaara",
 	  "applicationCategory": "LifestyleApplication",
 	  "operatingSystem": "Web",
 	  "offers": {
@@ -171,3 +171,4 @@ If expanding to non-English markets, add `alternates.languages` in metadata and 
 | Open Graph Debugger | Preview OG card appearance | [developers.facebook.com/tools/debug](https://developers.facebook.com/tools/debug) |
 | Twitter Card Validator | Preview Twitter card | [cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator) |
 | Schema Markup Validator | Validate JSON-LD | [validator.schema.org](https://validator.schema.org) |
+

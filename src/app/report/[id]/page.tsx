@@ -26,7 +26,7 @@ export async function generateMetadata({
     .eq("user_id", user.id)
     .single();
 
-  if (!row || row.status !== "ready") return { title: "Beauty Report — StyleAI" };
+  if (!row || row.status !== "ready") return { title: "Beauty Report — Renovaara" };
 
   const faceShape = (row.face_shape as { shape?: string } | null)?.shape;
   const season = (row.color_analysis as { season?: string } | null)?.season;
@@ -34,7 +34,7 @@ export async function generateMetadata({
     .filter(Boolean)
     .join(" · ") || "Beauty Report";
 
-  return { title: `${title} — StyleAI` };
+  return { title: `${title} — Renovaara` };
 }
 
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {

@@ -43,17 +43,17 @@ export async function generateMetadata({
   const imageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/og/${token}`;
 
   return {
-    title: `${title} — StyleAI`,
+    title: `${title} — Renovaara`,
     description,
     openGraph: {
-      title: `${title} — StyleAI`,
+      title: `${title} — Renovaara`,
       description,
       type: "website",
-      images: [{ url: imageUrl, width: 1200, height: 630, alt: "StyleAI beauty report" }],
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: "Renovaara beauty report" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} — StyleAI`,
+      title: `${title} — Renovaara`,
       description,
       images: [imageUrl],
     },
@@ -166,7 +166,7 @@ export default async function PublicReportPage({
       <div className="border-b text-center py-2 text-xs text-ink-stone"
         style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
       >
-        This is a shared StyleAI beauty report.{" "}
+        This is a shared Renovaara beauty report.{" "}
         <Link href="/" className="underline underline-offset-2 hover:opacity-80">
           Get your own →
         </Link>

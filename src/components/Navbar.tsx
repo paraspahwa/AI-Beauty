@@ -85,7 +85,7 @@ export function Navbar() {
             <Sparkles className="h-4 w-4 text-obsidian" />
           </motion.div>
           <span className="font-serif text-xl text-ink group-hover:text-chrome transition-colors duration-300">
-            StyleAI
+            Renovaara
           </span>
         </Link>
 

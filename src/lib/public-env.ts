@@ -5,7 +5,7 @@ function optional(value: string | undefined, fallback = ""): string {
 export const publicEnv = {
   app: {
     url: optional(process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"),
-    name: optional(process.env.NEXT_PUBLIC_APP_NAME, "StyleAI"),
+    name: optional(process.env.NEXT_PUBLIC_APP_NAME, "Renovaara"),
   },
   supabase: {
     url: optional(process.env.NEXT_PUBLIC_SUPABASE_URL),
@@ -20,3 +20,4 @@ export const publicEnv = {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",
   },
 };
+

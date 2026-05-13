@@ -141,7 +141,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
         amount,
         currency: orderCurrency,
         order_id: orderId,
-        name: "StyleAI",
+        name: "Renovaara",
         description: "Full Beauty Report",
         theme: { color: "#C17A5F" },
         handler: async (response: RazorpayPaymentResponse) => {

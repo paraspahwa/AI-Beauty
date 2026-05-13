@@ -161,12 +161,12 @@ function buildDynamicSuggestions(report?: Partial<CompiledReport>): string[] {
 const GREETING: Message = {
   role: "assistant",
   content:
-    "Hi! I'm your StyleAI consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
+    "Hi! I'm your Renovaara consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
 };
 
 // ── Share helper — Web Share API with clipboard fallback ─────────────────────
 async function shareSnippet(content: string, season?: string): Promise<"shared" | "copied" | "error"> {
-  const text = `✨ StyleAI Tip${season ? ` for ${season}` : ""}:\n\n${content}\n\n— Get your own style report at StyleAI`;
+  const text = `✨ Renovaara Tip${season ? ` for ${season}` : ""}:\n\n${content}\n\n— Get your own style report at Renovaara`;
   try {
     if (typeof navigator !== "undefined" && navigator.share) {
       await navigator.share({ text });
@@ -835,7 +835,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                   </Button>
                 </div>
                 <p className="mt-2 text-center text-xs" style={{ color: "rgba(240,232,216,0.25)" }}>
-                  Powered by StyleAI · Responses are AI-generated
+                  Powered by Renovaara · Responses are AI-generated
                 </p>
               </div>
               )}

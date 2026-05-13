@@ -1,4 +1,4 @@
-# StyleAI — Pricing Strategy & Cost Analysis
+# Renovaara — Pricing Strategy & Cost Analysis
 
 > Last updated: 2025 | Markets: India 🇮🇳 + International 🌍
 
@@ -35,7 +35,7 @@
 | **Glow Monthly** | ₹599/mo | Unlimited reports + 30 AI generations/mo + priority | Power users, fashion lovers |
 | **Glow Annual** | ₹4,999/yr | Same as monthly, 30% saving | Loyalists |
 
-> **Current live price:** ₹829 (mapped from $9.99). Recommendation: **drop to ₹399** for India to maximize conversion vs. cost margin.
+> **Current live price:** ₹399 (mapped from $9.99). Recommendation: **drop to ₹399** for India to maximize conversion vs. cost margin.
 
 ---
 
@@ -160,3 +160,4 @@ User clicks "Get Full Report"
 ---
 
 *Reviewed by: Jarvis — AI-Beauty Orchestration Layer*
+

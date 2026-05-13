@@ -1,5 +1,5 @@
 {
-  "name": "styleai",
+  "name": "renovaara",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -56,3 +56,5 @@
     "vitest": "^4.1.5"
   }
 }
+
+

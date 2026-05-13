@@ -70,7 +70,7 @@ function SuccessContent() {
         <motion.div variants={fadeUp} className="space-y-3 mb-8">
           <h1 className="font-serif text-3xl sm:text-4xl text-ink">{"You're all set! ✨"}</h1>
           <p className="text-ink-stone leading-relaxed">
-            {"Your full StyleAI report is now unlocked. Here's everything you get:"}
+            {"Your full Renovaara report is now unlocked. Here's everything you get:"}
           </p>
         </motion.div>
 
@@ -114,3 +114,4 @@ export default function SuccessPage() {
     </Suspense>
   );
 }
+

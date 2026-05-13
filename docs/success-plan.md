@@ -1,4 +1,4 @@
-# StyleAI ✦ — Path-to-Success Plan (Cheapest × Best-Quality)
+# Renovaara ✦ — Path-to-Success Plan (Cheapest × Best-Quality)
 
 > Written from a founder/operator lens. Goal: validate willingness-to-pay fast,
 > drive cost/report to ≤ $0.20, keep quality premium, and get to ramen-profitable
@@ -184,3 +184,4 @@ Add (from `visual-analysis-roadmap.md` P0/P1, mostly ✅):
 2. **Cost engineering is largely done** (roadmap Phases 1–4 complete). Push Phase 5 (lazy + dedupe) live to hit $0.25/report COGS.
 3. **The bottleneck is not tech, it's distribution.** Pick the bridal wedge, ship 1 landing variant, launch on Reddit/Pinterest/PH. Validate $9.99 PMF in 30 days.
 4. **Margins are extraordinary (~95%)** — break-even at ~6 paid reports/month. Don't raise money; raise paying users.
+

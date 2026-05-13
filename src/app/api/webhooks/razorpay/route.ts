@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
             ? `₹${(payment.amount / 100).toFixed(0)}`
             : `$${(payment.amount / 100).toFixed(2)}`)
         : "—";
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://styleai.app";
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://renovaara.in";
       const reportUrl = row.report_id ? `${appUrl}/report/${row.report_id}` : appUrl;
 
       fetch("https://api.resend.com/emails", {
@@ -134,9 +134,9 @@ export async function POST(req: NextRequest) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "StyleAI <noreply@styleai.app>",
+          from: "Renovaara <noreply@renovaara.in>",
           to: [userEmail],
-          subject: "Your StyleAI report is unlocked 🎉",
+          subject: "Your Renovaara report is unlocked 🎉",
           html: `
             <p>Hi there,</p>
             <p>Payment of <strong>${amountFormatted}</strong> confirmed. Your full AI beauty report is ready.</p>
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
               If you need a refund within 30 days, reply to this email or visit
               <a href="${appUrl}/dashboard">your dashboard</a>.
             </p>
-            <p style="font-size:12px;color:#888;">StyleAI · Your AI Personal Stylist</p>
+            <p style="font-size:12px;color:#888;">Renovaara · Your AI Personal Stylist</p>
           `,
         }),
       }).catch((e) => console.error("[webhook/razorpay] receipt email failed", e));

@@ -358,7 +358,7 @@ function AuthContent() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "rgba(201,149,107,0.2)", backdropFilter: "blur(8px)" }}>
             <Sparkles className="h-4 w-4" style={{ color: "#C9956B" }} />
           </div>
-          <span className="font-serif text-xl" style={{ color: "#F0E8D8" }}>StyleAI</span>
+          <span className="font-serif text-xl" style={{ color: "#F0E8D8" }}>Renovaara</span>
         </div>
       </motion.div>
       <div className="space-y-8">
@@ -401,7 +401,7 @@ function AuthContent() {
             <div className="flex h-8 w-8 items-center justify-center rounded-full text-obsidian" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
               <Sparkles className="h-4 w-4" />
             </div>
-            <span className="font-serif text-xl text-ink">StyleAI</span>
+            <span className="font-serif text-xl text-ink">Renovaara</span>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -498,7 +498,7 @@ function AuthContent() {
               /* ── MAIN FORM ────────────────────────────────────────────────── */
               <motion.div key="main-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                 <div>
-                  <h1 className="font-serif text-3xl text-ink mb-2">Sign in to StyleAI</h1>
+                  <h1 className="font-serif text-3xl text-ink mb-2">Sign in to Renovaara</h1>
                   <p className="text-ink-stone text-sm">No password needed — choose how you want to sign in.</p>
                 </div>
 
@@ -681,3 +681,4 @@ function AuthContent() {
     </div>
   );
 }
+

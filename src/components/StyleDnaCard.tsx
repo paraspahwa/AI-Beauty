@@ -130,7 +130,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
     ]
       .filter(Boolean)
       .join(" · ");
-    await navigator.clipboard.writeText(`✨ My StyleAI Profile\n${styleId}\n\nGet yours at styleai.app`);
+    await navigator.clipboard.writeText(`✨ My Renovaara Profile\n${styleId}\n\nGet yours at renovaara.in`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }

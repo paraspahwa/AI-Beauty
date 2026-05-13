@@ -110,7 +110,7 @@ function MockReportCard() {
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white">
             <Sparkles className="h-3 w-3" />
           </div>
-          <span className="font-serif text-sm text-ink">StyleAI Report</span>
+          <span className="font-serif text-sm text-ink">Renovaara Report</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs rounded-full px-2 py-0.5 font-medium" style={{ background: "rgba(255,255,255,0.06)", color: "#888", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -355,7 +355,7 @@ export default function HomePage() {
           variants={staggerContainer}
         >
           <motion.div variants={fadeUp} className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl text-ink mb-4">How StyleAI works</h2>
+            <h2 className="text-3xl sm:text-4xl text-ink mb-4">How Renovaara works</h2>
             <p className="text-ink-stone max-w-2xl mx-auto">
               One selfie. Four steps. A complete personal style profile in minutes.
             </p>
@@ -650,7 +650,7 @@ export default function HomePage() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-camel text-white">
                   <Sparkles className="h-3.5 w-3.5" />
                 </div>
-                <span className="font-serif text-lg text-ink">StyleAI</span>
+                <span className="font-serif text-lg text-ink">Renovaara</span>
               </div>
               <p className="text-sm text-ink-stone leading-relaxed max-w-xs">
                 Your AI-powered personal stylist. Discover the colors, cuts, and styles that make
@@ -697,7 +697,7 @@ export default function HomePage() {
           </div>
 
           <div className="pt-6 border-t border-cream-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-mist">
-            <p>© {new Date().getFullYear()} StyleAI. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Renovaara. All rights reserved.</p>
             <p>Powered by GPT-4o · AWS Rekognition · FAL AI (makeup, try-on, hair)</p>
           </div>
         </div>

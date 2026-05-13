@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "StyleAI <noreply@styleai.app>",
+          from: "Renovaara <noreply@renovaara.in>",
           to: [notifyEmail],
           subject: `[Refund Request] User ${user.email} — Payment ${payment.id}`,
           text: [
@@ -113,3 +113,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

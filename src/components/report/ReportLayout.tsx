@@ -164,7 +164,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
           className="text-[10px] uppercase tracking-[0.35em] font-semibold"
           style={{ color: "#C8A96E" }}
         >
-          ✦ Your StyleAI Report ✦
+          ✦ Your Renovaara Report ✦
         </motion.p>
         <motion.h1
           variants={fadeUp}
@@ -251,7 +251,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
           {!isReadOnly && isPaid ? (
             <a
               href={`/api/reports/${report.id}/pdf`}
-              download={`styleai-report-${report.id}.html`}
+              download={`Renovaara-report-${report.id}.html`}
               rel="noopener"
               className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
               style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
@@ -570,3 +570,4 @@ function Locked({
     </motion.div>
   );
 }
+

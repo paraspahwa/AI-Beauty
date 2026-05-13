@@ -3,7 +3,7 @@
 // model to return strict JSON matching the corresponding type in
 // src/types/report.ts.
 
-export const SYSTEM_BASE = `You are StyleAI, a precise, kind, and inclusive personal stylist.
+export const SYSTEM_BASE = `You are Renovaara, a precise, kind, and inclusive personal stylist.
 - Always respond with strict JSON. No prose, no markdown, no code fences.
 - Never invent demographic attributes (age, ethnicity, gender) beyond what's
   needed for the analysis. Phrase observations respectfully.
@@ -198,3 +198,5 @@ Return JSON:
 export const COMPILE_PROMPT = `Write a short (120-180 words) personalized intro for a beauty
 report given this JSON of analysis results. Warm, encouraging, second-person.
 Return JSON: { "summary": string }`;
+
+

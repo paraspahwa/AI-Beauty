@@ -336,7 +336,7 @@ export function ShoppingGuideCard({ report }: Props) {
 
       {/* Disclaimer */}
       <p className="text-center text-[11px]" style={{ color: "#B0A090" }}>
-        These are pre-filled search links. StyleAI is not affiliated with any retailer.
+        These are pre-filled search links. Renovaara is not affiliated with any retailer.
         Results depend on retailer inventory.
       </p>
     </div>

@@ -5,13 +5,13 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://styleai.app";
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "StyleAI — Your AI Personal Stylist",
-    template: "%s | StyleAI",
+    default: "Renovaara — Your AI Personal Stylist",
+    template: "%s | Renovaara",
   },
   description:
     "Upload a selfie and get your full AI beauty report: virtual clothing try-on, makeup try-on, spectacles guide, hairstyle recommendations, and skin analysis — all personalised to you.",
@@ -26,14 +26,14 @@ export const metadata: Metadata = {
     "beauty AI",
     "style report",
   ],
-  authors: [{ name: "StyleAI" }],
-  creator: "StyleAI",
+  authors: [{ name: "Renovaara" }],
+  creator: "Renovaara",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: BASE_URL,
-    siteName: "StyleAI",
-    title: "StyleAI — Your AI Personal Stylist",
+    siteName: "Renovaara",
+    title: "Renovaara — Your AI Personal Stylist",
     description:
       "Upload a selfie. Try on clothes & makeup. Get your personalised spectacles, hairstyle & skin blueprint — all powered by AI.",
     images: [
@@ -41,13 +41,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "StyleAI — AI Personal Stylist",
+        alt: "Renovaara — AI Personal Stylist",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "StyleAI — Your AI Personal Stylist",
+    title: "Renovaara — Your AI Personal Stylist",
     description:
       "Virtual try-on, makeup try-on, spectacles, hairstyle & skin analysis — all from one selfie.",
     images: ["/og-image.png"],
@@ -87,7 +87,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              "name": "StyleAI",
+              "name": "Renovaara",
               "applicationCategory": "LifestyleApplication",
               "operatingSystem": "Web",
               "url": BASE_URL,

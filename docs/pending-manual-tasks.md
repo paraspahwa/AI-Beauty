@@ -1,24 +1,24 @@
-# StyleAI — Pending Manual Tasks (Vercel + External)
+# Renovaara — Pending Manual Tasks (Vercel + External)
 
 These require action outside the codebase. All code changes are already deployed/committed.
 
 ## 🔴 P1 — Do First (Revenue / Broken)
 
 1. **Affiliate tags** — Register accounts, then set in Vercel env vars:
-   - `NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG` = your Amazon Associates India tag (e.g. `styleai-21`)
+   - `NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG` = your Amazon Associates India tag (e.g. `Renovaara-21`)
    - `NEXT_PUBLIC_MYNTRA_AFFILIATE_SID` = your Admitad/VCommission SID for Myntra
    - Register at: https://associates.amazon.in | https://www.myntra.com/affiliate
 
 2. **App URL** — Set in Vercel → Settings → Environment Variables:
    - `NEXT_PUBLIC_APP_URL` = `https://<your-production-domain>`
-   - Fixes sitemap.xml + robots.txt URLs (currently fallback to `https://styleai.app`)
+   - Fixes sitemap.xml + robots.txt URLs (currently fallback to `https://renovaara.in`)
 
-3. **Verify live price** — Confirm `NEXT_PUBLIC_PAID_PRICE_INR` is set to correct value (₹829, not ₹399 default)
+3. **Verify live price** — Confirm `NEXT_PUBLIC_PAID_PRICE_INR` is set to correct value (₹399, not ₹399 default)
 
 ## 🟡 P2 — Do This Week
 
 4. **OG image + favicon** — Create and commit to `public/`:
-   - `og-image.png` — 1200×630 px (dark obsidian bg, StyleAI logo + tagline)
+   - `og-image.png` — 1200×630 px (dark obsidian bg, Renovaara logo + tagline)
    - `favicon.ico` — 48×48 px
    - `apple-touch-icon.png` — 180×180 px
    - Tool: https://realfavicongenerator.net (upload 512×512 SVG → generates all sizes)
@@ -44,3 +44,4 @@ These require action outside the codebase. All code changes are already deployed
 
 9. **Subscription tiers** — Implement Glow Monthly (₹599) + Glow Annual (₹4,999) per `docs/PRICING_STRATEGY.md`
    - Needs: `supabase/migrations/0019_subscriptions.sql` + Razorpay subscription API
+

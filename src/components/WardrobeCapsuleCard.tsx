@@ -332,7 +332,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
 
           {/* Affiliate disclosure */}
           <p className="text-center text-[10px]" style={{ color: "rgba(240,232,216,0.18)" }}>
-            Shopping links may include affiliate tracking · StyleAI earns a small commission at no extra cost to you
+            Shopping links may include affiliate tracking · Renovaara earns a small commission at no extra cost to you
           </p>
         </>
       )}

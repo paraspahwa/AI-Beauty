@@ -80,7 +80,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new Response(Buffer.from(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="styleai-report-${row.id}.pdf"`,
+        "Content-Disposition": `attachment; filename="Renovaara-report-${row.id}.pdf"`,
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "Cache-Control": "private, no-store",
@@ -92,7 +92,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new Response(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `attachment; filename="styleai-report-${row.id}.html"`,
+        "Content-Disposition": `attachment; filename="Renovaara-report-${row.id}.html"`,
         "X-Content-Type-Options": "nosniff",
         "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none';",
         "X-Frame-Options": "DENY",
@@ -208,7 +208,7 @@ function renderHtml(r: ReportRow): string {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>StyleAI Report — ${r.id.slice(0, 8)}</title>
+  <title>Renovaara Report — ${r.id.slice(0, 8)}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Georgia,serif;background:#FAF7F2;color:#2A1F14;padding:40px 48px;max-width:900px;margin:0 auto}
@@ -234,11 +234,11 @@ function renderHtml(r: ReportRow): string {
 </head>
 <body>
   <header>
-    <h1>✦ StyleAI Personal Beauty Report ✦</h1>
+    <h1>✦ Renovaara Personal Beauty Report ✦</h1>
     <p>Generated ${new Date(r.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })} &nbsp;·&nbsp; Open in a browser and use <strong>File → Print → Save as PDF</strong></p>
   </header>
   ${parts.join("\n  ")}
-  <footer>styleai.app &nbsp;·&nbsp; Report ID ${r.id}</footer>
+  <footer>renovaara.in &nbsp;·&nbsp; Report ID ${r.id}</footer>
 </body>
 </html>`;
 }

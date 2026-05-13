@@ -34,7 +34,7 @@ export const env = {
     url: optional(process.env.NEXT_PUBLIC_APP_URL,
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"
     ),
-    name: optional(process.env.NEXT_PUBLIC_APP_NAME, "StyleAI"),
+    name: optional(process.env.NEXT_PUBLIC_APP_NAME, "Renovaara"),
   },
   supabase: {
     url: optional(process.env.NEXT_PUBLIC_SUPABASE_URL),
@@ -119,3 +119,5 @@ export const env = {
     }
   },
 };
+
+

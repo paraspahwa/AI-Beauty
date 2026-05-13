@@ -14,7 +14,7 @@
 import type { MetadataRoute } from "next";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://styleai.app";
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -55,3 +55,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // personal data that must not be crawled.
   ];
 }
+
+

@@ -8,7 +8,7 @@ import type { CompiledReport } from "@/types/report";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const SYSTEM_PROMPT = `You are StyleAI's personal style consultant — warm, concise, and expert.
+const SYSTEM_PROMPT = `You are Renovaara's personal style consultant — warm, concise, and expert.
 You have already analysed this user's face shape, color season, skin type, and style profile.
 Use the report context below to give specific, actionable advice.
 - Keep replies to 2-4 sentences unless the question needs more detail.
@@ -256,3 +256,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Chat unavailable right now" }, { status: 500 });
   }
 }
+
