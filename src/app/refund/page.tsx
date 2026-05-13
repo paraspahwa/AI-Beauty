@@ -34,7 +34,7 @@ export default function RefundPage() {
           <ul className="space-y-2 text-[15px] text-ink-stone">
             <li>✅ Full refund within <strong className="text-ink">{REFUND_WINDOW_HOURS} hours</strong> if your report fails to generate.</li>
             <li>✅ Full refund if the report is clearly erroneous due to a platform error.</li>
-            <li>❌ No refund if the report was successfully delivered and you simply didn't like the recommendations.</li>
+            <li>❌ No refund if the report was successfully delivered and you simply didn&apos;t like the recommendations.</li>
             <li>❌ No refund after {REFUND_WINDOW_HOURS} hours of payment.</li>
           </ul>
         </div>
@@ -100,7 +100,7 @@ export default function RefundPage() {
                 {CONTACT_EMAIL}
               </a>{" "}
               with the subject line{" "}
-              <strong className="text-ink">"Refund Request — [your registered email]"</strong>.
+              <strong className="text-ink">&ldquo;Refund Request — [your registered email]&rdquo;</strong>.
             </li>
             <li>
               Include your Razorpay Payment ID (found in your confirmation email or payment

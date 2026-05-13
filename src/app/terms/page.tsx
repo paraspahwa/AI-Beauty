@@ -27,8 +27,8 @@ export default function TermsPage() {
         <Section title="1. Acceptance of Terms">
           <p>
             By accessing or using <strong className="text-ink">{APP_NAME}</strong> (the
-            "Service") operated by <strong className="text-ink">{COMPANY}</strong> ("we", "us",
-            "our"), you agree to be bound by these Terms of Service ("Terms"). If you do not
+            &ldquo;Service&rdquo;) operated by <strong className="text-ink">{COMPANY}</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;,
+            &ldquo;our&rdquo;), you agree to be bound by these Terms of Service (&ldquo;Terms&rdquo;). If you do not
             agree, please do not use the Service.
           </p>
           <p>

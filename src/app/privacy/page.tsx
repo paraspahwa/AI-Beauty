@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         <Section title="1. Who We Are">
           <p>
             {APP_NAME} is an AI-powered personal styling platform operated by{" "}
-            <strong className="text-ink">{COMPANY}</strong> ("we", "us", "our"). We provide
+            <strong className="text-ink">{COMPANY}</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). We provide
             face-shape analysis, colour-season profiling, virtual try-on, hairstyle
             recommendations, spectacles guidance, and skin analysis through our web
             application.
@@ -91,8 +91,8 @@ export default function PrivacyPage() {
 
         <Section title="4. Facial Image Data">
           <p>
-            Your uploaded photo is transmitted securely to OpenAI's API for analysis only. It
-            is <strong>not</strong> used to train OpenAI's models under our API agreement. After
+            Your uploaded photo is transmitted securely to OpenAI&apos;s API for analysis only. It
+            is <strong>not</strong> used to train OpenAI&apos;s models under our API agreement. After
             analysis is complete, the image is retained in your account for 30 days so you can
             re-access your report, then automatically deleted from storage.
           </p>
@@ -210,7 +210,7 @@ export default function PrivacyPage() {
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
               {CONTACT_EMAIL}
             </a>{" "}
-            with the subject line "Data Request". We will respond within 30 days.
+            with the subject line &ldquo;Data Request&rdquo;. We will respond within 30 days.
           </p>
         </Section>
 
