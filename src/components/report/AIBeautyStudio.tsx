@@ -642,18 +642,22 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
 
               {/* Contour toggle */}
               <section>
-                <div className="flex items-center justify-between rounded-xl px-4 py-3"
+                <div className="flex items-center gap-4 rounded-xl px-4 py-3"
                   style={{ background: "#F5EDE4", border: "1.5px solid #E0CEBC" }}>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Contour &amp; Highlight</p>
                     <p className="text-[10px] mt-0.5" style={{ color: "#9C7D5B" }}>Sculpt cheekbones and nose bridge</p>
                   </div>
-                  <button onClick={() => { setMkContour((v) => !v); resetMakeupResult(); }}
+                  <button
+                    onClick={() => { setMkContour((v) => !v); resetMakeupResult(); }}
                     disabled={status === "loading"}
-                    className="relative ml-4 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40"
-                    style={{ background: mkContour ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#D8CEC4" }}>
-                    <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
-                      style={{ transform: mkContour ? "translateX(22px)" : "translateX(2px)" }} />
+                    className="relative shrink-0 h-6 w-11 rounded-full transition-colors disabled:opacity-40"
+                    style={{ background: mkContour ? "linear-gradient(135deg,#C9956B,#E8C990)" : "#D8CEC4" }}
+                  >
+                    <span
+                      className="absolute inset-y-0 my-auto h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+                      style={{ transform: mkContour ? "translateX(22px)" : "translateX(2px)" }}
+                    />
                   </button>
                 </div>
               </section>
