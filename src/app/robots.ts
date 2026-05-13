@@ -23,7 +23,7 @@ export default function robots(): MetadataRoute.Robots {
           "/dashboard/",   // User dashboard — requires login
           "/admin/",       // Admin panel — must never be indexed
           "/api/",         // All API routes
-          "/r/",           // Shared report token pages (optional: allow if you want public sharing indexed)
+          // /r/ (public share pages) intentionally allowed for indexing
         ],
       },
     ],

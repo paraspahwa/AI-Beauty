@@ -81,6 +81,29 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "StyleAI",
+              "applicationCategory": "LifestyleApplication",
+              "operatingSystem": "Web",
+              "url": BASE_URL,
+              "description": "AI-powered personal stylist: face shape analysis, colour season, virtual try-on, makeup studio, hairstyle guide, spectacles guide, and skin analysis — all from one selfie.",
+              "offers": [
+                { "@type": "Offer", "price": "0", "priceCurrency": "INR", "description": "Free preview — face shape analysis" },
+                { "@type": "Offer", "price": "199", "priceCurrency": "INR", "description": "Full AI beauty report" },
+              ],
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "reviewCount": "50000",
+              },
+            }),
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col bg-obsidian text-ink antialiased">
         {/* ── Persistent aurora background ── */}

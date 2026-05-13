@@ -73,6 +73,14 @@ export async function POST(req: NextRequest) {
   if (!row) return NextResponse.json({ ok: true }, { status: 202 });
 
   if (event.event === "payment.captured") {
+    // Fetch user email for the receipt — needed regardless of which branch runs.
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", row.user_id)
+      .single();
+    const userEmail = profile?.email as string | undefined;
+
     if (row.report_id) {
       // Always reconcile via RPC when report_id exists; function is idempotent.
       const { error: rpcErr } = await admin.rpc("complete_webhook_payment", {
@@ -105,6 +113,42 @@ export async function POST(req: NextRequest) {
         console.error("[webhook/razorpay] profile update failed", profileErr);
         return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
+    }
+
+    // Fire-and-forget receipt email via Resend.
+    // Set RESEND_API_KEY in Vercel env vars to enable (free tier: 3,000 emails/mo).
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey && userEmail) {
+      const amountFormatted = typeof payment?.amount === "number"
+        ? (payment.currency === "INR"
+            ? `₹${(payment.amount / 100).toFixed(0)}`
+            : `$${(payment.amount / 100).toFixed(2)}`)
+        : "—";
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://styleai.app";
+      const reportUrl = row.report_id ? `${appUrl}/report/${row.report_id}` : appUrl;
+
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "StyleAI <noreply@styleai.app>",
+          to: [userEmail],
+          subject: "Your StyleAI report is unlocked 🎉",
+          html: `
+            <p>Hi there,</p>
+            <p>Payment of <strong>${amountFormatted}</strong> confirmed. Your full AI beauty report is ready.</p>
+            <p><a href="${reportUrl}" style="background:#C9956B;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600;">View Your Report</a></p>
+            <p style="font-size:12px;color:#888;">
+              If you need a refund within 30 days, reply to this email or visit
+              <a href="${appUrl}/dashboard">your dashboard</a>.
+            </p>
+            <p style="font-size:12px;color:#888;">StyleAI · Your AI Personal Stylist</p>
+          `,
+        }),
+      }).catch((e) => console.error("[webhook/razorpay] receipt email failed", e));
     }
   } else if (event.event === "payment.failed") {
     // Never regress paid -> failed.

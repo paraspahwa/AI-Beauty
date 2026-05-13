@@ -21,8 +21,8 @@ const TABS = [
   { value: "skin",    label: "Skin" },
   { value: "glasses", label: "Spectacles" },
   { value: "hair",    label: "Hairstyle" },
-  { value: "studio",  label: "✨ AI Studio" },
-  { value: "shop",    label: "🛍 Shop" },
+  { value: "studio",  label: "AI Studio" },
+  { value: "shop",    label: "Shop" },
 ] as const;
 
 interface Props {
