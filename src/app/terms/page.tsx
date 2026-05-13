@@ -113,7 +113,7 @@ export default function TermsPage() {
         <Section title="6. Refunds">
           <p>
             Please refer to our{" "}
-            <Link href="/refund" className="text-gold hover:underline">
+            <Link href="/refund" className="text-chrome-gold hover:underline">
               Refund Policy
             </Link>{" "}
             for full details. In summary: you may request a refund within{" "}
@@ -146,7 +146,7 @@ export default function TermsPage() {
             By uploading, you grant us a limited, non-exclusive licence to process your photos
             solely for the purpose of generating your report. We do not claim ownership of
             your images. See our{" "}
-            <Link href="/privacy" className="text-gold hover:underline">
+            <Link href="/privacy" className="text-chrome-gold hover:underline">
               Privacy Policy
             </Link>{" "}
             for data-retention details.
@@ -181,7 +181,7 @@ export default function TermsPage() {
             subject to the exclusive jurisdiction of the{" "}
             <strong className="text-ink">{JURISDICTION}</strong>. Before pursuing formal legal
             action, both parties agree to attempt good-faith resolution by emailing{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
               {CONTACT_EMAIL}
             </a>
             .
@@ -191,7 +191,7 @@ export default function TermsPage() {
         <Section title="12. Contact">
           <p>
             For questions about these Terms, email{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
               {CONTACT_EMAIL}
             </a>
             .

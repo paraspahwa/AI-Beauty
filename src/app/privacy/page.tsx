@@ -31,7 +31,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Questions about this policy? Reach us at{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
               {CONTACT_EMAIL}
             </a>
             .
@@ -207,7 +207,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             To exercise any right, email{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
               {CONTACT_EMAIL}
             </a>{" "}
             with the subject line "Data Request". We will respond within 30 days.

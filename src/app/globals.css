@@ -283,7 +283,12 @@
     @apply text-ink font-semibold;
   }
   .prose-legal a {
-    @apply text-gold hover:underline;
+    color: #E8C990;
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+  .prose-legal a:hover {
+    color: #C9956B;
   }
 
   .legal-table {

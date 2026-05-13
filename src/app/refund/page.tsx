@@ -96,7 +96,7 @@ export default function RefundPage() {
           <ol className="list-decimal list-inside space-y-2">
             <li>
               Email{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
                 {CONTACT_EMAIL}
               </a>{" "}
               with the subject line{" "}
@@ -145,7 +145,7 @@ export default function RefundPage() {
         <Section title="8. Contact">
           <p>
             For any refund-related questions, please email{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
               {CONTACT_EMAIL}
             </a>
             . We typically respond within 24 hours on business days.
