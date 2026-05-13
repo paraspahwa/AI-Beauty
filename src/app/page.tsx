@@ -179,7 +179,7 @@ function MockReportCard() {
 
       {/* Unlock hint */}
       <div className="mt-4 rounded-xl px-4 py-3 text-center" style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.1), rgba(232,201,144,0.08))", border: "1px solid rgba(201,149,107,0.2)" }}>
-        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock full report — $9.99 · ₹399</p>
+        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock full report — ₹399 one-time</p>
       </div>
 
       {/* Floating stat badges */}
@@ -543,7 +543,7 @@ export default function HomePage() {
             {/* Free */}
             <motion.div variants={fadeUp} className="card-soft">
               <p className="text-xs uppercase tracking-widest text-ink-mist mb-2">Free preview</p>
-              <p className="font-serif text-5xl text-ink mb-1">$0</p>
+              <p className="font-serif text-5xl text-ink mb-1">₹0</p>
               <p className="text-xs text-ink-mist mb-6">No card required · Free forever</p>
               <ul className="space-y-3 text-sm text-ink-stone mb-8">
                 {[
@@ -573,10 +573,10 @@ export default function HomePage() {
               </div>
               <p className="text-xs uppercase tracking-widest text-terracotta mb-2">Full report</p>
               <div className="flex items-baseline gap-3 mb-1">
-                <p className="font-serif text-5xl text-ink">$9.99</p>
-                <p className="text-sm text-ink-mist line-through">$29.99</p>
+                <p className="font-serif text-5xl text-ink">₹399</p>
+                <p className="text-sm text-ink-mist line-through">₹999</p>
               </div>
-              <p className="text-xs text-ink-mist mb-6">One-time · ₹399 for India · 30-day guarantee</p>
+              <p className="text-xs text-ink-mist mb-6">One-time payment · No subscription · 72-hr refund guarantee</p>
               <ul className="space-y-3 text-sm text-ink-stone mb-8">
                 {[
                   "Everything in Free, plus:",
