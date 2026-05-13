@@ -47,6 +47,22 @@ export async function POST(
     if (rowErr || !row) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (row.user_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+    // ── Entitlement check ─────────────────────────────────────────────────────
+    const { data: tierData } = await admin.rpc("get_user_plan_tier", { p_user: user.id });
+    const planTier = (tierData as string | null) ?? "free";
+
+    if (planTier === "studio_pro") {
+      const allowed = await admin.rpc("try_consume_generation", { p_user: user.id, p_cap: 150 });
+      if (!allowed.data) {
+        return NextResponse.json(
+          { error: "Monthly generation limit reached (150). Resets at the start of next billing period.", code: "QUOTA_EXCEEDED" },
+          { status: 429 },
+        );
+      }
+    } else if (!row.is_paid) {
+      return NextResponse.json({ error: "Payment required" }, { status: 402 });
+    }
+
     if (!env.fal?.isConfigured) {
       return NextResponse.json({ error: "FAL not configured" }, { status: 503 });
     }

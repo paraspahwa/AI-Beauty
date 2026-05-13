@@ -99,6 +99,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (rowErr || !row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     if (row.status !== "ready") return NextResponse.json({ error: "Report not ready" }, { status: 409 });
 
+    // ── Entitlement check ─────────────────────────────────────────────────────
+    const { data: tierData } = await admin.rpc("get_user_plan_tier", { p_user: user.id });
+    const planTier = (tierData as string | null) ?? "free";
+
+    if (planTier === "studio_pro") {
+      const allowed = await admin.rpc("try_consume_generation", { p_user: user.id, p_cap: 150 });
+      if (!allowed.data) {
+        return NextResponse.json(
+          { error: "Monthly generation limit reached (150). Resets at the start of next billing period.", code: "QUOTA_EXCEEDED" },
+          { status: 429 },
+        );
+      }
+    } else {
+      // For report-plan users, require paid report
+      const { data: paidCheck } = await admin
+        .from("reports")
+        .select("is_paid")
+        .eq("id", id)
+        .single();
+      if (!paidCheck?.is_paid) {
+        return NextResponse.json({ error: "Payment required" }, { status: 402 });
+      }
+    }
+
     // Download selfie
     const { data: imgData, error: imgErr } = await admin.storage
       .from(env.supabase.bucket)

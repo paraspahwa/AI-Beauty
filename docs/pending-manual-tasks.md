@@ -13,7 +13,13 @@ These require action outside the codebase. All code changes are already deployed
    - `NEXT_PUBLIC_APP_URL` = `https://<your-production-domain>`
    - Fixes sitemap.xml + robots.txt URLs (currently fallback to `https://renovaara.in`)
 
-3. **Verify live price** — Confirm `NEXT_PUBLIC_PAID_PRICE_INR` is set to correct value (₹399, not ₹399 default)
+3. **Verify live prices** — Set/verify in Vercel → Settings → Environment Variables:
+   - `NEXT_PUBLIC_PRICE_REPORT_INR` = `299` (one-time report unlock, INR)
+   - `NEXT_PUBLIC_PRICE_REPORT_USD` = `3.99` (one-time report unlock, USD)
+   - `NEXT_PUBLIC_PRICE_STUDIO_PRO_INR` = `999` (Studio Pro monthly, INR)
+   - `NEXT_PUBLIC_PRICE_STUDIO_PRO_USD` = `12.99` (Studio Pro monthly, USD)
+   - Remove old `NEXT_PUBLIC_PAID_PRICE_INR` / `NEXT_PUBLIC_PAID_PRICE_USD` once verified
+   - ⚠️ Do NOT set `NEXT_PUBLIC_PAID_PRICE_INR=399` — the new report plan is ₹299
 
 ## 🟡 P2 — Do This Week
 
@@ -42,6 +48,11 @@ These require action outside the codebase. All code changes are already deployed
 8. **Razorpay international payments** — Enable in Razorpay dashboard under "International Payments"
    - Allows USD-paying users to pay via card without Stripe
 
-9. **Subscription tiers** — Implement Glow Monthly (₹599) + Glow Annual (₹4,999) per `docs/PRICING_STRATEGY.md`
-   - Needs: `supabase/migrations/0019_subscriptions.sql` + Razorpay subscription API
+9. **Subscription tiers — Razorpay plan setup** — Create plans in [Razorpay dashboard](https://dashboard.razorpay.com) under Subscriptions → Plans, then set in Vercel:
+   - Plan name: `Studio Pro INR Monthly` · Amount: ₹999 · Interval: monthly → copy Plan ID
+   - Plan name: `Studio Pro USD Monthly` · Amount: $12.99 · Interval: monthly → copy Plan ID
+   - `RAZORPAY_PLAN_ID_STUDIO_PRO_INR` = `plan_XXXXXXXXXXXXXX`
+   - `RAZORPAY_PLAN_ID_STUDIO_PRO_USD` = `plan_XXXXXXXXXXXXXX`
+   - Also add these Razorpay webhook events in dashboard: `subscription.activated`, `subscription.charged`, `subscription.halted`, `subscription.cancelled`
+   - Run migration: `supabase db push` → applies `0019_plans_subscriptions.sql`
 

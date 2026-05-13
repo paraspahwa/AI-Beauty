@@ -75,7 +75,7 @@ const FAQS = [
   },
   {
     q: "What's included in the free preview?",
-    a: "You'll get face shape identification and a personalized introduction — completely free, no card required. The full report unlocks skin analysis, spectacles guide, hairstyle guide, AI Beauty Studio (makeup, clothing try-on, hair color), and a downloadable PDF."
+    a: "You'll get face shape identification and a personalised introduction — completely free, no card required. The Full Report (₹299 one-time) unlocks skin analysis, spectacles guide, hairstyle guide, 5 AI Studio generations, and a downloadable PDF. Studio Pro (₹999/mo) adds unlimited reports and 150 AI generations per month."
   },
   {
     q: "How does the AI Makeup Studio work?",
@@ -91,7 +91,7 @@ const FAQS = [
   },
   {
     q: "Can I get a refund?",
-    a: "Yes! We offer a 30-day money-back guarantee. If you're not satisfied with your full report, contact us for a full refund — no questions asked."
+    a: "Yes! We offer a 30-day money-back guarantee on all paid plans. If you’re not satisfied, contact us for a full refund — no questions asked."
   },
 ];
 
@@ -179,7 +179,7 @@ function MockReportCard() {
 
       {/* Unlock hint */}
       <div className="mt-4 rounded-xl px-4 py-3 text-center" style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.1), rgba(232,201,144,0.08))", border: "1px solid rgba(201,149,107,0.2)" }}>
-        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock full report — ₹399 one-time</p>
+        <p className="text-xs font-medium" style={{ color: "#E8C990" }}>✦ Unlock full report — ₹299 one-time · or ₹999/mo for AI Studio Pro</p>
       </div>
 
       {/* Floating stat badges */}
@@ -525,7 +525,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" className="container max-w-4xl py-20 scroll-mt-16">
+      <section id="pricing" className="container max-w-5xl py-20 scroll-mt-16">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -536,10 +536,10 @@ export default function HomePage() {
             Simple, honest pricing
           </motion.h2>
           <motion.p variants={fadeUp} className="text-center text-ink-stone mb-12">
-            Try it free, upgrade when you&apos;re ready · No subscription, no hidden fees
+            Try it free, upgrade when you&apos;re ready · Transparent pricing, no hidden fees
           </motion.p>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-3">
             {/* Free */}
             <motion.div variants={fadeUp} className="card-soft">
               <p className="text-xs uppercase tracking-widest text-ink-mist mb-2">Free preview</p>
@@ -548,8 +548,8 @@ export default function HomePage() {
               <ul className="space-y-3 text-sm text-ink-stone mb-8">
                 {[
                   "Face shape identification",
-                  "20+ unique facial trait breakdown",
-                  "Personalized style introduction",
+                  "20+ unique facial traits",
+                  "Personalised style intro",
                   "Shareable report link",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
@@ -563,29 +563,28 @@ export default function HomePage() {
               </Button>
             </motion.div>
 
-            {/* Full report */}
+            {/* Report — one-time */}
             <motion.div
               variants={scaleIn}
               className="card-soft border-0 relative overflow-hidden chrome-border"
             >
               <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)", color: "#0A0A0F" }}>
-                BEST VALUE
+                POPULAR
               </div>
-              <p className="text-xs uppercase tracking-widest text-terracotta mb-2">Full report</p>
-              <div className="flex items-baseline gap-3 mb-1">
-                <p className="font-serif text-5xl text-ink">₹399</p>
-                <p className="text-sm text-ink-mist line-through">₹999</p>
+              <p className="text-xs uppercase tracking-widest text-terracotta mb-2">Full Report</p>
+              <div className="flex items-baseline gap-2 mb-1">
+                <p className="font-serif text-5xl text-ink">₹299</p>
               </div>
-              <p className="text-xs text-ink-mist mb-6">One-time payment · No subscription · 72-hr refund guarantee</p>
+              <p className="text-xs text-ink-mist mb-6">One-time · No subscription · 30-day refund guarantee</p>
               <ul className="space-y-3 text-sm text-ink-stone mb-8">
                 {[
                   "Everything in Free, plus:",
-                  "💄 Makeup Studio — lip, eyeshadow, blush, foundation, contour & eyeliner",
-                  "👗 Virtual Clothing Try-On (selfie + full-body mode)",
-                  "💇 AI Hair Color & Hairstyle previews",
-                  "👓 Spectacles guide — frames, metals & colours for your face",
-                  "🧴 Skin analysis & personalized routine",
-                  "📄 Downloadable PDF report",
+                  "💄 Makeup Studio (5 AI gens)",
+                  "👗 Virtual Clothing Try-On",
+                  "💇 AI Hair Colour previews",
+                  "👓 Spectacles guide",
+                  "🧴 Skin analysis & routine",
+                  "📄 Downloadable PDF",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <CheckCircle2 className="h-5 w-5 text-sage shrink-0 mt-0.5" />
@@ -594,7 +593,41 @@ export default function HomePage() {
                 ))}
               </ul>
               <Button asChild variant="accent" size="lg" className="w-full">
-                <Link href="/upload">Get my full report</Link>
+                <Link href="/upload">Get my report</Link>
+              </Button>
+            </motion.div>
+
+            {/* Studio Pro — subscription */}
+            <motion.div
+              variants={scaleIn}
+              className="card-soft border-0 relative overflow-hidden"
+              style={{ background: "linear-gradient(145deg, rgba(26,20,46,0.98), rgba(18,18,26,0.95))", border: "1px solid rgba(123,110,158,0.45)" }}
+            >
+              <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full" style={{ background: "linear-gradient(135deg, #7B6E9E, #A89CC8)", color: "#0A0A0F" }}>
+                PRO
+              </div>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#A89CC8" }}>Studio Pro</p>
+              <div className="flex items-baseline gap-2 mb-1">
+                <p className="font-serif text-5xl text-ink">₹999</p>
+                <p className="text-xs text-ink-mist">/month</p>
+              </div>
+              <p className="text-xs text-ink-mist mb-6">Monthly subscription · Cancel anytime</p>
+              <ul className="space-y-3 text-sm text-ink-stone mb-8">
+                {[
+                  "Everything in Full Report, plus:",
+                  "♾️ Unlimited reports",
+                  "🎨 150 AI generations/month",
+                  "⚡ Priority AI queue",
+                  "🔄 All future AI Studio features",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#A89CC8" }} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Button asChild size="lg" className="w-full" style={{ background: "linear-gradient(135deg, #7B6E9E, #A89CC8)", color: "#0A0A0F" }}>
+                <Link href="/upload">Start Studio Pro</Link>
               </Button>
             </motion.div>
           </div>
@@ -604,7 +637,7 @@ export default function HomePage() {
             className="mt-8 flex items-center justify-center gap-2 text-sm text-ink-mist"
           >
             <ShieldCheck className="h-4 w-4" />
-            Your selfie stays private — encrypted, only you can view your report · 30-day money-back guarantee
+            Your selfie stays private — encrypted, only you can view your report · 30-day money-back guarantee on all paid plans
           </motion.p>
         </motion.div>
       </section>

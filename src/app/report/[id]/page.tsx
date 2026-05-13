@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
+import { getStudioEntitlement } from "@/lib/entitlement";
 import { ReportLayout } from "@/components/report/ReportLayout";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
@@ -177,6 +178,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   }
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
+
+  // Fetch studio entitlement (plan tier + remaining quota)
+  const studioEntitlement = await getStudioEntitlement(user.id);
+  // studio_pro users always get premium content access
+  const effectivePremium = hasPremium || studioEntitlement.tier === "studio_pro";
+
   let visualAssets: Awaited<ReturnType<typeof resolveVisualAssets>> = undefined;
   try {
     visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
@@ -205,16 +212,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     userId: row.user_id,
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
-    isPaid: hasPremium,
+    isPaid: effectivePremium,
+    studioEntitlement,
     shareToken: (row as Record<string, unknown>).share_token as string | null ?? null,
     faceShape: row.face_shape ?? undefined,
     colorAnalysis: row.color_analysis ?? undefined,
-    skinAnalysis: hasPremium ? row.skin_analysis ?? undefined : undefined,
-    features:     hasPremium ? row.features      ?? undefined : undefined,
-    glasses:      hasPremium ? row.glasses       ?? undefined : undefined,
-    hairstyle:    hasPremium ? row.hairstyle     ?? undefined : undefined,
+    skinAnalysis: effectivePremium ? row.skin_analysis ?? undefined : undefined,
+    features:     effectivePremium ? row.features      ?? undefined : undefined,
+    glasses:      effectivePremium ? row.glasses       ?? undefined : undefined,
+    hairstyle:    effectivePremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
-    summary:      hasPremium ? row.summary       ?? undefined : undefined,
+    summary:      effectivePremium ? row.summary       ?? undefined : undefined,
     pipelineMeta,
     createdAt:    row.created_at,
   };

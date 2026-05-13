@@ -29,6 +29,22 @@ export function verifyCheckoutSignature(args: {
   return safeEqual(expected, args.signature);
 }
 
+/**
+ * Verify the signature returned by Razorpay Checkout after a subscription first-charge.
+ * HMAC-SHA256(payment_id + "|" + subscription_id, key_secret)
+ */
+export function verifySubscriptionSignature(args: {
+  paymentId: string;
+  subscriptionId: string;
+  signature: string;
+}): boolean {
+  if (!env.razorpay.keySecret) return false;
+  const expected = createHmac("sha256", env.razorpay.keySecret)
+    .update(`${args.paymentId}|${args.subscriptionId}`)
+    .digest("hex");
+  return safeEqual(expected, args.signature);
+}
+
 /** Verify the X-Razorpay-Signature header on incoming webhooks. */
 export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
   if (!env.razorpay.webhookSecret) return false;

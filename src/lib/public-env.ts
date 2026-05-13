@@ -13,8 +13,12 @@ export const publicEnv = {
   },
   razorpay: {
     keyId: optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
-    priceUSD: Number(process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "9.99"),
-    priceINR: Number(process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "399"),
+    // One-time report unlock
+    priceINR: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_INR ?? process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "299"),
+    priceUSD: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_USD ?? process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "3.99"),
+    // Studio Pro subscription
+    priceStudioProINR: Number(process.env.NEXT_PUBLIC_PRICE_STUDIO_PRO_INR ?? "999"),
+    priceStudioProUSD: Number(process.env.NEXT_PUBLIC_PRICE_STUDIO_PRO_USD ?? "12.99"),
   },
   flags: {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",

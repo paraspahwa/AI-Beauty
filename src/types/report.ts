@@ -2,6 +2,23 @@
 
 export type ReportStatus = "pending" | "processing" | "ready" | "failed";
 
+/** Mirror of src/lib/entitlement.ts — kept here for client-safe import from report types. */
+export type PlanTier = "free" | "report" | "studio_pro";
+
+export interface StudioEntitlement {
+  tier: PlanTier;
+  /** Monthly AI gens remaining. null for free/report (not metered at account level). */
+  remainingGens: number | null;
+  /** Monthly AI gens used this period. null for free/report. */
+  usedGens: number | null;
+  /** Hard cap for this tier. 150 for studio_pro, null otherwise. */
+  cap: number | null;
+  /** ISO date string of next period reset. null for free/report. */
+  periodResets: string | null;
+  /** Supabase UUID of the active subscription row. null if no subscription. */
+  subscriptionId: string | null;
+}
+
 export type ColorSeason =
   | "Spring"
   | "Summer"
@@ -143,6 +160,8 @@ export interface CompiledReport {
   imageUrl: string;
   status: ReportStatus;
   isPaid: boolean;
+  /** Entitlement for AI Studio — governs generation gating and monthly quota. */
+  studioEntitlement?: StudioEntitlement;
   shareToken?: string | null;
   faceShape?: FaceShapeResult;
   colorAnalysis?: ColorAnalysisResult;

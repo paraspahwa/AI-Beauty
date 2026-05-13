@@ -23,31 +23,28 @@
 
 ---
 
-## 2. Proposed Plans
+## 2. Active Plans (v2 — 2025)
+
+> Previous multi-tier model (Starter / Full / Glow) is retired. Two clear plans now live.
 
 ### 🇮🇳 India Pricing (INR)
 
-| Plan | Price | What's Included | Target |
+| Plan | Price | Type | What's Included |
 |---|---|---|---|
-| **Free** | ₹0 | Face shape + intro (no AI previews) | Acquisition / top of funnel |
-| **Starter** | ₹199 | Full report + 3 AI studio generations | Students, first-time users |
-| **Full Report** | ₹399 | Full report + 10 AI studio generations + PDF | Working professionals |
-| **Glow Monthly** | ₹599/mo | Unlimited reports + 30 AI generations/mo + priority | Power users, fashion lovers |
-| **Glow Annual** | ₹4,999/yr | Same as monthly, 30% saving | Loyalists |
-
-> **Current live price:** ₹399 (mapped from $9.99). Recommendation: **drop to ₹399** for India to maximize conversion vs. cost margin.
-
----
+| **Free** | ₹0 | Always free | Face shape + colour intro (no AI studio) |
+| **Report** | ₹299 | One-time per report | Full analysis + PDF + 5 AI Studio gens |
+| **Studio Pro** | ₹999/mo | Recurring subscription | Unlimited reports + 150 AI gens/month + priority |
 
 ### 🌍 International Pricing (USD)
 
-| Plan | Price | What's Included | Target |
+| Plan | Price | Type | What's Included |
 |---|---|---|---|
-| **Free** | $0 | Face shape + intro (no AI previews) | Acquisition |
-| **Starter** | $3.99 | Full report + 3 AI studio generations | Casual users |
-| **Full Report** | $9.99 | Full report + 10 AI studio generations + PDF | Core target ✅ (current) |
-| **Glow Monthly** | $14.99/mo | Unlimited reports + 30 AI generations/mo + priority | Enthusiasts |
-| **Glow Annual** | $99/yr | Same as monthly, 44% saving | Loyalists |
+| **Free** | $0 | Always free | Face shape + colour intro |
+| **Report** | $3.99 | One-time per report | Full analysis + PDF + 5 AI Studio gens |
+| **Studio Pro** | $12.99/mo | Recurring subscription | Unlimited reports + 150 AI gens/month + priority |
+
+> **AI generation cap:** 150/month (soft limit — enforced server-side, not shown to users).
+> At 130 gens a gentle "Fair-use threshold approaching" badge shows. At 150 returns 429.
 
 ---
 
@@ -69,21 +66,21 @@
 
 ## 4. Feature Gating per Plan
 
-| Feature | Free | Starter | Full | Glow |
-|---|---|---|---|---|
-| Face shape + traits | ✅ | ✅ | ✅ | ✅ |
-| Color analysis summary | ✅ | ✅ | ✅ | ✅ |
-| Skin analysis | ❌ | ✅ | ✅ | ✅ |
-| Spectacles guide | ❌ | ✅ | ✅ | ✅ |
-| Hairstyle guide | ❌ | ✅ | ✅ | ✅ |
-| Shopping guide | ❌ | ✅ | ✅ | ✅ |
-| AI Makeup Studio (granular) | ❌ | 3 gens | 10 gens | 30/mo |
-| Virtual Clothing Try-On | ❌ | 2 gens | 5 gens | 15/mo |
-| AI Hair Color Try-On | ❌ | 1 gen | 5 gens | 10/mo |
-| PDF download | ❌ | ❌ | ✅ | ✅ |
-| Share link | ❌ | ✅ | ✅ | ✅ |
-| Priority AI queue | ❌ | ❌ | ❌ | ✅ |
-| Multiple reports | ❌ | 1 | 1 | Unlimited |
+| Feature | Free | Report (₹299) | Studio Pro (₹999/mo) |
+|---|---|---|---|
+| Face shape + traits | ✅ | ✅ | ✅ |
+| Colour analysis summary | ✅ | ✅ | ✅ |
+| Skin analysis | ❌ | ✅ | ✅ |
+| Spectacles guide | ❌ | ✅ | ✅ |
+| Hairstyle guide | ❌ | ✅ | ✅ |
+| Shopping guide | ❌ | ✅ | ✅ |
+| AI Makeup Studio | ❌ | 5 gens (this report) | 150 gens/month (all reports) |
+| Virtual Clothing Try-On | ❌ | counted in 5 | counted in 150 |
+| AI Hair Colour Try-On | ❌ | counted in 5 | counted in 150 |
+| PDF download | ❌ | ✅ | ✅ |
+| Share link | ❌ | ✅ | ✅ |
+| Multiple reports | ❌ | 1 (this unlock) | Unlimited |
+| Priority AI queue | ❌ | ❌ | ✅ |
 
 ---
 
@@ -137,25 +134,33 @@ User clicks "Get Full Report"
 
 ---
 
-## 8. Next Implementation Steps
+## 8. Implementation Status
 
-### Phase 1 (Now — 1 week)
-- [ ] Add `plan` column to `reports` table (free / starter / full / glow)
-- [ ] Gate AI generation count per plan in the studio route
-- [ ] Add Razorpay plan IDs for subscription tiers
-- [ ] Update pricing UI on landing page (dual currency toggle IN ↔ USD)
+### ✅ Phase 1 — Done (Code shipped)
+- [x] `plans` + `subscriptions` + `usage_counters` tables added (`0019_plans_subscriptions.sql`)
+- [x] `plan_tier` enum (`free` / `report` / `studio_pro`) with RPCs for entitlement + quota
+- [x] AI generation routes (makeup, virtual-tryon, hair-color) gated by tier + monthly counter
+- [x] `src/lib/entitlement.ts` — `getStudioEntitlement()` helper
+- [x] Subscription create / verify / cancel API routes (`/api/subscriptions/*`)
+- [x] Razorpay webhook expanded for `subscription.*` lifecycle events
+- [x] `Paywall.tsx` redesigned — two-plan cards (Report ₹299 + Studio Pro ₹999/mo)
+- [x] `AIBeautyStudio.tsx` — quota banner (remaining gens + reset date)
+- [x] Landing page pricing updated — 3-card layout (Free / Report / Studio Pro)
+- [x] `env.ts` + `public-env.ts` — new price env vars and Razorpay plan ID vars added
 
-### Phase 2 (2–4 weeks)
-- [ ] Stripe integration for USD subscriptions
-- [ ] Usage counter per user per month (AI generations)
-- [ ] Subscription management dashboard
-- [ ] Referral tracking (simple UUID-based)
+### 🟡 Phase 2 — Manual / Pending (This week)
+- [ ] Run `supabase db push` → applies `0019_plans_subscriptions.sql`
+- [ ] Create Razorpay subscription plans in dashboard → set `RAZORPAY_PLAN_ID_STUDIO_PRO_INR` + `RAZORPAY_PLAN_ID_STUDIO_PRO_USD`
+- [ ] Enable `subscription.*` webhook events in Razorpay dashboard
+- [ ] Verify all price env vars are set in Vercel (`NEXT_PUBLIC_PRICE_REPORT_INR=299`, etc.)
+- [ ] Wire `/api/subscriptions/cancel` into an account/billing settings page
 
-### Phase 3 (1–2 months)
-- [ ] Influencer/affiliate link generation
+### 🔵 Phase 3 — Roadmap (2–4 weeks)
+- [ ] Stripe integration for USD subscriptions (alternative to Razorpay international)
+- [ ] Subscription management page (view plan, cancel, billing history)
+- [ ] Referral tracking (simple UUID-based, ₹50 credit)
 - [ ] Festive discount coupon system
-- [ ] AppSumo lifetime deal listing
-- [ ] Analytics dashboard (MRR, conversion rate, AI cost per user)
+- [ ] Analytics dashboard (MRR, AI cost per user, conversion rate)
 
 ---
 

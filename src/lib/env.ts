@@ -66,8 +66,15 @@ export const env = {
     keyId: optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
     keySecret: optional(process.env.RAZORPAY_KEY_SECRET),
     webhookSecret: optional(process.env.RAZORPAY_WEBHOOK_SECRET),
-    priceUSD: Number(process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "9.99"),
-    priceINR: Number(process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "399"),
+    // One-time report unlock prices
+    priceINR: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_INR ?? process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "299"),
+    priceUSD: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_USD ?? process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "3.99"),
+    // Studio Pro subscription prices
+    priceStudioProINR: Number(process.env.NEXT_PUBLIC_PRICE_STUDIO_PRO_INR ?? "999"),
+    priceStudioProUSD: Number(process.env.NEXT_PUBLIC_PRICE_STUDIO_PRO_USD ?? "12.99"),
+    // Razorpay Plan IDs (created manually in Razorpay dashboard)
+    planIdStudioProINR: optional(process.env.RAZORPAY_PLAN_ID_STUDIO_PRO_INR),
+    planIdStudioProUSD: optional(process.env.RAZORPAY_PLAN_ID_STUDIO_PRO_USD),
     isConfigured:
       optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID).length > 0 &&
       optional(process.env.RAZORPAY_KEY_SECRET).length > 0 &&

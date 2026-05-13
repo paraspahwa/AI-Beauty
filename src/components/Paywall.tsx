@@ -3,7 +3,10 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
-import { Lock, Sparkles, Check, Shield, Zap, Award, Droplets, Glasses, Scissors, FileDown, Share2 } from "lucide-react";
+import {
+  Lock, Sparkles, Check, Shield, Zap, Award, Droplets, Glasses,
+  Scissors, FileDown, Share2, Crown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,13 +21,17 @@ import { formatCurrency } from "@/lib/utils";
 import { detectCurrency, type SupportedCurrency } from "@/lib/currency";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
-/** Subset of the Razorpay Checkout success response we actually use. */
+// ── Razorpay types ────────────────────────────────────────────────────────────
 interface RazorpayPaymentResponse {
   razorpay_payment_id: string;
   razorpay_order_id: string;
   razorpay_signature: string;
 }
-
+interface RazorpaySubscriptionResponse {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
+}
 interface CreatePaymentResponse {
   orderId: string;
   amount: number;
@@ -33,6 +40,12 @@ interface CreatePaymentResponse {
   mode?: "real" | "test";
   requiresRealCheckout?: boolean;
 }
+interface CreateSubscriptionResponse {
+  subscriptionId: string;
+  keyId: string | null;
+  currency: string;
+  planId: string;
+}
 
 declare global {
   interface Window {
@@ -40,62 +53,71 @@ declare global {
   }
 }
 
-interface PaywallProps {
+export interface PaywallProps {
   reportId: string;
-  /** Called after successful checkout signature verification. */
   onUnlocked?: () => void;
+  onSubscribed?: () => void;
 }
 
-const PERKS = [
-  {
-    icon: Droplets,
-    text: "Full skin analysis with custom routine",
-  },
-  {
-    icon: Glasses,
-    text: "Spectacles guide tailored to your face shape",
-  },
-  {
-    icon: Scissors,
-    text: "Hairstyle, length & color recommendations",
-  },
-  {
-    icon: FileDown,
-    text: "Downloadable PDF for stylists & shopping",
-  },
-  {
-    icon: Share2,
-    text: "Shareable preview cards for socials",
-  },
+// ── Plan perk lists ───────────────────────────────────────────────────────────
+const REPORT_PERKS = [
+  { icon: Droplets, text: "Full skin analysis + custom routine" },
+  { icon: Glasses,  text: "Spectacles guide for your face shape" },
+  { icon: Scissors, text: "Hairstyle, length & colour guide" },
+  { icon: FileDown, text: "Downloadable PDF for stylists" },
+  { icon: Share2,   text: "Shareable preview cards" },
+  { icon: Sparkles, text: "5 AI Studio generations included" },
+];
+
+const PRO_PERKS = [
+  { icon: Sparkles, text: "150 AI Studio generations / month" },
+  { icon: Droplets, text: "Unlimited reports every month" },
+  { icon: Glasses,  text: "Full analysis on every report" },
+  { icon: FileDown, text: "PDF download on every report" },
+  { icon: Crown,    text: "Priority AI queue" },
+  { icon: Shield,   text: "Cancel anytime — no lock-in" },
 ];
 
 const SOCIAL_PROOF = [
-  { icon: Award, text: "50,000+ analyses done" },
-  { icon: Sparkles, text: "4.9/5 stars" },
-  { icon: Shield, text: "30-day refund" },
+  { icon: Award,    text: "50,000+ analyses done" },
+  { icon: Sparkles, text: "4.9 / 5 stars" },
+  { icon: Shield,   text: "30-day refund" },
 ];
 
-const TRUST_BADGES = [
-  "256-bit SSL",
-  "Instant delivery",
-  "Money back guarantee",
-];
+const TRUST_BADGES = ["256-bit SSL", "Instant delivery", "Money back guarantee"];
 
-export function Paywall({ reportId, onUnlocked }: PaywallProps) {
-  const [open, setOpen] = React.useState(false);
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmtINR(n: number) {
+  return `₹${n.toLocaleString("en-IN")}`;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
+  const [open, setOpen]       = React.useState(false);
+  const [plan, setPlan]       = React.useState<"report" | "studio_pro">("report");
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Detect currency once on mount (client-side only)
+  const [error, setError]     = React.useState<string | null>(null);
   const [currency, setCurrency] = React.useState<SupportedCurrency>("INR");
+
   React.useEffect(() => { setCurrency(detectCurrency()); }, []);
 
-  const priceMinor = currency === "INR"
+  // ── Derived prices ────────────────────────────────────────────────────────
+  const reportPriceMinor = currency === "INR"
     ? Math.round(publicEnv.razorpay.priceINR * 100)
     : Math.round(publicEnv.razorpay.priceUSD * 100);
-  const priceLabel = formatCurrency(priceMinor, currency);
 
-  async function startCheckout() {
+  const reportLabel = currency === "INR"
+    ? fmtINR(publicEnv.razorpay.priceINR)
+    : formatCurrency(reportPriceMinor, currency);
+
+  const reportStrike = currency === "INR" ? fmtINR(599) : "$9.99";
+
+  const proLabel = currency === "INR"
+    ? fmtINR(publicEnv.razorpay.priceStudioProINR)
+    : `$${publicEnv.razorpay.priceStudioProUSD.toFixed(2)}`;
+
+  // ── One-time report checkout ──────────────────────────────────────────────
+  async function startReportCheckout() {
     setLoading(true);
     setError(null);
     try {
@@ -106,64 +128,60 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
       });
       const payload = await res.json();
       if (!res.ok) {
-        const message = payload.code === "PAYMENT_NOT_CONFIGURED"
-          ? "Payments are disabled in this environment. Set PAYMENT_TEST_MODE=true to test unlock flow without Razorpay keys."
-          : payload.error ?? "Failed to create order";
-        throw new Error(message);
+        throw new Error(
+          payload.code === "PAYMENT_NOT_CONFIGURED"
+            ? "Payments disabled here. Set PAYMENT_TEST_MODE=true to test."
+            : (payload.error ?? "Failed to create order"),
+        );
       }
 
-      const { orderId, amount, currency: orderCurrency, keyId, mode, requiresRealCheckout } = payload as CreatePaymentResponse;
+      const { orderId, amount, currency: orderCurrency, keyId, mode, requiresRealCheckout } =
+        payload as CreatePaymentResponse;
 
+      // Test / dev mode
       if (mode === "test" || requiresRealCheckout === false) {
         const verify = await fetch("/api/payments/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             reportId,
-            razorpay_order_id: orderId,
-            razorpay_payment_id: `test_pay_${Date.now()}`,
-            razorpay_signature: "test_signature",
+            razorpay_order_id:    orderId,
+            razorpay_payment_id:  `test_pay_${Date.now()}`,
+            razorpay_signature:   "test_signature",
           }),
         });
-
-        const verifyPayload = await verify.json().catch(() => ({}));
-        if (!verify.ok) throw new Error(verifyPayload.error ?? "Payment verification failed");
-
+        const vp = await verify.json().catch(() => ({}));
+        if (!verify.ok) throw new Error(vp.error ?? "Verification failed");
         setOpen(false);
         onUnlocked?.();
         return;
       }
 
-      if (!window.Razorpay || !keyId) throw new Error("Razorpay checkout is not available right now");
+      if (!window.Razorpay || !keyId) throw new Error("Razorpay is not available right now");
 
-      const rz = new window.Razorpay({
-        key: keyId,
+      new window.Razorpay({
+        key:        keyId,
         amount,
-        currency: orderCurrency,
-        order_id: orderId,
-        name: "Renovaara",
-        description: "Full Beauty Report",
-        theme: { color: "#C17A5F" },
+        currency:   orderCurrency,
+        order_id:   orderId,
+        name:       "Renovaara",
+        description:"Full Beauty Report",
+        theme:      { color: "#C17A5F" },
         handler: async (response: RazorpayPaymentResponse) => {
           const verify = await fetch("/api/payments/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               reportId,
-              razorpay_order_id: response.razorpay_order_id,
+              razorpay_order_id:   response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
+              razorpay_signature:  response.razorpay_signature,
             }),
           });
-          if (verify.ok) {
-            setOpen(false);
-            onUnlocked?.();
-          } else {
-            setError("Payment verification failed");
-          }
+          if (verify.ok) { setOpen(false); onUnlocked?.(); }
+          else setError("Verification failed — contact support if amount was deducted.");
         },
-      });
-      rz.open();
+      }).open();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -171,31 +189,83 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
     }
   }
 
+  // ── Studio Pro subscription checkout ──────────────────────────────────────
+  async function startProCheckout() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/subscriptions/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currencyHint: currency }),
+      });
+      const payload = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          payload.code === "SUBSCRIPTION_NOT_CONFIGURED"
+            ? "Studio Pro subscriptions are coming soon! Contact us for early access."
+            : (payload.error ?? "Failed to create subscription"),
+        );
+      }
+
+      const { subscriptionId, keyId } = payload as CreateSubscriptionResponse;
+
+      if (!window.Razorpay || !keyId) throw new Error("Razorpay is not available right now");
+
+      new window.Razorpay({
+        key:             keyId,
+        subscription_id: subscriptionId,
+        name:            "Renovaara Studio Pro",
+        description:     "Monthly · 150 AI generations / month",
+        theme:           { color: "#7B6E9E" },
+        handler: async (response: RazorpaySubscriptionResponse) => {
+          const verify = await fetch("/api/subscriptions/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_payment_id:      response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature:       response.razorpay_signature,
+            }),
+          });
+          if (verify.ok) { setOpen(false); onSubscribed?.(); }
+          else setError("Subscription verification failed — contact support if payment was deducted.");
+        },
+      }).open();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleCTA() {
+    if (plan === "report") startReportCheckout();
+    else startProCheckout();
+  }
+
+  // ── Accent colour per selected plan ──────────────────────────────────────
+  const accent = plan === "studio_pro" ? "#9B7CB6" : "#C9956B";
+
   return (
     <>
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="afterInteractive"
-      />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="accent" size="lg" className="group relative overflow-hidden">
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-terracotta via-camel to-terracotta opacity-0 group-hover:opacity-100 transition-opacity"
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              style={{
+                background: "linear-gradient(90deg,#C17A5F,#C8A96E,#C17A5F)",
+                backgroundSize: "200% 100%",
               }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-              style={{ backgroundSize: "200% 100%" }}
             />
             <span className="relative flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Unlock Full Report — {priceLabel}
+              Unlock Full Report — {reportLabel}
               <Zap className="h-4 w-4 animate-pulse-slow" />
             </span>
           </Button>
@@ -203,167 +273,214 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
 
         <AnimatePresence>
           {open && (
-            <DialogContent className="max-w-lg" style={{ background: "linear-gradient(145deg, #12121A, #1A1A26)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
+            <DialogContent
+              className="max-w-2xl"
+              style={{
+                background: "linear-gradient(145deg,#12121A,#1A1A26)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+              }}
+            >
               <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+                {/* Header */}
                 <DialogHeader>
-                  {/* Animated lock icon with pulse */}
-                  <motion.div
-                    variants={fadeUp}
-                    className="mx-auto mb-4 relative"
-                  >
+                  <motion.div variants={fadeUp} className="mx-auto mb-3 relative">
                     <motion.div
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 0.8, 0.5],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                       className="absolute inset-0 rounded-full blur-xl"
                       style={{ background: "rgba(201,149,107,0.25)" }}
                     />
-                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
-                      <Lock className="h-8 w-8" />
+                    <div
+                      className="relative flex h-14 w-14 items-center justify-center rounded-full text-obsidian shadow-glow"
+                      style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)" }}
+                    >
+                      <Lock className="h-7 w-7" />
                     </div>
                   </motion.div>
-
                   <motion.div variants={fadeUp}>
-                    <DialogTitle className="text-center text-2xl sm:text-3xl">
-                      Unlock Your Complete Analysis
-                    </DialogTitle>
+                    <DialogTitle className="text-center text-2xl">Unlock Your Full Analysis</DialogTitle>
                   </motion.div>
-
                   <motion.div variants={fadeUp}>
-                    <DialogDescription className="text-center text-base">
-                      You&apos;re seeing the free preview. Unlock all sections plus PDF.
+                    <DialogDescription className="text-center text-sm">
+                      Choose the plan that fits — one report unlock or full monthly access.
                     </DialogDescription>
                   </motion.div>
                 </DialogHeader>
 
-                {/* Pricing */}
-                <motion.div
-                  variants={fadeUp}
-                  className="my-6 text-center rounded-2xl p-6"
-                  style={{ background: "rgba(201,149,107,0.06)", border: "1px solid rgba(201,149,107,0.15)" }}
-                >
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="font-serif text-5xl" style={{ color: "#F0E8D8" }}>
-                      {priceLabel}
-                    </span>
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm text-ink-mist line-through">
-                        {currency === "INR" ? "₹999" : "$29.99"}
-                      </span>
-                      <span className="inline-block text-obsidian text-xs font-bold px-2 py-0.5 rounded" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
-                        {currency === "INR" ? "60% OFF" : "67% OFF"}
+                {/* ── 2-card plan selector ── */}
+                <motion.div variants={fadeUp} className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                  {/* ── Card 1 · One-Time Report ── */}
+                  <button
+                    onClick={() => setPlan("report")}
+                    className="relative rounded-2xl p-4 text-left transition-all focus:outline-none"
+                    style={{
+                      background: plan === "report" ? "rgba(201,149,107,0.10)" : "rgba(255,255,255,0.03)",
+                      border:     plan === "report" ? "2px solid rgba(201,149,107,0.55)" : "2px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
+                          style={{ color: "#C9956B" }}>One-Time Report</p>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-serif text-3xl leading-none" style={{ color: "#F0E8D8" }}>
+                            {reportLabel}
+                          </span>
+                          <span className="text-xs line-through" style={{ color: "#4A3A2A" }}>
+                            {reportStrike}
+                          </span>
+                        </div>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#7C5A3A" }}>this report, forever</p>
+                      </div>
+                      <div
+                        className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all"
+                        style={{
+                          background: plan === "report" ? "#C9956B" : "rgba(255,255,255,0.07)",
+                          border: "2px solid " + (plan === "report" ? "#C9956B" : "rgba(255,255,255,0.12)"),
+                        }}
+                      >
+                        {plan === "report" && <Check className="h-3 w-3 text-obsidian" />}
+                      </div>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {REPORT_PERKS.map((p, i) => (
+                        <li key={i} className="flex items-center gap-2 text-[11px]" style={{ color: "#8A7A6A" }}>
+                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#C9956B" }} />
+                          {p.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
+
+                  {/* ── Card 2 · Studio Pro ── */}
+                  <button
+                    onClick={() => setPlan("studio_pro")}
+                    className="relative rounded-2xl p-4 text-left transition-all focus:outline-none"
+                    style={{
+                      background: plan === "studio_pro" ? "rgba(123,110,158,0.14)" : "rgba(255,255,255,0.03)",
+                      border:     plan === "studio_pro" ? "2px solid rgba(123,110,158,0.60)" : "2px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    {/* Badge */}
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
+                        style={{ background: "linear-gradient(135deg,#7B6E9E,#9B7CB6)" }}
+                      >
+                        <Crown className="h-2.5 w-2.5" /> Most Popular
                       </span>
                     </div>
-                  </div>
-                  <p className="text-xs text-ink-stone">Limited time offer</p>
+
+                    <div className="flex items-start justify-between mb-3 mt-1">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
+                          style={{ color: "#9B7CB6" }}>Studio Pro</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-serif text-3xl leading-none" style={{ color: "#F0E8D8" }}>
+                            {proLabel}
+                          </span>
+                          <span className="text-xs" style={{ color: "#6A5A7C" }}>/mo</span>
+                        </div>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#6A5A7C" }}>cancel anytime</p>
+                      </div>
+                      <div
+                        className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all"
+                        style={{
+                          background: plan === "studio_pro" ? "#9B7CB6" : "rgba(255,255,255,0.07)",
+                          border: "2px solid " + (plan === "studio_pro" ? "#9B7CB6" : "rgba(255,255,255,0.12)"),
+                        }}
+                      >
+                        {plan === "studio_pro" && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {PRO_PERKS.map((p, i) => (
+                        <li key={i} className="flex items-center gap-2 text-[11px]" style={{ color: "#8A7A6A" }}>
+                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#9B7CB6" }} />
+                          {p.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
                 </motion.div>
 
-                {/* Feature Checklist */}
-                <motion.ul
-                  variants={staggerContainer}
-                  className="space-y-3 mb-6"
-                >
-                  {PERKS.map((perk, index) => (
-                    <motion.li
-                      key={index}
-                      variants={fadeUp}
-                      className="flex items-start gap-3 text-sm text-ink-stone"
-                    >
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.1 * index, type: "spring" }}
-                        className="shrink-0"
-                      >
-                        <perk.icon className="h-5 w-5" style={{ color: "#C9956B" }} />
-                      </motion.div>
-                      <span>{perk.text}</span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-
+                {/* Error */}
                 {error && (
                   <motion.p
-                    initial={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 text-center text-sm rounded-lg p-3"
+                    className="mt-3 text-center text-sm rounded-lg p-3"
                     style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}
                   >
                     {error}
                   </motion.p>
                 )}
 
-                {/* CTA Button */}
-                <motion.div variants={fadeUp}>
+                {/* CTA */}
+                <motion.div variants={fadeUp} className="mt-4">
                   <Button
                     variant="accent"
                     size="lg"
-                    className="w-full text-lg h-14 shadow-premium relative overflow-hidden group"
-                    onClick={startCheckout}
+                    className="w-full text-base h-13 shadow-premium relative overflow-hidden"
+                    onClick={handleCTA}
                     disabled={loading}
+                    style={plan === "studio_pro"
+                      ? { background: "linear-gradient(135deg,#7B6E9E,#9B7CB6)", color: "#fff", border: "none" }
+                      : undefined}
                   >
-                    <motion.div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)", backgroundSize: "200% 100%" }}
-                      animate={{
-                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    />
-                    <span className="relative flex items-center gap-2">
+                    <span className="relative flex items-center justify-center gap-2">
                       {loading ? (
                         <>
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                           >
-                            <Sparkles className="h-5 w-5" />
+                            <Sparkles className="h-4 w-4" />
                           </motion.div>
-                          Starting checkout...
+                          Starting checkout…
                         </>
+                      ) : plan === "report" ? (
+                        <><Sparkles className="h-4 w-4" />Unlock Report — {reportLabel}</>
                       ) : (
-                        <>
-                          <Sparkles className="h-5 w-5" />
-                          Unlock Full Report — {priceLabel}
-                        </>
+                        <><Crown className="h-4 w-4" />Start Studio Pro — {proLabel}/mo</>
                       )}
                     </span>
                   </Button>
                 </motion.div>
 
+                {/* Upgrade hint */}
+                {plan === "report" && (
+                  <motion.p variants={fadeUp} className="mt-2 text-center text-[11px]" style={{ color: "#4A3A2A" }}>
+                    Upgrade to Studio Pro anytime — your ₹299 report is always yours.
+                  </motion.p>
+                )}
+
                 {/* Social Proof */}
                 <motion.div
                   variants={fadeUp}
-                  className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-ink-stone"
+                  className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs"
+                  style={{ color: "#5A4A3A" }}
                 >
-                  {SOCIAL_PROOF.map((item, index) => (
-                    <div key={index} className="flex items-center gap-1.5">
-                      <item.icon className="h-3.5 w-3.5" style={{ color: "#C9956B" }} />
+                  {SOCIAL_PROOF.map((item, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <item.icon className="h-3.5 w-3.5" style={{ color: accent }} />
                       {item.text}
                     </div>
                   ))}
                 </motion.div>
 
-                {/* Trust Badges */}
+                {/* Trust badges */}
                 <motion.div
                   variants={fadeUp}
-                  className="mt-4 flex flex-wrap items-center justify-center gap-3"
+                  className="mt-3 flex flex-wrap items-center justify-center gap-2"
                 >
-                  {TRUST_BADGES.map((badge, index) => (
+                  {TRUST_BADGES.map((badge, i) => (
                     <div
-                      key={index}
-                      className="flex items-center gap-1.5 text-xs text-ink-mist rounded-full px-3 py-1"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                      key={i}
+                      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
+                      style={{ color: "#5A4A3A", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
                     >
                       <Shield className="h-3 w-3" />
                       {badge}
@@ -371,10 +488,7 @@ export function Paywall({ reportId, onUnlocked }: PaywallProps) {
                   ))}
                 </motion.div>
 
-                <motion.p
-                  variants={fadeUp}
-                  className="mt-4 text-center text-xs text-ink-mist"
-                >
+                <motion.p variants={fadeUp} className="mt-3 text-center text-[11px]" style={{ color: "#3A2A1A" }}>
                   Secure checkout powered by Razorpay
                 </motion.p>
               </motion.div>

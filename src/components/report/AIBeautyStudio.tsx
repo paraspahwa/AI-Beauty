@@ -6,7 +6,7 @@ import {
   Sparkles, Upload, Wand2, Loader2, RefreshCw, ShoppingBag,
   X, History, UserRound, Info, Download, ChevronDown, Lock,
 } from "lucide-react";
-import type { ColorAnalysisResult } from "@/types/report";
+import type { ColorAnalysisResult, StudioEntitlement } from "@/types/report";
 import {
   LIP_COLORS, EYESHADOW_PALETTES, BLUSH_COLORS, BLUSH_INTENSITIES,
   FOUNDATION_SHADES, EYELINER_STYLES,
@@ -41,6 +41,7 @@ interface Props {
   reportId: string;
   photoUrl: string;
   isPaid: boolean;
+  studioEntitlement?: StudioEntitlement;
   colorAnalysis?: ColorAnalysisResult;
 }
 
@@ -251,7 +252,7 @@ function ModeTab({ label, active, onClick }: { label: string; active: boolean; o
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main component
 // ═══════════════════════════════════════════════════════════════════════════════
-export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Props) {
+export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, colorAnalysis }: Props) {
   const [mode, setMode] = React.useState<StudioMode>("clothing");
 
   // ── Clothing state ──
@@ -399,6 +400,17 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
     );
   }
 
+  // ── Studio Pro quota badge ──
+  const isStudioPro = studioEntitlement?.tier === "studio_pro";
+  const remainingGens = studioEntitlement?.remainingGens ?? null;
+  const usedGens = studioEntitlement?.usedGens ?? null;
+  const cap = studioEntitlement?.cap ?? 150;
+  const periodResets = studioEntitlement?.periodResets
+    ? new Date(studioEntitlement.periodResets).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+    : null;
+  const isNearLimit = remainingGens !== null && remainingGens <= 20;
+  const isAtLimit = remainingGens !== null && remainingGens <= 0;
+
   const currentHairColor = HAIR_COLORS.find((c) => c.value === hairColor);
 
   return (
@@ -428,6 +440,41 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, colorAnalysis }: Pr
             <ModeTab label="💇 Hair"     active={mode === "hair"}     onClick={() => switchMode("hair")} />
           </div>
         </div>
+
+        {/* ── Studio Pro quota banner ── */}
+        {isStudioPro && remainingGens !== null && (
+          <div className="mx-5 mt-2 rounded-xl px-4 py-2.5 flex items-center justify-between"
+            style={{
+              background: isAtLimit
+                ? "rgba(239,68,68,0.08)"
+                : isNearLimit
+                  ? "rgba(245,158,11,0.08)"
+                  : "rgba(201,149,107,0.07)",
+              border: `1px solid ${isAtLimit ? "rgba(239,68,68,0.25)" : isNearLimit ? "rgba(245,158,11,0.25)" : "rgba(201,149,107,0.2)"}`,
+            }}>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 shrink-0" style={{ color: isAtLimit ? "#EF4444" : isNearLimit ? "#F59E0B" : "#C8A96E" }} />
+              <span className="text-xs font-medium" style={{ color: isAtLimit ? "#EF4444" : isNearLimit ? "#B45309" : "#7C5A3A" }}>
+                {isAtLimit
+                  ? `Monthly limit reached — resets ${periodResets ?? "next month"}`
+                  : `${remainingGens} of ${cap} Studio generations left this month`}
+              </span>
+            </div>
+            {!isAtLimit && usedGens !== null && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ width: 60, background: "rgba(0,0,0,0.08)" }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.round((usedGens / cap) * 100)}%`,
+                      background: isNearLimit ? "#F59E0B" : "#C8A96E",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── CLOTHING mode ── */}
         {mode === "clothing" && (

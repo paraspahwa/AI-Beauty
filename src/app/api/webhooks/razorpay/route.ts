@@ -28,18 +28,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  let event: { event?: string; payload?: { payment?: { entity?: Record<string, unknown> } } };
+  let event: { event?: string; payload?: { payment?: { entity?: Record<string, unknown> }; subscription?: { entity?: Record<string, unknown> } } };
   try {
     event = JSON.parse(raw);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const admin = createSupabaseAdminClient();
+
+  // ── Subscription events ─────────────────────────────────────────────────────
+  const subEventTypes = [
+    "subscription.activated",
+    "subscription.charged",
+    "subscription.halted",
+    "subscription.cancelled",
+    "subscription.completed",
+  ];
+  if (event.event && subEventTypes.includes(event.event)) {
+    return handleSubscriptionEvent(event.event, event.payload?.subscription?.entity, admin);
+  }
+
   const payment = event.payload?.payment?.entity;
   const orderId = payment?.order_id as string | undefined;
   if (!orderId) return NextResponse.json({ ok: true }, { status: 202 }); // ignore non-payment events
-
-  const admin = createSupabaseAdminClient();
 
   // Idempotency guard: skip duplicate event deliveries using provider_event_id.
   // record_webhook_event returns true on first insert, false on duplicate.
@@ -165,3 +177,75 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 202 });
 }
+
+// ── Subscription event handler ─────────────────────────────────────────────────
+async function handleSubscriptionEvent(
+  eventType: string,
+  entity: Record<string, unknown> | undefined,
+  admin: ReturnType<typeof import("@/lib/supabase/server").createSupabaseAdminClient>,
+): Promise<Response> {
+  if (!entity) return NextResponse.json({ ok: true }, { status: 202 });
+
+  const providerSubId = entity.id as string | undefined;
+  if (!providerSubId) return NextResponse.json({ ok: true }, { status: 202 });
+
+  const now = new Date().toISOString();
+
+  // Build the update payload based on event type
+  let statusUpdate: Record<string, unknown> = { updated_at: now, raw: entity };
+
+  if (eventType === "subscription.activated") {
+    statusUpdate.status = "active";
+    if (entity.current_start) {
+      statusUpdate.current_period_start = new Date((entity.current_start as number) * 1000).toISOString();
+    }
+    if (entity.current_end) {
+      statusUpdate.current_period_end = new Date((entity.current_end as number) * 1000).toISOString();
+    }
+  } else if (eventType === "subscription.charged") {
+    // Monthly renewal — advance the billing period
+    statusUpdate.status = "active";
+    if (entity.current_start) {
+      statusUpdate.current_period_start = new Date((entity.current_start as number) * 1000).toISOString();
+    }
+    if (entity.current_end) {
+      statusUpdate.current_period_end = new Date((entity.current_end as number) * 1000).toISOString();
+    }
+    // Reset monthly generation counter for the new period
+    const { data: sub } = await admin
+      .from("subscriptions")
+      .select("user_id")
+      .eq("provider_subscription_id", providerSubId)
+      .single();
+    if (sub?.user_id) {
+      const newPeriodStart = entity.current_start
+        ? new Date(new Date((entity.current_start as number) * 1000).getFullYear(),
+            new Date((entity.current_start as number) * 1000).getMonth(), 1)
+            .toISOString().split("T")[0]
+        : new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+      // Insert a fresh counter for the new period (upsert — safe if already exists)
+      await admin.from("usage_counters").upsert(
+        { user_id: sub.user_id, period_start: newPeriodStart, ai_generations: 0 },
+        { onConflict: "user_id,period_start", ignoreDuplicates: true },
+      );
+    }
+  } else if (eventType === "subscription.halted") {
+    statusUpdate.status = "halted";
+  } else if (eventType === "subscription.cancelled" || eventType === "subscription.completed") {
+    statusUpdate.status = "cancelled";
+    statusUpdate.cancelled_at = now;
+  }
+
+  const { error } = await admin
+    .from("subscriptions")
+    .update(statusUpdate)
+    .eq("provider_subscription_id", providerSubId);
+
+  if (error) {
+    console.error(`[webhook/razorpay] ${eventType} db update failed`, error);
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true }, { status: 202 });
+}
+

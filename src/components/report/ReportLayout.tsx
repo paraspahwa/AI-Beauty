@@ -335,6 +335,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     reportId={report.id}
                     photoUrl={report.imageUrl}
                     isPaid={isPaid}
+                    studioEntitlement={report.studioEntitlement}
                     colorAnalysis={report.colorAnalysis}
                   />
                 </motion.div>
