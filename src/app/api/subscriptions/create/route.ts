@@ -107,10 +107,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
     }
 
-    // Create Razorpay subscription
+    // Create Razorpay subscription — SDK types don't expose .subscriptions, cast via unknown
     const rz = getRazorpay();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sub = await (rz as any).subscriptions.create({
+    // @ts-ignore
+    const sub = await (rz as unknown as Record<string, { create: (o: unknown) => Promise<{ id: string }> }>).subscriptions.create({
       plan_id:       razorpayPlanId,
       total_count:   120,         // max billing cycles (10 years — effectively unlimited)
       quantity:      1,
