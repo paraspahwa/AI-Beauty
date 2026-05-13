@@ -77,7 +77,7 @@ export default async function PublicReportPage({
 
   const { data: row } = await admin
     .from("reports")
-    .select("*")
+    .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, visual_assets, created_at")
     .eq("share_token", token)
     .eq("status", "ready")
     .single();
@@ -157,7 +157,7 @@ export default async function PublicReportPage({
     glasses: hasPremium ? row.glasses ?? undefined : undefined,
     hairstyle: hasPremium ? row.hairstyle ?? undefined : undefined,
     visualAssets,
-    summary: row.summary ?? undefined,
+    summary: hasPremium ? row.summary ?? undefined : undefined,
     createdAt: row.created_at,
   };
 

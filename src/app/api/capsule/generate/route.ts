@@ -27,6 +27,10 @@ export interface GeneratedCapsule {
 }
 
 // ── Colour distance helper (avoid-color guard) ─────────────────────────────────
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+function isValidHex(hex: string): boolean {
+  return HEX_RE.test(hex);
+}
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   return [
@@ -188,11 +192,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Generation failed — please try again." }, { status: 502 });
     }
 
-    // Avoid-color guard: replace any flagged hex with a safe palette fallback
+    // Sanitize text fields to prevent storing adversarially long strings from AI response
+    const MAX_NAME = 80, MAX_WHY = 400, MAX_FABRIC = 120, MAX_QUERY = 120;
+    items = items.map((item) => ({
+      ...item,
+      name:        String(item.name        ?? "").slice(0, MAX_NAME),
+      why:         String(item.why         ?? "").slice(0, MAX_WHY),
+      fabric:      item.fabric      != null ? String(item.fabric).slice(0, MAX_FABRIC)       : undefined,
+      myntraQuery: item.myntraQuery != null ? String(item.myntraQuery).slice(0, MAX_QUERY)   : undefined,
+      amazonQuery: item.amazonQuery != null ? String(item.amazonQuery).slice(0, MAX_QUERY)   : undefined,
+    }));
+
+    // Avoid-color guard: replace any flagged or malformed hex with a safe palette fallback
     const safeHexes = colorAnalysis.palette.map((c) => c.hex);
     items = items.map((item, i) => {
+      const fallback = safeHexes[i % safeHexes.length] ?? "#9C7D5B";
+      if (!isValidHex(item.hex)) {
+        console.warn(`[capsule] item "${item.name}" has invalid hex "${item.hex}" — replacing with ${fallback}`);
+        return { ...item, hex: fallback };
+      }
       if (isTooCloseToAvoid(item.hex, colorAnalysis.avoidColors)) {
-        const fallback = safeHexes[i % safeHexes.length] ?? "#9C7D5B";
         console.warn(`[capsule] item "${item.name}" hex ${item.hex} too close to avoid color — replacing with ${fallback}`);
         return { ...item, hex: fallback };
       }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { getOpenAI } from "@/lib/ai/openai";
 import { env } from "@/lib/env";
+import { hasPremiumAccess } from "@/lib/auth/access";
 import type { CompiledReport } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -199,7 +200,20 @@ export async function POST(req: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    const reportContext = row ? buildReportContext(row as Partial<CompiledReport>) : "";
+    // Gate premium fields — free users only get face shape + color analysis in AI context
+    const isPremium = row ? hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email }) : false;
+    const contextRow: Partial<CompiledReport> = row
+      ? {
+          faceShape:     row.face_shape      ?? undefined,
+          colorAnalysis: row.color_analysis   ?? undefined,
+          skinAnalysis:  isPremium ? row.skin_analysis ?? undefined : undefined,
+          features:      isPremium ? row.features      ?? undefined : undefined,
+          glasses:       isPremium ? row.glasses       ?? undefined : undefined,
+          hairstyle:     isPremium ? row.hairstyle     ?? undefined : undefined,
+          summary:       isPremium ? row.summary       ?? undefined : undefined,
+        }
+      : {};
+    const reportContext = row ? buildReportContext(contextRow) : "";
     const systemContent = SYSTEM_PROMPT + reportContext;
 
     // Cap history at last 12 messages to control token cost

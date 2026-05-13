@@ -161,7 +161,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   const { data: row } = await supabase
     .from("reports")
-    .select("*")
+    .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, visual_assets, pipeline_meta, created_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -214,7 +214,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     glasses:      hasPremium ? row.glasses       ?? undefined : undefined,
     hairstyle:    hasPremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
-    summary:      row.summary ?? undefined,
+    summary:      hasPremium ? row.summary       ?? undefined : undefined,
     pipelineMeta,
     createdAt:    row.created_at,
   };
