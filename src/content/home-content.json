@@ -45,25 +45,25 @@
         "id": "pair-1",
         "title": "Face shape + hair direction",
         "tag": "Profile refinement",
-        "baseName": "sample-N"
+        "baseName": "sample-1"
       },
       {
         "id": "pair-2",
         "title": "Makeup and color harmony",
         "tag": "Undertone-matched",
-        "baseName": "sample-N"
+        "baseName": "sample-2"
       },
       {
         "id": "pair-3",
         "title": "Wardrobe and frame polish",
         "tag": "Style uplift",
-        "baseName": "sample-N"
+        "baseName": "sample-3"
       },
       {
         "id": "pair-4",
         "title": "Skin finish and glow",
         "tag": "Routine-led progress",
-        "baseName": "sample-N"
+        "baseName": "sample-4"
       }
     ],
     "tuning": {
