@@ -40,44 +40,30 @@
     }
   ],
   "showcase": {
-    "fallbackSingles": [
-      "/samples/sample-1.jpg",
-      "/samples/sample-2.jpg",
-      "/samples/sample-3.jpg",
-      "/samples/sample-4.jpg"
-    ],
     "pairs": [
       {
         "id": "pair-1",
         "title": "Face shape + hair direction",
         "tag": "Profile refinement",
-        "baseName": "sample-1",
-        "fallbackBeforeIndex": 0,
-        "fallbackAfterIndex": 1
+        "baseName": "sample-N"
       },
       {
         "id": "pair-2",
         "title": "Makeup and color harmony",
         "tag": "Undertone-matched",
-        "baseName": "sample-2",
-        "fallbackBeforeIndex": 2,
-        "fallbackAfterIndex": 3
+        "baseName": "sample-N"
       },
       {
         "id": "pair-3",
         "title": "Wardrobe and frame polish",
         "tag": "Style uplift",
-        "baseName": "sample-3",
-        "fallbackBeforeIndex": 1,
-        "fallbackAfterIndex": 2
+        "baseName": "sample-N"
       },
       {
         "id": "pair-4",
         "title": "Skin finish and glow",
         "tag": "Routine-led progress",
-        "baseName": "sample-4",
-        "fallbackBeforeIndex": 3,
-        "fallbackAfterIndex": 0
+        "baseName": "sample-N"
       }
     ],
     "tuning": {

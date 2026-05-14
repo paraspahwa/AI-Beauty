@@ -8,8 +8,6 @@ export interface SamplePairConfig {
   tag?: string;
   baseName: string;
   ext?: "jpg" | "jpeg" | "png" | "webp";
-  fallbackBeforeIndex: number;
-  fallbackAfterIndex: number;
   beforeAlt?: string;
   afterAlt?: string;
 }
@@ -39,7 +37,6 @@ interface HomeContentConfig {
   };
   stats: StatItem[];
   showcase: {
-    fallbackSingles: string[];
     pairs: SamplePairConfig[];
     tuning: ShowcaseTuning;
   };
@@ -51,22 +48,15 @@ function pairPath(baseName: string, side: "before" | "after", ext = "jpg"): stri
   return `/samples/${baseName}-${side}.${ext}`;
 }
 
-function pickFallback(singles: string[], index: number): string {
-  if (index >= 0 && index < singles.length) return singles[index];
-  return singles[0] ?? "/samples/sample-1.jpg";
-}
-
 export function toBeforeAfterItems(): BeforeAfterItem[] {
-  const singles = HOME_CONTENT.showcase.fallbackSingles;
-
   return HOME_CONTENT.showcase.pairs.map((pair) => ({
     id: pair.id,
     title: pair.title,
     tag: pair.tag,
     beforeSrc: pairPath(pair.baseName, "before", pair.ext ?? "jpg"),
     afterSrc: pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
-    beforeFallbackSrc: pickFallback(singles, pair.fallbackBeforeIndex),
-    afterFallbackSrc: pickFallback(singles, pair.fallbackAfterIndex),
+    beforeFallbackSrc: pairPath(pair.baseName, "before", pair.ext ?? "jpg"),
+    afterFallbackSrc: pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
     beforeAlt: pair.beforeAlt ?? "Before AI-guided beauty recommendations",
     afterAlt: pair.afterAlt ?? "After AI-guided beauty recommendations",
   }));
