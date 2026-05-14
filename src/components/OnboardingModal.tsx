@@ -12,7 +12,7 @@ const STEPS = [
     icon: Sparkles,
     title: "Welcome to Renovaara ✨",
     body: "Your personal AI stylist — ready to analyse your face shape, color season, skin type, and give you a complete style guide. Let's show you how it works.",
-    accent: "#C9956B",
+    accent: "#EC4899",
   },
   {
     icon: Eye,
@@ -30,7 +30,7 @@ const STEPS = [
     icon: Shield,
     title: "Your report is private",
     body: "Photos are encrypted at rest and only you can access your report. You choose if and when to share it. We never sell your data.",
-    accent: "#C9956B",
+    accent: "#EC4899",
   },
 ];
 
@@ -68,7 +68,7 @@ export function OnboardingModal({ onDone }: Props) {
           className="relative w-full max-w-sm rounded-3xl p-8 text-center"
           style={{
             background: "linear-gradient(160deg, #0E0E18 0%, #16162A 100%)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(131,24,67,0.18)",
             boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
           }}
         >
@@ -77,7 +77,7 @@ export function OnboardingModal({ onDone }: Props) {
             onClick={onDone}
             aria-label="Skip onboarding"
             className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-            style={{ background: "rgba(255,255,255,0.06)", color: "rgba(240,232,216,0.4)" }}
+            style={{ background: "rgba(131,24,67,0.14)", color: "rgba(131,24,67,0.5)" }}
           >
             <X className="h-3.5 w-3.5" />
           </button>

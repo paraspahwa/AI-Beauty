@@ -268,7 +268,7 @@ export function MakeupCard({ colorAnalysis, isPaid, reportId, photoUrl }: Props)
                 className="flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold
                            transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                 style={{
-                  background: "linear-gradient(135deg, #C9956B, #E8C990)",
+                  background: "linear-gradient(135deg,#EC4899,#8B5CF6)",
                   color: "#3D2B1F",
                   boxShadow: "0 2px 12px rgba(201,149,107,0.3)",
                 }}

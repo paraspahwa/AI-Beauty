@@ -6,19 +6,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian disabled:opacity-40 disabled:pointer-events-none",
+  "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
   {
     variants: {
       variant: {
-        default: "bg-obsidian-100 text-ink hover:bg-obsidian-200 border border-white/8 shadow-card",
+        default: "bg-terracotta text-white hover:opacity-90 hover:-translate-y-px shadow-card",
         accent: [
-          "text-obsidian font-semibold shadow-glow",
-          "bg-[linear-gradient(135deg,#C9956B_0%,#E8C990_40%,#D4857A_70%,#B8C4CC_100%)]",
-          "bg-[length:200%_200%] hover:shadow-[0_0_60px_rgba(201,149,107,0.55)]",
-          "hover:brightness-110",
+          "text-white shadow-glow-iris",
+          "bg-[linear-gradient(135deg,#8B5CF6_0%,#A78BFA_100%)]",
+          "hover:opacity-95 hover:-translate-y-px",
         ].join(" "),
-        outline: "border border-white/10 text-ink hover:bg-white/5 hover:border-chrome/40 transition-colors",
-        ghost: "text-ink hover:bg-white/5",
+        outline: "border border-terracotta/40 text-terracotta bg-white/60 hover:bg-terracotta/10",
+        ghost: "text-ink hover:bg-terracotta/10",
       },
       size: {
         sm: "h-9  px-4 text-sm",

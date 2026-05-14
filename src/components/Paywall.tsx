@@ -245,7 +245,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
   }
 
   // ── Accent colour per selected plan ──────────────────────────────────────
-  const accent = plan === "studio_pro" ? "#9B7CB6" : "#C9956B";
+  const accent = plan === "studio_pro" ? "#9B7CB6" : "#EC4899";
 
   return (
     <>
@@ -276,9 +276,9 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
             <DialogContent
               className="max-w-2xl"
               style={{
-                background: "linear-gradient(145deg,#12121A,#1A1A26)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+                background: "linear-gradient(145deg,#FFF7FB,#FCE7F3)",
+                border: "1px solid rgba(131,24,67,0.18)",
+                boxShadow: "0 20px 50px rgba(131,24,67,0.14)",
               }}
             >
               <motion.div variants={staggerContainer} initial="hidden" animate="visible">
@@ -289,11 +289,11 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                       animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                       className="absolute inset-0 rounded-full blur-xl"
-                      style={{ background: "rgba(201,149,107,0.25)" }}
+                      style={{ background: "rgba(236,72,153,0.2)" }}
                     />
                     <div
                       className="relative flex h-14 w-14 items-center justify-center rounded-full text-obsidian shadow-glow"
-                      style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)" }}
+                      style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}
                     >
                       <Lock className="h-7 w-7" />
                     </div>
@@ -316,16 +316,16 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                     onClick={() => setPlan("report")}
                     className="relative rounded-2xl p-4 text-left transition-all focus:outline-none"
                     style={{
-                      background: plan === "report" ? "rgba(201,149,107,0.10)" : "rgba(255,255,255,0.03)",
-                      border:     plan === "report" ? "2px solid rgba(201,149,107,0.55)" : "2px solid rgba(255,255,255,0.07)",
+                      background: plan === "report" ? "rgba(236,72,153,0.12)" : "rgba(131,24,67,0.08)",
+                      border:     plan === "report" ? "2px solid rgba(236,72,153,0.45)" : "2px solid rgba(131,24,67,0.16)",
                     }}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                          style={{ color: "#C9956B" }}>One-Time Report</p>
+                          style={{ color: "#EC4899" }}>One-Time Report</p>
                         <div className="flex items-baseline gap-2">
-                          <span className="font-serif text-3xl leading-none" style={{ color: "#F0E8D8" }}>
+                          <span className="font-serif text-3xl leading-none" style={{ color: "#831843" }}>
                             {reportLabel}
                           </span>
                           <span className="text-xs line-through" style={{ color: "#4A3A2A" }}>
@@ -337,8 +337,8 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                       <div
                         className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all"
                         style={{
-                          background: plan === "report" ? "#C9956B" : "rgba(255,255,255,0.07)",
-                          border: "2px solid " + (plan === "report" ? "#C9956B" : "rgba(255,255,255,0.12)"),
+                          background: plan === "report" ? "#EC4899" : "rgba(131,24,67,0.16)",
+                          border: "2px solid " + (plan === "report" ? "#EC4899" : "rgba(131,24,67,0.2)"),
                         }}
                       >
                         {plan === "report" && <Check className="h-3 w-3 text-obsidian" />}
@@ -347,7 +347,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                     <ul className="space-y-1.5">
                       {REPORT_PERKS.map((p, i) => (
                         <li key={i} className="flex items-center gap-2 text-[11px]" style={{ color: "#8A7A6A" }}>
-                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#C9956B" }} />
+                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} />
                           {p.text}
                         </li>
                       ))}
@@ -359,8 +359,8 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                     onClick={() => setPlan("studio_pro")}
                     className="relative rounded-2xl p-4 text-left transition-all focus:outline-none"
                     style={{
-                      background: plan === "studio_pro" ? "rgba(123,110,158,0.14)" : "rgba(255,255,255,0.03)",
-                      border:     plan === "studio_pro" ? "2px solid rgba(123,110,158,0.60)" : "2px solid rgba(255,255,255,0.07)",
+                      background: plan === "studio_pro" ? "rgba(123,110,158,0.14)" : "rgba(131,24,67,0.08)",
+                      border:     plan === "studio_pro" ? "2px solid rgba(139,92,246,0.5)" : "2px solid rgba(131,24,67,0.16)",
                     }}
                   >
                     {/* Badge */}
@@ -378,7 +378,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                         <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
                           style={{ color: "#9B7CB6" }}>Studio Pro</p>
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-serif text-3xl leading-none" style={{ color: "#F0E8D8" }}>
+                          <span className="font-serif text-3xl leading-none" style={{ color: "#831843" }}>
                             {proLabel}
                           </span>
                           <span className="text-xs" style={{ color: "#6A5A7C" }}>/mo</span>
@@ -388,8 +388,8 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                       <div
                         className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all"
                         style={{
-                          background: plan === "studio_pro" ? "#9B7CB6" : "rgba(255,255,255,0.07)",
-                          border: "2px solid " + (plan === "studio_pro" ? "#9B7CB6" : "rgba(255,255,255,0.12)"),
+                          background: plan === "studio_pro" ? "#9B7CB6" : "rgba(131,24,67,0.16)",
+                          border: "2px solid " + (plan === "studio_pro" ? "#9B7CB6" : "rgba(131,24,67,0.2)"),
                         }}
                       >
                         {plan === "studio_pro" && <Check className="h-3 w-3 text-white" />}
@@ -480,7 +480,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                     <div
                       key={i}
                       className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
-                      style={{ color: "#5A4A3A", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                      style={{ color: "#5A4A3A", background: "rgba(131,24,67,0.10)", border: "1px solid rgba(131,24,67,0.14)" }}
                     >
                       <Shield className="h-3 w-3" />
                       {badge}

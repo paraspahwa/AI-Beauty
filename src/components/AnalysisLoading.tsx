@@ -105,14 +105,14 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
                   }`}
                   style={{
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(26,26,38,0.98), rgba(36,36,52,0.95))"
+                      ? "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))"
                       : isComplete
                       ? "rgba(123,110,158,0.08)"
-                      : "rgba(18,18,26,0.6)",
+                      : "rgba(255,247,251,0.85)",
                     border: isActive
-                      ? "1px solid rgba(201,149,107,0.2)"
-                      : "1px solid rgba(255,255,255,0.04)",
-                    boxShadow: isActive ? "0 4px 24px rgba(0,0,0,0.4)" : "none",
+                      ? "1px solid rgba(236,72,153,0.3)"
+                      : "1px solid rgba(131,24,67,0.10)",
+                    boxShadow: isActive ? "0 10px 24px rgba(131,24,67,0.16)" : "none",
                   }}
                 >
                   {/* Icon */}
@@ -124,10 +124,10 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
                       background: isComplete
                         ? "rgba(123,110,158,0.8)"
                         : isActive
-                        ? "linear-gradient(135deg, #C9956B, #E8C990)"
-                        : "rgba(255,255,255,0.05)",
-                      color: isComplete || isActive ? "#0A0A0F" : "rgba(255,255,255,0.3)",
-                      boxShadow: isActive ? "0 0 20px rgba(201,149,107,0.3)" : "none",
+                        ? "linear-gradient(135deg,#EC4899,#8B5CF6)"
+                        : "rgba(131,24,67,0.12)",
+                      color: isComplete || isActive ? "#FFFFFF" : "rgba(131,24,67,0.45)",
+                      boxShadow: isActive ? "0 0 20px rgba(236,72,153,0.3)" : "none",
                     }}
                   >
                     {isComplete ? (
@@ -170,9 +170,9 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
           <motion.div
             variants={scaleIn}
             className="rounded-2xl p-6 backdrop-blur-sm"
-            style={{ background: "rgba(18,18,26,0.8)", border: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ background: "rgba(255,247,251,0.9)", border: "1px solid rgba(131,24,67,0.14)" }}
           >
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#C9956B" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#EC4899" }}>
               Did you know?
             </p>
             <motion.p

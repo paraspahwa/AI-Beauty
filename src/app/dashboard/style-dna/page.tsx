@@ -79,7 +79,7 @@ export default async function StyleDnaPage() {
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm mb-6 transition-opacity hover:opacity-70"
-          style={{ color: "rgba(240,232,216,0.5)" }}
+          style={{ color: "rgba(131,24,67,0.62)" }}
         >
           <ChevronLeft className="h-4 w-4" />
           My Reports
@@ -88,7 +88,7 @@ export default async function StyleDnaPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Dna className="h-5 w-5" style={{ color: "#C9956B" }} />
+              <Dna className="h-5 w-5" style={{ color: "#EC4899" }} />
               <span
                 className="text-[10px] uppercase tracking-[0.35em] font-semibold"
                 style={{ color: "#C8A96E" }}
@@ -100,7 +100,7 @@ export default async function StyleDnaPage() {
               Your Style DNA
             </h1>
             {totalCount != null && (
-              <p className="mt-1 text-sm" style={{ color: "rgba(240,232,216,0.45)" }}>
+              <p className="mt-1 text-sm" style={{ color: "rgba(131,24,67,0.55)" }}>
                 Derived from {totalCount} analysis{totalCount !== 1 ? "es" : ""}
                 {prefs?.updated_at
                   ? ` · Last updated ${new Date(prefs.updated_at).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" })}`
@@ -122,13 +122,13 @@ export default async function StyleDnaPage() {
         <div
           className="flex flex-col items-center justify-center gap-4 py-24 rounded-3xl text-center"
           style={{
-            background: "linear-gradient(145deg, rgba(18,18,26,0.8), rgba(26,26,38,0.6))",
-            border: "1px dashed rgba(255,255,255,0.1)",
+            background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))",
+            border: "1px dashed rgba(131,24,67,0.20)",
           }}
         >
-          <Dna className="h-14 w-14 opacity-20" style={{ color: "#C9956B" }} />
+          <Dna className="h-14 w-14 opacity-20" style={{ color: "#EC4899" }} />
           <h2 className="font-serif text-2xl text-ink">No style data yet</h2>
-          <p style={{ color: "rgba(240,232,216,0.45)" }} className="text-sm max-w-xs">
+          <p style={{ color: "rgba(131,24,67,0.55)" }} className="text-sm max-w-xs">
             Complete your first beauty analysis to unlock your Style DNA profile.
           </p>
           <Button asChild variant="accent">

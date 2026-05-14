@@ -254,7 +254,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
               download={`Renovaara-report-${report.id}.html`}
               rel="noopener"
               className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
             >
               <Download className="h-4 w-4" /> Download PDF
             </a>
@@ -285,7 +285,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     value={t.value}
                     className="relative rounded-xl text-[13px] font-medium px-4 py-2 transition-all data-[state=active]:shadow-sm"
                     style={activeTab === t.value
-                      ? { background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F" }
+                      ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F" }
                       : { color: "#9C7D5B" }}
                   >
                     {isLocked && (
@@ -499,7 +499,7 @@ function Locked({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="rounded-4xl p-12 sm:p-16 text-center relative overflow-hidden"
-      style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(201,149,107,0.18)" }}
+      style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(201,149,107,0.18)" }}
     >
       {/* Decorative background elements */}
       <motion.div
@@ -554,7 +554,7 @@ function Locked({
             className="absolute inset-0 rounded-full blur-xl"
             style={{ background: "rgba(201,149,107,0.25)" }}
           />
-          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)" }}>
+          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
             <Lock className="h-8 w-8" />
           </div>
         </motion.div>

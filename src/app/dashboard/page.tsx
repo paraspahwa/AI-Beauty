@@ -19,9 +19,9 @@ type ReportRow = {
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "ready") return <Badge style={{ background: "rgba(123,110,158,0.15)", color: "#A69CC4", border: "1px solid rgba(123,110,158,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
-  if (status === "processing") return <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
+  if (status === "processing") return <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#EC4899", border: "1px solid rgba(201,149,107,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
   if (status === "failed" || status === "error") return <Badge style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}><AlertCircle className="h-3 w-3 mr-1" />Failed</Badge>;
-  return <Badge style={{ background: "rgba(255,255,255,0.06)", color: "rgba(240,232,216,0.5)", border: "1px solid rgba(255,255,255,0.08)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
+  return <Badge style={{ background: "rgba(131,24,67,0.14)", color: "rgba(131,24,67,0.62)", border: "1px solid rgba(131,24,67,0.18)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
 }
 
 export default async function DashboardPage() {
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Progress Tracker</p>
-            <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>See how your style profile has evolved</p>
+            <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>See how your style profile has evolved</p>
           </div>
         </Link>
         <Link
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Wardrobe Capsule</p>
-            <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>Your 10-piece seasonal wardrobe edit</p>
+            <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>Your 10-piece seasonal wardrobe edit</p>
           </div>
         </Link>
       </div>
@@ -110,13 +110,13 @@ export default async function DashboardPage() {
               className="flex h-10 w-10 items-center justify-center rounded-full shrink-0"
               style={{ background: "rgba(201,149,107,0.2)" }}
             >
-              <Dna className="h-5 w-5" style={{ color: "#C9956B" }} />
+              <Dna className="h-5 w-5" style={{ color: "#EC4899" }} />
             </div>
             <div>
               <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
                 {prefs.color_season} · {prefs.face_shape ?? "Style DNA"}
               </p>
-              <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>
+              <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>
                 View your full Style DNA profile
               </p>
             </div>
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
       )}
 
       {rows.length === 0 ? (
-        <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.8), rgba(26,26,38,0.6))", border: "1px dashed rgba(255,255,255,0.1)" }}>
+        <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(131,24,67,0.20)" }}>
           <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(255,255,255,0.2)" }} />
           <h2 className="font-serif text-2xl text-ink mb-2">No reports yet</h2>
           <p className="text-ink-stone mb-6">Upload a selfie to get your personalized beauty analysis.</p>
@@ -156,11 +156,11 @@ export default async function DashboardPage() {
               <div
                 key={report.id}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5"
-                style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
+                style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
               >
                 <div className="flex items-start gap-4 min-w-0">
-                  <div className="shrink-0 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: "rgba(26,26,38,0.9)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <FileText className="h-5 w-5" style={{ color: "rgba(240,232,216,0.4)" }} />
+                  <div className="shrink-0 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(131,24,67,0.14)" }}>
+                    <FileText className="h-5 w-5" style={{ color: "rgba(131,24,67,0.5)" }} />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
                         </Badge>
                       )}
                       {!report.is_paid && !isAdminPremium && (
-                        <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#C9956B", border: "1px solid rgba(201,149,107,0.25)" }}>
+                        <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#EC4899", border: "1px solid rgba(201,149,107,0.25)" }}>
                           <Lock className="h-3 w-3 mr-1" />Free preview
                         </Badge>
                       )}

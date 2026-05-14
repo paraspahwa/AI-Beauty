@@ -39,7 +39,7 @@ function SuccessContent() {
   }, [countdown, router, reportHref]);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6" style={{ background: "linear-gradient(145deg, #0A0A0F 0%, #12121A 50%, #1A1226 100%)" }}>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6" style={{ background: "linear-gradient(145deg, #FDF2F8 0%, #FCE7F3 50%, #F9A8D4 100%)" }}>
       <motion.div
         initial="hidden"
         animate="visible"
@@ -50,7 +50,7 @@ function SuccessContent() {
           <div className="relative inline-block">
             <motion.div
               className="w-24 h-24 rounded-full flex items-center justify-center mx-auto"
-              style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)", boxShadow: "0 0 40px rgba(201,149,107,0.4), 0 0 80px rgba(201,149,107,0.15)" }}
+              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", boxShadow: "0 0 40px rgba(201,149,107,0.4), 0 0 80px rgba(201,149,107,0.15)" }}
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -80,9 +80,9 @@ function SuccessContent() {
               key={i}
               variants={fadeUp}
               className="flex items-start gap-3 rounded-2xl px-5 py-3.5"
-              style={{ background: "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))", border: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
             >
-              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#C9956B" }} />
+              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#EC4899" }} />
               <span className="text-sm text-ink-stone">{perk}</span>
             </motion.li>
           ))}
@@ -98,7 +98,7 @@ function SuccessContent() {
           </Button>
           {countdown > 0 && (
             <p className="text-sm text-ink-mist">
-              Redirecting in <span className="font-medium" style={{ color: "#C9956B" }}>{countdown}s</span>…
+              Redirecting in <span className="font-medium" style={{ color: "#EC4899" }}>{countdown}s</span>…
             </p>
           )}
         </motion.div>

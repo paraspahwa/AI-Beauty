@@ -72,9 +72,9 @@ export function DeleteReportButton({ reportId }: { reportId: string }) {
       aria-label={confirmed ? "Confirm deletion" : "Delete report"}
       className="shrink-0 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all hover:opacity-90 disabled:opacity-40"
       style={{
-        background: confirmed ? "rgba(248,113,113,0.15)" : "rgba(255,255,255,0.04)",
-        border: `1px solid ${confirmed ? "rgba(248,113,113,0.4)" : "rgba(255,255,255,0.08)"}`,
-        color: confirmed ? "#F87171" : "rgba(240,232,216,0.35)",
+        background: confirmed ? "rgba(248,113,113,0.15)" : "rgba(131,24,67,0.10)",
+        border: `1px solid ${confirmed ? "rgba(248,113,113,0.4)" : "rgba(131,24,67,0.18)"}`,
+        color: confirmed ? "#F87171" : "rgba(131,24,67,0.45)",
       }}
     >
       {pending ? (

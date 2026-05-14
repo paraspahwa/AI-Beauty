@@ -95,9 +95,9 @@ function Dropdown<T extends string>({
       {open && (
         <div className="absolute left-0 top-full mt-1 z-50 rounded-xl overflow-y-auto"
           style={{
-            background: "#1A1A26",
-            border: "1px solid rgba(232,201,144,0.2)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+            background: "#FFF7FB",
+            border: "1px solid rgba(236,72,153,0.25)",
+            boxShadow: "0 8px 24px rgba(131,24,67,0.14)",
             minWidth: 230, maxHeight: 320,
           }}
         >
@@ -128,14 +128,14 @@ function DropdownItem({
   return (
     <button type="button" onClick={() => onSelect(opt.value)}
       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition-colors"
-      style={{ background: selected ? "rgba(200,169,110,0.18)" : "transparent", color: selected ? "#E8C990" : "rgba(255,255,255,0.85)" }}
+      style={{ background: selected ? "rgba(200,169,110,0.18)" : "transparent", color: selected ? "#F9A8D4" : "rgba(255,255,255,0.85)" }}
     >
       {opt.hex && (
         <span className="inline-block h-4 w-4 rounded-full flex-shrink-0"
           style={{ backgroundColor: opt.hex, border: "1.5px solid rgba(255,255,255,0.2)" }} />
       )}
       <span className="flex-1">{opt.label}</span>
-      {selected && <span style={{ color: "#E8C990", fontSize: 12 }}>&#10003;</span>}
+      {selected && <span style={{ color: "#F9A8D4", fontSize: 12 }}>&#10003;</span>}
     </button>
   );
 }
@@ -184,7 +184,7 @@ export function HairColorCard({ reportId }: Props) {
       {/* Header */}
       <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: "1px solid #F0E8DC" }}>
         <div className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)" }}>
+          style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
           <Sparkles className="h-4 w-4" style={{ color: "#3D2B1F" }} />
         </div>
         <div>
@@ -229,12 +229,12 @@ export function HairColorCard({ reportId }: Props) {
                   <div className="h-8 w-8 rounded-full transition-all"
                     style={{
                       backgroundColor: c.hex,
-                      border: selectedColor === c.value ? "3px solid #C9956B" : "2px solid rgba(0,0,0,0.12)",
-                      boxShadow: selectedColor === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #C9956B" : "0 1px 3px rgba(0,0,0,0.15)",
+                      border: selectedColor === c.value ? "3px solid #EC4899" : "2px solid rgba(0,0,0,0.12)",
+                      boxShadow: selectedColor === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #EC4899" : "0 1px 3px rgba(0,0,0,0.15)",
                     }}
                   />
                   <span className="text-[7px] text-center max-w-[32px] leading-tight"
-                    style={{ color: selectedColor === c.value ? "#C9956B" : "#B8A898" }}>
+                    style={{ color: selectedColor === c.value ? "#EC4899" : "#B8A898" }}>
                     {c.label.split(" ")[0]}
                   </span>
                 </button>
@@ -245,7 +245,7 @@ export function HairColorCard({ reportId }: Props) {
           {/* Generate button */}
           <button type="button" onClick={generate} disabled={loading}
             className="self-start flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: "linear-gradient(135deg,#C9956B,#E8C990)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+            style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {btnLabel}
@@ -286,7 +286,7 @@ export function HairColorCard({ reportId }: Props) {
                 <div className="h-14 w-14 rounded-full animate-pulse"
                   style={{ backgroundColor: currentColor.hex, opacity: 0.7 }} />
               )}
-              <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#C9956B" }} />
+              <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#EC4899" }} />
               <p className="text-xs text-center px-4" style={{ color: "#9C7D5B" }}>
                 {!isColorOnly ? `Changing to ${styleLabel}...` : `Applying ${currentColor?.label}...`}
                 <br /><span className="text-[10px]" style={{ color: "#B8A898" }}>~20-40 seconds</span>

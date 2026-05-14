@@ -59,7 +59,7 @@ const CHIP_ACTIVE: React.CSSProperties = {
   ...CHIP_BASE,
   background: "rgba(201,149,107,0.18)",
   border: "1px solid rgba(201,149,107,0.7)",
-  color: "#E8C990",
+  color: "#F9A8D4",
 };
 
 function Chip({
@@ -93,7 +93,7 @@ function Question({
     <div className="mb-5">
       <p
         className="text-[10px] uppercase tracking-[0.2em] mb-1"
-        style={{ color: "#C9956B" }}
+        style={{ color: "#EC4899" }}
       >
         {number} of {total}
       </p>
@@ -146,10 +146,10 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" style={{ color: "#C9956B" }} />
+                <Sparkles className="h-4 w-4" style={{ color: "#EC4899" }} />
                 <p
                   className="text-xs font-bold uppercase tracking-[0.2em]"
-                  style={{ color: "#C9956B" }}
+                  style={{ color: "#EC4899" }}
                 >
                   Personalize Your Analysis
                 </p>
@@ -213,8 +213,8 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
                 onClick={handleDone}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg,#C9956B,#E8C990)",
-                  color: "#0A0A0F",
+                  background: "linear-gradient(135deg,#EC4899,#8B5CF6)",
+                  color: "#831843",
                 }}
               >
                 Continue

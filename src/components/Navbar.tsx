@@ -54,11 +54,11 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-500",
+        "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled || !isHome
-          ? "backdrop-blur-2xl shadow-premium"
+          ? "backdrop-blur-xl shadow-card"
           : "backdrop-blur-sm",
-        "bg-obsidian-50/80",
+        "bg-obsidian-50/90",
       )}
     >
       {/* Shimmer border line — appears on scroll */}
@@ -69,7 +69,7 @@ export function Navbar() {
         )}
         style={{
           background:
-            "linear-gradient(90deg, transparent 0%, rgba(201,149,107,0.4) 30%, rgba(232,201,144,0.5) 50%, rgba(201,149,107,0.4) 70%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, rgba(236,72,153,0.35) 30%, rgba(139,92,246,0.35) 50%, rgba(236,72,153,0.35) 70%, transparent 100%)",
         }}
       />
       <div className="container max-w-6xl flex h-16 items-center justify-between gap-6">
@@ -79,12 +79,12 @@ export function Navbar() {
             whileHover={{ rotate: 20, scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full shadow-glow animate-glow-pulse"
-            style={{ background: "linear-gradient(135deg, #C9956B, #E8C990, #D4857A)" }}
+            className="flex h-8 w-8 items-center justify-center rounded-full shadow-glow"
+            style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
           >
-            <Sparkles className="h-4 w-4 text-obsidian" />
+            <Sparkles className="h-4 w-4 text-white" />
           </motion.div>
-          <span className="font-serif text-xl text-ink group-hover:text-chrome transition-colors duration-300">
+          <span className="font-serif text-xl text-ink group-hover:text-terracotta transition-colors duration-200">
             Renovaara
           </span>
         </Link>
@@ -96,7 +96,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="relative px-4 py-2 text-sm text-ink-stone hover:text-ink transition-colors rounded-full hover:bg-white/5 group"
+                className="relative px-4 py-2 text-sm text-ink-stone hover:text-ink transition-colors rounded-full hover:bg-terracotta/10 group"
               >
                 {link.label}
               </Link>
@@ -160,7 +160,7 @@ export function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden ml-auto p-2 rounded-full text-ink-stone hover:text-ink hover:bg-cream-200 transition-colors"
+          className="md:hidden ml-auto p-2 rounded-full text-ink-stone hover:text-ink hover:bg-terracotta/10 transition-colors"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle navigation menu"
           aria-expanded={menuOpen}
@@ -187,7 +187,7 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="md:hidden overflow-hidden border-t border-white/5 backdrop-blur-xl surface-deep"
+            className="md:hidden overflow-hidden border-t border-terracotta/20 backdrop-blur-xl surface-deep"
           >
             <div className="container py-4 space-y-1">
               {isHome &&
@@ -196,12 +196,12 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 text-sm text-ink-stone hover:text-ink hover:bg-white/5 rounded-xl transition-colors"
+                    className="block px-4 py-3 text-sm text-ink-stone hover:text-ink hover:bg-terracotta/10 rounded-xl transition-colors"
                   >
                     {link.label}
                   </Link>
                 ))}
-              <div className="pt-3 flex flex-col gap-2 border-t border-white/5">
+              <div className="pt-3 flex flex-col gap-2 border-t border-terracotta/20">
                 {user ? (
                   <>
                     <Button asChild variant="outline" className="w-full">

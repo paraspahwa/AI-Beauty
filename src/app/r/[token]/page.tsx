@@ -164,7 +164,7 @@ export default async function PublicReportPage({
   return (
     <main>
       <div className="border-b text-center py-2 text-xs text-ink-stone"
-        style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
+        style={{ borderColor: "rgba(131,24,67,0.14)", background: "rgba(255,255,255,0.02)" }}
       >
         This is a shared Renovaara beauty report.{" "}
         <Link href="/" className="underline underline-offset-2 hover:opacity-80">

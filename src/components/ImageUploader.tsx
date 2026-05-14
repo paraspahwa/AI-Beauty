@@ -173,15 +173,15 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           style={{
             background: isDragActive
               ? "rgba(201,149,107,0.05)"
-              : "linear-gradient(145deg, rgba(18,18,26,0.95), rgba(26,26,38,0.9))",
+              : "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))",
             borderColor: isDragActive
-              ? "#C9956B"
+              ? "#EC4899"
               : file
               ? "rgba(123,110,158,0.6)"
-              : "rgba(255,255,255,0.08)",
+              : "rgba(131,24,67,0.18)",
             boxShadow: isDragActive
-              ? "0 0 40px rgba(201,149,107,0.15), inset 0 1px 0 rgba(255,255,255,0.05)"
-              : "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+              ? "0 0 40px rgba(201,149,107,0.15), inset 0 1px 0 rgba(131,24,67,0.12)"
+              : "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(131,24,67,0.10)",
           }}
         >
           <input {...getInputProps()} />
@@ -207,7 +207,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
                   className="absolute -top-2 -right-2 rounded-full p-2"
-                  style={{ background: "linear-gradient(135deg, #C9956B, #E8C990)", color: "#0A0A0F", boxShadow: "0 4px 12px rgba(201,149,107,0.4)" }}
+                  style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#831843", boxShadow: "0 4px 12px rgba(201,149,107,0.4)" }}
                 >
                   <CheckCircle2 className="h-5 w-5" />
                 </motion.div>
@@ -232,9 +232,9 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                   )}
                   style={{
                     background: isDragActive
-                      ? "linear-gradient(135deg, #C9956B, #E8C990)"
+                      ? "linear-gradient(135deg,#EC4899,#8B5CF6)"
                       : "rgba(201,149,107,0.12)",
-                    color: isDragActive ? "#0A0A0F" : "#C9956B",
+                    color: isDragActive ? "#831843" : "#EC4899",
                     boxShadow: isDragActive ? "0 0 30px rgba(201,149,107,0.3)" : "none",
                   }}
                 >
@@ -252,7 +252,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                         repeat: Infinity,
                         ease: "easeOut",
                       }}
-                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#C9956B" }}
+                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#EC4899" }}
                     />
                     <motion.div
                       initial={{ scale: 1, opacity: 0.6 }}
@@ -263,7 +263,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                         ease: "easeOut",
                         delay: 0.3,
                       }}
-                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#C9956B" }}
+                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#EC4899" }}
                     />
                   </>
                 )}
@@ -364,7 +364,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           <motion.p
             variants={fadeUp}
             className="text-center text-xs font-semibold uppercase tracking-[0.2em] mb-4 section-label justify-center"
-            style={{ color: "#C9956B" }}
+            style={{ color: "#EC4899" }}
           >
             <Sparkles className="inline h-3 w-3 mr-1.5" />
             Or try a sample photo
@@ -399,14 +399,14 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                   className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                   style={{ background: "linear-gradient(to top, rgba(10,10,15,0.8) 40%, transparent)" }}
                 >
-                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#E8C990" }}>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#F9A8D4" }}>
                     Use this
                   </span>
                 </div>
                 {/* Loading spinner */}
                 {loadingSample === sample.src && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(10,10,15,0.7)" }}>
-                    <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#C9956B" }} />
+                    <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#EC4899" }} />
                   </div>
                 )}
               </motion.button>

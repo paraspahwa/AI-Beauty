@@ -79,7 +79,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap"
         />
         <script
           type="application/ld+json"
@@ -106,50 +106,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="min-h-screen flex flex-col bg-obsidian text-ink antialiased">
-        {/* ── Persistent aurora background ── */}
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
-        >
-          {/* Primary terracotta orb — top-right */}
-          <div
-            className="absolute -top-48 -right-48 w-[700px] h-[700px] rounded-full opacity-[0.18] animate-aurora"
-            style={{
-              background: "radial-gradient(circle at 40% 40%, #C9956B 0%, #E8C990 35%, transparent 70%)",
-            }}
-          />
-          {/* Iris / violet orb — mid-left */}
-          <div
-            className="absolute top-1/3 -left-56 w-[520px] h-[520px] rounded-full opacity-[0.14] animate-float-slow"
-            style={{
-              background: "radial-gradient(circle at 60% 60%, #7B6E9E 0%, #5A5075 45%, transparent 75%)",
-            }}
-          />
-          {/* Camel orb — bottom-center */}
-          <div
-            className="absolute -bottom-32 left-1/3 w-[450px] h-[450px] rounded-full opacity-[0.12] animate-glow-breathe"
-            style={{
-              background: "radial-gradient(circle at 50% 30%, #E8C990 0%, #C9956B 40%, transparent 70%)",
-            }}
-          />
-          {/* Silver orb — bottom-right */}
-          <div
-            className="absolute bottom-0 -right-20 w-[300px] h-[300px] rounded-full opacity-[0.09]"
-            style={{
-              background: "radial-gradient(circle, #B8C4CC 0%, transparent 70%)",
-              animation: "float-slow 13s ease-in-out infinite reverse",
-            }}
-          />
-          {/* Subtle grid mesh */}
-          <div
-            className="absolute inset-0 opacity-[0.022]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-              backgroundSize: "72px 72px",
-            }}
-          />
-        </div>
 
         <Navbar />
         <div className="flex-1">{children}</div>

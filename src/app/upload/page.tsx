@@ -27,7 +27,7 @@ export default function UploadPage() {
             <motion.span
               variants={springPop}
               className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs uppercase tracking-[0.25em] font-semibold mb-5 chrome-border"
-              style={{ background: "rgba(201,149,107,0.08)", color: "#E8C990" }}
+              style={{ background: "rgba(201,149,107,0.08)", color: "#F9A8D4" }}
             >
               <Sparkles className="h-3 w-3" />
               Step 1 of 2
@@ -65,7 +65,7 @@ export default function UploadPage() {
                 >
                   <CheckCircle2
                     className="h-5 w-5 shrink-0 mt-0.5 animate-glow-pulse"
-                    style={{ color: "#C9956B" }}
+                    style={{ color: "#EC4899" }}
                   />
                   <span>{tip}</span>
                 </motion.li>

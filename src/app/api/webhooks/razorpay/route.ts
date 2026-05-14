@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
           html: `
             <p>Hi there,</p>
             <p>Payment of <strong>${amountFormatted}</strong> confirmed. Your full AI beauty report is ready.</p>
-            <p><a href="${reportUrl}" style="background:#C9956B;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600;">View Your Report</a></p>
+            <p><a href="${reportUrl}" style="background:#8B5CF6;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600;">View Your Report</a></p>
             <p style="font-size:12px;color:#888;">
               If you need a refund within 30 days, reply to this email or visit
               <a href="${appUrl}/dashboard">your dashboard</a>.
