@@ -10,12 +10,9 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
-import sharp from "sharp";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isAdminUserEmail } from "@/lib/auth/access";
-import { runAnalysisPipeline } from "@/lib/ai/pipeline";
 import type { PipelineStageEvent } from "@/lib/ai/pipeline";
-import { PipelineStageError } from "@/lib/ai/resilience";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -175,6 +172,7 @@ export async function POST(req: NextRequest) {
             return;
           }
 
+          const { default: sharp } = await import("sharp");
           const metadata = await sharp(buffer).metadata();
           const width = metadata.width ?? 0;
           const height = metadata.height ?? 0;
@@ -220,6 +218,7 @@ export async function POST(req: NextRequest) {
           };
 
           try {
+            const { runAnalysisPipeline } = await import("@/lib/ai/pipeline");
             const result = await runAnalysisPipeline(buffer, user.id, undefined, onStage);
             controller.enqueue(line({
               type: "pipeline_completed",
@@ -227,8 +226,9 @@ export async function POST(req: NextRequest) {
               wallMs: Date.now() - startWall,
             }));
           } catch (pipelineErr) {
-            const msg = pipelineErr instanceof PipelineStageError
-              ? `${pipelineErr.stage}:${pipelineErr.kind}:${pipelineErr.message}`
+            const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
+            const msg = pe.name === "PipelineStageError"
+              ? `${pe.stage}:${pe.kind}:${pe.message}`
               : (pipelineErr as Error).message;
             controller.enqueue(line({ type: "pipeline_failed", message: msg.slice(0, 400), wallMs: Date.now() - startWall }));
           }

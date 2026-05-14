@@ -1,9 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
-import sharp from "sharp";
-import { runAnalysisPipeline } from "@/lib/ai/pipeline";
 import type { PipelineStageEvent } from "@/lib/ai/pipeline";
-import { PipelineStageError } from "@/lib/ai/resilience";
 import { persistStylePrefs } from "@/lib/ai/memory";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
@@ -261,6 +258,7 @@ export async function POST(req: NextRequest) {
               return;
             }
 
+            const { default: sharp } = await import("sharp");
             const metadata = await sharp(buffer).metadata();
             const width = metadata.width ?? 0;
             const height = metadata.height ?? 0;
@@ -371,6 +369,7 @@ export async function POST(req: NextRequest) {
             };
 
             try {
+              const { runAnalysisPipeline } = await import("@/lib/ai/pipeline");
               const result = await runAnalysisPipeline(buffer, user.id, skinUserContext, onStage);
 
               const reportUpdatePayload = {
@@ -431,8 +430,9 @@ export async function POST(req: NextRequest) {
               });
             } catch (pipelineErr) {
               console.error("[analyze] pipeline failed:", pipelineErr);
-              const internalError = pipelineErr instanceof PipelineStageError
-                ? `${pipelineErr.stage}:${pipelineErr.kind}:${pipelineErr.message}`
+              const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
+              const internalError = pe.name === "PipelineStageError"
+                ? `${pe.stage}:${pe.kind}:${pe.message}`
                 : (pipelineErr as Error).message;
               await admin.from("reports").update({
                 status: "failed",
@@ -509,6 +509,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { default: sharp } = await import("sharp");
     const metadata = await sharp(buffer).metadata();
     const width = metadata.width ?? 0;
     const height = metadata.height ?? 0;
@@ -622,6 +623,7 @@ export async function POST(req: NextRequest) {
     // 3) Run text analysis pipeline (Rekognition + all GPT stages)
     //    Pass user.id so the pipeline can inject personalized style context.
     try {
+      const { runAnalysisPipeline } = await import("@/lib/ai/pipeline");
       const result = await runAnalysisPipeline(buffer, user.id, skinUserContext);
 
       const reportUpdatePayload = {
@@ -684,8 +686,9 @@ export async function POST(req: NextRequest) {
       });
     } catch (pipelineErr) {
       console.error("[analyze] pipeline failed:", pipelineErr);
-      const internalError = pipelineErr instanceof PipelineStageError
-        ? `${pipelineErr.stage}:${pipelineErr.kind}:${pipelineErr.message}`
+      const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
+      const internalError = pe.name === "PipelineStageError"
+        ? `${pe.stage}:${pe.kind}:${pe.message}`
         : (pipelineErr as Error).message;
       await admin.from("reports").update({
         status: "failed",

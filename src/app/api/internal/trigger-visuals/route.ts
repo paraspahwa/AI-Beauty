@@ -17,15 +17,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
-import {
-  createVisualAssetsSkeleton,
-  generateLandmarkOverlay,
-  generatePaletteBoard,
-  generateGlassesPreviews,
-  generateHairstylePreviews,
-  generateMakeupPreviews,
-} from "@/lib/ai/visuals";
-import { generateAllColorSwatchPreviews } from "@/lib/ai/color-swatch-v2";
 import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
 import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
@@ -104,6 +95,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image unavailable" }, { status: 422 });
     }
     const buffer = Buffer.from(await imgData.arrayBuffer());
+
+    const {
+      createVisualAssetsSkeleton,
+      generateLandmarkOverlay,
+      generatePaletteBoard,
+      generateGlassesPreviews,
+      generateHairstylePreviews,
+      generateMakeupPreviews,
+    } = await import("@/lib/ai/visuals");
+    const { generateAllColorSwatchPreviews } = await import("@/lib/ai/color-swatch-v2");
 
     const visualAssets = createVisualAssetsSkeleton(row.user_id as string, reportId, env.supabase.bucket);
 

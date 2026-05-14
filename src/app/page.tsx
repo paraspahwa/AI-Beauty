@@ -8,6 +8,7 @@ import {
   Scissors,
   ShieldCheck,
   Sparkles,
+  Star,
   Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

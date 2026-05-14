@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
-import sharp from "sharp";
 
 export const runtime = "nodejs";
 // No CDN caching — share revocation must take effect immediately
@@ -51,6 +50,7 @@ export async function GET(
   const buffer = Buffer.from(await blob.arrayBuffer());
 
   // Resize to 1200×630 OG thumbnail — avoids serving full-res selfie publicly
+  const { default: sharp } = await import("sharp");
   const thumbnail = await sharp(buffer)
     .rotate()
     .resize(1200, 630, { fit: "cover", position: "attention" })

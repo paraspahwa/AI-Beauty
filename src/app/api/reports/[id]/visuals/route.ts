@@ -1,14 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
-import {
-  createVisualAssetsSkeleton,
-  generateLandmarkOverlay,
-  generatePaletteBoard,
-  generateGlassesPreviews,
-  generateHairstylePreviews,
-  generateMakeupPreviews,
-} from "@/lib/ai/visuals";
 import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import { isAdminUserEmail } from "@/lib/auth/access";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
@@ -63,6 +55,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (row.status !== "ready") {
       return NextResponse.json({ error: "Report is not ready yet" }, { status: 409 });
     }
+
+    const {
+      createVisualAssetsSkeleton,
+      generateLandmarkOverlay,
+      generatePaletteBoard,
+      generateGlassesPreviews,
+      generateHairstylePreviews,
+      generateMakeupPreviews,
+    } = await import("@/lib/ai/visuals");
 
     // ── Lazy partial generation for a single section (glasses | hairstyle) ───
     // ?type=glasses             → generate all 3 glasses previews

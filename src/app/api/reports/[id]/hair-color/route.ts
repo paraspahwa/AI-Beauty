@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import Replicate from "replicate";
-import sharp from "sharp";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 
 export const runtime = "nodejs";
@@ -185,6 +184,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Downscale to 640px for faster upload + processing
+    const { default: sharp } = await import("sharp");
+
     const smallBuf = await sharp(rawBuf)
       .rotate()
       .resize(640, 640, { fit: "inside", withoutEnlargement: true })

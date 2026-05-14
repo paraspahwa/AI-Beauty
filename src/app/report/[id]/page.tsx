@@ -10,7 +10,8 @@ import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const REPORT_TABS = new Set(["face", "skin", "glasses", "hair", "studio", "shop"]);
+type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
+const REPORT_TABS: readonly ReportTab[] = ["face", "skin", "glasses", "hair", "studio", "shop"] as const;
 
 export async function generateMetadata({
   params,
@@ -168,7 +169,9 @@ export default async function ReportPage({
   const query = await searchParams;
   const tabParam = Array.isArray(query.tab) ? query.tab[0] : query.tab;
   const sourceParam = Array.isArray(query.sourceAssetId) ? query.sourceAssetId[0] : query.sourceAssetId;
-  const initialTab = tabParam && REPORT_TABS.has(tabParam) ? tabParam : "face";
+  const initialTab: ReportTab = tabParam && REPORT_TABS.includes(tabParam as ReportTab)
+    ? (tabParam as ReportTab)
+    : "face";
   const initialSourceAssetId = sourceParam && UUID_RE.test(sourceParam) ? sourceParam : null;
 
   const supabase = await createSupabaseServerClient();
