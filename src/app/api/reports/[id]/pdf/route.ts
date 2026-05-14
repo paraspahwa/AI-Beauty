@@ -160,11 +160,18 @@ function renderHtml(r: ReportRow): string {
 
   if (r.skin_analysis) {
     const sa = r.skin_analysis;
+    const concernLabels = (sa.concerns ?? []).map((c: unknown) => (typeof c === "string" ? c : (c as { label: string }).label));
+    const routineSteps: { step: string; product: string }[] = (() => {
+      const rt = sa.routine;
+      if (!rt) return [];
+      if (!Array.isArray(rt) && "am" in rt) return [...(rt.am ?? []), ...(rt.pm ?? [])];
+      return Array.isArray(rt) ? rt : [];
+    })();
     parts.push(section("Skin Analysis", `
       <p><strong>Type:</strong> ${esc(sa.type)}</p>
-      ${sa.concerns.length ? `<p><strong>Concerns:</strong> ${sa.concerns.map((c) => pill(c, "#9A8070")).join(" ")}</p>` : ""}
-      ${sa.zones.length ? `<table><tr><th>Zone</th><th>Observation</th></tr>${sa.zones.map((z) => `<tr><td>${esc(z.zone)}</td><td>${esc(z.observation)}</td></tr>`).join("")}</table>` : ""}
-      ${sa.routine.length ? `<h3>Routine</h3><ol>${sa.routine.map((s) => `<li><strong>${esc(s.step)}:</strong> ${esc(s.product)}</li>`).join("")}</ol>` : ""}
+      ${concernLabels.length ? `<p><strong>Concerns:</strong> ${concernLabels.map((c: string) => pill(c, "#9A8070")).join(" ")}</p>` : ""}
+      ${sa.zones.length ? `<table><tr><th>Zone</th><th>Observation</th></tr>${sa.zones.map((z: { zone: string; observation: string }) => `<tr><td>${esc(z.zone)}</td><td>${esc(z.observation)}</td></tr>`).join("")}</table>` : ""}
+      ${routineSteps.length ? `<h3>Routine</h3><ol>${routineSteps.map((s) => `<li><strong>${esc(s.step)}:</strong> ${esc(s.product)}</li>`).join("")}</ol>` : ""}
     `));
   }
 

@@ -96,3 +96,51 @@ export async function extractClothingColors(buffer: Buffer): Promise<DominantCol
   }
 }
 
+/**
+ * Crop the face region from an image using the Rekognition BoundingBox,
+ * add 30% padding for skin context (forehead/chin), then resize to maxEdge.
+ * Returns null when no valid bounding box is available.
+ *
+ * Used for the skin vision stage so gpt-4o receives a high-res face crop
+ * instead of a compressed full-body thumbnail.
+ */
+export async function cropFaceForSkin(
+  buffer: Buffer,
+  rekognitionResult: unknown,
+  maxEdge = 900,
+): Promise<Buffer | null> {
+  if (!rekognitionResult || typeof rekognitionResult !== "object") return null;
+  const bb = (rekognitionResult as Record<string, unknown>).BoundingBox as
+    | Record<string, number>
+    | undefined;
+  if (!bb || typeof bb.Left !== "number") return null;
+
+  try {
+    const meta = await sharp(buffer).rotate().metadata();
+    const W = meta.width ?? 0;
+    const H = meta.height ?? 0;
+    if (!W || !H) return null;
+
+    // 30% padding on each axis so skin context (neck/forehead) is visible
+    const padX = bb.Width  * W * 0.30;
+    const padY = bb.Height * H * 0.30;
+    const left   = Math.max(0, Math.round(bb.Left                 * W - padX));
+    const top    = Math.max(0, Math.round((bb.Top ?? 0)           * H - padY));
+    const right  = Math.min(W, Math.round((bb.Left + bb.Width)    * W + padX));
+    const bottom = Math.min(H, Math.round(((bb.Top ?? 0) + (bb.Height ?? 0)) * H + padY));
+
+    const cropW = right  - left;
+    const cropH = bottom - top;
+    if (cropW < 64 || cropH < 64) return null;
+
+    return sharp(buffer)
+      .rotate()
+      .extract({ left, top, width: cropW, height: cropH })
+      .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+  } catch (err) {
+    console.warn("[cropFaceForSkin] crop failed:", err);
+    return null;
+  }
+}

@@ -90,6 +90,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing image" }, { status: 400 });
     }
 
+    // Optional skin questionnaire context (from pre-analysis form in the UI)
+    let skinUserContext: { ageRange?: string; selfReportedFeeling?: string; primaryConcern?: string } | undefined;
+    const skinContextRaw = form.get("skinContext");
+    if (typeof skinContextRaw === "string" && skinContextRaw.length > 0) {
+      try { skinUserContext = JSON.parse(skinContextRaw); } catch { /* ignore malformed */ }
+    }
+
     // ── MIME type allowlist check ─────────────────────────────────────────────
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
@@ -225,7 +232,7 @@ export async function POST(req: NextRequest) {
     // 3) Run text analysis pipeline (Rekognition + all GPT stages)
     //    Pass user.id so the pipeline can inject personalized style context.
     try {
-      const result = await runAnalysisPipeline(buffer, user.id);
+      const result = await runAnalysisPipeline(buffer, user.id, skinUserContext);
 
       const reportUpdatePayload = {
         status: "ready",

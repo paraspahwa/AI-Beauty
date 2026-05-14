@@ -152,7 +152,9 @@ export function generateShoppingSections(report: Partial<CompiledReport>): ShopS
 
   // ── 3. Skincare Essentials ────────────────────────────────────────────────
   const skinProducts = SKIN_PRODUCTS[skinType] ?? SKIN_PRODUCTS["Normal"];
-  const skinConcerns = report.skinAnalysis?.concerns ?? [];
+  const skinConcerns = (report.skinAnalysis?.concerns ?? []).map((c) =>
+    typeof c === "string" ? c : c.label
+  );
   const primaryConcern = skinConcerns[0] ? `${skinConcerns[0].toLowerCase()} serum` : skinProducts[0];
 
   sections.push({

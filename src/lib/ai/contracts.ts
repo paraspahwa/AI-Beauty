@@ -7,6 +7,7 @@ import type {
   GlassesResult,
   HairstyleResult,
   SkinAnalysisResult,
+  SkinConcern,
 } from "@/types/report";
 
 const FACE_SHAPES: FaceShape[] = [
@@ -267,6 +268,20 @@ export function normalizeColorAnalysis(input: unknown): ColorAnalysisResult {
   };
 }
 
+const DEFAULT_AM_ROUTINE = [
+  { step: "Cleanse",    product: "Gentle low-foam cleanser" },
+  { step: "Serum",      product: "Vitamin C or targeted treatment serum" },
+  { step: "Moisturize", product: "Lightweight barrier moisturizer" },
+  { step: "Protect",    product: "Broad-spectrum SPF 50" },
+];
+
+const DEFAULT_PM_ROUTINE = [
+  { step: "Cleanse",    product: "Gentle cleanser or micellar water" },
+  { step: "Treat",      product: "Retinol or active treatment (2–3×/week)" },
+  { step: "Moisturize", product: "Rich barrier-repair moisturizer" },
+  { step: "Eye Care",   product: "Peptide eye cream" },
+];
+
 export function normalizeSkinAnalysis(input: unknown): SkinAnalysisResult {
   const obj = asObject(input);
   const typeRaw = asString(obj.type, "Combination");
@@ -274,44 +289,78 @@ export function normalizeSkinAnalysis(input: unknown): SkinAnalysisResult {
     ? (typeRaw as SkinAnalysisResult["type"])
     : "Combination";
 
-  const concerns = uniqueStrings(
-    asArray(obj.concerns)
-      .map((item) => asString(item, ""))
-      .filter((item) => item.length > 0),
-  ).slice(0, 6);
+  const imageConfidence = asNumber(obj.imageConfidence, 0.75, 0, 1);
+
+  // Concerns — handle both string[] (old/fallback) and SkinConcern[] (new)
+  const VALID_SEVERITIES = ["mild", "moderate", "significant"] as const;
+  const VALID_ZONES      = ["T-Zone", "Cheeks", "Under-Eye", "Jawline", "General"] as const;
+
+  const concerns: SkinConcern[] = asArray(obj.concerns)
+    .map((item): SkinConcern => {
+      if (typeof item === "string") {
+        return { label: item.trim(), severity: "mild", zone: "General" };
+      }
+      const c = asObject(item);
+      const sev = asString(c.severity, "mild");
+      const zon = asString(c.zone, "General");
+      return {
+        label:    asString(c.label, "Skin concern"),
+        severity: (VALID_SEVERITIES.includes(sev as typeof VALID_SEVERITIES[number]) ? sev : "mild") as SkinConcern["severity"],
+        zone:     (VALID_ZONES.includes(zon as typeof VALID_ZONES[number]) ? zon : "General") as SkinConcern["zone"],
+      };
+    })
+    .filter((c) => c.label.length > 0)
+    .slice(0, 6);
 
   const zones = asArray(obj.zones)
     .map((item) => {
       const zone = asObject(item);
       return {
-        zone: asString(zone.zone, "T-Zone"),
+        zone:        asString(zone.zone, "T-Zone"),
         observation: asString(zone.observation, "No strong concern detected."),
       };
     })
     .slice(0, 6);
 
-  const routineRaw = asArray(obj.routine)
-    .map((item) => {
-      const step = asObject(item);
+  // Routine — handle both AM/PM object (new) and flat array (legacy)
+  let routine: SkinAnalysisResult["routine"];
+  const routineRaw = obj.routine;
+
+  if (routineRaw && typeof routineRaw === "object" && !Array.isArray(routineRaw)) {
+    // New { am, pm } format
+    const r = routineRaw as Record<string, unknown>;
+    const normalizeSteps = (arr: unknown[]) =>
+      arr.map((item) => {
+        const s = asObject(item);
+        return {
+          step:    asString(s.step,    "Step"),
+          product: asString(s.product, "Gentle care product"),
+        };
+      });
+    const am = normalizeSteps(asArray(r.am));
+    const pm = normalizeSteps(asArray(r.pm));
+    routine = {
+      am: am.length >= 3 ? am.slice(0, 6) : DEFAULT_AM_ROUTINE,
+      pm: pm.length >= 3 ? pm.slice(0, 6) : DEFAULT_PM_ROUTINE,
+    };
+  } else {
+    // Legacy flat array
+    const steps = asArray(routineRaw ?? []).map((item) => {
+      const s = asObject(item);
       return {
-        step: asString(step.step, "Step"),
-        product: asString(step.product, "Gentle care product"),
+        step:    asString(s.step,    "Step"),
+        product: asString(s.product, "Gentle care product"),
       };
     });
+    routine = steps.length >= 4 ? steps.slice(0, 6) : [
+      { step: "Cleanse",    product: "Gentle low-foam cleanser" },
+      { step: "Treat",      product: "Targeted serum based on concerns" },
+      { step: "Moisturize", product: "Barrier-support moisturizer" },
+      { step: "Protect",    product: "Broad-spectrum SPF 50" },
+    ];
+  }
 
-  const routine = takeOrPad(routineRaw, 4, (index) => [
-    { step: "Cleanse", product: "Gentle low-foam cleanser" },
-    { step: "Treat", product: "Targeted serum based on concerns" },
-    { step: "Moisturize", product: "Barrier-support moisturizer" },
-    { step: "Protect", product: "Broad-spectrum SPF 50" },
-  ][index]).slice(0, 6);
-
-  return {
-    type,
-    concerns,
-    zones,
-    routine,
-  };
+  return { type, imageConfidence, concerns, zones, routine };
 }
 
 export function normalizeFeatures(input: unknown): FeatureBreakdown {

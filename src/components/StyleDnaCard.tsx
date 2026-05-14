@@ -100,8 +100,26 @@ function StatPill({ label, value }: { label: string; value: string }) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
+/** Normalises a SkinConcern (string | {label}) to a plain string. */
+function getConcernLabel(c: unknown): string {
+  if (typeof c === "string") return c;
+  if (c && typeof c === "object" && "label" in c) return (c as { label: string }).label;
+  return "";
+}
+
 export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
   const [copied, setCopied] = React.useState(false);
+  const copyTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
+  // Unused: userEmail is available for future personalised features (e.g. share link).
+  void userEmail;
 
   // Merge: prefs table (aggregated) wins for top-level fields, latest report fills detail
   const season    = prefs?.color_season ?? latest?.color_analysis?.season ?? null;
@@ -130,9 +148,14 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
     ]
       .filter(Boolean)
       .join(" · ");
-    await navigator.clipboard.writeText(`✨ My Renovaara Profile\n${styleId}\n\nGet yours at renovaara.in`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    try {
+      await navigator.clipboard.writeText(`✨ My Renovaara Profile\n${styleId}\n\nGet yours at renovaara.in`);
+      setCopied(true);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Clipboard API unavailable (non-HTTPS or permission denied) — silent fail
+    }
   }
 
   return (
@@ -195,8 +218,8 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
                 Your colour palette
               </p>
               <div className="flex flex-wrap gap-2">
-                {richPalette.map((c) => (
-                  <div key={c.hex} className="flex items-center gap-1.5 group">
+                {richPalette.map((c, idx) => (
+                  <div key={`${c.hex}-${idx}`} className="flex items-center gap-1.5 group">
                     <div
                       className="h-7 w-7 rounded-full shadow-md transition-transform group-hover:scale-110"
                       style={{ background: c.hex, border: "2px solid rgba(255,255,255,0.12)" }}
@@ -340,15 +363,18 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
               <div>
                 <p className="text-[11px] mb-1" style={{ color: "rgba(240,232,216,0.35)" }}>Active concerns</p>
                 <div className="flex flex-wrap gap-1">
-                  {skinConcerns.map((c) => (
-                    <span
-                      key={c}
-                      className="text-[10px] rounded-full px-2 py-0.5"
-                      style={{ background: "rgba(99,162,130,0.15)", color: "#63A282" }}
-                    >
-                      {c}
-                    </span>
-                  ))}
+                  {skinConcerns.map((c, idx) => {
+                    const label = getConcernLabel(c);
+                    return (
+                      <span
+                        key={idx}
+                        className="text-[10px] rounded-full px-2 py-0.5"
+                        style={{ background: "rgba(99,162,130,0.15)", color: "#63A282" }}
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -420,7 +446,9 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             {skinConcerns.length > 0 && (
               <div>
                 <p className="text-[10px] mb-1" style={{ color: "rgba(240,232,216,0.3)" }}>Focus on</p>
-                <p className="text-xs" style={{ color: "rgba(240,232,216,0.7)" }}>{skinConcerns[0]} care</p>
+                <p className="text-xs" style={{ color: "rgba(240,232,216,0.7)" }}>
+                  {getConcernLabel(skinConcerns[0])} care
+                </p>
               </div>
             )}
           </div>

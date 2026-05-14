@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
 import { fadeUp, staggerContainer, cascadeContainer, springPop } from "@/lib/animations";
+import { SkinQuestionnaireModal, type SkinContext } from "@/components/SkinQuestionnaireModal";
 
 export interface ImageUploaderProps {
   onUploaded: (reportId: string) => void;
@@ -41,6 +42,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
   const [progress, setProgress] = React.useState(0);
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [skinContext, setSkinContext] = React.useState<SkinContext | null>(null);
+  const [showQuestionnaire, setShowQuestionnaire] = React.useState(false);
 
   async function handleSampleClick(sample: typeof SAMPLE_PHOTOS[0]) {
     setLoadingSample(sample.src);
@@ -49,6 +52,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       const f = await urlToFile(sample.src, sample.label.replace(" ", "-").toLowerCase() + ".jpg");
       setFile(f);
       setPreview(URL.createObjectURL(f));
+      if (!skinContext) setShowQuestionnaire(true);
     } catch {
       setError("Could not load sample photo. Please upload your own.");
     } finally {
@@ -65,7 +69,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
     setError(null);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-  }, []);
+    if (!skinContext) setShowQuestionnaire(true);
+  }, [skinContext]);
 
   const onDropRejected = React.useCallback((rejections: FileRejection[]) => {
     if (rejections.length > 1) {
@@ -104,6 +109,9 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
     try {
       const form = new FormData();
       form.append("image", file);
+      if (skinContext && Object.keys(skinContext).length > 0) {
+        form.append("skinContext", JSON.stringify(skinContext));
+      }
 
       // Fake progress while the text pipeline runs (~30-50 s)
       const ticker = setInterval(() => {
@@ -142,6 +150,13 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           <AnalysisLoading currentStep={currentStep} progress={progress} />
         )}
       </AnimatePresence>
+
+      {/* Skin personalization questionnaire — shown once after photo selection */}
+      <SkinQuestionnaireModal
+        open={showQuestionnaire}
+        onComplete={(ctx) => { setSkinContext(ctx); setShowQuestionnaire(false); }}
+        onSkip={() => { setSkinContext({}); setShowQuestionnaire(false); }}
+      />
       <motion.div variants={fadeUp}>
         <div
           {...getRootProps()}
@@ -286,7 +301,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
             >
               <Button
                 variant="outline"
-                onClick={() => { setFile(null); setPreview(null); setError(null); }}
+                onClick={() => { setFile(null); setPreview(null); setError(null); setSkinContext(null); }}
                 disabled={submitting}
                 className="w-full sm:w-auto min-w-[130px]"
               >

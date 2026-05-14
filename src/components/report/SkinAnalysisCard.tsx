@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { Check, ExternalLink, ShoppingBag, X } from "lucide-react";
-import type { SkinAnalysisResult } from "@/types/report";
-import { getAffiliateProducts } from "@/lib/affiliates";
+import * as React from "react";
+import { Check, ExternalLink, ShoppingBag, X, Sun, Moon, AlertTriangle } from "lucide-react";
+import type { SkinAnalysisResult, SkinConcern } from "@/types/report";
+import { getAffiliateProducts, getConcernIngredients } from "@/lib/affiliates";
 
 const ZONE_ANIMATION_CSS = `
 @keyframes skin-draw-zone {
@@ -176,6 +177,32 @@ function ZoneThumb({ photoUrl, thumbPosition, zoneColor, label }: { photoUrl?: s
   );
 }
 
+// ── Runtime helpers for backward-compat (old reports have string[] concerns + flat routine) ──
+
+type RawConcern = SkinConcern | string;
+
+function getConcernLabel(c: RawConcern): string {
+  return typeof c === "string" ? c : c.label;
+}
+function getConcernSeverity(c: RawConcern): SkinConcern["severity"] {
+  return typeof c === "string" ? "mild" : c.severity;
+}
+function getConcernZone(c: RawConcern): string {
+  return typeof c === "string" ? "General" : c.zone;
+}
+
+function isAmPmRoutine(
+  r: SkinAnalysisResult["routine"],
+): r is { am: { step: string; product: string }[]; pm: { step: string; product: string }[] } {
+  return !Array.isArray(r) && typeof r === "object" && "am" in r && "pm" in r;
+}
+
+const SEVERITY_STYLE: Record<SkinConcern["severity"], { bg: string; color: string; label: string }> = {
+  mild:        { bg: "rgba(251,191,36,0.12)",  color: "#FBBF24", label: "Mild"        },
+  moderate:    { bg: "rgba(251,146,60,0.12)",  color: "#FB923C", label: "Moderate"    },
+  significant: { bg: "rgba(248,113,113,0.12)", color: "#F87171", label: "Significant" },
+};
+
 export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult; photoUrl?: string }) {
   const skinType  = data.type;
   const compTypes = Array.from(new Set(["Oily", "Dry", skinType, "Sensitive"])).slice(0, 4);
@@ -189,6 +216,20 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
   });
 
   const benefits = BEST_MATCH_BENEFITS[skinType] ?? BEST_MATCH_BENEFITS["Combination"];
+
+  // Routine helpers
+  type FlatStep = { step: string; product: string };
+  type AmPmRoutine = { am: FlatStep[]; pm: FlatStep[] };
+  const amPm = isAmPmRoutine(data.routine);
+  const [activeTab, setActiveTab] = React.useState<"am" | "pm">("am");
+  const amSteps: FlatStep[] = amPm ? (data.routine as AmPmRoutine).am : (data.routine as FlatStep[]);
+  const pmSteps: FlatStep[] = amPm ? (data.routine as AmPmRoutine).pm : [];
+
+  const visibleSteps: FlatStep[] = amPm ? (activeTab === "am" ? amSteps : pmSteps) : amSteps;
+
+  // Concerns (handle both string[] and SkinConcern[])
+  const rawConcerns = (data.concerns ?? []) as RawConcern[];
+  const lowConfidence = (data.imageConfidence ?? 1) < 0.55;
 
   return (
     <>
@@ -276,104 +317,149 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
 
         <div className="px-6 py-6">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <span style={{ color: "#C8A96E" }}>&#10022;</span>
-            <p className={sectionTitle} style={warmBrown}>Best Match</p>
-            <span style={{ color: "#C8A96E" }}>&#10022;</span>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-5">
-            <div className="flex items-center gap-3 px-6 py-4 rounded-2xl min-w-[220px] justify-center" style={{ background: "#8B7D6B", color: "#fff" }}>
-              <span className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(255,255,255,0.2)" }}><IconDrop filled /></span>
-              <p className="text-base font-black uppercase tracking-widest">{skinType} Skin</p>
+              <span style={{ color: "#C8A96E" }}>&#10022;</span>
+              <p className={sectionTitle} style={warmBrown}>Best Match</p>
+              <span style={{ color: "#C8A96E" }}>&#10022;</span>
             </div>
-            <div className="flex gap-6 justify-center flex-wrap">
-              {benefits.map((b, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 text-center">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B", border: "1px solid #E8DDD0" }}>{b.icon}</span>
-                  <span className="text-xs leading-tight max-w-[64px]" style={{ color: "#6B5344" }}>{b.label}</span>
-                </div>
-              ))}
+            <div className="flex flex-col sm:flex-row items-center gap-5">
+              <div className="flex items-center gap-3 px-6 py-4 rounded-2xl min-w-[220px] justify-center" style={{ background: "#8B7D6B", color: "#fff" }}>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(255,255,255,0.2)" }}><IconDrop filled /></span>
+                <p className="text-base font-black uppercase tracking-widest">{skinType} Skin</p>
+              </div>
+              <div className="flex gap-6 justify-center flex-wrap">
+                {benefits.map((b, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 text-center">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B", border: "1px solid #E8DDD0" }}>{b.icon}</span>
+                    <span className="text-xs leading-tight max-w-[64px]" style={{ color: "#6B5344" }}>{b.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          {data.routine.length > 0 && (
-            <div className="mt-6">
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>Recommended Routine</p>
-              <ol className="space-y-4">
-                {data.routine.map((r, i) => {
-                  const products = getAffiliateProducts(r.step, skinType);
-                  return (
-                    <li key={r.step}>
-                      {/* Step label */}
-                      <div className="flex items-start gap-3 text-sm mb-2">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
-                        <div>
-                          <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
-                          <span style={{ color: "#9C7D5B" }}> — {r.product}</span>
-                        </div>
+
+            {/* Low-confidence warning */}
+            {lowConfidence && (
+              <div className="mt-4 flex items-start gap-2 rounded-xl px-4 py-3" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#FBBF24" }} />
+                <p className="text-[11px] leading-relaxed" style={{ color: "#B8A780" }}>
+                  Image quality limited the skin read. Results are estimated — for best accuracy upload a clear, well-lit, unfiltered selfie.
+                </p>
+              </div>
+            )}
+
+            {/* Concerns with severity badges */}
+            {rawConcerns.length > 0 && (
+              <div className="mt-5">
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "#9C7D5B" }}>Detected Concerns</p>
+                <div className="flex flex-wrap gap-2">
+                  {rawConcerns.map((c, i) => {
+                    const sev     = getConcernSeverity(c);
+                    const style   = SEVERITY_STYLE[sev];
+                    const ingInfo = getConcernIngredients(getConcernLabel(c));
+                    return (
+                      <div key={i} className="flex flex-col gap-0.5">
+                        <span
+                          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold"
+                          style={{ background: style.bg, color: style.color, border: `1px solid ${style.color}33` }}
+                        >
+                          {getConcernLabel(c)}
+                          <span className="text-[9px] opacity-70 uppercase tracking-wide">{getConcernZone(c)}</span>
+                        </span>
+                        {ingInfo && (
+                          <p className="text-[9px] pl-2" style={{ color: "#9C7D5B" }}>
+                            Look for: {ingInfo.ingredients.slice(0, 2).join(", ")}
+                          </p>
+                        )}
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-                      {/* Affiliate product cards */}
-                      {products.length > 0 && (
-                        <div className="ml-9 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {products.map((p) => (
-                            <a
-                              key={p.url}
-                              href={p.url}
-                              target="_blank"
-                              rel="noopener noreferrer sponsored"
-                              className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                              style={{
-                                background: "#F5EFE7",
-                                border: "1px solid #E8DDD0",
-                                textDecoration: "none",
-                              }}
-                            >
-                              {/* Icon */}
-                              <span
-                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                                style={{ background: "#EDE3D8", color: "#9C7D5B" }}
-                              >
-                                <ShoppingBag className="h-4 w-4" />
-                              </span>
+            {/* Routine — AM/PM tabs (new) or flat list (legacy) */}
+            {(amPm ? (amSteps.length > 0 || pmSteps.length > 0) : (data.routine as {step:string;product:string}[]).length > 0) && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#9C7D5B" }}>
+                    {amPm ? "Daily Routine" : "Recommended Routine"}
+                  </p>
+                  {amPm && (
+                    <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
+                      {(["am", "pm"] as const).map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveTab(tab)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all"
+                          style={{
+                            background: activeTab === tab ? "#EDE3D8" : "transparent",
+                            color:      activeTab === tab ? "#3D2B1F" : "#9C7D5B",
+                          }}
+                        >
+                          {tab === "am" ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+                          {tab.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                              {/* Info */}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-semibold truncate" style={{ color: "#3D2B1F" }}>{p.name}</p>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-[10px]" style={{ color: "#9C7D5B" }}>{p.brand}</span>
-                                  {p.badge && (
-                                    <span
-                                      className="text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
-                                      style={{ background: "#EDE3D8", color: "#7B5E3A" }}
-                                    >
-                                      {p.badge}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Price + arrow */}
-                              <div className="flex flex-col items-end shrink-0">
-                                <span className="text-[11px] font-bold" style={{ color: "#3D2B1F" }}>₹{p.priceINR}</span>
-                                <ExternalLink
-                                  className="h-3 w-3 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity"
-                                  style={{ color: "#9C7D5B" }}
-                                />
-                              </div>
-                            </a>
-                          ))}
+                <ol className="space-y-4">
+                  {visibleSteps.map((r: FlatStep, i: number) => {
+                    const products = getAffiliateProducts(r.step, skinType);
+                    return (
+                      <li key={`${activeTab}-${r.step}`}>
+                        <div className="flex items-start gap-3 text-sm mb-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
+                          <div>
+                            <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
+                            <span style={{ color: "#9C7D5B" }}> — {r.product}</span>
+                          </div>
                         </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ol>
 
-              {/* Affiliate disclosure */}
-              <p className="mt-4 text-[9px] leading-relaxed" style={{ color: "#B8A898" }}>
-                * Product links are affiliate links. We may earn a small commission if you purchase through these links — at no extra cost to you. Prices are approximate and may vary.
-              </p>
-            </div>
-          )}
+                        {products.length > 0 && (
+                          <div className="ml-9 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {products.map((p) => (
+                              <a
+                                key={p.url}
+                                href={p.url}
+                                target="_blank"
+                                rel="noopener noreferrer sponsored"
+                                className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                style={{ background: "#F5EFE7", border: "1px solid #E8DDD0", textDecoration: "none" }}
+                              >
+                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+                                  <ShoppingBag className="h-4 w-4" />
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[11px] font-semibold truncate" style={{ color: "#3D2B1F" }}>{p.name}</p>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-[10px]" style={{ color: "#9C7D5B" }}>{p.brand}</span>
+                                    {p.badge && (
+                                      <span className="text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full" style={{ background: "#EDE3D8", color: "#7B5E3A" }}>
+                                        {p.badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end shrink-0">
+                                  <span className="text-[11px] font-bold" style={{ color: "#3D2B1F" }}>₹{p.priceINR}</span>
+                                  <ExternalLink className="h-3 w-3 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: "#9C7D5B" }} />
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+
+                <p className="mt-4 text-[9px] leading-relaxed" style={{ color: "#B8A898" }}>
+                  * Product links are affiliate links. We may earn a small commission if you purchase through these links — at no extra cost to you. Prices are approximate and may vary.
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </>

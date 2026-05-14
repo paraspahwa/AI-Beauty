@@ -148,3 +148,40 @@ export function getAffiliateProducts(step: string, skinType: string): AffiliateP
   const skinKey = skinType as keyof typeof entry;
   return (entry[skinKey] ?? entry.default ?? []).slice(0, 2);
 }
+
+// ── Concern → Ingredient mapping ─────────────────────────────────────────────
+
+/**
+ * Maps detected skin concern keywords to hero ingredients and ingredients to avoid.
+ * Used to enrich routine product recommendations with specific active ingredients.
+ */
+export const CONCERN_INGREDIENTS: Record<string, { ingredients: string[]; avoid: string[] }> = {
+  "dark spots":    { ingredients: ["niacinamide", "vitamin C", "alpha-arbutin", "kojic acid"],           avoid: ["harsh scrubs"] },
+  "pigmentation":  { ingredients: ["vitamin C", "niacinamide", "tranexamic acid"],                       avoid: [] },
+  "acne":          { ingredients: ["salicylic acid", "benzoyl peroxide", "tea tree", "niacinamide"],     avoid: ["comedogenic oils", "heavy creams"] },
+  "breakouts":     { ingredients: ["salicylic acid", "niacinamide", "zinc"],                             avoid: ["heavy moisturizers", "fragrance"] },
+  "oily":          { ingredients: ["niacinamide", "salicylic acid", "zinc"],                             avoid: ["heavy oils", "occlusive balms"] },
+  "dryness":       { ingredients: ["hyaluronic acid", "ceramides", "squalane", "glycerin"],              avoid: ["alcohol-based toners"] },
+  "redness":       { ingredients: ["centella asiatica", "azelaic acid", "green tea", "niacinamide"],     avoid: ["fragrance", "essential oils", "alcohol"] },
+  "sensitivity":   { ingredients: ["centella asiatica", "ceramides", "aloe vera", "oat extract"],       avoid: ["fragrance", "retinol", "strong acids"] },
+  "pores":         { ingredients: ["niacinamide", "salicylic acid", "retinol"],                         avoid: ["heavy SPF formulas"] },
+  "wrinkles":      { ingredients: ["retinol", "peptides", "vitamin C", "niacinamide"],                  avoid: ["harsh daily exfoliants"] },
+  "fine lines":    { ingredients: ["retinol", "peptides", "hyaluronic acid"],                           avoid: [] },
+  "dullness":      { ingredients: ["vitamin C", "AHA", "niacinamide", "glycolic acid"],                 avoid: [] },
+  "uneven tone":   { ingredients: ["niacinamide", "vitamin C", "azelaic acid"],                         avoid: [] },
+  "under-eye":     { ingredients: ["caffeine", "peptides", "vitamin K", "hyaluronic acid"],             avoid: ["retinol near eyes"] },
+  "dark circles":  { ingredients: ["caffeine", "vitamin K", "peptides"],                                avoid: [] },
+  "dehydration":   { ingredients: ["hyaluronic acid", "glycerin", "beta-glucan"],                       avoid: ["alcohol", "harsh cleansers"] },
+};
+
+/**
+ * Find concern-relevant ingredient info by matching concern label keywords.
+ * Returns the best match or null.
+ */
+export function getConcernIngredients(
+  concernLabel: string,
+): { ingredients: string[]; avoid: string[] } | null {
+  const label = concernLabel.toLowerCase();
+  const match = Object.entries(CONCERN_INGREDIENTS).find(([key]) => label.includes(key));
+  return match ? match[1] : null;
+}

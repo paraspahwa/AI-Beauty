@@ -1,6 +1,6 @@
 import { detectFaceDetails } from "./rekognition";
 import { chatJSON } from "./openai";
-import { compressForAI, extractClothingColors } from "./image";
+import { compressForAI, extractClothingColors, cropFaceForSkin } from "./image";
 import {
   normalizeColorAnalysis,
   normalizeFaceShape,
@@ -69,7 +69,11 @@ export interface PipelineResult {
  *                   fetches stored style prefs and injects them as soft
  *                   prior context into the LLM system prompt.
  */
-export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Promise<PipelineResult> {
+export async function runAnalysisPipeline(
+  rawImage: Buffer,
+  userId?: string,
+  skinUserContext?: { ageRange?: string; selfReportedFeeling?: string; primaryConcern?: string },
+): Promise<PipelineResult> {
   const pipelineStart = Date.now();
   const stageMetas: PipelineStageMeta[] = [];
 
@@ -105,6 +109,16 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
     : SYSTEM_BASE;
 
   console.info("[pipeline] clothing colours extracted:", clothingInfo.clothingColors, `coverage=${Math.round(clothingInfo.clothingCoverage * 100)}%`);
+
+  // Phase 5: High-res face crop for skin analysis (900px vs 512px full image)
+  // Runs after rekognition so we have the bounding box. Falls back to full imageBase64 if unavailable.
+  const skinBase64: string = await cropFaceForSkin(rawImage, rekognition, 900)
+    .then((crop) => {
+      if (!crop) return imageBase64;
+      console.info("[pipeline] skin face crop created:", crop.byteLength, "bytes");
+      return crop.toString("base64");
+    })
+    .catch(() => imageBase64);
 
   // P1-4: Timed + degradation-tracked stage runner
   async function runNormalizedStage<T>(
@@ -180,21 +194,21 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
       {},
       colorVariant.id,
     ),
-    // Phase 4.4: Vision-only skin stage (type+concerns+zones, no routine).
-    // Routine is fetched separately as a cheap text-only call after this.
+    // Phase 5: Vision-only skin stage — uses full gpt-4o for better texture accuracy,
+    // and a face-cropped image at 900px so pores/tone are readable.
     runNormalizedStage(
       "skin_vision",
       () =>
         chatJSON<unknown>({
-          model: env.openai.miniModel,
+          model: env.openai.visionModel,  // gpt-4o — significantly better skin texture reading
           temperature: 0.2,
           system: effectiveSystemBase,
           user: SKIN_VISION_PROMPT,
-          imageBase64,
+          imageBase64: skinBase64,         // face crop, not full 512px thumbnail
         }),
-      normalizeSkinAnalysis,  // handles missing routine with safe defaults
+      normalizeSkinAnalysis,
       {},
-      "skin_vision_v1",
+      "skin_vision_v2",
     ),
   ]);
 
@@ -212,12 +226,12 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
   // Features runs before Glasses so eye/brow data can be injected into the Glasses prompt.
   const featuresVariant = pickVariant("features");
   const [skinRoutineRaw, features] = await Promise.all([
-    // Phase 4.4: Text-only routine call — no image tokens, very cheap
+    // Phase 5: Text-only AM/PM routine call — no image tokens, very cheap
     withRetry("skin_routine", () =>
       chatJSON<unknown>({
         model: env.openai.miniModel,
         system: effectiveSystemBase,
-        user: buildSkinRoutinePrompt(skinVisionResult.type, skinVisionResult.concerns),
+        user: buildSkinRoutinePrompt(skinVisionResult.type, skinVisionResult.concerns, skinUserContext),
       }), 2,
     ).catch(() => null),
     // Phase 4.1: Features vision call with Rekognition attributes injected
@@ -236,21 +250,46 @@ export async function runAnalysisPipeline(rawImage: Buffer, userId?: string): Pr
     ),
   ]);
 
-  // Merge better text-routine into skin analysis if available
+  // Merge AM/PM routine from text stage into the skin vision result
   const skinAnalysis: SkinAnalysisResult = (() => {
     if (!skinRoutineRaw) return skinVisionResult;
     const rawRoutine = (skinRoutineRaw as Record<string, unknown>).routine;
-    if (!Array.isArray(rawRoutine)) return skinVisionResult;
-    const merged = rawRoutine
-      .map((item) => {
-        const obj = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
-        return {
-          step:    typeof obj.step    === "string" ? obj.step    : "Care step",
-          product: typeof obj.product === "string" ? obj.product : "Appropriate product",
-        };
-      })
-      .slice(0, 6);
-    return { ...skinVisionResult, routine: merged.length >= 4 ? merged : skinVisionResult.routine };
+
+    // New AM/PM object format
+    if (rawRoutine && typeof rawRoutine === "object" && !Array.isArray(rawRoutine)) {
+      const r = rawRoutine as Record<string, unknown>;
+      const normalizeSteps = (arr: unknown[]) =>
+        Array.isArray(arr)
+          ? arr.map((item) => {
+              const obj = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+              return {
+                step:    typeof obj.step    === "string" ? obj.step    : "Care step",
+                product: typeof obj.product === "string" ? obj.product : "Appropriate product",
+              };
+            }).slice(0, 6)
+          : [];
+      const am = normalizeSteps(r.am as unknown[]);
+      const pm = normalizeSteps(r.pm as unknown[]);
+      if (am.length >= 3 && pm.length >= 3) {
+        return { ...skinVisionResult, routine: { am, pm } };
+      }
+    }
+
+    // Legacy flat array fallback
+    if (Array.isArray(rawRoutine)) {
+      const merged = rawRoutine
+        .map((item) => {
+          const obj = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+          return {
+            step:    typeof obj.step    === "string" ? obj.step    : "Care step",
+            product: typeof obj.product === "string" ? obj.product : "Appropriate product",
+          };
+        })
+        .slice(0, 6);
+      return { ...skinVisionResult, routine: merged.length >= 4 ? merged : skinVisionResult.routine };
+    }
+
+    return skinVisionResult;
   })();
 
   // 6) Glasses, 7) Hairstyle in parallel.

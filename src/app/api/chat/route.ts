@@ -52,12 +52,21 @@ function buildReportContext(report: Partial<CompiledReport>): string {
   if (report.skinAnalysis) {
     const sa = report.skinAnalysis;
     parts.push(`Skin type: ${sa.type}`);
-    if (sa.concerns?.length) parts.push(`Skin concerns: ${sa.concerns.join(", ")}`);
+    if (sa.concerns?.length) {
+      const concernLabels = sa.concerns.map((c) => (typeof c === "string" ? c : c.label));
+      parts.push(`Skin concerns: ${concernLabels.join(", ")}`);
+    }
     if (sa.zones?.length) {
       parts.push(`Skin zone observations: ${sa.zones.map((z) => `${z.zone}: ${z.observation}`).join("; ")}`);
     }
-    if (sa.routine?.length) {
-      parts.push(`Recommended skincare routine: ${sa.routine.map((r) => `${r.step} → ${r.product}`).join("; ")}`);
+    const routine = sa.routine;
+    if (routine) {
+      if (!Array.isArray(routine) && "am" in routine) {
+        const steps = [...routine.am, ...routine.pm];
+        if (steps.length) parts.push(`Skincare routine: ${steps.map((r) => `${r.step} → ${r.product}`).join("; ")}`);
+      } else if (Array.isArray(routine) && routine.length) {
+        parts.push(`Skincare routine: ${(routine as { step: string; product: string }[]).map((r) => `${r.step} → ${r.product}`).join("; ")}`);
+      }
     }
   }
 

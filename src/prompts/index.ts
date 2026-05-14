@@ -79,27 +79,43 @@ Return JSON:
 }`;
 
 /**
- * Phase 4.4 — vision-only portion of the split skin analysis.
- * Returns type + concerns + zones; routine is fetched separately via buildSkinRoutinePrompt.
+ * Phase 5 — vision-only portion of the split skin analysis.
+ * Uses gpt-4o (full model) on a face-cropped image for maximum texture accuracy.
+ * Returns type + imageConfidence + structured concerns + zones.
+ * Routine is fetched separately via buildSkinRoutinePrompt.
  */
-export const SKIN_VISION_PROMPT = `Analyze skin type and visible concerns from the photo.
+export const SKIN_VISION_PROMPT = `Analyze skin type and visible concerns from this face-cropped photo.
+IMPORTANT: Focus ONLY on skin texture, tone, pores, and visible condition. Ignore makeup, filters, and lighting artifacts.
+If the image is blurry, heavily filtered, or poorly lit, set imageConfidence below 0.55 and add a concern noting the limitation.
 Return JSON:
 {
   "type": "Oily" | "Dry" | "Combination" | "Normal" | "Sensitive",
-  "concerns": string[],
+  "imageConfidence": number,
+  "concerns": [{ "label": string, "severity": "mild" | "moderate" | "significant", "zone": "T-Zone" | "Cheeks" | "Under-Eye" | "Jawline" | "General" }],
   "zones": [{ "zone": "T-Zone" | "Cheeks" | "Under-Eye" | "Jawline", "observation": string }]
 }`;
 
 /**
- * Phase 4.4 — text-only routine generator. No image required.
- * Call after the skin vision stage to produce a personalized routine.
+ * Phase 5 — text-only AM/PM routine generator. No image required.
+ * Accepts structured or plain-string concerns, plus optional user questionnaire context.
  */
-export function buildSkinRoutinePrompt(type: string, concerns: string[]): string {
-  const concernText = concerns.length > 0 ? concerns.join(", ") : "general maintenance";
+export function buildSkinRoutinePrompt(
+  type: string,
+  concerns: Array<string | { label: string; severity?: string; zone?: string }>,
+  userContext?: { ageRange?: string; selfReportedFeeling?: string; primaryConcern?: string },
+): string {
+  const concernLabels = concerns.map((c) => (typeof c === "string" ? c : c.label));
+  const concernText = concernLabels.length > 0 ? concernLabels.join(", ") : "general maintenance";
+  const contextParts: string[] = [];
+  if (userContext?.selfReportedFeeling) contextParts.push(`Skin feels "${userContext.selfReportedFeeling}" by midday.`);
+  if (userContext?.primaryConcern)      contextParts.push(`Primary concern: "${userContext.primaryConcern}".`);
+  if (userContext?.ageRange)            contextParts.push(`Age range: ${userContext.ageRange}.`);
+  const contextBlock = contextParts.length > 0 ? ` Additional user context: ${contextParts.join(" ")}` : "";
   return (
-    `Create a personalized 5-step daily skincare routine for ${type} skin with these concerns: ${concernText}. ` +
-    `Each step must be actionable with a specific product-type recommendation. ` +
-    `Return JSON: { "routine": [{ "step": string, "product": string }] }`
+    `Create a personalized daily skincare routine for ${type} skin with these concerns: ${concernText}.${contextBlock} ` +
+    `Split into AM (morning — focus on protection and hydration) and PM (evening — focus on treatment and repair). ` +
+    `Each step must be actionable with a specific product-type recommendation. AM: 4–5 steps. PM: 4–5 steps. ` +
+    `Return JSON: { "routine": { "am": [{ "step": string, "product": string }], "pm": [{ "step": string, "product": string }] } }`
   );
 }
 

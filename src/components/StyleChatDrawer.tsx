@@ -96,7 +96,8 @@ function buildInsights(report?: Partial<CompiledReport>): string[] {
   }
 
   if (report.skinAnalysis?.concerns?.[0]) {
-    const concern = report.skinAnalysis.concerns[0].toLowerCase();
+    const rawConcern = report.skinAnalysis.concerns[0];
+    const concern = (typeof rawConcern === "string" ? rawConcern : rawConcern.label).toLowerCase();
     const ingredientMap: Record<string, string> = {
       acne: "niacinamide, salicylic acid, and tea tree",
       "dark spots": "vitamin C, kojic acid, and alpha-arbutin",
@@ -139,7 +140,10 @@ function buildDynamicSuggestions(report?: Partial<CompiledReport>): string[] {
 
   if (report.skinAnalysis) {
     const top = report.skinAnalysis.concerns?.[0];
-    if (top) chips.push(`What ingredients help with ${top.toLowerCase()}?`);
+    if (top) {
+      const topLabel = typeof top === "string" ? top : top.label;
+      chips.push(`What ingredients help with ${topLabel.toLowerCase()}?`);
+    }
   }
 
   if (report.glasses?.recommended?.[0]) {

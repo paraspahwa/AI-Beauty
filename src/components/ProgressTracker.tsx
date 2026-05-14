@@ -127,7 +127,11 @@ export function ProgressTracker({ reports }: Props) {
   const dominantSkin       = dominant(skinTypes);
 
   // Skin concern trend
-  const allConcerns = reports.flatMap((r) => r.skin_analysis?.concerns ?? []);
+  const allConcerns = reports.flatMap((r) =>
+    (r.skin_analysis?.concerns ?? []).map((c: unknown) =>
+      typeof c === "string" ? c : (c as { label: string }).label
+    )
+  );
   const concernCounts = allConcerns.reduce<Record<string, number>>((acc, v) => { acc[v] = (acc[v] ?? 0) + 1; return acc; }, {});
   const topConcerns = Object.entries(concernCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
 

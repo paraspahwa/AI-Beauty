@@ -65,11 +65,25 @@ export interface ColorAnalysisResult {
   };
 }
 
+export interface SkinConcern {
+  label: string;
+  severity: "mild" | "moderate" | "significant";
+  zone: "T-Zone" | "Cheeks" | "Under-Eye" | "Jawline" | "General";
+}
+
 export interface SkinAnalysisResult {
   type: "Oily" | "Dry" | "Combination" | "Normal" | "Sensitive";
-  concerns: string[];
+  /** 0..1 — how readable/clear the skin was in the image. Below 0.55 = hedged results. */
+  imageConfidence?: number;
+  concerns: SkinConcern[];
   zones: { zone: string; observation: string }[];
-  routine: { step: string; product: string }[];
+  /**
+   * AM/PM split routine (Phase 5+).
+   * For backward compat, may also be a flat array for older reports.
+   */
+  routine:
+    | { am: { step: string; product: string }[]; pm: { step: string; product: string }[] }
+    | { step: string; product: string }[];
 }
 
 export interface FeatureBreakdown {
