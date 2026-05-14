@@ -28,7 +28,7 @@ export default function AuthPage() {
 const inputStyle: React.CSSProperties = {
   background: "rgba(251,231,242,0.92)",
   border: "1px solid rgba(131,24,67,0.18)",
-  color: "#F0E8D8",
+  color: "#831843",
   boxShadow: "inset 0 1px 0 rgba(131,24,67,0.10)",
 };
 
@@ -348,7 +348,7 @@ function AuthContent() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden"
+      className="hidden lg:flex flex-col justify-between p-12 text-ink relative overflow-hidden"
       style={{ background: "linear-gradient(145deg, #FDF2F8 0%, #FCE7F3 45%, #F9A8D4 100%)" }}
     >
       <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-2xl pointer-events-none" style={{ background: "rgba(201,149,107,0.12)" }} />
@@ -358,13 +358,13 @@ function AuthContent() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "rgba(201,149,107,0.2)", backdropFilter: "blur(8px)" }}>
             <Sparkles className="h-4 w-4" style={{ color: "#EC4899" }} />
           </div>
-          <span className="font-serif text-xl" style={{ color: "#F0E8D8" }}>Renovaara</span>
+          <span className="font-serif text-xl" style={{ color: "#831843" }}>Renovaara</span>
         </div>
       </motion.div>
       <div className="space-y-8">
         <motion.div variants={fadeUp}>
           <h2 className="text-3xl font-serif leading-snug mb-4">Discover the colors and styles made for you</h2>
-          <p className="text-white/80 leading-relaxed">One selfie is all it takes. Get your personalized color season, face shape analysis, and style guide in minutes.</p>
+          <p className="leading-relaxed" style={{ color: "rgba(131,24,67,0.8)" }}>One selfie is all it takes. Get your personalized color season, face shape analysis, and style guide in minutes.</p>
         </motion.div>
         <motion.ul variants={staggerContainer} className="space-y-4">
           {FEATURES.map((f) => (
@@ -377,7 +377,7 @@ function AuthContent() {
           ))}
         </motion.ul>
       </div>
-      <motion.div variants={fadeUp} className="text-sm" style={{ color: "rgba(131,24,67,0.62)" }}>
+      <motion.div variants={fadeUp} className="text-sm" style={{ color: "rgba(131,24,67,0.85)" }}>
         Trusted by 50,000+ style enthusiasts
       </motion.div>
     </motion.div>
@@ -401,7 +401,7 @@ function AuthContent() {
             <div className="flex h-8 w-8 items-center justify-center rounded-full text-obsidian" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
               <Sparkles className="h-4 w-4" />
             </div>
-            <span className="font-serif text-xl text-ink">Renovaara</span>
+            <span className="font-serif text-xl text-white">Renovaara</span>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -412,14 +412,14 @@ function AuthContent() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
                   <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
                 </div>
-                <h1 className="font-serif text-2xl text-ink">Check your inbox</h1>
-                <p className="text-ink-stone leading-relaxed">
-                  We sent a magic link to <span className="font-medium text-ink">{email}</span>. Click it to sign in.
+                <h1 className="font-serif text-2xl text-white">Check your inbox</h1>
+                <p className="text-white/85 leading-relaxed">
+                  We sent a magic link to <span className="font-medium text-white">{email}</span>. Click it to sign in.
                 </p>
-                <p className="text-xs text-ink-mist">
+                <p className="text-xs text-white/70">
                   {"Didn't receive it? Check spam or "}
                   <button
-                    className="underline hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="underline hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => setEmailSent(false)}
                     disabled={cooldown > 0}
                   >
@@ -433,12 +433,12 @@ function AuthContent() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
                   <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
                 </div>
-                <h1 className="font-serif text-2xl text-ink">Confirm your email</h1>
-                <p className="text-ink-stone leading-relaxed">
-                  We sent a confirmation link to <span className="font-medium text-ink">{email}</span>. Click it to activate your account, then come back and sign in.
+                <h1 className="font-serif text-2xl text-white">Confirm your email</h1>
+                <p className="text-white/85 leading-relaxed">
+                  We sent a confirmation link to <span className="font-medium text-white">{email}</span>. Click it to activate your account, then come back and sign in.
                 </p>
                 <button
-                  className="text-xs underline text-ink-mist hover:text-ink transition-colors"
+                  className="text-xs underline text-white/70 hover:text-white transition-colors"
                   onClick={() => { setSignupDone(false); setEmailMode("signin"); }}
                 >
                   Back to sign in
@@ -450,12 +450,12 @@ function AuthContent() {
               /* ── OTP VERIFY ──────────────────────────────────────────────── */
               <motion.div key="otp-verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                 <div>
-                  <button onClick={() => { setOtpSent(false); setOtp(""); setError(null); }} className="flex items-center gap-1 text-sm text-ink-mist hover:text-ink transition-colors mb-6">
+                  <button onClick={() => { setOtpSent(false); setOtp(""); setError(null); }} className="flex items-center gap-1 text-sm text-white/70 hover:text-white transition-colors mb-6">
                     <ChevronLeft className="h-4 w-4" /> Back
                   </button>
-                  <h1 className="font-serif text-3xl text-ink mb-2">Enter the code</h1>
-                  <p className="text-ink-stone text-sm">
-                    We sent a {OTP_LENGTH}-digit code to <span className="font-medium text-ink">{sentE164 || phone}</span>
+                  <h1 className="font-serif text-3xl text-white mb-2">Enter the code</h1>
+                  <p className="text-white/85 text-sm">
+                    We sent a {OTP_LENGTH}-digit code to <span className="font-medium text-white">{sentE164 || phone}</span>
                   </p>
                 </div>
 
@@ -481,10 +481,10 @@ function AuthContent() {
                   </Button>
                 </form>
 
-                <p className="text-xs text-center text-ink-mist">
+                <p className="text-xs text-center text-white/70">
                   {"Didn't get a code? "}
                   <button
-                    className="underline hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="underline hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => { setOtpSent(false); setOtp(""); }}
                     disabled={cooldown > 0}
                   >
@@ -498,8 +498,8 @@ function AuthContent() {
               /* ── MAIN FORM ────────────────────────────────────────────────── */
               <motion.div key="main-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                 <div>
-                  <h1 className="font-serif text-3xl text-ink mb-2">Sign in to Renovaara</h1>
-                  <p className="text-ink-stone text-sm">No password needed — choose how you want to sign in.</p>
+                  <h1 className="font-serif text-3xl text-white mb-2">Sign in to Renovaara</h1>
+                  <p className="text-white/85 text-sm">No password needed — choose how you want to sign in.</p>
                 </div>
 
                 {/* Tab switcher */}
@@ -511,9 +511,9 @@ function AuthContent() {
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all"
                       style={tab === t ? {
                         background: "linear-gradient(135deg, rgba(201,149,107,0.25), rgba(232,201,144,0.15))",
-                        color: "#EC4899",
+                        color: "#831843",
                         boxShadow: "0 1px 0 rgba(131,24,67,0.10)",
-                      } : { color: "rgba(131,24,67,0.5)" }}
+                      } : { color: "rgba(131,24,67,0.75)" }}
                     >
                       {t === "email" ? <Mail className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
                       {t === "email" ? "Email" : "Phone"}
@@ -529,7 +529,7 @@ function AuthContent() {
                         key={m}
                         onClick={() => { setEmailMode(m); setError(null); }}
                         className="flex-1 py-2 text-xs font-medium transition-all"
-                        style={emailMode === m ? { background: "rgba(201,149,107,0.15)", color: "#EC4899" } : { color: "rgba(131,24,67,0.45)" }}
+                        style={emailMode === m ? { background: "rgba(201,149,107,0.15)", color: "#ffffff" } : { color: "rgba(255,255,255,0.75)" }}
                       >
                         {m === "signin" ? "Sign in" : "Create account"}
                       </button>
@@ -543,7 +543,7 @@ function AuthContent() {
                     /* Email + password form */
                     <motion.form key={`email-${emailMode}`} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} onSubmit={handlePasswordSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <label htmlFor="email" className="text-sm font-medium text-ink">Email address</label>
+                        <label htmlFor="email" className="text-sm font-medium text-white">Email address</label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-mist" />
                           <input
@@ -553,13 +553,13 @@ function AuthContent() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
                             required
-                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 transition-all"
+                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 transition-all"
                             style={inputStyle}
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="password" className="text-sm font-medium text-ink">Password</label>
+                        <label htmlFor="password" className="text-sm font-medium text-white">Password</label>
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-mist" />
                           <input
@@ -570,7 +570,7 @@ function AuthContent() {
                             placeholder={emailMode === "signup" ? "Min 6 characters" : "Your password"}
                             required
                             minLength={6}
-                            className="w-full rounded-xl pl-10 pr-10 py-3 text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 transition-all"
+                            className="w-full rounded-xl pl-10 pr-10 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 transition-all"
                             style={inputStyle}
                           />
                           <button
@@ -595,13 +595,13 @@ function AuthContent() {
                         )}
                       </Button>
                       {/* Magic link fallback */}
-                      <p className="text-xs text-center text-ink-mist">
+                      <p className="text-xs text-center text-white/70">
                         Prefer a link?{" "}
                         <button
                           type="button"
                           onClick={handleMagicLink}
                           disabled={!email || loading || cooldown > 0}
-                          className="underline hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="underline hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {cooldown > 0 ? `Send magic link (${cooldown}s)` : "Send me a magic link"}
                         </button>
@@ -613,7 +613,7 @@ function AuthContent() {
                     /* Phone form */
                     <motion.form key="phone-form" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }} onSubmit={handlePhoneSend} className="space-y-4">
                       <div className="space-y-2">
-                        <label htmlFor="phone" className="text-sm font-medium text-ink">Phone number</label>
+                        <label htmlFor="phone" className="text-sm font-medium text-white">Phone number</label>
                         <div className="flex gap-2">
                           <select
                             aria-label="Country code"
@@ -640,12 +640,12 @@ function AuthContent() {
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="98765 43210"
                             required
-                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-white/25 focus:outline-none focus:ring-2 transition-all"
+                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 transition-all"
                             style={inputStyle}
                           />
                           </div>
                         </div>
-                        <p className="text-xs text-ink-mist">Detected country: {phoneCountryLabel}. You can change it from the dropdown.</p>
+                        <p className="text-xs text-white/70">Detected country: {phoneCountryLabel}. You can change it from the dropdown.</p>
                       </div>
                       {error && <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>}
                       <Button type="submit" variant="accent" size="lg" disabled={loading || !phone || cooldown > 0} className="w-full group">
@@ -662,13 +662,13 @@ function AuthContent() {
                 </AnimatePresence>
 
                 <div className="text-center space-y-3">
-                  <p className="text-xs text-ink-mist">
+                  <p className="text-xs text-white/70">
                     By continuing, you agree to our{" "}
-                    <Link href="#" className="underline hover:text-ink transition-colors">Terms</Link>
+                    <Link href="#" className="underline hover:text-white transition-colors">Terms</Link>
                     {" "}and{" "}
-                    <Link href="#" className="underline hover:text-ink transition-colors">Privacy Policy</Link>.
+                    <Link href="#" className="underline hover:text-white transition-colors">Privacy Policy</Link>.
                   </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-ink-mist">
+                  <div className="flex items-center justify-center gap-2 text-xs text-white/70">
                     <Shield className="h-3.5 w-3.5" style={{ color: "#7B6E9E" }} />
                     No password. No spam. Cancel anytime.
                   </div>
