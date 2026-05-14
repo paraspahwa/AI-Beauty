@@ -19,6 +19,9 @@ const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
   { prefix: "/api/analyze",             max: 8  },
   { prefix: "/api/chat",                max: 30 },
   { prefix: "/api/reports",             max: 15 },
+  { prefix: "/api/payments",            max: 10 },
+  { prefix: "/api/subscriptions",       max: 10 },
+  { prefix: "/api/capsule",             max: 15 },
 ];
 const RATE_LIMIT_WINDOW_MS = 60_000;
 

@@ -91,9 +91,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               "applicationCategory": "LifestyleApplication",
               "operatingSystem": "Web",
               "url": BASE_URL,
-              "description": "AI-powered personal stylist: face shape analysis, colour season, virtual try-on, makeup studio, hairstyle guide, spectacles guide, and skin analysis — all from one selfie.",
+              "description": "AI-powered personal stylist: face shape analysis, colour season, virtual try-on, makeup studio, hairstyle guide, spectacles guide, and skin analysis \u2014 all from one selfie.",
               "offers": [
-                { "@type": "Offer", "price": "0", "priceCurrency": "INR", "description": "Free preview — face shape analysis" },
+                { "@type": "Offer", "price": "0", "priceCurrency": "INR", "description": "Free preview \u2014 face shape analysis" },
                 { "@type": "Offer", "price": "399", "priceCurrency": "INR", "description": "Full AI beauty report" },
               ],
               "aggregateRating": {
