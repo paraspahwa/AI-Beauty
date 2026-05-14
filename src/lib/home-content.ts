@@ -7,6 +7,8 @@ export interface SamplePairConfig {
   title: string;
   tag?: string;
   baseName: string;
+  beforeFile?: string;
+  afterFile?: string;
   ext?: "jpg" | "jpeg" | "png" | "webp";
   beforeAlt?: string;
   afterAlt?: string;
@@ -44,8 +46,12 @@ interface HomeContentConfig {
 
 export const HOME_CONTENT = homeContent as HomeContentConfig;
 
-function pairPath(baseName: string, _side: "before" | "after", ext = "jpg"): string {
-  return `/samples/${baseName}.${ext}`;
+function pairPath(baseName: string, side: "before" | "after", ext = "jpg"): string {
+  return `/samples/${baseName}-${side}.${ext}`;
+}
+
+function normalizeSamplePath(fileName: string): string {
+  return fileName.startsWith("/") ? fileName : `/samples/${fileName}`;
 }
 
 const DEFAULT_BEFORE_FALLBACK = "/samples/sample-N-before.jpg";
@@ -56,8 +62,12 @@ export function toBeforeAfterItems(): BeforeAfterItem[] {
     id: pair.id,
     title: pair.title,
     tag: pair.tag,
-    beforeSrc: pairPath(pair.baseName, "before", pair.ext ?? "jpg"),
-    afterSrc: pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
+    beforeSrc: pair.beforeFile
+      ? normalizeSamplePath(pair.beforeFile)
+      : pairPath(pair.baseName, "before", pair.ext ?? "jpg"),
+    afterSrc: pair.afterFile
+      ? normalizeSamplePath(pair.afterFile)
+      : pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
     beforeFallbackSrc: DEFAULT_BEFORE_FALLBACK,
     afterFallbackSrc: DEFAULT_AFTER_FALLBACK,
     beforeAlt: pair.beforeAlt ?? "Before AI-guided beauty recommendations",
