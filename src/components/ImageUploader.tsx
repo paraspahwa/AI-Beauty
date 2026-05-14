@@ -3,11 +3,11 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone, type FileRejection } from "react-dropzone";
-import { Upload, ImageIcon, Loader2, CheckCircle2, XCircle, Sparkles } from "lucide-react";
+import { Upload, ImageIcon, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
-import { fadeUp, staggerContainer, cascadeContainer, springPop } from "@/lib/animations";
+import { fadeUp, staggerContainer } from "@/lib/animations";
 import { SkinQuestionnaireModal, type SkinContext } from "@/components/SkinQuestionnaireModal";
 
 export interface ImageUploaderProps {
@@ -45,22 +45,6 @@ type AnalyzeStreamEvent =
   | { type: "completed"; reportId: string; visualsPending: boolean }
   | { type: "failed"; message: string };
 
-const SAMPLE_PHOTOS = [
-  { src: "/samples/sample-1.jpg", label: "Sample 1", hint: "Woman, warm skin tone" },
-  { src: "/samples/sample-2.jpg", label: "Sample 2", hint: "Woman, cool undertone" },
-  { src: "/samples/sample-3.jpg", label: "Sample 3", hint: "Man, olive skin" },
-  { src: "/samples/sample-4.jpg", label: "Sample 4", hint: "Man, fair skin" },
-];
-
-/**
- * Convert a public-path URL to a File object (for sample photo injection).
- */
-async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type || "image/jpeg" });
-}
-
 /**
  * Drag-and-drop selfie uploader with enhanced animations and premium design.
  * Posts the file as multipart/form-data to /api/analyze and reports progress.
@@ -68,7 +52,6 @@ async function urlToFile(url: string, filename: string): Promise<File> {
 export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
   const [file, setFile] = React.useState<File | null>(null);
   const [preview, setPreview] = React.useState<string | null>(null);
-  const [loadingSample, setLoadingSample] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
   const [remainingSeconds, setRemainingSeconds] = React.useState(0);
   const [currentStage, setCurrentStage] = React.useState<string | null>(null);
@@ -80,21 +63,6 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
   const analysisStartedAtRef = React.useRef<number>(0);
   const etaMsRef = React.useRef<number>(ESTIMATED_ANALYSIS_MS);
   const stageAvgMsRef = React.useRef<Record<string, number>>({});
-
-  async function handleSampleClick(sample: typeof SAMPLE_PHOTOS[0]) {
-    setLoadingSample(sample.src);
-    setError(null);
-    try {
-      const f = await urlToFile(sample.src, sample.label.replace(" ", "-").toLowerCase() + ".jpg");
-      setFile(f);
-      setPreview(URL.createObjectURL(f));
-      if (!skinContext) setShowQuestionnaire(true);
-    } catch {
-      setError("Could not load sample photo. Please upload your own.");
-    } finally {
-      setLoadingSample(null);
-    }
-  }
 
   const currentStep = React.useMemo(() => {
     if (currentStage === "rekognition" || currentStage === "face_shape") return 0;
@@ -514,70 +482,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
         </div>
       </motion.div>
 
-      {/* ── Sample Photos ── */}
-      {!file && (
-        <motion.div
-          variants={cascadeContainer}
-          initial="hidden"
-          animate="visible"
-          className="mt-8"
-        >
-          <motion.p
-            variants={fadeUp}
-            className="text-center text-xs font-semibold uppercase tracking-[0.2em] mb-4 section-label justify-center"
-            style={{ color: "#EC4899" }}
-          >
-            <Sparkles className="inline h-3 w-3 mr-1.5" />
-            Or try a sample photo
-          </motion.p>
-          <motion.div
-            variants={fadeUp}
-            className="grid grid-cols-4 gap-3"
-          >
-            {SAMPLE_PHOTOS.map((sample) => (
-              <motion.button
-                key={sample.src}
-                variants={springPop}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleSampleClick(sample)}
-                disabled={!!loadingSample}
-                title={sample.hint}
-                className="relative rounded-2xl overflow-hidden aspect-square group cursor-pointer"
-                style={{
-                  border: "1.5px solid rgba(201,149,107,0.25)",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={sample.src}
-                  alt={sample.hint}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                {/* Overlay on hover */}
-                <div
-                  className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  style={{ background: "linear-gradient(to top, rgba(10,10,15,0.8) 40%, transparent)" }}
-                >
-                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#F9A8D4" }}>
-                    Use this
-                  </span>
-                </div>
-                {/* Loading spinner */}
-                {loadingSample === sample.src && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(10,10,15,0.7)" }}>
-                    <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#EC4899" }} />
-                  </div>
-                )}
-              </motion.button>
-            ))}
-          </motion.div>
-          <p className="text-center text-xs mt-3" style={{ color: "rgba(255,255,255,0.3)" }}>
-            Sample images are for demo only — your results will reflect your own face.
-          </p>
-        </motion.div>
-      )}
+
 
       <AnimatePresence>
         {error && (

@@ -46,8 +46,8 @@
         "title": "Face shape + hair direction",
         "tag": "Profile refinement",
         "baseName": "sample-1",
-        "beforeFile": "sample-N-before.jpg",
-        "afterFile": "sample-N-after.jpg"
+        "beforeFile": "sample-1-before.jpg",
+        "afterFile": "sample-1-after.jpg"
       },
       {
         "id": "pair-2",
