@@ -312,6 +312,44 @@
     background-clip: text;
     color: transparent;
   }
+
+  .marquee-mask {
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .animate-marquee-left {
+    animation: marquee-left var(--marquee-duration, 32s) linear infinite;
+  }
+
+  .animate-marquee-right {
+    animation: marquee-right var(--marquee-duration, 36s) linear infinite;
+  }
+
+  .cta-glow {
+    animation: cta-glow-pulse 2.7s ease-in-out infinite;
+    box-shadow: 0 10px 22px rgba(139, 92, 246, 0.28);
+  }
+
+  .cta-shimmer {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .cta-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%);
+    transform: translateX(-120%) skewX(-18deg);
+    pointer-events: none;
+  }
+
+  .cta-shimmer:hover::after {
+    animation: cta-shimmer-sweep 0.8s ease-out forwards;
+  }
 }
 
 @keyframes chrome-scan {
@@ -412,5 +450,63 @@
   }
   80% {
     transform: translate(-1%, -1%);
+  }
+}
+
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes cta-shimmer-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(140%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cta-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 10px 22px rgba(139, 92, 246, 0.24);
+  }
+  50% {
+    box-shadow: 0 14px 30px rgba(236, 72, 153, 0.28);
+  }
+}
+
+@media (max-width: 640px) {
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation-duration: calc(var(--marquee-duration, 32s) + 12s);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-left,
+  .animate-marquee-right,
+  .cta-glow,
+  .cta-shimmer::after {
+    animation: none !important;
   }
 }

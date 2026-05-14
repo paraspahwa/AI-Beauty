@@ -14,6 +14,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
+import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -74,6 +75,7 @@ export async function POST(
     }
 
     const form = await req.formData();
+    const sourceAssetId = normalizeSourceAssetId(form.get("sourceAssetId"));
 
     // Required: garment image
     const clothFile = form.get("clothImage") as File | null;
@@ -90,6 +92,8 @@ export async function POST(
     // Optional: full-body person photo (overrides stored selfie)
     const personFile = form.get("personImage") as File | null;
     let selfieBuf: Buffer;
+    let sourceImagePath = row.image_path as string;
+    let sourceAssetIdResolved: string | null = null;
 
     if (personFile) {
       if (!ALLOWED_MIME.has(personFile.type)) {
@@ -99,11 +103,28 @@ export async function POST(
         return NextResponse.json({ error: "Person image too large (max 10 MB)" }, { status: 413 });
       }
       selfieBuf = Buffer.from(await personFile.arrayBuffer());
+      // Preserve explicit user upload behavior for clothing draping.
+      sourceImagePath = row.image_path as string;
+      sourceAssetIdResolved = null;
     } else {
+      let sourceResolved: { sourceImagePath: string; sourceAssetId: string | null };
+      try {
+        sourceResolved = await resolveSourceImagePath({
+          admin,
+          userId: user.id,
+          defaultImagePath: row.image_path as string,
+          sourceAssetId,
+        });
+      } catch {
+        return NextResponse.json({ error: "Invalid source image selection" }, { status: 400 });
+      }
+      sourceImagePath = sourceResolved.sourceImagePath;
+      sourceAssetIdResolved = sourceResolved.sourceAssetId;
+
       // ── Load the stored selfie from private storage ──────────────────────
       const { data: selfieData, error: selfieErr } = await admin.storage
         .from(env.supabase.bucket)
-        .download(row.image_path as string);
+        .download(sourceImagePath);
       if (selfieErr || !selfieData) {
         return NextResponse.json({ error: "Selfie unavailable" }, { status: 422 });
       }
@@ -149,7 +170,7 @@ export async function POST(
 
     if (upErr) {
       // Fall back to returning the FAL URL directly (short-lived but usable)
-      return NextResponse.json({ url: resultUrl, stored: false });
+      return NextResponse.json({ url: resultUrl, stored: false, asset: null });
     }
 
     // ── Persist latest tryon path in visual_assets for history ─────────────
@@ -166,7 +187,30 @@ export async function POST(
       .from(env.supabase.bucket)
       .createSignedUrl(storagePath, 3600);
 
-    return NextResponse.json({ url: signed?.signedUrl ?? resultUrl, stored: true });
+    let asset: { id: string; createdAt: string } | null = null;
+    try {
+      asset = await insertGeneratedAsset({
+        admin,
+        userId: user.id,
+        reportId: id,
+        sourceAssetId: sourceAssetIdResolved,
+        sourceImagePath,
+        resultImagePath: storagePath,
+        tool: "virtual_tryon",
+        variant: null,
+        meta: {
+          usedPersonUpload: !!personFile,
+        },
+      });
+    } catch (insertErr) {
+      console.warn("[virtual-tryon] failed to persist generated_assets row:", (insertErr as Error).message);
+    }
+
+    return NextResponse.json({
+      url: signed?.signedUrl ?? resultUrl,
+      stored: true,
+      asset,
+    });
   } catch (err) {
     console.error("[virtual-tryon route]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

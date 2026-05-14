@@ -9,6 +9,9 @@ import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const dynamic = "force-dynamic";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const REPORT_TABS = new Set(["face", "skin", "glasses", "hair", "studio", "shop"]);
+
 export async function generateMetadata({
   params,
 }: {
@@ -154,8 +157,20 @@ async function resolveVisualAssets(
   return out;
 }
 
-export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string | string[]; sourceAssetId?: string | string[] }>;
+}) {
   const { id } = await params;
+  const query = await searchParams;
+  const tabParam = Array.isArray(query.tab) ? query.tab[0] : query.tab;
+  const sourceParam = Array.isArray(query.sourceAssetId) ? query.sourceAssetId[0] : query.sourceAssetId;
+  const initialTab = tabParam && REPORT_TABS.has(tabParam) ? tabParam : "face";
+  const initialSourceAssetId = sourceParam && UUID_RE.test(sourceParam) ? sourceParam : null;
+
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/auth?redirect=/report/${id}`);
@@ -227,5 +242,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     createdAt:    row.created_at,
   };
 
-  return <ReportLayout report={report} />;
+  return (
+    <ReportLayout
+      report={report}
+      initialTab={initialTab}
+      initialStudioSourceAssetId={initialSourceAssetId}
+    />
+  );
 }

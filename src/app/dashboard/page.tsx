@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag, MessageCircle } from "lucide-react";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag, MessageCircle, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Feature quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Link
           href="/dashboard/progress"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
@@ -90,6 +90,19 @@ export default async function DashboardPage() {
           <div>
             <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Wardrobe Capsule</p>
             <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>Your 10-piece seasonal wardrobe edit</p>
+          </div>
+        </Link>
+        <Link
+          href="/dashboard/vault"
+          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+          style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
+            <Images className="h-5 w-5" style={{ color: "#EC4899" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Image Vault</p>
+            <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>All generated looks with date and time</p>
           </div>
         </Link>
       </div>

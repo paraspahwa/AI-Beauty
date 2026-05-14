@@ -15,6 +15,36 @@ export interface ImageUploaderProps {
   className?: string;
 }
 
+const ESTIMATED_ANALYSIS_MS = 45000;
+
+const STAGE_PROGRESS: Record<string, number> = {
+  rekognition: 8,
+  face_shape: 22,
+  color_analysis: 40,
+  skin_vision: 56,
+  features: 70,
+  skin_routine: 74,
+  glasses: 84,
+  hairstyle: 88,
+  summary: 97,
+};
+
+interface AnalyzeEtaResponse {
+  totalAvgMs?: number;
+  p50Ms?: number;
+  p75Ms?: number;
+  p90Ms?: number;
+  stageAvgMs?: Record<string, number>;
+}
+
+type AnalyzeStreamEvent =
+  | { type: "accepted"; reportId: string }
+  | { type: "cached"; reportId: string }
+  | { type: "stage_started"; stage: string; variantId?: string }
+  | { type: "stage_completed"; stage: string; durationMs?: number; degraded?: boolean; variantId?: string }
+  | { type: "completed"; reportId: string; visualsPending: boolean }
+  | { type: "failed"; message: string };
+
 const SAMPLE_PHOTOS = [
   { src: "/samples/sample-1.jpg", label: "Sample 1", hint: "Woman, warm skin tone" },
   { src: "/samples/sample-2.jpg", label: "Sample 2", hint: "Woman, cool undertone" },
@@ -40,10 +70,16 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
   const [preview, setPreview] = React.useState<string | null>(null);
   const [loadingSample, setLoadingSample] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
+  const [remainingSeconds, setRemainingSeconds] = React.useState(0);
+  const [currentStage, setCurrentStage] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [skinContext, setSkinContext] = React.useState<SkinContext | null>(null);
   const [showQuestionnaire, setShowQuestionnaire] = React.useState(false);
+  const countdownTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const analysisStartedAtRef = React.useRef<number>(0);
+  const etaMsRef = React.useRef<number>(ESTIMATED_ANALYSIS_MS);
+  const stageAvgMsRef = React.useRef<Record<string, number>>({});
 
   async function handleSampleClick(sample: typeof SAMPLE_PHOTOS[0]) {
     setLoadingSample(sample.src);
@@ -60,8 +96,14 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
     }
   }
 
-  // Derived step for AnalysisLoading (5 steps, equally spaced across 0-100%)
-  const currentStep = Math.min(4, Math.floor(progress / 20));
+  const currentStep = React.useMemo(() => {
+    if (currentStage === "rekognition" || currentStage === "face_shape") return 0;
+    if (currentStage === "color_analysis") return 1;
+    if (currentStage === "skin_vision") return 2;
+    if (currentStage === "features" || currentStage === "skin_routine" || currentStage === "glasses" || currentStage === "hairstyle") return 3;
+    if (currentStage === "summary") return 4;
+    return Math.min(4, Math.floor(progress / 20));
+  }, [currentStage, progress]);
 
   const onDrop = React.useCallback((accepted: File[]) => {
     const f = accepted[0];
@@ -100,11 +142,58 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
 
   React.useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
+  React.useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, []);
+
   async function handleSubmit() {
     if (!file) return;
     setSubmitting(true);
     setError(null);
-    setProgress(10);
+    setCurrentStage(null);
+
+    let initialEtaMs = ESTIMATED_ANALYSIS_MS;
+    let stageAvgMs: Record<string, number> = {};
+    try {
+      const etaRes = await fetch("/api/analyze", { method: "GET" });
+      if (etaRes.ok) {
+        const etaJson = (await etaRes.json()) as AnalyzeEtaResponse;
+        // Use p75 (conservative) so the countdown rarely runs out early.
+        const chosen = etaJson.p75Ms ?? etaJson.totalAvgMs;
+        if (typeof chosen === "number" && chosen > 0) {
+          initialEtaMs = chosen;
+        }
+        if (etaJson.stageAvgMs && typeof etaJson.stageAvgMs === "object") {
+          stageAvgMs = etaJson.stageAvgMs;
+        }
+      }
+    } catch {
+      // Fallback silently to default ETA.
+    }
+
+    analysisStartedAtRef.current = Date.now();
+    etaMsRef.current = initialEtaMs;
+    stageAvgMsRef.current = stageAvgMs;
+    setProgress(0);
+    setRemainingSeconds(Math.ceil(initialEtaMs / 1000));
+
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+    }
+    countdownTimerRef.current = setInterval(() => {
+      const elapsedMs = Date.now() - analysisStartedAtRef.current;
+      const nextRemainingMs = Math.max(etaMsRef.current - elapsedMs, 0);
+      const nextRemainingSeconds = Math.ceil(nextRemainingMs / 1000);
+      setRemainingSeconds(nextRemainingSeconds);
+
+      // Keep progress moving smoothly while waiting for server response.
+      const nextProgress = Math.min((elapsedMs / Math.max(etaMsRef.current, 1)) * 100, 99);
+      setProgress(nextProgress);
+    }, 250);
 
     try {
       const form = new FormData();
@@ -113,26 +202,98 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
         form.append("skinContext", JSON.stringify(skinContext));
       }
 
-      // Fake progress while the text pipeline runs (~30-50 s)
-      const ticker = setInterval(() => {
-        setProgress((p) => (p < 85 ? p + 3 : p));
-      }, 600);
+      const res = await fetch("/api/analyze?stream=1", { method: "POST", body: form });
 
-      const res = await fetch("/api/analyze", { method: "POST", body: form });
-      clearInterval(ticker);
-
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error ?? `Upload failed (${res.status})`);
       }
-      const json = (await res.json()) as { reportId?: string; visualsPending?: boolean };
-      if (!json.reportId) throw new Error("Analysis started but no report ID was returned.");
 
-      setProgress(100);
-      onUploaded(json.reportId);
+      const decoder = new TextDecoder();
+      const reader = res.body.getReader();
+      let bufferText = "";
+      let finalReportId: string | null = null;
+
+      const applyRemainingFromEta = () => {
+        const elapsedMs = Date.now() - analysisStartedAtRef.current;
+        const nextRemainingMs = Math.max(etaMsRef.current - elapsedMs, 0);
+        setRemainingSeconds(Math.ceil(nextRemainingMs / 1000));
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bufferText += decoder.decode(value, { stream: true });
+        const lines = bufferText.split("\n");
+        bufferText = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          let event: AnalyzeStreamEvent;
+          try {
+            event = JSON.parse(trimmed) as AnalyzeStreamEvent;
+          } catch {
+            continue;
+          }
+
+          if (event.type === "failed") {
+            throw new Error(event.message || "Analysis failed. Please try again.");
+          }
+
+          if (event.type === "stage_started") {
+            setCurrentStage(event.stage);
+            const stageProgress = STAGE_PROGRESS[event.stage];
+            if (typeof stageProgress === "number") {
+              setProgress((prev) => Math.max(prev, stageProgress));
+            }
+            continue;
+          }
+
+          if (event.type === "stage_completed") {
+            const avgMs = stageAvgMsRef.current[event.stage];
+            if (typeof avgMs === "number" && typeof event.durationMs === "number") {
+              etaMsRef.current = Math.max(etaMsRef.current + (event.durationMs - avgMs), 1000);
+            }
+            const stageProgress = STAGE_PROGRESS[event.stage];
+            if (typeof stageProgress === "number") {
+              setProgress((prev) => Math.max(prev, stageProgress));
+            }
+            applyRemainingFromEta();
+            continue;
+          }
+
+          if (event.type === "cached") {
+            finalReportId = event.reportId;
+            setProgress(100);
+            setRemainingSeconds(0);
+            break;
+          }
+
+          if (event.type === "completed") {
+            finalReportId = event.reportId;
+            setProgress(100);
+            setRemainingSeconds(0);
+            break;
+          }
+        }
+
+        if (finalReportId) break;
+      }
+
+      if (!finalReportId) {
+        throw new Error("Analysis finished but no report ID was returned.");
+      }
+
+      onUploaded(finalReportId);
     } catch (err) {
       setError((err as Error).message);
     } finally {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
       setSubmitting(false);
     }
   }
@@ -147,7 +308,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
       {/* Full-screen analysis overlay when submitting */}
       <AnimatePresence>
         {submitting && (
-          <AnalysisLoading currentStep={currentStep} progress={progress} />
+          <AnalysisLoading currentStep={currentStep} progress={progress} remainingSeconds={remainingSeconds} />
         )}
       </AnimatePresence>
 

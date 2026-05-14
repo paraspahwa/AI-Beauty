@@ -3,6 +3,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import Replicate from "replicate";
 import sharp from "sharp";
+import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -77,9 +78,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await req.json() as { colorName?: string; colorHex?: string; styleName?: string };
+    const body = await req.json() as {
+      colorName?: string;
+      colorHex?: string;
+      styleName?: string;
+      sourceAssetId?: string;
+    };
     const colorName = (body.colorName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E]/g, "");
     const styleName = (body.styleName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E_]/g, "");
+    const sourceAssetId = normalizeSourceAssetId(body.sourceAssetId);
     if (!colorName) {
       return NextResponse.json({ error: "colorName is required" }, { status: 400 });
     }
@@ -98,6 +105,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (rowErr || !row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     if (row.status !== "ready") return NextResponse.json({ error: "Report not ready" }, { status: 409 });
+
+    let sourceResolved: { sourceImagePath: string; sourceAssetId: string | null };
+    try {
+      sourceResolved = await resolveSourceImagePath({
+        admin,
+        userId: user.id,
+        defaultImagePath: row.image_path as string,
+        sourceAssetId,
+      });
+    } catch {
+      return NextResponse.json({ error: "Invalid source image selection" }, { status: 400 });
+    }
 
     // ── Entitlement check ─────────────────────────────────────────────────────
     const { data: tierData } = await admin.rpc("get_user_plan_tier", { p_user: user.id });
@@ -126,13 +145,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Download selfie
     const { data: imgData, error: imgErr } = await admin.storage
       .from(env.supabase.bucket)
-      .download(row.image_path as string);
+      .download(sourceResolved.sourceImagePath);
     if (imgErr || !imgData) return NextResponse.json({ error: "Image unavailable" }, { status: 422 });
 
     const rawBuf = Buffer.from(await imgData.arrayBuffer());
 
     // Phase 2.4: Build storage path early so we can cache-check before calling the model
-    const slug = `${styleName ? styleName + "-" : ""}${colorName}`
+    const sourceKey = sourceResolved.sourceAssetId ? sourceResolved.sourceAssetId.slice(0, 8) : "orig";
+    const slug = `${styleName ? styleName + "-" : ""}${colorName}-${sourceKey}`
       .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-_]/g, "").slice(0, 80);
     const storagePath = `users/${user.id}/reports/${id}/hair-color-${slug}.jpg`;
 
@@ -145,7 +165,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .from(env.supabase.bucket)
         .createSignedUrl(storagePath, 3600);
       if (cached?.signedUrl) {
-        return NextResponse.json({ signedUrl: cached.signedUrl, cached: true });
+        const { data: existingAsset } = await admin
+          .from("generated_assets")
+          .select("id, created_at")
+          .eq("user_id", user.id)
+          .eq("result_image_path", storagePath)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        return NextResponse.json({
+          signedUrl: cached.signedUrl,
+          cached: true,
+          asset: existingAsset
+            ? { id: existingAsset.id as string, createdAt: existingAsset.created_at as string }
+            : null,
+        });
       }
     }
 
@@ -235,7 +270,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .from(env.supabase.bucket)
       .createSignedUrl(storagePath, 3600);
 
-    return NextResponse.json({ signedUrl: signed?.signedUrl ?? null });
+    let asset: { id: string; createdAt: string } | null = null;
+    try {
+      asset = await insertGeneratedAsset({
+        admin,
+        userId: user.id,
+        reportId: id,
+        sourceAssetId: sourceResolved.sourceAssetId,
+        sourceImagePath: sourceResolved.sourceImagePath,
+        resultImagePath: storagePath,
+        tool: "hair",
+        variant: slug,
+        meta: {
+          colorName,
+          styleName: styleName || "No change",
+        },
+      });
+    } catch (insertErr) {
+      console.warn("[hair-color] failed to persist generated_assets row:", (insertErr as Error).message);
+    }
+
+    return NextResponse.json({ signedUrl: signed?.signedUrl ?? null, asset });
   } catch (err) {
     console.error("[hair-color] unexpected error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

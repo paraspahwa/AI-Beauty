@@ -37,12 +37,32 @@ type StudioMode = "clothing" | "makeup" | "hair";
 type GenStatus  = "idle" | "loading" | "done" | "error";
 type PhotoMode  = "selfie" | "full";
 
+type GeneratedAssetMeta = {
+  id: string;
+  createdAt: string;
+};
+
+type HistoryItem = {
+  url: string;
+  assetId?: string | null;
+  createdAt?: string | null;
+};
+
+type VaultItem = {
+  id: string;
+  reportId: string;
+  tool: "virtual_tryon" | "makeup" | "hair";
+  imageUrl: string | null;
+  createdAt: string;
+};
+
 interface Props {
   reportId: string;
   photoUrl: string;
   isPaid: boolean;
   studioEntitlement?: StudioEntitlement;
   colorAnalysis?: ColorAnalysisResult;
+  initialSourceAssetId?: string | null;
 }
 
 // ── Upload zone ───────────────────────────────────────────────────────────────
@@ -216,18 +236,18 @@ type HairColorValue = (typeof HAIR_COLORS)[number]["value"];
 
 // ── History strip ─────────────────────────────────────────────────────────────
 function HistoryStrip({ history, currentUrl, onSelect, onClear }: {
-  history: string[]; currentUrl: string | null;
-  onSelect: (url: string) => void; onClear: () => void;
+  history: HistoryItem[]; currentUrl: string | null;
+  onSelect: (item: HistoryItem) => void; onClear: () => void;
 }) {
   if (history.length === 0) return null;
   return (
     <div className="flex items-center gap-2 overflow-x-auto px-5 py-3" style={{ borderTop: "1px solid #F0E8DF" }}>
       <p className="text-[10px] font-semibold uppercase tracking-wider shrink-0" style={{ color: "#B8A898" }}>History</p>
-      {history.map((url, i) => (
-        <button key={i} onClick={() => onSelect(url)}
+      {history.map((item, i) => (
+        <button key={i} onClick={() => onSelect(item)}
           className="shrink-0 rounded-xl overflow-hidden transition-all hover:opacity-80"
-          style={{ width: 52, height: 52, border: url === currentUrl ? "2px solid #C8A96E" : "2px solid #E8DDD0" }}>
-          <Image src={url} alt={`Result ${i + 1}`} width={52} height={52} className="object-cover w-full h-full" unoptimized />
+          style={{ width: 52, height: 52, border: item.url === currentUrl ? "2px solid #C8A96E" : "2px solid #E8DDD0" }}>
+          <Image src={item.url} alt={`Result ${i + 1}`} width={52} height={52} className="object-cover w-full h-full" unoptimized />
         </button>
       ))}
       <button onClick={onClear} className="shrink-0 text-[10px] transition-opacity hover:opacity-70 ml-1"
@@ -252,7 +272,14 @@ function ModeTab({ label, active, onClick }: { label: string; active: boolean; o
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main component
 // ═══════════════════════════════════════════════════════════════════════════════
-export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, colorAnalysis }: Props) {
+export function AIBeautyStudio({
+  reportId,
+  photoUrl,
+  isPaid,
+  studioEntitlement,
+  colorAnalysis,
+  initialSourceAssetId = null,
+}: Props) {
   const [mode, setMode] = React.useState<StudioMode>("clothing");
 
   // ── Clothing state ──
@@ -280,7 +307,11 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
   // ── Shared result state (per mode) ──
   const [results, setResults]   = React.useState<Record<StudioMode, string | null>>({ clothing: null, makeup: null, hair: null });
   const [statuses, setStatuses] = React.useState<Record<StudioMode, GenStatus>>({ clothing: "idle", makeup: "idle", hair: "idle" });
-  const [history, setHistory]   = React.useState<string[]>([]);
+  const [history, setHistory]   = React.useState<HistoryItem[]>([]);
+  const [vault, setVault]       = React.useState<VaultItem[]>([]);
+  const [vaultLoading, setVaultLoading] = React.useState(false);
+  const [sourceAssetId, setSourceAssetId] = React.useState<string | null>(initialSourceAssetId);
+  const [sourcePreviewUrl, setSourcePreviewUrl] = React.useState<string | null>(null);
 
   const resultUrl = results[mode];
   const status    = statuses[mode];
@@ -297,6 +328,38 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
     if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview);
     if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
   }, [clothPreview, fullBodyPreview]);
+
+  const loadVault = React.useCallback(async () => {
+    setVaultLoading(true);
+    try {
+      const res = await fetch(`/api/vault/images?limit=36&reportId=${reportId}`);
+      if (!res.ok) return;
+      const json = await res.json() as { items?: VaultItem[] };
+      const items = (json.items ?? []).filter((it) => !!it.imageUrl);
+      setVault(items);
+
+      if (sourceAssetId) {
+        const selected = items.find((item) => item.id === sourceAssetId);
+        if (selected?.imageUrl) {
+          setSourcePreviewUrl(selected.imageUrl);
+        }
+      }
+
+      if (!sourceAssetId && items.length > 0 && items[0].imageUrl) {
+        setSourceAssetId(items[0].id);
+        setSourcePreviewUrl(items[0].imageUrl);
+      }
+    } catch {
+      // Silent fail keeps studio usable even if vault endpoint is unavailable.
+    } finally {
+      setVaultLoading(false);
+    }
+  }, [reportId, sourceAssetId]);
+
+  React.useEffect(() => {
+    if (!isPaid) return;
+    void loadVault();
+  }, [isPaid, loadVault]);
 
   // ── Clothing handlers ──
   function handleClothFile(f: File) {
@@ -327,12 +390,18 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
       const form = new FormData();
       form.append("clothImage", clothFile);
       if (photoMode === "full" && fullBodyFile) form.append("personImage", fullBodyFile);
+      if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
       const res  = await fetch(`/api/reports/${reportId}/virtual-tryon`, { method: "POST", body: form });
-      const json = await res.json() as { url?: string; error?: string };
+      const json = await res.json() as { url?: string; error?: string; asset?: GeneratedAssetMeta | null };
       if (!res.ok || !json.url) throw new Error(json.error ?? "Generation failed");
       setModeResult("clothing", json.url);
       setModeStatus("clothing", "done");
-      setHistory((h) => [json.url!, ...h].slice(0, 10));
+      setHistory((h) => [{ url: json.url!, assetId: json.asset?.id ?? null, createdAt: json.asset?.createdAt ?? null }, ...h].slice(0, 10));
+      if (json.asset?.id) {
+        setSourceAssetId(json.asset.id);
+        setSourcePreviewUrl(json.url);
+      }
+      void loadVault();
     } catch { setModeStatus("clothing", "error"); }
   }
 
@@ -350,13 +419,18 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
     try {
       const res  = await fetch(`/api/reports/${reportId}/makeup`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(controls),
+        body: JSON.stringify({ ...controls, sourceAssetId }),
       });
-      const json = await res.json() as { url?: string; error?: string };
+      const json = await res.json() as { url?: string; error?: string; asset?: GeneratedAssetMeta | null };
       if (!res.ok || !json.url) throw new Error(json.error ?? "Generation failed");
       setModeResult("makeup", json.url);
       setModeStatus("makeup", "done");
-      setHistory((h) => [json.url!, ...h].slice(0, 10));
+      setHistory((h) => [{ url: json.url!, assetId: json.asset?.id ?? null, createdAt: json.asset?.createdAt ?? null }, ...h].slice(0, 10));
+      if (json.asset?.id) {
+        setSourceAssetId(json.asset.id);
+        setSourcePreviewUrl(json.url);
+      }
+      void loadVault();
     } catch { setModeStatus("makeup", "error"); }
   }
 
@@ -368,13 +442,19 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
         body: JSON.stringify({
           colorName: hairColor,
           styleName: hairStyle === "No change" ? undefined : hairStyle,
+          sourceAssetId,
         }),
       });
-      const json = await res.json() as { signedUrl?: string; error?: string };
+      const json = await res.json() as { signedUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
       if (!res.ok || !json.signedUrl) throw new Error(json.error ?? "Generation failed");
       setModeResult("hair", json.signedUrl);
       setModeStatus("hair", "done");
-      setHistory((h) => [json.signedUrl!, ...h].slice(0, 10));
+      setHistory((h) => [{ url: json.signedUrl!, assetId: json.asset?.id ?? null, createdAt: json.asset?.createdAt ?? null }, ...h].slice(0, 10));
+      if (json.asset?.id) {
+        setSourceAssetId(json.asset.id);
+        setSourcePreviewUrl(json.signedUrl);
+      }
+      void loadVault();
     } catch { setModeStatus("hair", "error"); }
   }
 
@@ -410,6 +490,8 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
     : null;
   const isNearLimit = remainingGens !== null && remainingGens <= 20;
   const isAtLimit = remainingGens !== null && remainingGens <= 0;
+  const effectiveSourcePhoto = sourcePreviewUrl ?? photoUrl;
+  const selectedVaultItem = sourceAssetId ? vault.find((v) => v.id === sourceAssetId) : undefined;
 
   const currentHairColor = HAIR_COLORS.find((c) => c.value === hairColor);
 
@@ -476,6 +558,52 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
           </div>
         )}
 
+        {/* ── Reusable source selector ── */}
+        <div className="mx-5 mt-3 rounded-2xl px-4 py-3" style={{ background: "rgba(123,110,158,0.06)", border: "1px solid rgba(123,110,158,0.18)" }}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Source for next generation</p>
+              <p className="text-[11px]" style={{ color: "#7C5A3A" }}>
+                {sourceAssetId
+                  ? `Using generated image from ${selectedVaultItem ? new Date(selectedVaultItem.createdAt).toLocaleString("en-IN") : "vault"}`
+                  : "Using original selfie"}
+              </p>
+            </div>
+            <button
+              onClick={() => { setSourceAssetId(null); setSourcePreviewUrl(null); }}
+              className="rounded-full px-3 py-1.5 text-[11px] font-medium"
+              style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(201,149,107,0.3)", color: "#7C5A3A" }}
+            >
+              Use original
+            </button>
+          </div>
+
+          <div className="mt-2 flex items-center gap-2 overflow-x-auto">
+            {vaultLoading ? (
+              <p className="text-[11px]" style={{ color: "#B8A898" }}>Loading vault…</p>
+            ) : vault.length === 0 ? (
+              <p className="text-[11px]" style={{ color: "#B8A898" }}>No generated images yet.</p>
+            ) : (
+              vault.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setSourceAssetId(item.id);
+                    setSourcePreviewUrl(item.imageUrl);
+                  }}
+                  className="shrink-0 rounded-xl overflow-hidden"
+                  style={{ border: sourceAssetId === item.id ? "2px solid #8B5CF6" : "2px solid #E8DDD0", width: 56, height: 56 }}
+                  title={`${item.tool} • ${new Date(item.createdAt).toLocaleString("en-IN")}`}
+                >
+                  {item.imageUrl ? (
+                    <Image src={item.imageUrl} alt="Vault source" width={56} height={56} className="h-full w-full object-cover" unoptimized />
+                  ) : null}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* ── CLOTHING mode ── */}
         {mode === "clothing" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
@@ -502,7 +630,7 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
                 <>
                   <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Your Photo</p>
                   <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
-                    <Image src={photoUrl} alt="Your photo" fill className="object-cover" unoptimized />
+                    <Image src={effectiveSourcePhoto} alt="Your photo" fill className="object-cover" unoptimized />
                   </div>
                   <div className="flex items-start gap-2 rounded-xl px-3 py-2.5"
                     style={{ background: "rgba(200,169,110,0.08)", border: "1px solid rgba(200,169,110,0.2)" }}>
@@ -743,7 +871,7 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
             <div className="flex flex-col gap-3 p-5 sm:sticky sm:top-0 sm:self-start">
               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Your Photo</p>
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
-                <Image src={photoUrl} alt="Your photo" fill className="object-cover" unoptimized />
+                <Image src={effectiveSourcePhoto} alt="Your photo" fill className="object-cover" unoptimized />
               </div>
               {colorAnalysis && colorAnalysis.palette.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 rounded-xl px-3 py-2"
@@ -814,7 +942,7 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
             <div className="flex flex-col gap-3">
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Your Photo</p>
               <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
-                <Image src={photoUrl} alt="Your photo" fill className="object-cover" unoptimized />
+                <Image src={effectiveSourcePhoto} alt="Your photo" fill className="object-cover" unoptimized />
               </div>
             </div>
           </div>
@@ -835,7 +963,14 @@ export function AIBeautyStudio({ reportId, photoUrl, isPaid, studioEntitlement, 
         <HistoryStrip
           history={history}
           currentUrl={resultUrl}
-          onSelect={(url) => { setModeResult(mode, url); setModeStatus(mode, "done"); }}
+          onSelect={(item) => {
+            setModeResult(mode, item.url);
+            setModeStatus(mode, "done");
+            if (item.assetId) {
+              setSourceAssetId(item.assetId);
+              setSourcePreviewUrl(item.url);
+            }
+          }}
           onClear={() => setHistory([])}
         />
 

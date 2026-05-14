@@ -8,10 +8,14 @@ import {
   Scissors,
   ShieldCheck,
   Sparkles,
-  Star,
   Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SampleShowcase } from "@/components/home/SampleShowcase";
+import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
+import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
+import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
+import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
 
 const FEATURES = [
   {
@@ -61,42 +65,53 @@ const STEPS = [
   },
 ];
 
-const TESTIMONIALS = [
+const TESTIMONIALS: TestimonialItem[] = [
   {
+    id: "sarah",
     name: "Sarah K.",
     tag: "Virtual Try-On",
     quote: "I tested looks in minutes and finally picked colors that actually suit me.",
   },
   {
+    id: "priya",
     name: "Priya M.",
     tag: "Makeup Studio",
     quote: "The lip and blush previews looked surprisingly realistic and saved me money.",
   },
   {
+    id: "emma",
     name: "Emma L.",
     tag: "Hair Guide",
     quote: "I changed my haircut confidently because I could preview the shape beforehand.",
   },
 ];
 
-const FAQS = [
+const FAQS: FAQItem[] = [
   {
-    q: "How accurate is the analysis?",
-    a: "Results are strongest with a clear front-facing image in balanced light. The system evaluates multiple visual traits to produce personalized recommendations.",
+    id: "accuracy",
+    question: "How accurate is the analysis?",
+    answer:
+      "Results are strongest with a clear front-facing image in balanced light. The system evaluates multiple visual traits to produce personalized recommendations.",
   },
   {
-    q: "Is my photo private?",
-    a: "Yes. Your image is processed securely and only accessible within your account workflows.",
+    id: "privacy",
+    question: "Is my photo private?",
+    answer: "Yes. Your image is processed securely and only accessible within your account workflows.",
   },
   {
-    q: "What is included in free preview?",
-    a: "The free preview includes core face-shape insights. Paid plans unlock full beauty and style recommendations.",
+    id: "free-preview",
+    question: "What is included in free preview?",
+    answer:
+      "The free preview includes core face-shape insights. Paid plans unlock full beauty and style recommendations.",
   },
   {
-    q: "Can I request a refund?",
-    a: "Yes. Paid plans are covered by a 30-day money-back guarantee.",
+    id: "refund",
+    question: "Can I request a refund?",
+    answer: "Yes. Paid plans are covered by a 30-day money-back guarantee.",
   },
 ];
+
+const STATS: StatItem[] = HOME_CONTENT.stats;
 
 const PLANS = [
   {
@@ -140,30 +155,31 @@ const PLANS = [
 ];
 
 export default function HomePage() {
+  const showcaseItems = toBeforeAfterItems();
+
   return (
     <main className="min-h-screen overflow-x-hidden">
       <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <span className="section-label">AI Personal Stylist</span>
+            <span className="section-label">{HOME_CONTENT.hero.badge}</span>
             <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl text-ink leading-tight">
-              Beauty guidance that feels <span className="text-iris">made for you</span>
+              {HOME_CONTENT.hero.title} <span className="text-iris">{HOME_CONTENT.hero.titleAccent}</span>
             </h1>
             <p className="mt-6 max-w-xl text-base sm:text-lg text-ink-stone leading-relaxed">
-              Upload one selfie and get your personalized beauty report with makeup, hairstyle,
-              spectacles, and skin recommendations tailored to your unique features.
+              {HOME_CONTENT.hero.description}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="accent" className="group">
-                <Link href="/upload">
+              <Button asChild size="lg" variant="accent" className="group cta-shimmer cta-glow">
+                <Link href={HOME_CONTENT.hero.primaryCta.href}>
                   <Camera className="h-4 w-4" />
-                  Start free analysis
+                  {HOME_CONTENT.hero.primaryCta.label}
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="#how">How it works</Link>
+                <Link href={HOME_CONTENT.hero.secondaryCta.href}>{HOME_CONTENT.hero.secondaryCta.label}</Link>
               </Button>
             </div>
 
@@ -214,6 +230,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <StatsCounters items={STATS} />
+
       <section id="features" className="container max-w-6xl py-16 scroll-mt-20">
         <div className="text-center">
           <h2 className="text-3xl sm:text-4xl text-ink">Everything in one beauty workflow</h2>
@@ -237,20 +255,22 @@ export default function HomePage() {
 
       <section className="container max-w-6xl py-8 sm:py-12">
         <div className="rounded-3xl border border-iris/20 bg-[linear-gradient(135deg,rgba(249,168,212,0.25),rgba(196,181,253,0.25))] px-6 py-10 text-center shadow-card sm:px-10">
-          <h2 className="text-2xl sm:text-3xl text-ink">Start with one selfie and see your best look</h2>
+          <h2 className="text-2xl sm:text-3xl text-ink">{HOME_CONTENT.ctaBanner.title}</h2>
           <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
-            Above-fold CTA intentionally places the first action immediately while keeping privacy and trust signals visible.
+            {HOME_CONTENT.ctaBanner.description}
           </p>
           <div className="mt-6">
             <Button asChild size="lg" variant="accent" className="group">
-              <Link href="/upload">
-                Get my personalized report
+              <Link href={HOME_CONTENT.ctaBanner.buttonHref}>
+                {HOME_CONTENT.ctaBanner.buttonLabel}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
+
+      <SampleShowcase items={showcaseItems} tuning={HOME_CONTENT.showcase.tuning} />
 
       <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
         <div className="text-center">
@@ -306,39 +326,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="container max-w-6xl py-16">
-        <h2 className="text-center text-3xl sm:text-4xl text-ink">Loved by thousands</h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {TESTIMONIALS.map((item) => (
-            <article key={item.name} className="card-soft">
-              <div className="mb-3 flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-terracotta text-terracotta" />
-                ))}
-              </div>
-              <p className="text-sm text-ink-stone leading-relaxed">&ldquo;{item.quote}&rdquo;</p>
-              <div className="mt-4">
-                <p className="text-sm font-semibold text-ink">{item.name}</p>
-                <p className="text-xs text-ink-mist">{item.tag}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <TestimonialsSection items={TESTIMONIALS} />
 
       <section id="faq" className="container max-w-4xl py-16 scroll-mt-20">
         <h2 className="text-center text-3xl sm:text-4xl text-ink">Frequently asked questions</h2>
-        <div className="mt-8 space-y-3">
-          {FAQS.map((faq) => (
-            <details key={faq.q} className="card-soft group">
-              <summary className="list-none flex items-center justify-between text-left">
-                <span className="font-medium text-ink">{faq.q}</span>
-                <span className="text-terracotta text-sm">Open</span>
-              </summary>
-              <p className="mt-3 text-sm text-ink-stone leading-relaxed">{faq.a}</p>
-            </details>
-          ))}
-        </div>
+        <FAQAccordion items={FAQS} />
       </section>
     </main>
   );

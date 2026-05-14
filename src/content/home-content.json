@@ -1,0 +1,91 @@
+{
+  "hero": {
+    "badge": "AI Personal Stylist",
+    "title": "Beauty guidance that feels",
+    "titleAccent": "made for you",
+    "description": "Upload one selfie and get your personalized beauty report with makeup, hairstyle, spectacles, and skin recommendations tailored to your unique features.",
+    "primaryCta": {
+      "label": "Start free analysis",
+      "href": "/upload"
+    },
+    "secondaryCta": {
+      "label": "How it works",
+      "href": "#how"
+    }
+  },
+  "ctaBanner": {
+    "title": "Start with one selfie and see your best look",
+    "description": "Join 50,000+ people who discovered their most flattering colors, cuts, and routines without guesswork.",
+    "buttonLabel": "Get my personalized report",
+    "buttonHref": "/upload"
+  },
+  "stats": [
+    {
+      "id": "analyses",
+      "label": "Analyses completed",
+      "value": 50000,
+      "suffix": "+"
+    },
+    {
+      "id": "rating",
+      "label": "Average user rating",
+      "value": 4.9,
+      "suffix": "/5"
+    },
+    {
+      "id": "refund",
+      "label": "Money-back guarantee",
+      "value": 30,
+      "suffix": " days"
+    }
+  ],
+  "showcase": {
+    "fallbackSingles": [
+      "/samples/sample-1.jpg",
+      "/samples/sample-2.jpg",
+      "/samples/sample-3.jpg",
+      "/samples/sample-4.jpg"
+    ],
+    "pairs": [
+      {
+        "id": "pair-1",
+        "title": "Face shape + hair direction",
+        "tag": "Profile refinement",
+        "baseName": "sample-1",
+        "fallbackBeforeIndex": 0,
+        "fallbackAfterIndex": 1
+      },
+      {
+        "id": "pair-2",
+        "title": "Makeup and color harmony",
+        "tag": "Undertone-matched",
+        "baseName": "sample-2",
+        "fallbackBeforeIndex": 2,
+        "fallbackAfterIndex": 3
+      },
+      {
+        "id": "pair-3",
+        "title": "Wardrobe and frame polish",
+        "tag": "Style uplift",
+        "baseName": "sample-3",
+        "fallbackBeforeIndex": 1,
+        "fallbackAfterIndex": 2
+      },
+      {
+        "id": "pair-4",
+        "title": "Skin finish and glow",
+        "tag": "Routine-led progress",
+        "baseName": "sample-4",
+        "fallbackBeforeIndex": 3,
+        "fallbackAfterIndex": 0
+      }
+    ],
+    "tuning": {
+      "marqueeLeftSeconds": 32,
+      "marqueeRightSeconds": 36,
+      "cardWidthClass": "w-56 sm:w-64",
+      "cardHeightClass": "h-64 sm:h-72",
+      "rowGapClass": "gap-4"
+    }
+  }
+}

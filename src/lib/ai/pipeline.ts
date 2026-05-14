@@ -32,6 +32,14 @@ export interface PipelineStageMeta {
   variantId?: string;
 }
 
+export interface PipelineStageEvent {
+  stage: string;
+  status: "started" | "completed";
+  durationMs?: number;
+  degraded?: boolean;
+  variantId?: string;
+}
+
 export interface PipelineMeta {
   totalDurationMs: number;
   stages: PipelineStageMeta[];
@@ -73,6 +81,7 @@ export async function runAnalysisPipeline(
   rawImage: Buffer,
   userId?: string,
   skinUserContext?: { ageRange?: string; selfReportedFeeling?: string; primaryConcern?: string },
+  onStage?: (event: PipelineStageEvent) => void,
 ): Promise<PipelineResult> {
   const pipelineStart = Date.now();
   const stageMetas: PipelineStageMeta[] = [];
@@ -85,11 +94,15 @@ export async function runAnalysisPipeline(
     // 1) Rekognition for landmarks + ALL attributes (uses original bytes — better signal)
     (async () => {
       const rekStart = Date.now();
+      onStage?.({ stage: "rekognition", status: "started" });
       const result = await detectFaceDetails(rawImage).catch((err) => {
         console.warn("[pipeline] Rekognition failed:", err);
         return null;
       });
-      stageMetas.push({ stage: "rekognition", durationMs: Date.now() - rekStart, degraded: result === null });
+      const durationMs = Date.now() - rekStart;
+      const degraded = result === null;
+      stageMetas.push({ stage: "rekognition", durationMs, degraded });
+      onStage?.({ stage: "rekognition", status: "completed", durationMs, degraded });
       return result;
     })(),
     // Dominant clothing colours (uses raw buffer for full resolution)
@@ -130,16 +143,21 @@ export async function runAnalysisPipeline(
   ): Promise<T> {
     const t0 = Date.now();
     let degraded = false;
+    onStage?.({ stage, status: "started", variantId });
     try {
       const raw = await withRetry(stage, call, 2);
-      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded, variantId });
+      const durationMs = Date.now() - t0;
+      stageMetas.push({ stage, durationMs, degraded, variantId });
+      onStage?.({ stage, status: "completed", durationMs, degraded, variantId });
       return normalize(raw);
     } catch (err) {
       degraded = true;
       const kind = classifyStageError(err);
       const message = err instanceof Error ? err.message : String(err);
       console.warn(`[pipeline:${stage}] degraded with fallback (${kind}): ${message}`);
-      stageMetas.push({ stage, durationMs: Date.now() - t0, degraded, variantId });
+      const durationMs = Date.now() - t0;
+      stageMetas.push({ stage, durationMs, degraded, variantId });
+      onStage?.({ stage, status: "completed", durationMs, degraded, variantId });
       return normalize(fallbackValue);
     }
   }
@@ -227,13 +245,24 @@ export async function runAnalysisPipeline(
   const featuresVariant = pickVariant("features");
   const [skinRoutineRaw, features] = await Promise.all([
     // Phase 5: Text-only AM/PM routine call — no image tokens, very cheap
-    withRetry("skin_routine", () =>
-      chatJSON<unknown>({
-        model: env.openai.miniModel,
-        system: effectiveSystemBase,
-        user: buildSkinRoutinePrompt(skinVisionResult.type, skinVisionResult.concerns, skinUserContext),
-      }), 2,
-    ).catch(() => null),
+    (async () => {
+      const t0 = Date.now();
+      onStage?.({ stage: "skin_routine", status: "started" });
+      const result = await withRetry("skin_routine", () =>
+        chatJSON<unknown>({
+          model: env.openai.miniModel,
+          system: effectiveSystemBase,
+          user: buildSkinRoutinePrompt(skinVisionResult.type, skinVisionResult.concerns, skinUserContext),
+        }), 2,
+      ).catch(() => null);
+      onStage?.({
+        stage: "skin_routine",
+        status: "completed",
+        durationMs: Date.now() - t0,
+        degraded: result === null,
+      });
+      return result;
+    })(),
     // Phase 4.1: Features vision call with Rekognition attributes injected
     runNormalizedStage(
       "features",
@@ -327,6 +356,7 @@ export async function runAnalysisPipeline(
   const summaryVariant = pickVariant("summary");
   let summary: string;
   const summaryT0 = Date.now();
+  onStage?.({ stage: "summary", status: "started", variantId: summaryVariant.id });
   try {
     const compiledRaw = await withRetry(
       "summary",
@@ -345,11 +375,15 @@ export async function runAnalysisPipeline(
         }),
       2,
     );
-    stageMetas.push({ stage: "summary", durationMs: Date.now() - summaryT0, degraded: false, variantId: summaryVariant.id });
+    const durationMs = Date.now() - summaryT0;
+    stageMetas.push({ stage: "summary", durationMs, degraded: false, variantId: summaryVariant.id });
+    onStage?.({ stage: "summary", status: "completed", durationMs, degraded: false, variantId: summaryVariant.id });
     summary = normalizeSummary(compiledRaw);
   } catch (err) {
     const kind = classifyStageError(err);
-    stageMetas.push({ stage: "summary", durationMs: Date.now() - summaryT0, degraded: true, variantId: summaryVariant.id });
+    const durationMs = Date.now() - summaryT0;
+    stageMetas.push({ stage: "summary", durationMs, degraded: true, variantId: summaryVariant.id });
+    onStage?.({ stage: "summary", status: "completed", durationMs, degraded: true, variantId: summaryVariant.id });
     console.warn(`[pipeline:summary] degraded with fallback (${kind})`);
     summary = normalizeSummary({
       summary:

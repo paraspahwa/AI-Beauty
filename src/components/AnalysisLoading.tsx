@@ -52,12 +52,21 @@ const FUN_FACTS = [
 interface AnalysisLoadingProps {
   currentStep?: number;
   progress?: number;
+  remainingSeconds?: number;
 }
 
-export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadingProps) {
+function formatRemaining(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSeconds = 0 }: AnalysisLoadingProps) {
   const currentFact = FUN_FACTS[currentStep % FUN_FACTS.length];
-  // Pipeline takes ~35 s on average; scale elapsed from progress %
-  const secondsLeft = Math.max(Math.round(35 * (1 - progress / 100)), 1);
+  const countdownText =
+    remainingSeconds > 0
+      ? `${formatRemaining(remainingSeconds)} remaining`
+      : "Finalizing your report...";
 
   return (
     <motion.div
@@ -80,7 +89,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0 }: AnalysisLoadi
               Analyzing your beauty profile
             </h2>
             <p className="text-ink-stone">
-              About {secondsLeft} second{secondsLeft !== 1 ? "s" : ""} remaining
+              {countdownText}
             </p>
           </motion.div>
 

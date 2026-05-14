@@ -110,6 +110,13 @@ export default async function AdminPage() {
           <h1 className="font-serif text-3xl text-ink">System Dashboard</h1>
         </div>
         <AdminCleanupButton />
+        <a
+          href="/admin/pipeline-debug"
+          className="text-sm px-4 py-2 rounded-xl font-medium"
+          style={{ background: "linear-gradient(135deg, rgba(123,110,158,0.1), rgba(201,149,107,0.08))", color: "#7B6E9E", border: "1px solid rgba(123,110,158,0.25)" }}
+        >
+          Pipeline debug →
+        </a>
       </div>
 
       {/* Summary cards */}

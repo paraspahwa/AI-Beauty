@@ -29,11 +29,18 @@ interface Props {
   report: CompiledReport;
   /** True on the public /r/[token] page — disables auth-gated features */
   isReadOnly?: boolean;
+  initialTab?: "face"|"skin"|"glasses"|"hair"|"studio"|"shop";
+  initialStudioSourceAssetId?: string | null;
 }
 
-export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
+export function ReportLayout({
+  report: initial,
+  isReadOnly = false,
+  initialTab = "face",
+  initialStudioSourceAssetId = null,
+}: Props) {
   const [report, setReport] = React.useState(initial);
-  const [activeTab, setActiveTab] = React.useState<"face"|"skin"|"glasses"|"hair"|"studio"|"shop">("face");
+  const [activeTab, setActiveTab] = React.useState<"face"|"skin"|"glasses"|"hair"|"studio"|"shop">(initialTab);
   // Radix Tabs passes onValueChange as (value: string) — cast to keep the union type safe
   const handleTabChange = (value: string) => setActiveTab(value as "face"|"skin"|"glasses"|"hair"|"studio"|"shop");
   const [copied, setCopied] = React.useState(false);
@@ -337,6 +344,7 @@ export function ReportLayout({ report: initial, isReadOnly = false }: Props) {
                     isPaid={isPaid}
                     studioEntitlement={report.studioEntitlement}
                     colorAnalysis={report.colorAnalysis}
+                    initialSourceAssetId={initialStudioSourceAssetId}
                   />
                 </motion.div>
               )}
