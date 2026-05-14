@@ -203,9 +203,11 @@ Return JSON:
 }`;
 
 export const HAIRSTYLE_PROMPT = (faceShape: string) => `Recommend hairstyles for a ${faceShape} face.
+Order styles from best to least suitable for this person.
+The first style must be the single best recommendation and should be practical to achieve.
 Return JSON:
 {
-  "styles":  [{ "name": string, "description": string }],   // 5 styles
+  "styles":  [{ "name": string, "description": string }],   // exactly 5 styles, rank-ordered (best first)
   "lengths": [{ "name": string, "description": string }],   // 3 lengths (Short / Medium / Long variants)
   "colors":  [{ "name": string, "hex": "#RRGGBB", "description": string }], // 5 colors
   "avoid":   string[3..5]

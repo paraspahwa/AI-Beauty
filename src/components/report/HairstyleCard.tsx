@@ -408,6 +408,24 @@ export function HairstyleCard({
   const resolvedFeatures  = (bestFeatures ?? ["Almond eyes", "Rounded cheeks", "Full lips"]).slice(0, 3);
   const resolvedTips      = (stylingTips ?? data.stylingTips ?? ["Use light layers for movement", "Soft waves add texture", "Avoid heavy straight looks"]).slice(0, 3);
 
+  const bestStyleName = data.styles[0]?.name?.trim().toLowerCase();
+  const readyPreviewSlots = (previewSlots ?? []).filter(
+    (slot): slot is PreviewSlot & { signedUrl: string } =>
+      slot.status === "ready" && typeof slot.signedUrl === "string" && slot.signedUrl.length > 0,
+  );
+  const matchedBestPreview = bestStyleName
+    ? readyPreviewSlots.find((slot) => slot.styleName?.trim().toLowerCase() === bestStyleName)
+    : undefined;
+  const slotZeroPreview =
+    previewSlots?.[0]?.status === "ready" && typeof previewSlots[0]?.signedUrl === "string"
+      ? (previewSlots[0] as PreviewSlot & { signedUrl: string })
+      : undefined;
+  const bestPreview = matchedBestPreview ?? slotZeroPreview ?? readyPreviewSlots[0];
+  const heroImageUrl = bestPreview?.signedUrl ?? photoUrl;
+  const heroImageAlt = bestPreview?.styleName
+    ? `AI curated best hairstyle: ${bestPreview.styleName}`
+    : "Your photo";
+
   const hairGoals = [
     { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5"><ellipse cx="12" cy="14" rx="8" ry="9" /><path d="M8 9 Q12 5 16 9" /></svg>, label: "Frame the face" },
     { icon: <IconWave />, label: "Add movement & volume" },
@@ -477,42 +495,50 @@ export function HairstyleCard({
 
           {/* Centre: single full photo + face guide overlay (matches reference) */}
           <div className="flex items-center justify-center p-6 min-h-[340px]" style={{ background: "#F5EFE7" }}>
-            {photoUrl ? (
+            {heroImageUrl ? (
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ maxWidth: 300, aspectRatio: "3/4" }}>
                 <Image
-                  src={photoUrl}
-                  alt="Your photo"
+                  src={heroImageUrl}
+                  alt={heroImageAlt}
                   fill
                   unoptimized
                   className="object-cover"
                   style={{ objectPosition: "top center" }}
                 />
-                {/* Dashed oval + guide lines matching reference */}
-                <svg
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  viewBox="0 0 300 400"
-                  style={{ zIndex: 9 }}
-                >
-                  <ellipse cx="150" cy="155" rx="90" ry="118"
-                    fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.8" strokeDasharray="8 5" />
-                  <line x1="150" y1="30" x2="150" y2="275"
-                    stroke="rgba(255,255,255,0.40)" strokeWidth="1.2" strokeDasharray="5 4" />
-                  <line x1="54" y1="143" x2="246" y2="143"
-                    stroke="rgba(255,255,255,0.30)" strokeWidth="1" strokeDasharray="4 3" />
-                  {/* pointer dots + lines radiating outward */}
-                  <line x1="86" y1="66" x2="128" y2="106" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="84" cy="64" r="3" fill="rgba(255,255,255,0.75)" />
-                  <line x1="214" y1="66" x2="172" y2="106" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="216" cy="64" r="3" fill="rgba(255,255,255,0.75)" />
-                  <line x1="48" y1="158" x2="96" y2="158" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="46" cy="158" r="3" fill="rgba(255,255,255,0.75)" />
-                  <line x1="252" y1="158" x2="204" y2="158" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
-                  <circle cx="254" cy="158" r="3" fill="rgba(255,255,255,0.75)" />
-                  <line x1="70" y1="236" x2="114" y2="216" stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
-                  <circle cx="68" cy="238" r="3" fill="rgba(255,255,255,0.65)" />
-                  <line x1="230" y1="236" x2="186" y2="216" stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
-                  <circle cx="232" cy="238" r="3" fill="rgba(255,255,255,0.65)" />
-                </svg>
+                {!bestPreview && (
+                  <svg
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    viewBox="0 0 300 400"
+                    style={{ zIndex: 9 }}
+                  >
+                    <ellipse cx="150" cy="155" rx="90" ry="118"
+                      fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.8" strokeDasharray="8 5" />
+                    <line x1="150" y1="30" x2="150" y2="275"
+                      stroke="rgba(255,255,255,0.40)" strokeWidth="1.2" strokeDasharray="5 4" />
+                    <line x1="54" y1="143" x2="246" y2="143"
+                      stroke="rgba(255,255,255,0.30)" strokeWidth="1" strokeDasharray="4 3" />
+                    <line x1="86" y1="66" x2="128" y2="106" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                    <circle cx="84" cy="64" r="3" fill="rgba(255,255,255,0.75)" />
+                    <line x1="214" y1="66" x2="172" y2="106" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                    <circle cx="216" cy="64" r="3" fill="rgba(255,255,255,0.75)" />
+                    <line x1="48" y1="158" x2="96" y2="158" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                    <circle cx="46" cy="158" r="3" fill="rgba(255,255,255,0.75)" />
+                    <line x1="252" y1="158" x2="204" y2="158" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" />
+                    <circle cx="254" cy="158" r="3" fill="rgba(255,255,255,0.75)" />
+                    <line x1="70" y1="236" x2="114" y2="216" stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
+                    <circle cx="68" cy="238" r="3" fill="rgba(255,255,255,0.65)" />
+                    <line x1="230" y1="236" x2="186" y2="216" stroke="rgba(255,255,255,0.45)" strokeWidth="1" />
+                    <circle cx="232" cy="238" r="3" fill="rgba(255,255,255,0.65)" />
+                  </svg>
+                )}
+                {bestPreview && (
+                  <div
+                    className="absolute left-3 top-3 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
+                    style={{ background: "rgba(61,43,31,0.75)", color: "#FDFAF6" }}
+                  >
+                    AI Best Match
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center rounded-2xl" style={{ width: 220, height: 280, background: "#EDE3D8", border: "2px dashed #C8B89A" }}>
@@ -623,6 +649,67 @@ export function HairstyleCard({
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* ── Top Recommended Styles ── */}
+        <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0", background: "#FDFAF6" }}>
+          <p className={sectionTitle} style={sT}>Top Recommended Styles</p>
+
+          <div className="space-y-3">
+            {data.styles.slice(0, 3).map((style, index) => {
+              const accent = styleAccentFromStyle(style.name);
+              const texture = textureFromStyle(style.name);
+              const maintenance = maintenanceFromStyle(style.name);
+
+              return (
+                <div
+                  key={`${style.name}-${index}`}
+                  className="rounded-2xl p-4 flex items-start gap-3"
+                  style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                        style={{ background: accent.band, color: accent.text }}
+                      >
+                        {index + 1}
+                      </span>
+                      <h4 className="font-serif text-sm truncate" style={{ color: "#3D2B1F" }}>
+                        {style.name}
+                      </h4>
+                    </div>
+
+                    <p className="text-xs leading-relaxed" style={{ color: "#6B5344" }}>{style.description}</p>
+
+                    <div className="mt-2 flex items-center gap-2 text-[10px]">
+                      <span className="rounded-full px-2 py-0.5" style={{ background: texture.bg, color: texture.color }}>
+                        {texture.label}
+                      </span>
+                      <span className="rounded-full px-2 py-0.5" style={{ background: "#EFE7DD", color: "#6B5344" }}>
+                        {maintenance.label} maintenance
+                      </span>
+                    </div>
+                  </div>
+
+                  {index === 0 && bestPreview?.signedUrl && (
+                    <div
+                      className="relative h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-xl"
+                      style={{ border: "1px solid #E8DDD0" }}
+                    >
+                      <Image
+                        src={bestPreview.signedUrl}
+                        alt={`Top recommended style preview: ${style.name}`}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

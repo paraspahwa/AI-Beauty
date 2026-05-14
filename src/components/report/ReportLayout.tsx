@@ -48,6 +48,8 @@ export function ReportLayout({
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
+  const [hairstyleBestLoading, setHairstyleBestLoading] = React.useState(false);
+  const hairstyleBestRequested = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
 
@@ -89,6 +91,38 @@ export function ReportLayout({
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatingSlots.size, report.id]);
+
+  // Ensure the top hairstyle recommendation has an AI preview when the hairstyle tab is opened.
+  React.useEffect(() => {
+    if (isReadOnly || activeTab !== "hair" || !isPaid || !report.hairstyle) return;
+
+    const slotZero = report.visualAssets?.assets?.hairstylePreviews?.[0];
+    if (slotZero?.status === "ready" || slotZero?.status === "pending" || slotZero?.status === "failed") return;
+    if (hairstyleBestLoading) return;
+
+    const requestKey = `${report.id}:hair-best`;
+    if (hairstyleBestRequested.current.has(requestKey)) return;
+    hairstyleBestRequested.current.add(requestKey);
+
+    let cancelled = false;
+    (async () => {
+      setHairstyleBestLoading(true);
+      try {
+        const res = await fetch(`/api/reports/${report.id}/visuals?type=hairstyle&index=0`, { method: "POST" });
+        if (!cancelled && res.ok) {
+          await refresh();
+        }
+      } catch {
+        /* non-blocking: fallback to selfie if preview generation fails */
+      } finally {
+        if (!cancelled) setHairstyleBestLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isPaid, isReadOnly, report.hairstyle, report.id, report.visualAssets, hairstyleBestLoading]);
 
   /** Generate a single color swatch slot on user click. */
   async function generateSwatchSlot(slot: number) {
