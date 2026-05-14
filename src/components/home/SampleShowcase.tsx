@@ -60,7 +60,11 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
             fill
             className="object-cover"
             sizes="(max-width: 640px) 112px, 128px"
-            onError={() => setBeforeSrc(item.beforeFallbackSrc)}
+            onError={() => {
+              if (beforeSrc !== item.beforeFallbackSrc) {
+                setBeforeSrc(item.beforeFallbackSrc);
+              }
+            }}
           />
           <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
             Before
@@ -73,7 +77,11 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
             fill
             className="object-cover"
             sizes="(max-width: 640px) 112px, 128px"
-            onError={() => setAfterSrc(item.afterFallbackSrc)}
+            onError={() => {
+              if (afterSrc !== item.afterFallbackSrc) {
+                setAfterSrc(item.afterFallbackSrc);
+              }
+            }}
           />
           <span className="absolute right-2 top-2 rounded-full bg-terracotta px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
             After

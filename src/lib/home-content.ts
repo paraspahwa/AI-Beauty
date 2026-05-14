@@ -44,9 +44,12 @@ interface HomeContentConfig {
 
 export const HOME_CONTENT = homeContent as HomeContentConfig;
 
-function pairPath(baseName: string, side: "before" | "after", ext = "jpg"): string {
-  return `/samples/${baseName}-${side}.${ext}`;
+function pairPath(baseName: string, _side: "before" | "after", ext = "jpg"): string {
+  return `/samples/${baseName}.${ext}`;
 }
+
+const DEFAULT_BEFORE_FALLBACK = "/samples/sample-N-before.jpg";
+const DEFAULT_AFTER_FALLBACK = "/samples/sample-N-after.jpg";
 
 export function toBeforeAfterItems(): BeforeAfterItem[] {
   return HOME_CONTENT.showcase.pairs.map((pair) => ({
@@ -55,8 +58,8 @@ export function toBeforeAfterItems(): BeforeAfterItem[] {
     tag: pair.tag,
     beforeSrc: pairPath(pair.baseName, "before", pair.ext ?? "jpg"),
     afterSrc: pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
-    beforeFallbackSrc: pairPath(pair.baseName, "before", pair.ext ?? "jpg"),
-    afterFallbackSrc: pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
+    beforeFallbackSrc: DEFAULT_BEFORE_FALLBACK,
+    afterFallbackSrc: DEFAULT_AFTER_FALLBACK,
     beforeAlt: pair.beforeAlt ?? "Before AI-guided beauty recommendations",
     afterAlt: pair.afterAlt ?? "After AI-guided beauty recommendations",
   }));
