@@ -87,7 +87,7 @@ function ItemCard({ item, index }: { item: CapsuleItem; index: number }) {
           style={{ background: item.hex, border: "2px solid rgba(255,255,255,0.12)" }}
           title={item.hex}
         />
-        <span className="text-[10px] font-bold tabular-nums" style={{ color: "rgba(240,232,216,0.22)" }}>
+        <span className="text-[10px] font-bold tabular-nums" style={{ color: "rgba(131,24,67,0.35)" }}>
           {String(item.number).padStart(2, "0")}
         </span>
       </div>
@@ -95,7 +95,7 @@ function ItemCard({ item, index }: { item: CapsuleItem; index: number }) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1">
-          <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>{item.name}</p>
+          <p className="text-sm font-semibold" style={{ color: "#831843" }}>{item.name}</p>
           <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={catStyle}>
             {item.category}
           </span>
@@ -210,7 +210,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
         <p className="text-[10px] uppercase tracking-[0.35em] font-semibold mb-1" style={{ color: "#C8A96E" }}>
           Your Bespoke Capsule
         </p>
-        <h2 className="font-serif text-2xl mb-1" style={{ color: "#F0E8D8" }}>
+        <h2 className="font-serif text-2xl mb-1" style={{ color: "#831843" }}>
           {season} · {undertone} Undertone
         </h2>
         <p className="text-sm mb-4" style={{ color: "rgba(131,24,67,0.55)" }}>
@@ -236,7 +236,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
         {/* Live palette swatches */}
         {paletteSwatches.length > 0 && (
           <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <span className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(200,169,110,0.5)" }}>
+            <span className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(131,24,67,0.55)" }}>
               Your palette
             </span>
             {paletteSwatches.map((c) => (
@@ -284,7 +284,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
         )}
 
         {capsule && (
-          <p className="mt-2 text-[10px]" style={{ color: "rgba(240,232,216,0.22)" }}>
+          <p className="mt-2 text-[10px]" style={{ color: "rgba(131,24,67,0.45)" }}>
             Generated {new Date(capsule.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
             {" · "}cached for 30 days
           </p>
@@ -344,7 +344,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
           </AnimatePresence>
 
           {/* Affiliate disclosure */}
-          <p className="text-center text-[10px]" style={{ color: "rgba(240,232,216,0.18)" }}>
+          <p className="text-center text-[10px]" style={{ color: "rgba(131,24,67,0.40)" }}>
             Shopping links may include affiliate tracking · Renovaara earns a small commission at no extra cost to you
           </p>
         </>

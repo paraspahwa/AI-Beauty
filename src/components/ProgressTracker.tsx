@@ -80,17 +80,17 @@ export function ProgressTracker({ reports }: Props) {
           {season && (
             <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "rgba(201,149,107,0.1)", border: "1px solid rgba(201,149,107,0.2)" }}>
               <SeasonDot season={season} />
-              <span className="text-sm" style={{ color: "#F0E8D8" }}>{season}</span>
+              <span className="text-sm" style={{ color: "#831843" }}>{season}</span>
             </div>
           )}
           {shape && (
             <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "rgba(123,110,158,0.1)", border: "1px solid rgba(123,110,158,0.2)" }}>
-              <span className="text-sm" style={{ color: "#F0E8D8" }}>{shape} face</span>
+              <span className="text-sm" style={{ color: "#831843" }}>{shape} face</span>
             </div>
           )}
           {skin && (
             <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "rgba(99,162,130,0.1)", border: "1px solid rgba(99,162,130,0.2)" }}>
-              <span className="text-sm" style={{ color: "#F0E8D8" }}>{skin} skin</span>
+              <span className="text-sm" style={{ color: "#831843" }}>{skin} skin</span>
             </div>
           )}
         </div>
@@ -148,10 +148,10 @@ export function ProgressTracker({ reports }: Props) {
             className="rounded-2xl p-5 space-y-2"
             style={{ background: "rgba(201,149,107,0.07)", border: "1px solid rgba(201,149,107,0.15)" }}
           >
-            <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>Colour Season</p>
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.60)" }}>Colour Season</p>
             <div className="flex items-center gap-2">
               <SeasonDot season={dominantSeason} />
-              <p className="font-serif text-lg" style={{ color: "#F0E8D8" }}>{dominantSeason}</p>
+              <p className="font-serif text-lg" style={{ color: "#831843" }}>{dominantSeason}</p>
             </div>
             <ConsistencyBadge pct={seasonConsistency} />
           </div>
@@ -161,8 +161,8 @@ export function ProgressTracker({ reports }: Props) {
             className="rounded-2xl p-5 space-y-2"
             style={{ background: "rgba(123,110,158,0.07)", border: "1px solid rgba(123,110,158,0.15)" }}
           >
-            <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>Face Shape</p>
-            <p className="font-serif text-lg" style={{ color: "#F0E8D8" }}>{dominantShape}</p>
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.60)" }}>Face Shape</p>
+            <p className="font-serif text-lg" style={{ color: "#831843" }}>{dominantShape}</p>
             <ConsistencyBadge pct={shapeConsistency} />
           </div>
         )}
@@ -171,8 +171,8 @@ export function ProgressTracker({ reports }: Props) {
             className="rounded-2xl p-5 space-y-2"
             style={{ background: "rgba(99,162,130,0.07)", border: "1px solid rgba(99,162,130,0.15)" }}
           >
-            <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>Skin Type</p>
-            <p className="font-serif text-lg" style={{ color: "#F0E8D8" }}>{dominantSkin}</p>
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.60)" }}>Skin Type</p>
+            <p className="font-serif text-lg" style={{ color: "#831843" }}>{dominantSkin}</p>
             <ConsistencyBadge pct={skinConsistency} />
           </div>
         )}
@@ -219,7 +219,7 @@ export function ProgressTracker({ reports }: Props) {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <p className="text-xs" style={{ color: "rgba(131,24,67,0.5)" }}>{fmt(r.created_at)}</p>
+                    <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>{fmt(r.created_at)}</p>
                     {i === reports.length - 1 && (
                       <span className="text-[10px] rounded-full px-2 py-0.5 font-medium" style={{ background: "rgba(201,149,107,0.15)", color: "#EC4899" }}>
                         Latest
@@ -230,7 +230,7 @@ export function ProgressTracker({ reports }: Props) {
                     {season && (
                       <div className="flex items-center gap-1.5">
                         <SeasonDot season={season} />
-                        <span className="text-sm" style={{ color: "#F0E8D8" }}>{season}</span>
+                        <span className="text-sm" style={{ color: "#831843" }}>{season}</span>
                         {seasonChanged && (
                           <span className="text-[10px] rounded-full px-1.5 py-0.5" style={{ background: "rgba(248,200,100,0.15)", color: "#F9A8D4" }}>
                             changed ↑
@@ -242,14 +242,14 @@ export function ProgressTracker({ reports }: Props) {
                     {skin && <span className="text-xs rounded-full px-2 py-0.5" style={{ background: "rgba(99,162,130,0.12)", color: "#63A282" }}>{skin}</span>}
                   </div>
                   {concerns.length > 0 && (
-                    <p className="text-xs mt-1.5" style={{ color: "rgba(131,24,67,0.45)" }}>
+                    <p className="text-xs mt-1.5" style={{ color: "rgba(131,24,67,0.55)" }}>
                       Concerns: {concerns.join(", ")}
                     </p>
                   )}
                   <a
                     href={`/report/${r.id}`}
                     className="mt-1.5 inline-flex items-center gap-1 text-xs hover:opacity-70 transition-opacity"
-                    style={{ color: "rgba(240,232,216,0.3)" }}
+                    style={{ color: "rgba(131,24,67,0.60)" }}
                   >
                     View report <ChevronRight className="h-3 w-3" />
                   </a>
@@ -272,13 +272,13 @@ export function ProgressTracker({ reports }: Props) {
           className="rounded-2xl p-5 space-y-3"
           style={{ background: "rgba(131,24,67,0.08)", border: "1px solid rgba(131,24,67,0.14)" }}
         >
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>
+          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.60)" }}>
             Recurring skin concerns
           </p>
           <div className="space-y-2">
             {topConcerns.map(([concern, count]) => (
               <div key={concern} className="flex items-center gap-3">
-                <span className="text-sm flex-1" style={{ color: "#F0E8D8" }}>{concern}</span>
+                <span className="text-sm flex-1" style={{ color: "#831843" }}>{concern}</span>
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 rounded-full overflow-hidden w-24" style={{ background: "rgba(131,24,67,0.18)" }}>
                     <div
