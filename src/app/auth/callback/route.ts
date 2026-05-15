@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
   }
 
   if (tokenHash && type && ALLOWED_OTP_TYPES.has(type as EmailOtpType)) {
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    console.error("[auth/callback] verifyOtp failed:", error.message);
   }
 
   // Code missing or exchange failed — send to auth with an error hint

@@ -220,6 +220,19 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
           Every piece works with every other piece.
         </p>
 
+        {/* Hero image — paid users only */}
+        {capsule?.heroImageUrl && (
+          <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(201,149,107,0.2)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={capsule.heroImageUrl}
+              alt="Your curated capsule wardrobe"
+              className="w-full object-cover"
+              style={{ maxHeight: "220px" }}
+            />
+          </div>
+        )}
+
         {/* Live palette swatches */}
         {paletteSwatches.length > 0 && (
           <div className="flex items-center gap-2 mb-4 flex-wrap">

@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     // Load report
     const { data: row, error: rowErr } = await admin
       .from("reports")
-      .select("id, user_id, status, image_path, rekognition, color_analysis, glasses, hairstyle, visual_assets")
+      .select("id, user_id, status, image_path, is_paid, rekognition, color_analysis, glasses, hairstyle, visual_assets")
       .eq("id", reportId)
       .single();
 
@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
       generateHairstylePreviews,
       generateMakeupPreviews,
     } = await import("@/lib/ai/visuals");
+    const { generateAIPaletteBoard } = await import("@/lib/ai/seedream-palette");
     const { generateAllColorSwatchPreviews } = await import("@/lib/ai/color-swatch-v2");
 
     const visualAssets = createVisualAssetsSkeleton(row.user_id as string, reportId, env.supabase.bucket);
@@ -131,18 +132,37 @@ export async function POST(req: NextRequest) {
       visualAssets.assets.landmarkOverlay!.error = (err as Error).message;
     }
 
-    // ── Palette board ────────────────────────────────────────────────────────
+    // ── Palette board ───────────────────────────────────────────
+    // Paid users: AI-generated mood board via SeedDream 4.5 ($0.03/report)
+    // Free users: programmatic SVG via Sharp (free)
     try {
-      const paletteBoard = await generatePaletteBoard(row.color_analysis as ColorAnalysisResult);
+      const isPaid = !!row.is_paid;
+      let paletteBoard: { buffer: Buffer; width: number; height: number } | null = null;
+
+      if (isPaid && env.replicate.isConfigured) {
+        paletteBoard = await generateAIPaletteBoard(
+          row.color_analysis as ColorAnalysisResult,
+          env.replicate.apiToken,
+        );
+      }
+
+      // Fallback to SVG for free users or if AI generation failed
+      if (!paletteBoard) {
+        paletteBoard = await generatePaletteBoard(row.color_analysis as ColorAnalysisResult);
+      }
+
+      const paletteMime = isPaid && paletteBoard ? "image/jpeg" : "image/png";
+      const palettePath = visualAssets.assets.paletteBoard!.path;
       const { error: upErr } = await admin.storage
         .from(env.supabase.bucket)
-        .upload(visualAssets.assets.paletteBoard!.path, paletteBoard.buffer, {
-          contentType: "image/png", upsert: true,
+        .upload(palettePath, paletteBoard.buffer, {
+          contentType: paletteMime, upsert: true,
         });
       visualAssets.assets.paletteBoard!.status = upErr ? "failed" : "ready";
+      visualAssets.assets.paletteBoard!.mime   = paletteMime;
       if (upErr) visualAssets.assets.paletteBoard!.error = upErr.message;
       else {
-        visualAssets.assets.paletteBoard!.width = paletteBoard.width;
+        visualAssets.assets.paletteBoard!.width  = paletteBoard.width;
         visualAssets.assets.paletteBoard!.height = paletteBoard.height;
       }
     } catch (err) {

@@ -146,7 +146,7 @@ function OtpBoxes({
           onKeyDown={(e) => handleKey(i, e)}
           onPaste={handlePaste}
           disabled={disabled}
-          className="w-11 h-13 text-center text-xl font-semibold rounded-xl focus:outline-none focus:ring-2 transition-all"
+          className="w-11 text-center text-xl font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
           style={{
             ...inputStyle,
             height: "3.25rem",
@@ -233,7 +233,7 @@ function AuthContent() {
           setError(error.message);
         }
       } else {
-        const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+        const safe = /^\/[^/]/.test(nextPath) ? nextPath : "/upload";
         window.location.href = safe;
       }
     } else {
@@ -253,7 +253,7 @@ function AuthContent() {
         setSignupDone(true);
       } else {
         // Auto-confirmed (e.g. Supabase project has confirmations disabled)
-        const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+        const safe = /^\/[^/]/.test(nextPath) ? nextPath : "/upload";
         window.location.href = safe;
       }
     }
@@ -337,7 +337,7 @@ function AuthContent() {
       setError(mapPhoneVerifyError(error.message));
       setOtp("");
     } else {
-      const safe = nextPath.startsWith("/") ? nextPath : "/upload";
+      const safe = /^\/[^/]/.test(nextPath) ? nextPath : "/upload";
       window.location.href = safe;
     }
   }
@@ -553,7 +553,7 @@ function AuthContent() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
                             required
-                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 transition-all"
+                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
                             style={inputStyle}
                           />
                         </div>
@@ -570,7 +570,7 @@ function AuthContent() {
                             placeholder={emailMode === "signup" ? "Min 6 characters" : "Your password"}
                             required
                             minLength={6}
-                            className="w-full rounded-xl pl-10 pr-10 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 transition-all"
+                            className="w-full rounded-xl pl-10 pr-10 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
                             style={inputStyle}
                           />
                           <button
@@ -640,7 +640,7 @@ function AuthContent() {
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="98765 43210"
                             required
-                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 transition-all"
+                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
                             style={inputStyle}
                           />
                           </div>
@@ -664,9 +664,9 @@ function AuthContent() {
                 <div className="text-center space-y-3">
                   <p className="text-xs text-white/70">
                     By continuing, you agree to our{" "}
-                    <Link href="#" className="underline hover:text-white transition-colors">Terms</Link>
+                    <Link href="/terms" className="underline hover:text-white transition-colors">Terms</Link>
                     {" "}and{" "}
-                    <Link href="#" className="underline hover:text-white transition-colors">Privacy Policy</Link>.
+                    <Link href="/privacy" className="underline hover:text-white transition-colors">Privacy Policy</Link>.
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-white/70">
                     <Shield className="h-3.5 w-3.5" style={{ color: "#7B6E9E" }} />

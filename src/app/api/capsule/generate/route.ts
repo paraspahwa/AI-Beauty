@@ -24,6 +24,8 @@ export interface GeneratedCapsule {
   undertone: string;
   items: CapsuleItem[];
   generatedAt: string;
+  /** Signed URL for the AI-generated hero flat-lay image (paid users only). */
+  heroImageUrl?: string;
 }
 
 // ── Colour distance helper (avoid-color guard) ─────────────────────────────────
@@ -145,7 +147,7 @@ export async function POST(req: NextRequest) {
     // Load latest ready report for full profile
     const { data: reportRow } = await admin
       .from("reports")
-      .select("color_analysis, skin_analysis, face_shape, hairstyle, rekognition")
+      .select("color_analysis, skin_analysis, face_shape, hairstyle, rekognition, is_paid")
       .eq("user_id", user.id)
       .eq("status", "ready")
       .order("created_at", { ascending: false })
@@ -156,6 +158,7 @@ export async function POST(req: NextRequest) {
     const skinAnalysis  = (reportRow?.skin_analysis  ?? null) as SkinAnalysisResult  | null;
     const faceShape     = (reportRow?.face_shape     ?? null) as FaceShapeResult     | null;
     const hairstyle     = (reportRow?.hairstyle      ?? null) as HairstyleResult     | null;
+    const isPaid        = !!reportRow?.is_paid;
 
     if (!colorAnalysis) {
       return NextResponse.json({ error: "No color analysis found. Complete a report first." }, { status: 422 });
@@ -227,6 +230,31 @@ export async function POST(req: NextRequest) {
       items,
       generatedAt: new Date().toISOString(),
     };
+
+    // ── Hero image for paid users ─────────────────────────────────────────────
+    if (isPaid && env.replicate.isConfigured) {
+      try {
+        const { generateCapsuleHeroImage } = await import("@/lib/ai/seedream-capsule");
+        const heroBuffer = await generateCapsuleHeroImage(capsule, env.replicate.apiToken);
+        if (heroBuffer) {
+          const heroPath = `users/${user.id}/capsule/hero-${Date.now()}.jpg`;
+          const { error: upErr } = await admin.storage
+            .from(env.supabase.bucket)
+            .upload(heroPath, heroBuffer, { contentType: "image/jpeg", upsert: true });
+          if (!upErr) {
+            const { data: signed } = await admin.storage
+              .from(env.supabase.bucket)
+              .createSignedUrl(heroPath, 30 * 24 * 60 * 60); // 30 days, matches cache TTL
+            if (signed?.signedUrl) {
+              capsule.heroImageUrl = signed.signedUrl;
+            }
+          }
+        }
+      } catch (heroErr) {
+        // Non-fatal: capsule still returns without hero image
+        console.warn("[capsule] hero image generation failed:", (heroErr as Error).message);
+      }
+    }
 
     // Cache in user_style_prefs.prefs JSONB column
     const existingPrefs = (prefsRow?.prefs as Record<string, unknown> | null) ?? {};
