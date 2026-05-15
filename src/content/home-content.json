@@ -62,16 +62,16 @@
         "title": "Wardrobe and frame polish",
         "tag": "Style uplift",
         "baseName": "sample-3",
-        "beforeFile": "sample-N-before.jpg",
-        "afterFile": "sample-N-after.jpg"
+        "beforeFile": "sample-3-before.jpg",
+        "afterFile": "sample-3-after.jpg"
       },
       {
         "id": "pair-4",
         "title": "Skin finish and glow",
         "tag": "Routine-led progress",
         "baseName": "sample-4",
-        "beforeFile": "sample-N-before.jpg",
-        "afterFile": "sample-N-after.jpg"
+        "beforeFile": "sample-4-before.jpg",
+        "afterFile": "sample-4-after.jpg"
       }
     ],
     "tuning": {

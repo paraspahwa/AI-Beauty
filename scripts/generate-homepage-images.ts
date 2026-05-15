@@ -104,7 +104,6 @@ async function main() {
           prompt: spec.prompt,
           size: "2K",
           aspect_ratio: "3:4",   // portrait — matches card aspect ratio
-          enhance_prompt: false,
           sequential_image_generation: "disabled",
           max_images: 1,
         },
@@ -123,8 +122,8 @@ async function main() {
       console.log(`  ✓ ${spec.filename} saved (${(buffer.length / 1024).toFixed(0)} KB)`);
       successCount++;
 
-      // Brief pause between requests to avoid rate limiting
-      await sleep(1000);
+      // Pause between requests — low-credit accounts are throttled to 1 burst/min
+      await sleep(12000);
     } catch (err) {
       console.error(`  ✗ ${spec.filename} failed:`, (err as Error).message);
     }
