@@ -11,6 +11,7 @@ import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
+import { JewelleryCard } from "./JewelleryCard";
 import { DoAvoidGuidanceCard } from "@/components/ui/DoAvoidGuidanceCard";
 import type { DoAvoidGuidanceConfig } from "@/types/doAvoidGuidance";
 import guidanceData from "@/content/do-avoid-guidance.json";
@@ -26,7 +27,8 @@ const TABS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "glasses", label: "Spectacles" },
   { value: "hair",    label: "Hairstyle" },
   { value: "studio",  label: "AI Studio" },
-  { value: "shop",    label: "Shop" },
+  { value: "shop",       label: "Shop" },
+  { value: "jewellery",  label: "Jewellery" },
   ...(publicEnv.flags.doAvoidModule ? [{ value: "style", label: "Style Guide" }] : []),
 ];
 
@@ -502,6 +504,30 @@ export function ReportLayout({
                       onUnlocked={refresh}
                       title="Shop Your Look"
                     />
+                  )}
+                </motion.div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="jewellery" className="mt-0">
+              {activeTab === "jewellery" && (
+                <motion.div
+                  key="jewellery"
+                  variants={tabContent}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  {report.faceShape && report.colorAnalysis ? (
+                    <JewelleryCard
+                      faceShape={report.faceShape}
+                      colorAnalysis={report.colorAnalysis}
+                      isPaid={isPaid}
+                    />
+                  ) : (
+                    <div className="py-12 text-center text-sm text-pink-700/50">
+                      Complete your analysis to unlock jewellery recommendations.
+                    </div>
                   )}
                 </motion.div>
               )}

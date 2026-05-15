@@ -89,10 +89,10 @@ function StatPill({ label, value }: { label: string; value: string }) {
       className="flex flex-col gap-0.5 rounded-2xl px-4 py-3"
       style={{ background: "rgba(131,24,67,0.10)", border: "1px solid rgba(131,24,67,0.16)" }}
     >
-      <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>
+      <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.60)" }}>
         {label}
       </span>
-      <span className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
+      <span className="text-sm font-semibold" style={{ color: "#831843" }}>
         {value}
       </span>
     </div>
@@ -214,7 +214,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
           {/* Colour palette swatches */}
           {richPalette.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.65)" }}>
                 Your colour palette
               </p>
               <div className="flex flex-wrap gap-2">
@@ -225,7 +225,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
                       style={{ background: c.hex, border: "2px solid rgba(255,255,255,0.12)" }}
                       title={c.name}
                     />
-                    <span className="text-[11px] hidden sm:block" style={{ color: "rgba(131,24,67,0.55)" }}>
+                    <span className="text-[11px] hidden sm:block" style={{ color: "rgba(131,24,67,0.70)" }}>
                       {c.name}
                     </span>
                   </div>
@@ -254,8 +254,8 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             </div>
             {season && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.5)" }}>Season</p>
-                <p className="text-sm font-medium" style={{ color: "#F0E8D8" }}>{season}</p>
+                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Season</p>
+                <p className="text-sm font-medium" style={{ color: "#831843" }}>{season}</p>
                 {seasonTraits && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {seasonTraits.keywords.map((kw) => (
@@ -273,22 +273,22 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             )}
             {undertone && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.5)" }}>Undertone</p>
-                <p className="text-sm font-medium" style={{ color: "#F0E8D8" }}>{undertone}</p>
-                <p className="text-xs mt-0.5" style={{ color: "rgba(131,24,67,0.55)" }}>
+                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Undertone</p>
+                <p className="text-sm font-medium" style={{ color: "#831843" }}>{undertone}</p>
+                <p className="text-xs mt-0.5" style={{ color: "rgba(131,24,67,0.68)" }}>
                   {UNDERTONE_DESC[undertone] ?? ""}
                 </p>
               </div>
             )}
             {metals.length > 0 && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.5)" }}>Best metals</p>
-                <p className="text-sm" style={{ color: "#F0E8D8" }}>{metals.join(" · ")}</p>
+                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Best metals</p>
+                <p className="text-sm" style={{ color: "#831843" }}>{metals.join(" · ")}</p>
               </div>
             )}
             {avoidColors.length > 0 && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.5)" }}>Colours to avoid</p>
+                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Colours to avoid</p>
                 <div className="flex gap-1.5 mt-1 flex-wrap">
                   {avoidColors.map((c) => (
                     <div key={c.hex} className="flex items-center gap-1">
@@ -296,7 +296,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
                         className="h-4 w-4 rounded-full"
                         style={{ background: c.hex, border: "1px solid rgba(255,255,255,0.15)" }}
                       />
-                      <span className="text-[11px]" style={{ color: "rgba(131,24,67,0.62)" }}>{c.name}</span>
+                      <span className="text-[11px]" style={{ color: "rgba(131,24,67,0.72)" }}>{c.name}</span>
                     </div>
                   ))}
                 </div>
@@ -319,8 +319,8 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#A69CC4" }}>Face Shape</p>
             </div>
             <div>
-              <p className="font-serif text-xl" style={{ color: "#F0E8D8" }}>{faceShape}</p>
-              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(131,24,67,0.68)" }}>
+              <p className="font-serif text-xl" style={{ color: "#4a1428" }}>{faceShape}</p>
+              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(131,24,67,0.72)" }}>
                 {FACE_SHAPE_DESC[faceShape] ?? "Unique and striking features."}
               </p>
             </div>
@@ -354,14 +354,14 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#63A282" }}>Skin Profile</p>
             </div>
             <div>
-              <p className="font-serif text-xl" style={{ color: "#F0E8D8" }}>{skinType}</p>
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(131,24,67,0.68)" }}>
+              <p className="font-serif text-xl" style={{ color: "#4a1428" }}>{skinType}</p>
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(131,24,67,0.72)" }}>
                 {SKIN_TYPE_DESC[skinType] ?? ""}
               </p>
             </div>
             {skinConcerns.length > 0 && (
               <div>
-                <p className="text-[11px] mb-1" style={{ color: "rgba(131,24,67,0.45)" }}>Active concerns</p>
+                  <p className="text-[11px] mb-1" style={{ color: "rgba(131,24,67,0.65)" }}>Active concerns</p>
                 <div className="flex flex-wrap gap-1">
                   {skinConcerns.map((c, idx) => {
                     const label = getConcernLabel(c);
@@ -396,15 +396,15 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             </div>
             <div>
               {latest?.hairstyle?.hairType && (
-                <p className="text-xs mb-2" style={{ color: "rgba(131,24,67,0.68)" }}>
-                  Hair type: <span style={{ color: "#F0E8D8" }}>{latest.hairstyle.hairType}</span>
+                <p className="text-xs mb-2" style={{ color: "rgba(131,24,67,0.72)" }}>
+                  Hair type: <span style={{ color: "#4a1428" }}>{latest.hairstyle.hairType}</span>
                 </p>
               )}
               <div className="space-y-1">
                 {hairstyleNames.map((name) => (
                   <div key={name} className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#638FB3" }} />
-                    <span className="text-sm" style={{ color: "#F0E8D8" }}>{name}</span>
+                    <span className="text-sm" style={{ color: "#4a1428" }}>{name}</span>
                   </div>
                 ))}
               </div>
@@ -420,33 +420,33 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="rounded-2xl p-5"
-          style={{ background: "rgba(131,24,67,0.08)", border: "1px solid rgba(131,24,67,0.14)" }}
+          style={{ background: "rgba(131,24,67,0.08)", border: "1px solid rgba(131,24,67,0.18)" }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <Eye className="h-4 w-4" style={{ color: "rgba(131,24,67,0.5)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.45)" }}>
+            <Eye className="h-4 w-4" style={{ color: "rgba(131,24,67,0.65)" }} />
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.65)" }}>
               Quick Style Rules
             </p>
           </div>
           <div className="grid sm:grid-cols-3 gap-3">
             {season && (
               <div>
-                <p className="text-[10px] mb-1" style={{ color: "rgba(240,232,216,0.3)" }}>Wear more of</p>
-                <p className="text-xs" style={{ color: "rgba(240,232,216,0.7)" }}>
+                <p className="text-[10px] mb-1" style={{ color: "rgba(131,24,67,0.55)" }}>Wear more of</p>
+                <p className="text-xs font-medium" style={{ color: "#831843" }}>
                   {seasonTraits?.keywords.slice(0, 2).join(", ") ?? "earthy, warm tones"}
                 </p>
               </div>
             )}
             {metals.length > 0 && (
               <div>
-                <p className="text-[10px] mb-1" style={{ color: "rgba(240,232,216,0.3)" }}>Jewellery</p>
-                <p className="text-xs" style={{ color: "rgba(240,232,216,0.7)" }}>{metals.join(", ")}</p>
+                <p className="text-[10px] mb-1" style={{ color: "rgba(131,24,67,0.55)" }}>Jewellery</p>
+                <p className="text-xs font-medium" style={{ color: "#831843" }}>{metals.join(", ")}</p>
               </div>
             )}
             {skinConcerns.length > 0 && (
               <div>
-                <p className="text-[10px] mb-1" style={{ color: "rgba(240,232,216,0.3)" }}>Focus on</p>
-                <p className="text-xs" style={{ color: "rgba(240,232,216,0.7)" }}>
+                <p className="text-[10px] mb-1" style={{ color: "rgba(131,24,67,0.55)" }}>Focus on</p>
+                <p className="text-xs font-medium" style={{ color: "#831843" }}>
                   {getConcernLabel(skinConcerns[0])} care
                 </p>
               </div>
