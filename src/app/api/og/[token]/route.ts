@@ -62,8 +62,8 @@ export async function GET(
     headers: {
       "Content-Type": "image/jpeg",
       "X-Content-Type-Options": "nosniff",
-      // private: OG selfie must not be cached by CDN — share revocation must take effect immediately
-      "Cache-Control": "private, max-age=3600",
+      // no-store: selfie must never be cached — share revocation must take effect immediately
+      "Cache-Control": "no-store",
     },
   });
 }

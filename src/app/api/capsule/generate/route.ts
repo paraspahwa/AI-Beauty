@@ -99,8 +99,8 @@ RULES:
 5. Each "fabric" field should match the user's skin type (${skinAnalysis?.type ?? "Normal"}).
 6. myntraQuery and amazonQuery should be short search terms that will find the item on those platforms.
 
-Return ONLY a JSON array of 10 items with this exact shape (no markdown, no prose):
-[
+Return a JSON object with an "items" key containing an array of exactly 10 items (no markdown, no prose):
+{"items": [
   {
     "number": 1,
     "category": "Base" | "Colour" | "Neutral" | "Pattern" | "Evening" | "Occasion",
@@ -112,7 +112,7 @@ Return ONLY a JSON array of 10 items with this exact shape (no markdown, no pros
     "amazonQuery": "search term for Amazon India"
   },
   ...
-]`;
+]}`
 }
 
 // ── Route handler ──────────────────────────────────────────────────────────────
@@ -170,10 +170,11 @@ export async function POST(req: NextRequest) {
       model: env.openai.miniModel,
       temperature: 0.7,
       max_tokens: 2000,
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content: "You are a world-class personal stylist. Respond ONLY with valid JSON — no markdown, no prose, no code fences.",
+          content: "You are a world-class personal stylist. Respond ONLY with valid JSON — no markdown, no prose, no code fences. Return a JSON object with an \"items\" array.",
         },
         {
           role: "user",
@@ -186,9 +187,15 @@ export async function POST(req: NextRequest) {
 
     let items: CapsuleItem[];
     try {
-      // Strip any accidental code fences before parsing
-      const cleaned = raw.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").trim();
-      items = JSON.parse(cleaned) as CapsuleItem[];
+      const parsed = JSON.parse(raw) as unknown;
+      // response_format: json_object wraps in an object — accept either { items: [...] } or a bare array
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && "items" in (parsed as Record<string, unknown>)) {
+        items = (parsed as { items: CapsuleItem[] }).items;
+      } else if (Array.isArray(parsed)) {
+        items = parsed as CapsuleItem[];
+      } else {
+        throw new Error("Unexpected shape");
+      }
       if (!Array.isArray(items) || items.length === 0) throw new Error("Empty array");
     } catch {
       console.error("[capsule] Failed to parse AI response:", raw.slice(0, 200));

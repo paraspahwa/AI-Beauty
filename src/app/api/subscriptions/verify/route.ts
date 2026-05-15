@@ -64,18 +64,22 @@ export async function POST(req: NextRequest) {
     const admin = createSupabaseAdminClient();
 
     // Mark as pending_activation — webhook will confirm to 'active'
-    const { error: updateErr } = await admin
+    const { error: updateErr, count } = await admin
       .from("subscriptions")
       .update({
         status:     "pending_activation",
         updated_at: new Date().toISOString(),
-      })
+      }, { count: "exact" })
       .eq("provider_subscription_id", body.razorpay_subscription_id)
       .eq("user_id", user.id);
 
     if (updateErr) {
       console.error("[subscriptions/verify] db update failed", updateErr);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+
+    if (count === 0) {
+      return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
     }
 
     return NextResponse.json({ ok: true });

@@ -68,6 +68,9 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(raw) || raw.length === 0) {
       return NextResponse.json({ error: "messages is required" }, { status: 400 });
     }
+    if (raw.length > MAX_HISTORY * 2 + 4) {
+      return NextResponse.json({ error: "Too many messages in payload" }, { status: 400 });
+    }
 
     // Sanitize and cap input
     const messages: Message[] = raw

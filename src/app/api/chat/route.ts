@@ -209,20 +209,22 @@ export async function POST(req: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
+    if (!row) {
+      return NextResponse.json({ error: "Report not found" }, { status: 404 });
+    }
+
     // Gate premium fields — free users only get face shape + color analysis in AI context
-    const isPremium = row ? hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email }) : false;
-    const contextRow: Partial<CompiledReport> = row
-      ? {
-          faceShape:     row.face_shape      ?? undefined,
-          colorAnalysis: row.color_analysis   ?? undefined,
-          skinAnalysis:  isPremium ? row.skin_analysis ?? undefined : undefined,
-          features:      isPremium ? row.features      ?? undefined : undefined,
-          glasses:       isPremium ? row.glasses       ?? undefined : undefined,
-          hairstyle:     isPremium ? row.hairstyle     ?? undefined : undefined,
-          summary:       isPremium ? row.summary       ?? undefined : undefined,
-        }
-      : {};
-    const reportContext = row ? buildReportContext(contextRow) : "";
+    const isPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
+    const contextRow: Partial<CompiledReport> = {
+      faceShape:     row.face_shape      ?? undefined,
+      colorAnalysis: row.color_analysis   ?? undefined,
+      skinAnalysis:  isPremium ? row.skin_analysis ?? undefined : undefined,
+      features:      isPremium ? row.features      ?? undefined : undefined,
+      glasses:       isPremium ? row.glasses       ?? undefined : undefined,
+      hairstyle:     isPremium ? row.hairstyle     ?? undefined : undefined,
+      summary:       isPremium ? row.summary       ?? undefined : undefined,
+    };
+    const reportContext = buildReportContext(contextRow);
     const systemContent = SYSTEM_PROMPT + reportContext;
 
     // Cap history at last 12 messages to control token cost
