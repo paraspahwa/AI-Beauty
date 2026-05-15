@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type TouchEvent as ReactTouchEvent } from "react";
 
 export type BeforeAfterItem = {
   id: string;
@@ -40,53 +40,97 @@ const DEFAULT_TUNING: ShowcaseTuning = {
 function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: ShowcaseTuning }) {
   const [beforeSrc, setBeforeSrc] = useState(item.beforeSrc);
   const [afterSrc, setAfterSrc] = useState(item.afterSrc);
+  const [sliderPct, setSliderPct] = useState(100);
+  const animating = useRef(true);
 
   useEffect(() => {
     setBeforeSrc(item.beforeSrc);
     setAfterSrc(item.afterSrc);
   }, [item.afterSrc, item.beforeSrc]);
 
+  // Auto-demo: animate slider from 100 → 50 on mount
+  useEffect(() => {
+    let frame: number;
+    let start: number | null = null;
+    const delay = setTimeout(() => {
+      const animate = (ts: number) => {
+        if (!start) start = ts;
+        const progress = Math.min((ts - start) / 1100, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setSliderPct(100 - eased * 50);
+        if (progress < 1) frame = requestAnimationFrame(animate);
+        else animating.current = false;
+      };
+      frame = requestAnimationFrame(animate);
+    }, 500);
+    return () => {
+      clearTimeout(delay);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  const handleMove = (clientX: number, target: HTMLElement) => {
+    const rect = target.getBoundingClientRect();
+    const pct = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
+    animating.current = false;
+    setSliderPct(pct);
+  };
+
   return (
     <motion.article
-      className={`${tuning.cardWidthClass} shrink-0 overflow-hidden rounded-3xl border border-terracotta/20 bg-white/85 shadow-card`}
+      className={`${tuning.cardWidthClass} shrink-0 overflow-hidden rounded-3xl border border-terracotta/20 bg-white/85 shadow-card cursor-ew-resize select-none`}
       whileHover={{ y: -4, scale: 1.02 }}
       transition={{ type: "spring", stiffness: 280, damping: 20 }}
+      onMouseMove={(e: ReactMouseEvent<HTMLElement>) => handleMove(e.clientX, e.currentTarget as HTMLElement)}
+      onTouchMove={(e: ReactTouchEvent<HTMLElement>) => handleMove(e.touches[0].clientX, e.currentTarget as HTMLElement)}
     >
-      <div className={`relative grid grid-cols-2 ${tuning.cardHeightClass}`}>
-        <div className="relative">
-          <Image
-            src={beforeSrc}
-            alt={item.beforeAlt}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 112px, 128px"
-            onError={() => {
-              if (beforeSrc !== item.beforeFallbackSrc) {
-                setBeforeSrc(item.beforeFallbackSrc);
-              }
-            }}
-          />
-          <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-            Before
-          </span>
-        </div>
-        <div className="relative">
+      <div className={`relative ${tuning.cardHeightClass}`}>
+        {/* After image — always visible underneath */}
+        <div className="absolute inset-0">
           <Image
             src={afterSrc}
             alt={item.afterAlt}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 112px, 128px"
+            sizes="(max-width: 640px) 224px, 256px"
             onError={() => {
-              if (afterSrc !== item.afterFallbackSrc) {
-                setAfterSrc(item.afterFallbackSrc);
-              }
+              if (afterSrc !== item.afterFallbackSrc) setAfterSrc(item.afterFallbackSrc);
             }}
           />
-          <span className="absolute right-2 top-2 rounded-full bg-terracotta px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-            After
-          </span>
         </div>
+        {/* Before image — clipped to show left portion */}
+        <div
+          className="absolute inset-0"
+          style={{ clipPath: `inset(0 ${100 - sliderPct}% 0 0)` }}
+        >
+          <Image
+            src={beforeSrc}
+            alt={item.beforeAlt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 224px, 256px"
+            onError={() => {
+              if (beforeSrc !== item.beforeFallbackSrc) setBeforeSrc(item.beforeFallbackSrc);
+            }}
+          />
+        </div>
+        {/* Divider line + handle */}
+        <div
+          className="pointer-events-none absolute inset-y-0 flex flex-col items-center"
+          style={{ left: `${sliderPct}%`, transform: "translateX(-50%)" }}
+        >
+          <div className="h-full w-0.5 bg-white/80 shadow-sm" />
+          <div className="absolute top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-terracotta/60 bg-white text-[11px] font-bold text-terracotta/80 shadow-md">
+            ⇄
+          </div>
+        </div>
+        {/* Labels */}
+        <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+          Before
+        </span>
+        <span className="absolute right-2 top-2 rounded-full bg-terracotta px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+          After
+        </span>
       </div>
       <div className="space-y-1 px-4 py-3">
         <p className="text-sm font-semibold text-ink">{item.title}</p>

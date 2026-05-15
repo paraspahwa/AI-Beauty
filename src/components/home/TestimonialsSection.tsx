@@ -27,8 +27,25 @@ function initials(name: string): string {
 export function TestimonialsSection({ items }: TestimonialsSectionProps) {
   return (
     <section className="container max-w-6xl py-16">
-      <h2 className="text-center text-3xl text-ink sm:text-4xl">Loved by thousands</h2>
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
+      <div className="mb-2 flex flex-col items-center gap-2 text-center">
+        <h2 className="text-3xl text-ink sm:text-4xl">Loved by thousands</h2>
+        <p className="mt-3 text-5xl font-semibold text-ink">4.9</p>
+        <div className="flex gap-1">
+          {[...Array(5)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.07, type: "spring", stiffness: 260 }}
+            >
+              <Star className="h-5 w-5 fill-terracotta text-terracotta" />
+            </motion.div>
+          ))}
+        </div>
+        <p className="text-sm text-ink-stone">from 50,000+ beauty analyses</p>
+      </div>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => (
           <motion.article
             key={item.id}

@@ -3,11 +3,11 @@ import {
   ArrowRight,
   Camera,
   CheckCircle2,
+  Clock,
   Droplets,
   Glasses,
   Scissors,
   ShieldCheck,
-  Sparkles,
   Star,
   Wand2,
 } from "lucide-react";
@@ -16,6 +16,9 @@ import { SampleShowcase } from "@/components/home/SampleShowcase";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
 import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
 import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
+import { ActivityTicker } from "@/components/home/ActivityTicker";
+import { HeroReportCard } from "@/components/home/HeroReportCard";
+import { StickyMobileCta } from "@/components/home/StickyMobileCta";
 import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
 
 const FEATURES = [
@@ -85,6 +88,12 @@ const TESTIMONIALS: TestimonialItem[] = [
     tag: "Hair Guide",
     quote: "I changed my haircut confidently because I could preview the shape beforehand.",
   },
+  {
+    id: "meera",
+    name: "Meera R.",
+    tag: "Skin Routine",
+    quote: "I stopped buying the wrong foundations. My routine is down to 6 products that actually work for my skin.",
+  },
 ];
 
 const FAQS: FAQItem[] = [
@@ -114,7 +123,16 @@ const FAQS: FAQItem[] = [
 
 const STATS: StatItem[] = HOME_CONTENT.stats;
 
-const PLANS = [
+const PLANS: {
+  name: string;
+  price: string;
+  originalPrice?: string;
+  note: string;
+  cta: string;
+  href: string;
+  featured: boolean;
+  items: string[];
+}[] = [
   {
     name: "Free Preview",
     price: "Rs 0",
@@ -127,6 +145,7 @@ const PLANS = [
   {
     name: "Full Report",
     price: "Rs 299",
+    originalPrice: "Rs 599",
     note: "One-time payment",
     cta: "Get my report",
     href: "/upload",
@@ -160,6 +179,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden">
+      <ActivityTicker />
       <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
@@ -184,50 +204,27 @@ export default function HomePage() {
               </Button>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-ink-stone">
-              <span className="inline-flex items-center gap-1.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-terracotta text-terracotta" />
+            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-ink-stone">
+              <div className="flex -space-x-2">
+                {["#EC4899", "#8B5CF6", "#F9A8D4", "#C4B5FD", "#FBCFE8"].map((c, i) => (
+                  <div
+                    key={i}
+                    className="h-8 w-8 rounded-full border-2 border-white ring-1 ring-terracotta/20"
+                    style={{ background: `radial-gradient(circle at 35% 35%, ${c}55, ${c}cc)` }}
+                  />
                 ))}
-                4.9 average rating
+              </div>
+              <span className="font-medium text-ink">50,000+ analyses</span>
+              <span className="text-ink-stone/40">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> ~60 second results
               </span>
-              <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-sage" />
-                50,000+ analyses
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-sage" />
-                30-day guarantee
-              </span>
+              <span className="text-ink-stone/40">·</span>
+              <span>No card required</span>
             </div>
           </div>
 
-          <div className="card-soft relative">
-            <div className="absolute right-4 top-4 rounded-full bg-terracotta/15 px-3 py-1 text-xs font-semibold text-terracotta">
-              Sample Report
-            </div>
-            <div className="flex items-center gap-2 text-sm text-ink-stone">
-              <Sparkles className="h-4 w-4 text-terracotta" />
-              Renovaara preview
-            </div>
-            <h2 className="mt-3 text-2xl text-ink">Soft Autumn profile</h2>
-            <p className="mt-2 text-sm text-ink-stone">
-              Warm undertone, balanced oval face shape, medium contrast features.
-            </p>
-            <div className="mt-5 space-y-2">
-              {[
-                "Top lipstick families",
-                "Best frame geometry",
-                "Hair length recommendations",
-                "AM and PM skin routine",
-              ].map((item) => (
-                <div key={item} className="flex items-center justify-between rounded-xl border border-terracotta/20 bg-white/70 px-4 py-2.5">
-                  <span className="text-sm text-ink-stone">{item}</span>
-                  <CheckCircle2 className="h-4 w-4 text-terracotta" />
-                </div>
-              ))}
-            </div>
-          </div>
+          <HeroReportCard />
         </div>
       </section>
 
@@ -304,12 +301,24 @@ export default function HomePage() {
               className={plan.featured ? "card-soft relative border-2 border-terracotta/50" : "card-soft"}
             >
               {plan.featured ? (
-                <span className="absolute right-4 top-4 rounded-full bg-terracotta text-white px-3 py-1 text-xs font-semibold">
+                <span className="absolute right-4 top-4 rounded-full bg-terracotta text-white px-3 py-1 text-xs font-semibold ring-2 ring-terracotta/30 ring-offset-1 animate-pulse">
                   Popular
                 </span>
               ) : null}
-              <h3 className="text-lg text-ink">{plan.name}</h3>
-              <p className="mt-1 text-3xl text-ink">{plan.price}</p>
+              {plan.featured && (
+                <span className="inline-flex items-center rounded-full bg-sage/20 px-2.5 py-0.5 text-xs text-sage">
+                  Launch offer
+                </span>
+              )}
+              <h3 className="mt-1 text-lg text-ink">{plan.name}</h3>
+              {plan.originalPrice ? (
+                <div className="mt-1 flex items-center gap-2">
+                  <p className="text-3xl text-ink">{plan.price}</p>
+                  <s className="text-sm text-ink-mist">{plan.originalPrice}</s>
+                </div>
+              ) : (
+                <p className="mt-1 text-3xl text-ink">{plan.price}</p>
+              )}
               <p className="mt-1 text-xs text-ink-stone">{plan.note}</p>
               <ul className="mt-6 space-y-2.5 text-sm text-ink-stone">
                 {plan.items.map((item) => (
@@ -325,6 +334,10 @@ export default function HomePage() {
             </article>
           ))}
         </div>
+        <div className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-sage/10 px-6 py-3 text-sm text-ink-stone">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-sage" />
+          30-day money-back guarantee — no questions asked
+        </div>
       </section>
 
       <TestimonialsSection items={TESTIMONIALS} />
@@ -333,6 +346,7 @@ export default function HomePage() {
         <h2 className="text-center text-3xl sm:text-4xl text-ink">Frequently asked questions</h2>
         <FAQAccordion items={FAQS} />
       </section>
+      <StickyMobileCta />
     </main>
   );
 }
