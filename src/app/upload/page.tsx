@@ -38,8 +38,8 @@ export default function UploadPage() {
               <span className="gradient-text font-bold">selfie</span>
             </h1>
             <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
-              One selfie unlocks your full AI beauty report: face shape, virtual clothing try-on,
-              makeup try-on, spectacles, and hairstyle guide.
+              One selfie unlocks your full AI beauty report — face shape, virtual clothing try-on,
+              makeup try-on, spectacles, hairstyle guide, skin routine, and your Do vs Avoid Style Guide.
             </p>
           </motion.header>
 

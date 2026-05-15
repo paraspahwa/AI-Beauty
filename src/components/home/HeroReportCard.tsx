@@ -8,6 +8,7 @@ const REPORT_ITEMS = [
   "Best frame geometry",
   "Hair length recommendations",
   "AM and PM skin routine",
+  "Do vs Avoid style rules",
 ];
 
 export function HeroReportCard() {

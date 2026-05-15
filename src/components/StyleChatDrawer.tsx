@@ -21,12 +21,18 @@ const CATEGORIES = [
   { id: "hair",     label: "💇 Hair" },
   { id: "skin",     label: "🧴 Skin" },
   { id: "frames",   label: "👓 Frames" },
+  { id: "style",    label: "✅ Style Guide" },
   { id: "occasion", label: "🎉 Occasion" },
 ] as const;
 
 type CategoryId = (typeof CATEGORIES)[number]["id"];
 
 const STATIC_CATEGORY_QUESTIONS: Record<CategoryId, string[]> = {
+  style: [
+    "Which silhouettes should I avoid for my body type?",
+    "What necklines are most flattering for me?",
+    "Give me a Do vs Avoid breakdown for bottoms",
+  ],
   wardrobe: [
     "Build me a capsule wardrobe for my color season",
     "What neutral tones work best for my undertone?",
@@ -165,7 +171,7 @@ function buildDynamicSuggestions(report?: Partial<CompiledReport>): string[] {
 const GREETING: Message = {
   role: "assistant",
   content:
-    "Hi! I'm your Renovaara consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, or style for any occasion! ✨",
+    "Hi! I'm your Renovaara style consultant — I've read your full report. Ask me anything about your colors, hairstyles, glasses, skincare, Do vs Avoid style rules, or what to wear for any occasion! ✨",
 };
 
 // ── Share helper — Web Share API with clipboard fallback ─────────────────────

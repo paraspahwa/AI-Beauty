@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BookOpen,
   Camera,
   CheckCircle2,
   Clock,
@@ -47,6 +48,12 @@ const FEATURES = [
     description:
       "Receive concern-based AM and PM routine suggestions with ingredient guidance.",
   },
+  {
+    icon: BookOpen,
+    title: "Do vs Avoid Style Guide",
+    description:
+      "See what silhouettes, necklines, and bottoms to embrace or skip — backed by reference images for every rule.",
+  },
 ];
 
 const STEPS = [
@@ -60,13 +67,14 @@ const STEPS = [
       "Face shape, season, undertone, and key style traits are analyzed in under a minute.",
   },
   {
-    title: "Try styles virtually",
-    description: "Test makeup and style directions safely before making any beauty purchases.",
+    title: "Explore your Style Guide",
+    description:
+      "Browse Do vs Avoid rules for tops, bottoms, and necklines — with reference images for every recommendation.",
   },
   {
-    title: "Get your complete report",
+    title: "Try styles and get your report",
     description:
-      "Unlock your full style blueprint with personalized recommendations and a shareable summary.",
+      "Test makeup, hairstyles, and clothing virtually, then unlock your full personalized blueprint.",
   },
 ];
 
@@ -120,6 +128,18 @@ const FAQS: FAQItem[] = [
     question: "Can I request a refund?",
     answer: "Yes. Paid plans are covered by a 30-day money-back guarantee.",
   },
+  {
+    id: "style-guide",
+    question: "What is the Do vs Avoid Style Guide?",
+    answer:
+      "The Style Guide is a visual education module showing which silhouettes, necklines, and bottoms flatter most body types — and which to skip. It lives on the homepage and in the Style Guide tab of every report, and it's free to browse.",
+  },
+  {
+    id: "chat",
+    question: "Can I ask follow-up questions about my report?",
+    answer:
+      "Yes. Every report includes an AI style consultant chat. Ask anything about your color season, hairstyle, frames, skin routine, or what to wear for a specific occasion — your full report is already loaded as context.",
+  },
 ];
 
 const STATS: StatItem[] = HOME_CONTENT.stats;
@@ -157,6 +177,8 @@ const PLANS: {
       "Virtual clothing try-on",
       "Spectacles and hairstyle guide",
       "Skin routine recommendations",
+      "Style Guide — Do vs Avoid module",
+      "AI style consultant chat",
     ],
   },
   {
@@ -171,6 +193,7 @@ const PLANS: {
       "Higher generation limits",
       "Priority processing",
       "Continuous style tracking",
+      "Unlimited consultant chat sessions",
     ],
   },
 ];
@@ -239,7 +262,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <article key={title} className="card-soft">
               <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta/15 text-terracotta">
