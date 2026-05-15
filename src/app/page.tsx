@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SampleShowcase } from "@/components/home/SampleShowcase";
+import { DoAvoidEducationStrip } from "./DoAvoidEducationStrip";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
 import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
 import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
@@ -268,7 +269,11 @@ export default function HomePage() {
         </div>
       </section>
 
+
       <SampleShowcase items={showcaseItems} tuning={HOME_CONTENT.showcase.tuning} />
+
+      {/* MVP Do vs Avoid education strip */}
+      <DoAvoidEducationStrip />
 
       <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
         <div className="text-center">

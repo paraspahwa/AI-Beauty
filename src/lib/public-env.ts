@@ -22,6 +22,7 @@ export const publicEnv = {
   },
   flags: {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",
+    doAvoidModule: optional(process.env.NEXT_PUBLIC_ENABLE_DO_AVOID_MODULE, "true") === "true",
   },
 };
 

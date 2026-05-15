@@ -54,8 +54,31 @@ function normalizeSamplePath(fileName: string): string {
   return fileName.startsWith("/") ? fileName : `/samples/${fileName}`;
 }
 
-const DEFAULT_BEFORE_FALLBACK = "/samples/sample-N-before.jpg";
-const DEFAULT_AFTER_FALLBACK = "/samples/sample-N-after.jpg";
+type SampleSide = "before" | "after";
+
+const LABELLED_SAMPLE_BASES = ["sample-1", "sample-2", "sample-3"] as const;
+type LabelledSampleBase = (typeof LABELLED_SAMPLE_BASES)[number];
+const LABELLED_SAMPLE_BASE_SET: ReadonlySet<LabelledSampleBase> = new Set(LABELLED_SAMPLE_BASES);
+
+function isLabelledSampleBase(baseName: string): baseName is LabelledSampleBase {
+  return LABELLED_SAMPLE_BASE_SET.has(baseName as LabelledSampleBase);
+}
+
+function getFallbackBaseName(baseName: string): string {
+  return isLabelledSampleBase(baseName) ? baseName : "sample-N";
+}
+
+function getFallbackSrc(baseName: string, side: SampleSide): string {
+  const fallbackBaseName = getFallbackBaseName(baseName);
+  return side === "before"
+    ? `/samples/${fallbackBaseName}-before.jpg`
+    : `/samples/${fallbackBaseName}-after.jpg`;
+}
+
+function getDefaultAlt(baseName: string, side: SampleSide): string {
+  const fallbackBaseName = getFallbackBaseName(baseName);
+  return `${fallbackBaseName} ${side}`;
+}
 
 export function toBeforeAfterItems(): BeforeAfterItem[] {
   return HOME_CONTENT.showcase.pairs.map((pair) => ({
@@ -68,9 +91,9 @@ export function toBeforeAfterItems(): BeforeAfterItem[] {
     afterSrc: pair.afterFile
       ? normalizeSamplePath(pair.afterFile)
       : pairPath(pair.baseName, "after", pair.ext ?? "jpg"),
-    beforeFallbackSrc: DEFAULT_BEFORE_FALLBACK,
-    afterFallbackSrc: DEFAULT_AFTER_FALLBACK,
-    beforeAlt: pair.beforeAlt ?? "Before AI-guided beauty recommendations",
-    afterAlt: pair.afterAlt ?? "After AI-guided beauty recommendations",
+    beforeFallbackSrc: getFallbackSrc(pair.baseName, "before"),
+    afterFallbackSrc: getFallbackSrc(pair.baseName, "after"),
+    beforeAlt: pair.beforeAlt ?? getDefaultAlt(pair.baseName, "before"),
+    afterAlt: pair.afterAlt ?? getDefaultAlt(pair.baseName, "after"),
   }));
 }

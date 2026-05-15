@@ -1,0 +1,53 @@
+[
+  {
+    "category": "tops",
+    "summary": "These styles define your shape and provide comfort & support.",
+    "do": [
+      { "label": "Wrap Dresses / Tops", "image": "/samples/seedream-wrap-dress.jpg" },
+      { "label": "Slightly Fitted Waist", "image": "/samples/seedream-fitted-waist.jpg" },
+      { "label": "A-Line Silhouettes", "image": "/samples/seedream-a-line.jpg" },
+      { "label": "Vertical Seams", "image": "/samples/seedream-vertical-seam.jpg" }
+    ],
+    "avoid": [
+      { "label": "Very Tight / Bodycon", "image": "/samples/seedream-bodycon.jpg" },
+      { "label": "Empire Waist", "image": "/samples/seedream-empire-waist.jpg" },
+      { "label": "Oversized / Boxy", "image": "/samples/seedream-boxy.jpg" },
+      { "label": "Thin & Clingy Fabrics", "image": "/samples/seedream-clingy.jpg" }
+    ],
+    "cta": "See full style guide"
+  },
+  {
+    "category": "bottoms",
+    "summary": "These balance your proportions and create a flattering silhouette.",
+    "do": [
+      { "label": "Wide-Leg Pants", "image": "/samples/seedream-wide-leg.jpg" },
+      { "label": "Straight Pants", "image": "/samples/seedream-straight-pant.jpg" },
+      { "label": "A-Line Skirts", "image": "/samples/seedream-a-line-skirt.jpg" },
+      { "label": "Flared Jeans", "image": "/samples/seedream-flared-jean.jpg" }
+    ],
+    "avoid": [
+      { "label": "Too Tight", "image": "/samples/seedream-tight-bottom.jpg" },
+      { "label": "Low-Rise Skinny Jeans", "image": "/samples/seedream-low-rise.jpg" },
+      { "label": "Very Short Skirts", "image": "/samples/seedream-short-skirt.jpg" },
+      { "label": "Extremely Baggy", "image": "/samples/seedream-baggy.jpg" }
+    ],
+    "cta": "See full style guide"
+  },
+  {
+    "category": "necklines",
+    "summary": "These elongate your neckline and create a balanced look.",
+    "do": [
+      { "label": "V-Neck", "image": "/samples/seedream-v-neck.jpg" },
+      { "label": "Wrap Neck", "image": "/samples/seedream-wrap-neck.jpg" },
+      { "label": "Scoop Neck", "image": "/samples/seedream-scoop-neck.jpg" },
+      { "label": "Square Neck", "image": "/samples/seedream-square-neck.jpg" }
+    ],
+    "avoid": [
+      { "label": "High Neck", "image": "/samples/seedream-high-neck.jpg" },
+      { "label": "Crew Neck", "image": "/samples/seedream-crew-neck.jpg" },
+      { "label": "Halter Neck", "image": "/samples/seedream-halter-neck.jpg" },
+      { "label": "High Boat Neck", "image": "/samples/seedream-boat-neck.jpg" }
+    ],
+    "cta": "See full style guide"
+  }
+]

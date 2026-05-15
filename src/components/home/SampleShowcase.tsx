@@ -42,6 +42,9 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
   const [afterSrc, setAfterSrc] = useState(item.afterSrc);
   const [sliderPct, setSliderPct] = useState(100);
   const animating = useRef(true);
+  const sampleLabel = item.id || "sample";
+  const beforeBadgeLabel = `${sampleLabel} before`;
+  const afterBadgeLabel = `${sampleLabel} after`;
 
   useEffect(() => {
     setBeforeSrc(item.beforeSrc);
@@ -126,10 +129,10 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
         </div>
         {/* Labels */}
         <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-          Before
+          {beforeBadgeLabel}
         </span>
         <span className="absolute right-2 top-2 rounded-full bg-terracotta px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-          After
+          {afterBadgeLabel}
         </span>
       </div>
       <div className="space-y-1 px-4 py-3">

@@ -11,25 +11,30 @@ import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
+import { DoAvoidGuidanceCard } from "@/components/ui/DoAvoidGuidanceCard";
+import type { DoAvoidGuidanceConfig } from "@/types/doAvoidGuidance";
+import guidanceData from "@/content/do-avoid-guidance.json";
+import { publicEnv } from "@/lib/public-env";
 import { Paywall } from "@/components/Paywall";
 import { StyleChatDrawer } from "@/components/StyleChatDrawer";
 import type { CompiledReport } from "@/types/report";
 import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
 
-const TABS = [
+const TABS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "face",    label: "Face" },
   { value: "skin",    label: "Skin" },
   { value: "glasses", label: "Spectacles" },
   { value: "hair",    label: "Hairstyle" },
   { value: "studio",  label: "AI Studio" },
   { value: "shop",    label: "Shop" },
-] as const;
+  ...(publicEnv.flags.doAvoidModule ? [{ value: "style", label: "Style Guide" }] : []),
+];
 
 interface Props {
   report: CompiledReport;
   /** True on the public /r/[token] page — disables auth-gated features */
   isReadOnly?: boolean;
-  initialTab?: "face"|"skin"|"glasses"|"hair"|"studio"|"shop";
+  initialTab?: string;
   initialStudioSourceAssetId?: string | null;
 }
 
@@ -40,9 +45,8 @@ export function ReportLayout({
   initialStudioSourceAssetId = null,
 }: Props) {
   const [report, setReport] = React.useState(initial);
-  const [activeTab, setActiveTab] = React.useState<"face"|"skin"|"glasses"|"hair"|"studio"|"shop">(initialTab);
-  // Radix Tabs passes onValueChange as (value: string) — cast to keep the union type safe
-  const handleTabChange = (value: string) => setActiveTab(value as "face"|"skin"|"glasses"|"hair"|"studio"|"shop");
+  const [activeTab, setActiveTab] = React.useState<string>(initialTab);
+  const handleTabChange = (value: string) => setActiveTab(value);
   const [copied, setCopied] = React.useState(false);
   const [shareLoading, setShareLoading] = React.useState(false);
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
@@ -319,6 +323,7 @@ export function ReportLayout({
               {TABS.map((t) => {
                 const isLocked =
                   !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "studio" || t.value === "shop");
+                // "style" tab is always free
 
                 return (
                   <TabsTrigger
@@ -501,6 +506,29 @@ export function ReportLayout({
                 </motion.div>
               )}
             </TabsContent>
+
+            {publicEnv.flags.doAvoidModule && (
+              <TabsContent value="style" className="mt-0">
+                {activeTab === "style" && (
+                  <motion.div
+                    key="style"
+                    variants={tabContent}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <p className="text-center text-sm text-ink-stone mb-6">
+                      General style guidance — personalized outfit recommendations are coming soon.
+                    </p>
+                    <div className="grid gap-6 md:grid-cols-3">
+                      {(guidanceData as DoAvoidGuidanceConfig).map((block) => (
+                        <DoAvoidGuidanceCard key={block.category} block={block} location="report" />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </TabsContent>
+            )}
           </AnimatePresence>
         </Tabs>
       </motion.div>
