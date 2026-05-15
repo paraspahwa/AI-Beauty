@@ -54,8 +54,8 @@
         "title": "Makeup and color harmony",
         "tag": "Undertone-matched",
         "baseName": "sample-2",
-        "beforeFile": "sample-N-before.jpg",
-        "afterFile": "sample-N-after.jpg"
+        "beforeFile": "sample-2-before.jpg",
+        "afterFile": "sample-2-after.jpg"
       },
       {
         "id": "pair-3",
