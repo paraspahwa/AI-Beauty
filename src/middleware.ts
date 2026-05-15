@@ -17,6 +17,7 @@ const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/ad
 //   /api/reports (POST)  → 15 req / 60 s per IP  (Replicate image generation)
 const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
   { prefix: "/api/analyze",             max: 8  },
+  { prefix: "/api/chat/visitor",        max: 10 }, // unauthenticated — stricter
   { prefix: "/api/chat",                max: 30 },
   { prefix: "/api/reports",             max: 15 },
   { prefix: "/api/payments",            max: 10 },

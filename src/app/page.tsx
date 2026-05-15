@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SampleShowcase } from "@/components/home/SampleShowcase";
 import { DoAvoidEducationStrip } from "./DoAvoidEducationStrip";
+import { VisitorChatWidget } from "@/components/VisitorChatWidget";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
 import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
 import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
@@ -139,6 +140,12 @@ const FAQS: FAQItem[] = [
     question: "Can I ask follow-up questions about my report?",
     answer:
       "Yes. Every report includes an AI style consultant chat. Ask anything about your color season, hairstyle, frames, skin routine, or what to wear for a specific occasion — your full report is already loaded as context.",
+  },
+  {
+    id: "visitor-chat",
+    question: "I have questions before signing up — can I get help?",
+    answer:
+      "Absolutely. Use the chat bubble in the bottom-right corner to talk to Aria, our pre-sales assistant. She can answer questions about features, pricing, privacy, and anything else about Renovaara.",
   },
 ];
 
@@ -375,6 +382,7 @@ export default function HomePage() {
         <FAQAccordion items={FAQS} />
       </section>
       <StickyMobileCta />
+      <VisitorChatWidget />
     </main>
   );
 }
