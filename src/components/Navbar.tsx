@@ -25,7 +25,7 @@ export function Navbar() {
   const isHome = pathname === "/";
 
   React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -56,9 +56,8 @@ export function Navbar() {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled || !isHome
-          ? "backdrop-blur-xl shadow-card"
-          : "backdrop-blur-sm",
-        "bg-obsidian-50/90",
+          ? "glass border-b border-[var(--color-border)] shadow-sm"
+          : "bg-transparent",
       )}
     >
       {/* Shimmer border line — appears on scroll */}

@@ -2,9 +2,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
-  Camera,
   CheckCircle2,
-  Clock,
   Droplets,
   Glasses,
   Scissors,
@@ -23,6 +21,8 @@ import { ActivityTicker } from "@/components/home/ActivityTicker";
 import { HeroReportCard } from "@/components/home/HeroReportCard";
 import { StickyMobileCta } from "@/components/home/StickyMobileCta";
 import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
+import { HeroText } from "@/components/home/HeroText";
+import { RevealSection } from "@/components/home/RevealSection";
 
 const FEATURES = [
   {
@@ -213,73 +213,46 @@ export default function HomePage() {
       <ActivityTicker />
       <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div>
-            <span className="section-label">{HOME_CONTENT.hero.badge}</span>
-            <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl text-ink leading-tight">
-              {HOME_CONTENT.hero.title} <span className="text-iris">{HOME_CONTENT.hero.titleAccent}</span>
-            </h1>
-            <p className="mt-6 max-w-xl text-base sm:text-lg text-ink-stone leading-relaxed">
-              {HOME_CONTENT.hero.description}
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="accent" className="group cta-shimmer cta-glow">
-                <Link href={HOME_CONTENT.hero.primaryCta.href}>
-                  <Camera className="h-4 w-4" />
-                  {HOME_CONTENT.hero.primaryCta.label}
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href={HOME_CONTENT.hero.secondaryCta.href}>{HOME_CONTENT.hero.secondaryCta.label}</Link>
-              </Button>
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-ink-stone">
-              <div className="flex -space-x-2">
-                {["#EC4899", "#8B5CF6", "#F9A8D4", "#C4B5FD", "#FBCFE8"].map((c, i) => (
-                  <div
-                    key={i}
-                    className="h-8 w-8 rounded-full border-2 border-white ring-1 ring-terracotta/20"
-                    style={{ background: `radial-gradient(circle at 35% 35%, ${c}55, ${c}cc)` }}
-                  />
-                ))}
-              </div>
-              <span className="font-medium text-ink">50,000+ analyses</span>
-              <span className="text-ink-stone/40">·</span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" /> ~60 second results
-              </span>
-              <span className="text-ink-stone/40">·</span>
-              <span>No card required</span>
-            </div>
-          </div>
+          <HeroText />
 
           <HeroReportCard />
         </div>
       </section>
 
-      <StatsCounters items={STATS} />
+      <RevealSection>
+        <StatsCounters items={STATS} />
+      </RevealSection>
 
       <section id="features" className="container max-w-6xl py-16 scroll-mt-20">
-        <div className="text-center">
-          <h2 className="text-3xl sm:text-4xl text-ink">Everything in one beauty workflow</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
-            Move from confusion to clarity with recommendations you can use immediately.
-          </p>
-        </div>
+        <RevealSection>
+          <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl text-ink">Everything in one beauty workflow</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
+              Move from confusion to clarity with recommendations you can use immediately.
+            </p>
+          </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {FEATURES.map(({ icon: Icon, title, description }) => (
-            <article key={title} className="card-soft">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta/15 text-terracotta">
-                <Icon className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg text-ink">{title}</h3>
-              <p className="mt-2 text-sm text-ink-stone leading-relaxed">{description}</p>
-            </article>
-          ))}
-        </div>
+          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[minmax(160px,auto)]">
+            {FEATURES.map(({ icon: Icon, title, description }, index) => {
+              const isFeatured = index === 0;
+              const hasBeam = index === 1 || index === 2;
+              const articleClass = isFeatured
+                ? "col-span-2 md:col-span-2 aurora-card chrome-border"
+                : hasBeam
+                ? "col-span-1 card-soft card-beam"
+                : "col-span-1 card-soft";
+              return (
+                <article key={title} className={articleClass}>
+                  <div className={`mb-4 inline-flex items-center justify-center rounded-xl bg-terracotta/15 text-terracotta ${isFeatured ? "h-12 w-12" : "h-10 w-10"}`}>
+                    <Icon className={isFeatured ? "h-6 w-6" : "h-5 w-5"} />
+                  </div>
+                  <h3 className={`text-ink ${isFeatured ? "text-xl" : "text-lg"}`}>{title}</h3>
+                  <p className="mt-2 text-sm text-ink-stone leading-relaxed">{description}</p>
+                </article>
+              );
+            })}
+          </div>
+        </RevealSection>
       </section>
 
       <section className="container max-w-6xl py-8 sm:py-12">
@@ -306,80 +279,86 @@ export default function HomePage() {
       <DoAvoidEducationStrip />
 
       <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
-        <div className="text-center">
-          <h2 className="text-3xl sm:text-4xl text-ink">How it works</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Four quick steps from upload to confidence.</p>
-        </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((step, index) => (
-            <article key={step.title} className="card-soft">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/15 text-xs font-semibold text-terracotta">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="mt-4 text-lg text-ink">{step.title}</h3>
-              <p className="mt-2 text-sm text-ink-stone">{step.description}</p>
-            </article>
-          ))}
-        </div>
+        <RevealSection>
+          <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl text-ink">How it works</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Four quick steps from upload to confidence.</p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((step, index) => (
+              <article key={step.title} className="card-soft">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/15 text-xs font-semibold text-terracotta">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-4 text-lg text-ink">{step.title}</h3>
+                <p className="mt-2 text-sm text-ink-stone">{step.description}</p>
+              </article>
+            ))}
+          </div>
+        </RevealSection>
       </section>
 
       <section id="pricing" className="container max-w-6xl py-16 scroll-mt-20">
-        <div className="text-center">
-          <h2 className="text-3xl sm:text-4xl text-ink">Simple pricing</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Choose the depth that matches your beauty goals.</p>
-        </div>
+        <RevealSection>
+          <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl text-ink">Simple pricing</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Choose the depth that matches your beauty goals.</p>
+          </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {PLANS.map((plan) => (
-            <article
-              key={plan.name}
-              className={plan.featured ? "card-soft relative border-2 border-terracotta/50" : "card-soft"}
-            >
-              {plan.featured ? (
-                <span className="absolute right-4 top-4 rounded-full bg-terracotta text-white px-3 py-1 text-xs font-semibold ring-2 ring-terracotta/30 ring-offset-1 animate-pulse">
-                  Popular
-                </span>
-              ) : null}
-              {plan.featured && (
-                <span className="inline-flex items-center rounded-full bg-sage/20 px-2.5 py-0.5 text-xs text-sage">
-                  Launch offer
-                </span>
-              )}
-              <h3 className="mt-1 text-lg text-ink">{plan.name}</h3>
-              {plan.originalPrice ? (
-                <div className="mt-1 flex items-center gap-2">
-                  <p className="text-3xl text-ink">{plan.price}</p>
-                  <s className="text-sm text-ink-mist">{plan.originalPrice}</s>
-                </div>
-              ) : (
-                <p className="mt-1 text-3xl text-ink">{plan.price}</p>
-              )}
-              <p className="mt-1 text-xs text-ink-stone">{plan.note}</p>
-              <ul className="mt-6 space-y-2.5 text-sm text-ink-stone">
-                {plan.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sage" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Button asChild size="lg" variant={plan.featured ? "accent" : "outline"} className="mt-8 w-full">
-                <Link href={plan.href}>{plan.cta}</Link>
-              </Button>
-            </article>
-          ))}
-        </div>
-        <div className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-sage/10 px-6 py-3 text-sm text-ink-stone">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-sage" />
-          30-day money-back guarantee — no questions asked
-        </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {PLANS.map((plan) => (
+              <article
+                key={plan.name}
+                className={plan.featured ? "card-soft chrome-border relative scale-[1.02] z-10 shadow-card" : "card-soft"}
+              >
+                {plan.featured ? (
+                  <span className="pill absolute -top-3 left-1/2 -translate-x-1/2">
+                    Popular
+                  </span>
+                ) : null}
+                {plan.featured && (
+                  <span className="inline-flex items-center rounded-full bg-sage/20 px-2.5 py-0.5 text-xs text-sage">
+                    Launch offer
+                  </span>
+                )}
+                <h3 className="mt-1 text-lg text-ink">{plan.name}</h3>
+                {plan.originalPrice ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="text-3xl text-ink">{plan.price}</p>
+                    <s className="text-sm text-ink-mist">{plan.originalPrice}</s>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-3xl text-ink">{plan.price}</p>
+                )}
+                <p className="mt-1 text-xs text-ink-stone">{plan.note}</p>
+                <ul className="mt-6 space-y-2.5 text-sm text-ink-stone">
+                  {plan.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sage" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild size="lg" variant={plan.featured ? "accent" : "outline"} className="mt-8 w-full">
+                  <Link href={plan.href}>{plan.cta}</Link>
+                </Button>
+              </article>
+            ))}
+          </div>
+          <div className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-sage/10 px-6 py-3 text-sm text-ink-stone">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-sage" />
+            30-day money-back guarantee — no questions asked
+          </div>
+        </RevealSection>
       </section>
 
       <TestimonialsSection items={TESTIMONIALS} />
 
       <section id="faq" className="container max-w-4xl py-16 scroll-mt-20">
-        <h2 className="text-center text-3xl sm:text-4xl text-ink">Frequently asked questions</h2>
-        <FAQAccordion items={FAQS} />
+        <RevealSection>
+          <h2 className="text-center text-3xl sm:text-4xl text-ink">Frequently asked questions</h2>
+          <FAQAccordion items={FAQS} />
+        </RevealSection>
       </section>
       <StickyMobileCta />
       <VisitorChatWidget />

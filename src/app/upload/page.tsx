@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ImageUploader } from "@/components/ImageUploader";
-import { CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { blurIn, cascadeContainer, fadeUp, springPop, staggerContainer } from "@/lib/animations";
 import { OnboardingGate } from "@/components/OnboardingModal";
 
@@ -46,6 +46,13 @@ export default function UploadPage() {
           {/* ── Upload zone with spinning ring ── */}
           <motion.div variants={fadeUp} className="upload-ring rounded-3xl">
             <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
+          </motion.div>
+
+          {/* ── Trust badges ── */}
+          <motion.div variants={fadeUp} className="mt-6 flex flex-wrap justify-center gap-6 text-xs text-ink-stone">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-sage" /> Your photo is private, never sold</span>
+            <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-sage" /> Results in ~60 seconds</span>
+            <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-sage" /> 30-day refund guarantee</span>
           </motion.div>
 
           {/* ── Tips ── */}
