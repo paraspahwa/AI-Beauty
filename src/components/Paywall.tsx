@@ -423,7 +423,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                   <Button
                     variant="accent"
                     size="lg"
-                    className="w-full text-base h-13 shadow-premium relative overflow-hidden"
+                    className="w-full text-base h-14 shadow-premium relative overflow-hidden"
                     onClick={handleCTA}
                     disabled={loading}
                     style={plan === "studio_pro"

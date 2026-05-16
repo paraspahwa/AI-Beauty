@@ -250,6 +250,8 @@ export default function HomePage() {
                 ? "col-span-2 md:col-span-2 aurora-card chrome-border"
                 : hasBeam
                 ? "col-span-1 card-soft card-beam"
+                : index === 3 || index === 4
+                ? "col-span-1 md:col-span-2 card-soft"
                 : "col-span-1 card-soft";
               return (
                 <article key={title} className={articleClass}>

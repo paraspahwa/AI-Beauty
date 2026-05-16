@@ -39,7 +39,7 @@ export function HeroText() {
 
       <motion.h1
         variants={itemVariants}
-        className="mt-4 text-6xl sm:text-7xl lg:text-8xl text-ink leading-[1.05] tracking-tight"
+        className="mt-4 text-5xl sm:text-6xl lg:text-7xl text-ink leading-[1.05] tracking-tight"
       >
         {HOME_CONTENT.hero.title}{" "}
         <span className="gradient-text font-bold" style={{ filter: "drop-shadow(0 0 28px rgba(236,72,153,0.50))" }}>{HOME_CONTENT.hero.titleAccent}</span>

@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft, Lock, Eye as EyeIcon, EyeOff } from "lucide-react";
+import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft, Lock, EyeOff } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -579,7 +579,7 @@ function AuthContent() {
                             className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-mist hover:text-ink transition-colors"
                             aria-label={showPassword ? "Hide password" : "Show password"}
                           >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
                       </div>

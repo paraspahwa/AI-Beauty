@@ -151,7 +151,7 @@ export default async function DashboardPage() {
 
       {rows.length === 0 ? (
         <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(131,24,67,0.20)" }}>
-          <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(255,255,255,0.2)" }} />
+          <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(131,24,67,0.3)" }} />
           <h2 className="font-serif text-2xl text-ink mb-2">No reports yet</h2>
           <p className="text-ink-stone mb-6">Upload a selfie to get your personalized beauty analysis.</p>
           <Button asChild variant="accent">

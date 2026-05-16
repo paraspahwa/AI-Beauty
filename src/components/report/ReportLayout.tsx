@@ -59,18 +59,17 @@ export function ReportLayout({
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
 
-  async function refresh() {
+  const refresh = React.useCallback(async () => {
     const res = await fetch(`/api/reports/${report.id}`, { cache: "no-store" });
     if (res.ok) setReport(await res.json());
-  }
+  }, [report.id]);
 
   // Poll while the report is still processing
   React.useEffect(() => {
     if (isReadOnly || !isProcessing) return;
     const interval = setInterval(refresh, 4000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isProcessing, report.id, isReadOnly]);
+  }, [isProcessing, report.id, isReadOnly, refresh]);
 
   // Per-slot generating state: Set of slot indices (0-11) currently in-flight.
   const [generatingSlots, setGeneratingSlots] = React.useState<Set<number>>(new Set());
@@ -87,16 +86,14 @@ export function ReportLayout({
     if (!hasVisuals) {
       triggerVisuals();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [report.status, report.id, isReadOnly]);
+  }, [report.status, report.id, isReadOnly, visualsLoading]);
 
   // Poll every 8s while any slot is actively generating (to pick up completed results)
   React.useEffect(() => {
     if (generatingSlots.size === 0) return;
     const timer = setInterval(refresh, 8000);
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generatingSlots.size, report.id]);
+  }, [generatingSlots.size, refresh]);
 
   // Ensure the top hairstyle recommendation has an AI preview when the hairstyle tab is opened.
   React.useEffect(() => {
@@ -301,7 +298,7 @@ export function ReportLayout({
               download={`Renovaara-report-${report.id}.html`}
               rel="noopener"
               className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
             >
               <Download className="h-4 w-4" /> Download PDF
             </a>
@@ -333,7 +330,7 @@ export function ReportLayout({
                     value={t.value}
                     className="relative rounded-xl text-[13px] font-medium px-4 py-2 transition-all data-[state=active]:shadow-sm"
                     style={activeTab === t.value
-                      ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F" }
+                      ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff" }
                       : { color: "#9C7D5B" }}
                   >
                     {isLocked && (
@@ -650,7 +647,7 @@ function Locked({
             className="absolute inset-0 rounded-full blur-xl"
             style={{ background: "rgba(201,149,107,0.25)" }}
           />
-          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
+          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-white shadow-glow" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
             <Lock className="h-8 w-8" />
           </div>
         </motion.div>
