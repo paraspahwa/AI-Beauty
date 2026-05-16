@@ -7,6 +7,7 @@ vi.mock("./openai", () => ({
 vi.mock("./image", () => ({
   compressForAI: vi.fn(async () => Buffer.from("compressed-image")),
   extractClothingColors: vi.fn(async () => ({ clothingColors: [], clothingCoverage: 0 })),
+  cropFaceForSkin: vi.fn(async () => null),
 }));
 
 vi.mock("./rekognition", () => ({
