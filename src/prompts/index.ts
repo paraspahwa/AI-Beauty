@@ -217,4 +217,42 @@ export const COMPILE_PROMPT = `Write a short (120-180 words) personalized intro 
 report given this JSON of analysis results. Warm, encouraging, second-person.
 Return JSON: { "summary": string }`;
 
+// ── Ingredient Analysis ────────────────────────────────────────────────────────
+
+/**
+ * Build the skincare ingredient analysis prompt.
+ * Optionally injects the user's skin profile so the AI can personalise flags.
+ */
+export function buildIngredientAnalysisPrompt(skinProfile?: {
+  type: string;           // e.g. "Oily"
+  concerns: string[];     // e.g. ["Acne", "Hyperpigmentation"]
+}): string {
+  const profileBlock = skinProfile
+    ? `\n\nUSER SKIN PROFILE (personalise your analysis to this):\n  Skin type: ${skinProfile.type}\n  Concerns: ${skinProfile.concerns.join(", ") || "None stated"}\n`
+    : "";
+
+  return `You are a cosmetic-science expert. Analyse the provided skincare product ingredient list and evaluate each ingredient.${profileBlock}
+Return strict JSON with this exact shape — no prose, no markdown, no code fences:
+{
+  "overallScore": number,       // 1-10 compatibility score for this user's skin profile (10 = excellent)
+  "summary": string,            // 2-3 sentence plain-English verdict; mention the most important positives and concerns
+  "highlights": string[],       // up to 3 short phrases describing the best features (e.g. "Hyaluronic acid for deep hydration")
+  "concerns": string[],         // up to 3 short phrases for notable concerns (e.g. "Fragrance may irritate sensitive skin")
+  "flags": [                    // one entry per NOTABLE ingredient (skip unremarkable fillers like water, glycerin filler-grade)
+    {
+      "name": string,           // clean INCI or common name
+      "verdict": "beneficial" | "neutral" | "caution" | "avoid",
+      "reason": string          // one sentence explaining the verdict for this skin profile
+    }
+  ]
+}
+Rules:
+- "avoid" only for confirmed irritants, comedogenic (rating 4-5) for oily/acne-prone, or known allergens.
+- "caution" for moderate irritants, comedogenic 3, or ingredients that may conflict with the stated concerns.
+- "beneficial" for evidence-backed actives that directly address the stated concerns.
+- Keep flags to the most meaningful 5-15 ingredients; skip bulk emulsifiers, pH adjusters, and safe preservatives.
+- overallScore must reflect the skin profile if provided; default to 7 if no profile.
+- If the input does not appear to be an ingredient list, return: { "error": "Not a valid ingredient list" }`;
+}
+
 

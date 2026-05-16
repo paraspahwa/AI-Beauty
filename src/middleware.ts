@@ -23,6 +23,7 @@ const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
   { prefix: "/api/payments",            max: 10 },
   { prefix: "/api/subscriptions",       max: 10 },
   { prefix: "/api/capsule",             max: 15 },
+  { prefix: "/api/ingredients",         max: 20 }, // ingredient analysis — gpt-4o-mini, cheap
 ];
 const RATE_LIMIT_WINDOW_MS = 60_000;
 

@@ -8,6 +8,7 @@ import { Download, Share2, Sparkles, Lock, Loader2, X } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
 import { AIBeautyStudio } from "./AIBeautyStudio";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
+import { IngredientAnalyzer } from "@/components/IngredientAnalyzer";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
@@ -398,10 +399,18 @@ export function ReportLayout({
                   exit="exit"
                 >
                   {isPaid && report.skinAnalysis ? (
-                    <SkinAnalysisCard
-                      data={report.skinAnalysis}
-                      photoUrl={report.imageUrl}
-                    />
+                    <>
+                      <SkinAnalysisCard
+                        data={report.skinAnalysis}
+                        photoUrl={report.imageUrl}
+                      />
+                      <IngredientAnalyzer
+                        skinContext={{
+                          type: report.skinAnalysis.type,
+                          concerns: report.skinAnalysis.concerns.map((c) => c.label),
+                        }}
+                      />
+                    </>
                   ) : (
                     <Locked
                       reportId={report.id}
