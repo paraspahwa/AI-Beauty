@@ -68,7 +68,7 @@ function SuccessContent() {
         </motion.div>
 
         <motion.div variants={fadeUp} className="space-y-3 mb-8">
-          <h1 className="font-serif text-3xl sm:text-4xl text-ink">{"You're all set! ✨"}</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl text-ink">You&apos;re all set!</h1>
           <p className="text-ink-stone leading-relaxed">
             {"Your full Renovaara report is now unlocked. Here's everything you get:"}
           </p>

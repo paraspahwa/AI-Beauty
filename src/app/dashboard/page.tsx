@@ -53,6 +53,7 @@ export default async function DashboardPage() {
     <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
       <div className="mb-10 flex items-center justify-between">
         <div>
+          <span className="section-label mb-3 inline-flex">Dashboard</span>
           <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-2">My Reports</h1>
           <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
         </div>
@@ -69,14 +70,14 @@ export default async function DashboardPage() {
         <Link
           href="/dashboard/progress"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-          style={{ background: "rgba(99,162,130,0.08)", border: "1px solid rgba(99,162,130,0.18)" }}
+          style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(99,162,130,0.18)" }}>
-            <TrendingUp className="h-5 w-5" style={{ color: "#63A282" }} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
+            <TrendingUp className="h-5 w-5" style={{ color: "#EC4899" }} />
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Progress Tracker</p>
-            <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>See how your style profile has evolved</p>
+            <p className="text-sm font-semibold text-ink">Progress Tracker</p>
+            <p className="text-xs text-ink-stone">See how your style profile has evolved</p>
           </div>
         </Link>
         <Link
@@ -88,8 +89,8 @@ export default async function DashboardPage() {
             <ShoppingBag className="h-5 w-5" style={{ color: "#A69CC4" }} />
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Wardrobe Capsule</p>
-            <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>Your 10-piece seasonal wardrobe edit</p>
+            <p className="text-sm font-semibold text-ink">Wardrobe Capsule</p>
+            <p className="text-xs text-ink-stone">Your 10-piece seasonal wardrobe edit</p>
           </div>
         </Link>
         <Link
@@ -101,8 +102,8 @@ export default async function DashboardPage() {
             <Images className="h-5 w-5" style={{ color: "#EC4899" }} />
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>Image Vault</p>
-            <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>All generated looks with date and time</p>
+            <p className="text-sm font-semibold text-ink">Image Vault</p>
+            <p className="text-xs text-ink-stone">All generated looks with date and time</p>
           </div>
         </Link>
       </div>
@@ -126,10 +127,10 @@ export default async function DashboardPage() {
               <Dna className="h-5 w-5" style={{ color: "#EC4899" }} />
             </div>
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
+              <p className="text-sm font-semibold text-ink">
                 {prefs.color_season} · {prefs.face_shape ?? "Style DNA"}
               </p>
-              <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>
+              <p className="text-xs text-ink-stone">
                 View your full Style DNA profile
               </p>
             </div>
