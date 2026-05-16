@@ -42,7 +42,7 @@ export function HeroText() {
         className="mt-4 text-6xl sm:text-7xl lg:text-8xl text-ink leading-[1.05] tracking-tight"
       >
         {HOME_CONTENT.hero.title}{" "}
-        <span className="gradient-text font-bold">{HOME_CONTENT.hero.titleAccent}</span>
+        <span className="gradient-text font-bold" style={{ filter: "drop-shadow(0 0 28px rgba(236,72,153,0.50))" }}>{HOME_CONTENT.hero.titleAccent}</span>
       </motion.h1>
 
       <motion.p

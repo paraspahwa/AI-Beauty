@@ -131,8 +131,8 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #ec4899, #f472b6, #8b5cf6);
-    background-size: 200% auto;
+    background: linear-gradient(135deg, #be185d 0%, #ec4899 25%, #f43f8b 50%, #8b5cf6 75%, #6d28d9 100%);
+    background-size: 300% 300%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -161,8 +161,10 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, #ec4899, #f9a8d4, #8b5cf6);
+    padding: 2px;
+    background: linear-gradient(135deg, #ec4899 0%, #f9a8d4 30%, #8b5cf6 60%, #ec4899 100%);
+    background-size: 300% 300%;
+    animation: chrome-scan 3s linear infinite;
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -188,21 +190,21 @@
     inset: -50%;
     background: conic-gradient(
       from 230deg at 50% 50%,
-      rgba(236, 72, 153, 0.12) 0deg,
-      rgba(139, 92, 246, 0.09) 120deg,
-      rgba(249, 168, 212, 0.12) 220deg,
-      rgba(236, 72, 153, 0.11) 360deg
+      rgba(236, 72, 153, 0.35) 0deg,
+      rgba(139, 92, 246, 0.28) 120deg,
+      rgba(249, 168, 212, 0.35) 220deg,
+      rgba(236, 72, 153, 0.32) 360deg
     );
     animation: aurora 14s ease infinite;
-    opacity: 0.6;
+    opacity: 0.95;
     pointer-events: none;
     border-radius: 50%;
-    filter: blur(38px);
+    filter: blur(28px);
   }
 
   .glow-orb {
     border-radius: 50%;
-    filter: blur(60px);
+    filter: blur(80px);
     pointer-events: none;
     animation: glow-breathe 5s ease-in-out infinite;
   }
@@ -403,12 +405,12 @@
 @keyframes glow-breathe {
   0%,
   100% {
-    opacity: 0.4;
+    opacity: 0.65;
     transform: scale(1);
   }
   50% {
-    opacity: 0.75;
-    transform: scale(1.06);
+    opacity: 1;
+    transform: scale(1.08);
   }
 }
 

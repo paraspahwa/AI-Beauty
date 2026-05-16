@@ -215,9 +215,9 @@ export default function HomePage() {
       <div className="relative overflow-hidden">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-          <div className="glow-orb absolute -top-40 -left-40 h-[500px] w-[500px] opacity-50" style={{ background: "rgba(236,72,153,0.18)" }} />
-          <div className="glow-orb absolute -top-20 right-[-10%] h-[400px] w-[400px] opacity-35" style={{ background: "rgba(139,92,246,0.15)" }} />
-          <div className="glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-64 w-[600px] opacity-20" style={{ background: "rgba(249,168,212,0.3)" }} />
+          <div className="glow-orb absolute -top-40 -left-40 h-[650px] w-[650px] opacity-80" style={{ background: "rgba(236,72,153,0.36)" }} />
+          <div className="glow-orb absolute -top-20 right-[-10%] h-[520px] w-[520px] opacity-70" style={{ background: "rgba(139,92,246,0.30)" }} />
+          <div className="glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-96 w-[700px] opacity-60" style={{ background: "rgba(249,168,212,0.50)" }} />
         </div>
       <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
@@ -319,7 +319,7 @@ export default function HomePage() {
             {PLANS.map((plan) => (
               <article
                 key={plan.name}
-                className={plan.featured ? "card-soft chrome-border relative scale-[1.05] z-10 shadow-xl" : "card-soft"}
+                className={plan.featured ? "card-soft chrome-border relative scale-[1.05] z-10 shadow-2xl shadow-pink-200/60 ring-2 ring-pink-300/40" : "card-soft"}
               >
                 {plan.featured ? (
                   <span className="pill absolute -top-3 left-1/2 -translate-x-1/2">
