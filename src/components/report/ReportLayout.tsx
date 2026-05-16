@@ -9,6 +9,7 @@ import { FaceFeaturesCard } from "./FaceFeaturesCard";
 import { AIBeautyStudio } from "./AIBeautyStudio";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
 import { IngredientAnalyzer } from "@/components/IngredientAnalyzer";
+import { ProductComparisonCard } from "@/components/ProductComparisonCard";
 import { SpectaclesCard } from "./SpectaclesCard";
 import { HairstyleCard } from "./HairstyleCard";
 import { ShoppingGuideCard } from "./ShoppingGuideCard";
@@ -405,6 +406,12 @@ export function ReportLayout({
                         photoUrl={report.imageUrl}
                       />
                       <IngredientAnalyzer
+                        skinContext={{
+                          type: report.skinAnalysis.type,
+                          concerns: report.skinAnalysis.concerns.map((c) => c.label),
+                        }}
+                      />
+                      <ProductComparisonCard
                         skinContext={{
                           type: report.skinAnalysis.type,
                           concerns: report.skinAnalysis.concerns.map((c) => c.label),

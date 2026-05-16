@@ -26,6 +26,21 @@ function nyk(slug: string) {
   return `https://www.nykaa.com/p/${slug}?ref=${NYKAA_REF}`;
 }
 
+/**
+ * Generate affiliate search links for an arbitrary product name.
+ * Used by the AI ingredient comparison feature when the exact ASIN is unknown.
+ */
+export function affiliateSearchLinks(productName: string): {
+  amazon: string;
+  nykaa: string;
+} {
+  const q = encodeURIComponent(productName.trim());
+  return {
+    amazon: `https://www.amazon.in/s?k=${q}&tag=${AMAZON_TAG}&i=beauty`,
+    nykaa: `https://www.nykaa.com/search/result/?q=${q}&ref=${NYKAA_REF}`,
+  };
+}
+
 export interface AffiliateProduct {
   name: string;
   brand: string;

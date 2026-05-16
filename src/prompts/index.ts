@@ -255,4 +255,54 @@ Rules:
 - If the input does not appear to be an ingredient list, return: { "error": "Not a valid ingredient list" }`;
 }
 
+// ── Product Comparison ────────────────────────────────────────────────────────
 
+/**
+ * Build the skincare product comparison prompt.
+ * Returns a structured side-by-side verdict for two products against the user's skin profile.
+ */
+export function buildProductComparisonPrompt(skinProfile?: {
+  type: string;
+  concerns: string[];
+}): string {
+  const profileBlock = skinProfile
+    ? `\n\nUSER SKIN PROFILE (all scores and verdicts must be relative to this):\n  Skin type: ${skinProfile.type}\n  Concerns: ${skinProfile.concerns.join(", ") || "None stated"}\n`
+    : "";
+
+  return `You are a cosmetic-science expert. Compare two skincare products given their ingredient lists and decide which is better for this user.${profileBlock}
+Return strict JSON with this exact shape — no prose, no markdown, no code fences:
+{
+  "winner": "A" | "B" | "tie",
+  "winnerReason": string,         // 1-2 sentences explaining why the winner is better for this skin profile
+  "recommendation": string,       // 2-3 sentences of actionable advice (e.g. when to use each, order of layers)
+  "productA": {
+    "score": number,              // 1-10 compatibility for this skin profile
+    "highlights": string[],       // up to 3 short positive phrases
+    "concerns": string[],         // up to 3 short concern phrases
+    "flags": [
+      {
+        "name": string,
+        "verdict": "beneficial" | "neutral" | "caution" | "avoid",
+        "reason": string
+      }
+    ]
+  },
+  "productB": {
+    "score": number,
+    "highlights": string[],
+    "concerns": string[],
+    "flags": [
+      {
+        "name": string,
+        "verdict": "beneficial" | "neutral" | "caution" | "avoid",
+        "reason": string
+      }
+    ]
+  }
+}
+Rules:
+- Score must reflect compatibility with the user's skin profile (not overall quality).
+- "avoid" flags only for confirmed irritants, high comedogenic risk, or known allergens relevant to the stated concerns.
+- Keep each flags array to the most meaningful 5-12 ingredients; skip safe, unremarkable fillers.
+- If either ingredient list does not appear valid, return: { "error": "Product A/B ingredient list is not valid." }`;
+}
