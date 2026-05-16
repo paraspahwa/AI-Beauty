@@ -179,10 +179,11 @@ function ProductColumn({
           {side.concerns.slice(0, 2).map((c, i) => (
             <p
               key={i}
-              className="text-[11px] leading-snug"
+              className="flex items-center gap-1 text-[11px] leading-snug"
               style={{ color: "#B45309" }}
             >
-              ⚠ {c}
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              {c}
             </p>
           ))}
         </div>
@@ -269,7 +270,7 @@ function ProductInput({
       <textarea
         className="w-full rounded-2xl bg-white/70 border border-pink-100 px-4 py-3 text-sm text-ink placeholder:text-ink-stone/50 focus:outline-none focus:ring-2 focus:ring-pink-200 resize-none leading-relaxed transition-shadow"
         rows={4}
-        maxLength={4200}
+        maxLength={4000}
         placeholder={`Paste ${label === "A" ? "first" : "second"} product's ingredient list…`}
         value={ingredients}
         onChange={(e) => onIngredientsChange(e.target.value)}
@@ -364,7 +365,7 @@ export function ProductComparisonCard({ skinContext }: Props) {
       </div>
 
       {/* Product inputs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <ProductInput
           label="A"
           name={nameA}
@@ -372,7 +373,7 @@ export function ProductComparisonCard({ skinContext }: Props) {
           onNameChange={setNameA}
           onIngredientsChange={setIngA}
         />
-        <div className="hidden sm:flex items-center justify-center">
+        <div className="hidden sm:flex items-center justify-center shrink-0">
           <Minus
             className="h-5 w-5"
             style={{ color: "rgba(61,12,30,0.2)", transform: "rotate(90deg) scaleX(2)" }}

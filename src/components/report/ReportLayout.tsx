@@ -66,6 +66,21 @@ export function ReportLayout({
     if (res.ok) setReport(await res.json());
   }, [report.id]);
 
+  const triggerVisuals = React.useCallback(async () => {
+    setVisualsLoading(true);
+    setVisualsFailed(false);
+    try {
+      // Fast path: generates palette board + landmark overlay only (no Replicate).
+      const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
+      if (!res.ok) { setVisualsFailed(true); return; }
+      await refresh();
+    } catch {
+      setVisualsFailed(true);
+    } finally {
+      setVisualsLoading(false);
+    }
+  }, [report.id, refresh]);
+
   // Poll while the report is still processing
   React.useEffect(() => {
     if (isReadOnly || !isProcessing) return;
@@ -88,7 +103,7 @@ export function ReportLayout({
     if (!hasVisuals) {
       triggerVisuals();
     }
-  }, [report.status, report.id, isReadOnly, visualsLoading]);
+  }, [report.status, report.id, isReadOnly, visualsLoading, report.visualAssets?.assets?.paletteBoard, triggerVisuals]);
 
   // Poll every 8s while any slot is actively generating (to pick up completed results)
   React.useEffect(() => {
@@ -127,7 +142,7 @@ export function ReportLayout({
     return () => {
       cancelled = true;
     };
-  }, [activeTab, isPaid, isReadOnly, report.hairstyle, report.id, report.visualAssets, hairstyleBestLoading]);
+  }, [activeTab, isPaid, isReadOnly, report.hairstyle, report.id, report.visualAssets, hairstyleBestLoading, refresh]);
 
   /** Generate a single color swatch slot on user click. */
   async function generateSwatchSlot(slot: number) {
@@ -151,20 +166,6 @@ export function ReportLayout({
     }
   }
 
-  async function triggerVisuals() {
-    setVisualsLoading(true);
-    setVisualsFailed(false);
-    try {
-      // Fast path: generates palette board + landmark overlay only (no Replicate).
-      const res = await fetch(`/api/reports/${report.id}/visuals`, { method: "POST" });
-      if (!res.ok) { setVisualsFailed(true); return; }
-      await refresh();
-    } catch {
-      setVisualsFailed(true);
-    } finally {
-      setVisualsLoading(false);
-    }
-  }
 
   async function share() {
     setShareLoading(true);
