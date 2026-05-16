@@ -6,6 +6,7 @@ import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, S
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
+import { DashboardTour } from "@/components/TourProvider";
 
 type ReportRow = {
   id: string;
@@ -57,18 +58,21 @@ export default async function DashboardPage() {
           <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-2">My Reports</h1>
           <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
         </div>
-        <Button asChild variant="accent" size="sm">
-          <Link href="/upload">
-            <Camera className="h-4 w-4" />
-            New analysis
-          </Link>
-        </Button>
+        <div data-tour="upload-cta">
+          <Button asChild variant="accent" size="sm">
+            <Link href="/upload">
+              <Camera className="h-4 w-4" />
+              New analysis
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Feature quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Link
           href="/dashboard/progress"
+          data-tour="style-chat"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
           style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
         >
@@ -149,6 +153,7 @@ export default async function DashboardPage() {
         </Link>
       )}
 
+      <div data-tour="reports-list">
       {rows.length === 0 ? (
         <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(131,24,67,0.20)" }}>
           <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(131,24,67,0.3)" }} />
@@ -216,6 +221,8 @@ export default async function DashboardPage() {
           })}
         </div>
       )}
+      </div>
+      <DashboardTour />
     </main>
   );
 }
