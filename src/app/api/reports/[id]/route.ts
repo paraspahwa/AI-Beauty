@@ -132,7 +132,7 @@ async function resolveVisualAssets(
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, max-age=10" } });
 
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -146,7 +146,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     .single();
 
   if (error || !row) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, max-age=10" } });
   }
 
   // Sign a short-lived URL for the original image

@@ -31,11 +31,11 @@ type WindowEntry = { count: number; resetAt: number };
 const ipWindows = new Map<string, WindowEntry>();
 const IP_MAP_MAX = 4096;
 
-function getClientIp(req: NextRequest): string {
+function getClientIp(req: NextRequest): string | null {
   return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    null
   );
 }
 
@@ -101,7 +101,9 @@ export async function middleware(request: NextRequest) {
   const matchedRoute = RATE_LIMIT_ROUTES.find((r) => pathname.startsWith(r.prefix));
   if (matchedRoute) {
     const ip = getClientIp(request);
-    if (isRateLimited(ip, matchedRoute.max)) {
+    // If no identifiable IP (e.g. absent proxy headers), skip the in-process limiter
+    // and fall through to the DB-layer burst/quota checks which are the hard gate.
+    if (ip !== null && isRateLimited(ip, matchedRoute.max)) {
       return NextResponse.json(
         { error: "Too many requests. Please slow down." },
         {

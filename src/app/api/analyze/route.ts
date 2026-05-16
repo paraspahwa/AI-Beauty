@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { unstable_cache } from "next/cache";
 import { createHash } from "crypto";
 import type { PipelineStageEvent } from "@/lib/ai/pipeline";
 import { persistStylePrefs } from "@/lib/ai/memory";
@@ -144,6 +145,17 @@ async function computeRecentEta(admin: ReturnType<typeof createSupabaseAdminClie
   };
 }
 
+// Caches ETA result for 60 s across all concurrent pollers on this instance.
+// Prevents thundering-herd on the reports aggregation query during active analyses.
+const getCachedEta = unstable_cache(
+  async () => {
+    const admin = createSupabaseAdminClient();
+    return computeRecentEta(admin);
+  },
+  ["analyze-eta"],
+  { revalidate: 60 },
+);
+
 function toStreamLine(event: AnalyzeStreamEvent): string {
   return `${JSON.stringify(event)}\n`;
 }
@@ -155,8 +167,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const admin = createSupabaseAdminClient();
-    const eta = await computeRecentEta(admin);
+    const eta = await getCachedEta();
     return NextResponse.json(eta);
   } catch (err) {
     console.error("[GET /api/analyze]", err);
