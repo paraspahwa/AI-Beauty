@@ -39,10 +39,10 @@ export function HeroText() {
 
       <motion.h1
         variants={itemVariants}
-        className="mt-4 text-5xl sm:text-6xl lg:text-7xl text-ink leading-tight"
+        className="mt-4 text-6xl sm:text-7xl lg:text-8xl text-ink leading-[1.05] tracking-tight"
       >
         {HOME_CONTENT.hero.title}{" "}
-        <span className="text-iris">{HOME_CONTENT.hero.titleAccent}</span>
+        <span className="gradient-text font-bold">{HOME_CONTENT.hero.titleAccent}</span>
       </motion.h1>
 
       <motion.p

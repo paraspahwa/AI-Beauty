@@ -211,6 +211,14 @@ export default function HomePage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
       <ActivityTicker />
+      {/* Hero section — full-width ambient glow wrapper */}
+      <div className="relative overflow-hidden">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+          <div className="glow-orb absolute -top-40 -left-40 h-[500px] w-[500px] opacity-50" style={{ background: "rgba(236,72,153,0.18)" }} />
+          <div className="glow-orb absolute -top-20 right-[-10%] h-[400px] w-[400px] opacity-35" style={{ background: "rgba(139,92,246,0.15)" }} />
+          <div className="glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-64 w-[600px] opacity-20" style={{ background: "rgba(249,168,212,0.3)" }} />
+        </div>
       <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <HeroText />
@@ -218,6 +226,7 @@ export default function HomePage() {
           <HeroReportCard />
         </div>
       </section>
+      </div>{/* end hero glow wrapper */}
 
       <RevealSection>
         <StatsCounters items={STATS} />
@@ -226,7 +235,8 @@ export default function HomePage() {
       <section id="features" className="container max-w-6xl py-16 scroll-mt-20">
         <RevealSection>
           <div className="text-center">
-            <h2 className="text-3xl sm:text-4xl text-ink">Everything in one beauty workflow</h2>
+            <span className="section-label">Features</span>
+            <h2 className="mt-3 text-4xl sm:text-5xl text-ink font-bold tracking-tight">Everything in one <span className="gradient-text">beauty workflow</span></h2>
             <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
               Move from confusion to clarity with recommendations you can use immediately.
             </p>
@@ -309,7 +319,7 @@ export default function HomePage() {
             {PLANS.map((plan) => (
               <article
                 key={plan.name}
-                className={plan.featured ? "card-soft chrome-border relative scale-[1.02] z-10 shadow-card" : "card-soft"}
+                className={plan.featured ? "card-soft chrome-border relative scale-[1.05] z-10 shadow-xl" : "card-soft"}
               >
                 {plan.featured ? (
                   <span className="pill absolute -top-3 left-1/2 -translate-x-1/2">
