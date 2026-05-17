@@ -212,7 +212,8 @@ export default function HomePage() {
     <main className="min-h-screen overflow-x-hidden">
       <ActivityTicker />
       {/* Hero section — full-width ambient glow wrapper */}
-      <div className="relative overflow-hidden">
+      {/* `isolate` creates a stacking context so negative z-indexes are scoped here, not falling behind the body background */}
+      <div className="relative isolate overflow-hidden">
         {/* Hero background video */}
         <video
           autoPlay
@@ -229,7 +230,7 @@ export default function HomePage() {
           aria-hidden
           style={{
             background:
-              "linear-gradient(135deg, rgba(253,242,248,0.82) 0%, rgba(245,235,255,0.75) 50%, rgba(253,242,248,0.88) 100%)",
+              "linear-gradient(135deg, rgba(253,242,248,0.55) 0%, rgba(245,235,255,0.45) 50%, rgba(253,242,248,0.60) 100%)",
           }}
         />
         {/* Ambient orbs — kept at reduced opacity to blend with video */}
