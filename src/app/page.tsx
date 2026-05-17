@@ -321,7 +321,7 @@ export default function HomePage() {
             {PLANS.map((plan) => (
               <article
                 key={plan.name}
-                className={plan.featured ? "card-soft chrome-border relative scale-[1.05] z-10 shadow-2xl shadow-pink-200/60 ring-2 ring-pink-300/40" : "card-soft"}
+                className={plan.featured ? "card-soft chrome-border relative md:scale-[1.05] z-10 shadow-2xl shadow-pink-200/60 ring-2 ring-pink-300/40" : "card-soft"}
               >
                 {plan.featured ? (
                   <span className="pill absolute -top-3 left-1/2 -translate-x-1/2">

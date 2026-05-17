@@ -4,7 +4,7 @@ import Image from "next/image";
 import * as React from "react";
 import { Check, ExternalLink, ShoppingBag, X, Sun, Moon, AlertTriangle } from "lucide-react";
 import type { SkinAnalysisResult, SkinConcern } from "@/types/report";
-import { getAffiliateProducts, getConcernIngredients } from "@/lib/affiliates";
+import { getAffiliateProducts, getConcernIngredients, collectAsins } from "@/lib/affiliates";
 
 const ZONE_ANIMATION_CSS = `
 @keyframes skin-draw-zone {
@@ -227,6 +227,32 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
 
   const visibleSteps: FlatStep[] = amPm ? (activeTab === "am" ? amSteps : pmSteps) : amSteps;
 
+  // ── Amazon product images (PA-API) ─────────────────────────────────────────
+  const [productImages, setProductImages] = React.useState<Record<string, string | null>>({});
+  React.useEffect(() => {
+    // Collect all Amazon ASINs across both AM and PM steps
+    const allSteps = amPm ? [...amSteps, ...pmSteps] : amSteps;
+    const asins = collectAsins(
+      allSteps.flatMap((s) => getAffiliateProducts(s.step, skinType))
+    );
+    if (asins.length === 0) return;
+
+    let cancelled = false;
+    fetch("/api/affiliate/amazon-images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ asins }),
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data: { images?: Record<string, string | null> } | null) => {
+        if (!cancelled && data?.images) setProductImages(data.images);
+      })
+      .catch(() => { /* silently ignore — fallback icon is shown */ });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Concerns (handle both string[] and SkinConcern[])
   const rawConcerns = (data.concerns ?? []) as RawConcern[];
   const lowConfidence = (data.imageConfidence ?? 1) < 0.55;
@@ -428,8 +454,17 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                                 className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 style={{ background: "#F5EFE7", border: "1px solid #E8DDD0", textDecoration: "none" }}
                               >
-                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
-                                  <ShoppingBag className="h-4 w-4" />
+                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+                                  {p.asin && productImages[p.asin] ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={productImages[p.asin]!}
+                                      alt={p.name}
+                                      className="h-8 w-8 object-cover rounded-lg"
+                                    />
+                                  ) : (
+                                    <ShoppingBag className="h-4 w-4" />
+                                  )}
                                 </span>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-[11px] font-semibold truncate" style={{ color: "#3D2B1F" }}>{p.name}</p>

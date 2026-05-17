@@ -111,6 +111,41 @@ export const env = {
     amazonTag: optional(process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG, ""),
     myntraSid: optional(process.env.NEXT_PUBLIC_MYNTRA_AFFILIATE_SID, ""),
   },
+  /**
+   * Amazon PA-API 5.0 — server-side product image fetching.
+   *
+   * AMAZON_PARTNER_TAG: your Associates tag (same value as NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG
+   *   but kept server-side so the public var can be omitted if desired).
+   *   Falls back to NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG.
+   *
+   * PA-API uses the same AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY as Rekognition,
+   * but the IAM user must also have AmazonProductAdvertisingAccess policy attached,
+   * or use a separate IAM user. Set AMAZON_PA_API_ACCESS_KEY_ID /
+   * AMAZON_PA_API_SECRET_ACCESS_KEY to use a dedicated PA-API key pair.
+   */
+  amazon: {
+    partnerTag: optional(
+      process.env.AMAZON_PARTNER_TAG ?? process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG,
+      "",
+    ),
+    // Allow a dedicated PA-API key pair separate from the Rekognition key
+    paApiAccessKeyId: optional(
+      process.env.AMAZON_PA_API_ACCESS_KEY_ID ?? process.env.AWS_ACCESS_KEY_ID,
+      "",
+    ),
+    paApiSecretKey: optional(
+      process.env.AMAZON_PA_API_SECRET_ACCESS_KEY ?? process.env.AWS_SECRET_ACCESS_KEY,
+      "",
+    ),
+    /** true only when all three PA-API credentials are present */
+    get paApiConfigured(): boolean {
+      return (
+        this.partnerTag.length > 0 &&
+        this.paApiAccessKeyId.length > 0 &&
+        this.paApiSecretKey.length > 0
+      );
+    },
+  },
   /** Throws if any required server-side secret is missing. Call from server code. */
   assertServer() {
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);

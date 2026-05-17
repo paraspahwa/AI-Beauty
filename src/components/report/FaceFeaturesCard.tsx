@@ -178,7 +178,7 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
         <div className="flex items-center justify-center gap-4">
           <span style={{ color: "#C8A96E", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
           <h2
-            className="text-[46px] leading-tight"
+            className="text-[26px] sm:text-[36px] md:text-[46px] leading-tight"
             style={{
               color: "#2C1A10",
               fontFamily: "'Georgia', 'Times New Roman', serif",
@@ -200,7 +200,7 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
       </div>
 
       {/* ── 3-column body ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-8 px-10 pb-10 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-8 px-4 sm:px-6 md:px-10 pb-10 items-center">
 
         {/* Left column: Face Shape · Eyes · Nose */}
         <div className="flex flex-col gap-4">
@@ -228,7 +228,7 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
         <div
           className="relative mx-auto shrink-0 rounded-2xl overflow-hidden"
           style={{
-            width: "clamp(260px, 30vw, 380px)",
+            width: "clamp(180px, 28vw, 380px)",
             aspectRatio: "3/4",
             boxShadow: "0 6px 32px rgba(61,43,31,0.18)",
           }}

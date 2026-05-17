@@ -47,6 +47,29 @@ export interface AffiliateProduct {
   priceINR: number;  // approx price for display
   url: string;
   badge?: string;    // e.g. "Best Seller", "Dermat Approved"
+  /** Amazon ASIN extracted from the url, populated automatically. */
+  asin?: string;
+}
+
+/**
+ * Extract the 10-character ASIN from an Amazon product URL.
+ * Returns undefined for non-Amazon URLs (e.g. Nykaa).
+ */
+export function extractAsin(url: string): string | undefined {
+  return url.match(/\/dp\/([A-Z0-9]{10})/)?.[1];
+}
+
+/**
+ * Return all unique Amazon ASINs found in a product list.
+ * Used to batch-fetch product images via PA-API.
+ */
+export function collectAsins(products: AffiliateProduct[]): string[] {
+  const asins = new Set<string>();
+  for (const p of products) {
+    const asin = p.asin ?? extractAsin(p.url);
+    if (asin) asins.add(asin);
+  }
+  return Array.from(asins);
 }
 
 /**
@@ -152,6 +175,7 @@ export const AFFILIATE_PRODUCTS: Record<string, {
 /**
  * Get affiliate products for a given routine step and skin type.
  * Returns up to 2 products, preferring skin-type specific ones.
+ * Automatically populates `asin` from the product URL for Amazon links.
  */
 export function getAffiliateProducts(step: string, skinType: string): AffiliateProduct[] {
   const normalised = Object.keys(AFFILIATE_PRODUCTS).find(
@@ -161,7 +185,9 @@ export function getAffiliateProducts(step: string, skinType: string): AffiliateP
 
   const entry = AFFILIATE_PRODUCTS[normalised];
   const skinKey = skinType as keyof typeof entry;
-  return (entry[skinKey] ?? entry.default ?? []).slice(0, 2);
+  return (entry[skinKey] ?? entry.default ?? [])
+    .slice(0, 2)
+    .map((p) => ({ ...p, asin: p.asin ?? extractAsin(p.url) }));
 }
 
 // ── Concern → Ingredient mapping ─────────────────────────────────────────────

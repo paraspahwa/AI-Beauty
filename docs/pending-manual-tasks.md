@@ -9,6 +9,16 @@ These require action outside the codebase. All code changes are already deployed
    - `NEXT_PUBLIC_MYNTRA_AFFILIATE_SID` = your Admitad/VCommission SID for Myntra
    - Register at: https://associates.amazon.in | https://www.myntra.com/affiliate
 
+2. **Amazon PA-API 5.0 (product images in skin routine)** — After getting at least 1 qualifying sale on your Associates account, enable PA-API access:
+   - Go to https://associates.amazon.in → Tools → Product Advertising API → Request Access
+   - Once approved, set in Vercel env vars:
+     - `AMAZON_PARTNER_TAG` = same value as `NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG` (e.g. `Renovaara-21`) — kept server-side only
+     - `AMAZON_PA_API_ACCESS_KEY_ID` = PA-API access key (from Amazon → Security Credentials, **or** reuse `AWS_ACCESS_KEY_ID` if that IAM user has `AmazonProductAdvertisingAccess` policy attached)
+     - `AMAZON_PA_API_SECRET_ACCESS_KEY` = corresponding secret key
+   - Alternatively, attach the `AmazonProductAdvertisingAccess` managed policy to the existing Rekognition IAM user — then the same `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` pair will work automatically (no extra vars needed, just set `AMAZON_PARTNER_TAG`)
+   - ⚠️ PA-API requires **at least 1 qualifying sale** on the Associates account. Until then, the API returns 401 and the UI gracefully falls back to shopping-bag icons — no user-visible error.
+   - Code is already live: `src/lib/amazon-pa-api.ts`, `src/app/api/affiliate/amazon-images/route.ts`
+
 2. **App URL** — Set in Vercel → Settings → Environment Variables:
    - `NEXT_PUBLIC_APP_URL` = `https://<your-production-domain>`
    - Fixes sitemap.xml + robots.txt URLs (currently fallback to `https://renovaara.in`)

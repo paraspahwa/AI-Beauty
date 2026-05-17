@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Renovaara — Complete Project Overview</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: #2a2a3a;
+    --pink: #EC4899;
+    --violet: #8B5CF6;
+    --text: #e2e2f0;
+    --muted: #888aaa;
+    --code-bg: #0d0d18;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 15px; line-height: 1.7; }
+
+  /* NAV */
+  #topnav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 4px; padding: 0 20px; height: 52px;
+    overflow-x: auto; white-space: nowrap;
+  }
+  #topnav a {
+    color: var(--muted); text-decoration: none; font-size: 12px;
+    padding: 5px 10px; border-radius: 6px; transition: all .2s;
+  }
+  #topnav a:hover, #topnav a.active { color: var(--pink); background: rgba(236,72,153,.12); }
+  #topnav .logo { font-weight: 700; font-size: 14px; color: var(--pink); margin-right: 8px; flex-shrink: 0; }
+
+  /* LAYOUT */
+  main { max-width: 1100px; margin: 0 auto; padding: 72px 24px 60px; }
+
+  /* SECTIONS */
+  section { margin-bottom: 56px; }
+  h1 { font-size: 2.4rem; font-weight: 800; background: linear-gradient(135deg,var(--pink),var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  h2 { font-size: 1.6rem; font-weight: 700; color: var(--text); margin: 0 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.05rem; font-weight: 600; color: var(--pink); margin: 20px 0 8px; }
+  h4 { font-size: .9rem; font-weight: 600; color: var(--violet); margin: 14px 0 6px; }
+  p { margin-bottom: 12px; color: var(--text); }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .badge-pink { background: rgba(236,72,153,.15); color: var(--pink); border: 1px solid rgba(236,72,153,.3); }
+  .badge-violet { background: rgba(139,92,246,.15); color: var(--violet); border: 1px solid rgba(139,92,246,.3); }
+  .badge-green { background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+  .badge-orange { background: rgba(251,146,60,.12); color: #fb923c; border: 1px solid rgba(251,146,60,.25); }
+  .badge-red { background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+
+  /* CODE */
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; overflow-x: auto; margin: 12px 0; position: relative; }
+  code { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; color: #c9d1d9; }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    padding: 3px 10px; border-radius: 5px; cursor: pointer; font-size: 11px;
+  }
+  .copy-btn:hover { color: var(--text); }
+  .inline-code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 13px; color: #c9d1d9; }
+
+  /* TABLE */
+  .tbl { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  .tbl th { background: var(--surface2); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* PIPELINE */
+  .pipeline { display: flex; align-items: flex-start; gap: 0; margin: 16px 0; overflow-x: auto; padding-bottom: 8px; }
+  .pipe-step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; min-width: 120px; text-align: center; font-size: 12px; position: relative; }
+  .pipe-step .num { font-size: 18px; font-weight: 800; color: var(--pink); display: block; }
+  .pipe-step .model { font-size: 10px; color: var(--violet); margin-top: 2px; }
+  .pipe-arrow { color: var(--border); font-size: 20px; padding: 0 4px; align-self: center; flex-shrink: 0; }
+
+  /* HERO */
+  .hero { text-align: center; padding: 40px 0 32px; }
+  .hero p { font-size: 1.1rem; color: var(--muted); max-width: 600px; margin: 12px auto; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .4s, transform .4s; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ALERT */
+  .alert { border-radius: var(--radius); padding: 12px 16px; margin: 12px 0; }
+  .alert-red { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: #fca5a5; }
+  .alert-yellow { background: rgba(234,179,8,.08); border: 1px solid rgba(234,179,8,.25); color: #fde68a; }
+  .alert-blue { background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.25); color: #93c5fd; }
+
+  @media(max-width:600px){
+    h1{font-size:1.8rem} h2{font-size:1.3rem}
+    .card-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<nav id="topnav">
+  <span class="logo">✦ Renovaara</span>
+  <a href="#overview">Overview</a>
+  <a href="#stack">Stack</a>
+  <a href="#structure">Structure</a>
+  <a href="#pipeline">AI Pipeline</a>
+  <a href="#report">Report</a>
+  <a href="#studio">Studio</a>
+  <a href="#ingredients">Ingredients</a>
+  <a href="#capsule">Capsule</a>
+  <a href="#jewellery">Jewellery</a>
+  <a href="#visuals">Visuals</a>
+  <a href="#api">API Routes</a>
+  <a href="#database">Database</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#payments">Payments</a>
+  <a href="#canary">Canary</a>
+  <a href="#memory">Memory</a>
+  <a href="#affiliates">Affiliates</a>
+  <a href="#security">Security</a>
+  <a href="#components">Components</a>
+  <a href="#pages">Pages</a>
+  <a href="#middleware">Middleware</a>
+  <a href="#env">Env Vars</a>
+  <a href="#testing">Testing</a>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<section id="overview" class="hero reveal">
+  <h1>Renovaara</h1>
+  <p>AI-powered beauty analysis SaaS — complete technical reference for the entire codebase, architecture, and pipeline.</p>
+  <div class="hero-tags">
+    <span class="badge badge-pink">Next.js 15</span>
+    <span class="badge badge-violet">React 19</span>
+    <span class="badge badge-green">TypeScript</span>
+    <span class="badge badge-pink">Supabase</span>
+    <span class="badge badge-violet">GPT-4o</span>
+    <span class="badge badge-orange">Razorpay</span>
+    <span class="badge badge-green">Vercel Pro</span>
+    <span class="badge badge-pink">FAL AI</span>
+    <span class="badge badge-violet">Replicate</span>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack" class="reveal">
+  <h2>Tech Stack</h2>
+  <div class="card-grid">
+    <div class="card">
+      <h3>Frontend</h3>
+      <ul>
+        <li>Next.js 15 App Router</li>
+        <li>React 19 + TypeScript</li>
+        <li>Tailwind CSS 3</li>
+        <li>Radix UI + class-variance-authority</li>
+        <li>Framer Motion animations</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Backend / Database</h3>
+      <ul>
+        <li>Supabase (PostgreSQL + Auth + Storage)</li>
+        <li>Row-Level Security on all tables</li>
+        <li>20 sequential SQL migrations</li>
+        <li>pg_cron for background jobs</li>
+        <li>Stored RPCs for all multi-table writes</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>AI Services</h3>
+      <ul>
+        <li>OpenAI GPT-4o (vision stages)</li>
+        <li>OpenAI GPT-4o-mini (text stages)</li>
+        <li>AWS Rekognition (face detection)</li>
+        <li>FAL AI (makeup, hair, try-on)</li>
+        <li>Replicate (SDXL, Flux Kontext, SeedDream 4.5)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Deployment</h3>
+      <ul>
+        <li>Vercel Pro (required for maxDuration=60)</li>
+        <li>Selfies bucket: private Supabase Storage</li>
+        <li>Edge middleware for rate-limiting + auth</li>
+        <li>Server-Sent Events (SSE) for pipeline stream</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- STRUCTURE -->
+<section id="structure" class="reveal">
+  <h2>Directory Structure</h2>
+  <div class="card-grid">
+    <div class="card">
+      <h4>src/app/</h4>
+      <p>Next.js App Router pages + API routes. Each route folder has <span class="inline-code">page.tsx</span> and/or <span class="inline-code">route.ts</span>.</p>
+    </div>
+    <div class="card">
+      <h4>src/components/</h4>
+      <p>React components — <span class="inline-code">ui/</span> primitives (Radix + CVA) and feature components (report, home, etc).</p>
+    </div>
+    <div class="card">
+      <h4>src/lib/</h4>
+      <p>All business logic: <span class="inline-code">ai/</span>, <span class="inline-code">supabase/</span>, <span class="inline-code">payments/</span>, <span class="inline-code">auth/</span>, <span class="inline-code">utils.ts</span>, <span class="inline-code">env.ts</span>.</p>
+    </div>
+    <div class="card">
+      <h4>src/prompts/</h4>
+      <p>All AI prompt strings in <span class="inline-code">index.ts</span>. Builders: <span class="inline-code">buildColorAnalysisPrompt()</span>, <span class="inline-code">buildSkinRoutinePrompt()</span>, etc.</p>
+    </div>
+    <div class="card">
+      <h4>src/types/</h4>
+      <p>Shared domain types: <span class="inline-code">report.ts</span> (ColorSeason, FaceShape, SkinAnalysisResult), <span class="inline-code">jewellery.ts</span>, <span class="inline-code">doAvoidGuidance.ts</span>.</p>
+    </div>
+    <div class="card">
+      <h4>supabase/migrations/</h4>
+      <p>20 sequential SQL migrations — source of truth for schema. Never modify past migrations.</p>
+    </div>
+    <div class="card">
+      <h4>design-system/renovaara/</h4>
+      <p><span class="inline-code">MASTER.md</span> — design tokens and component specs. Page-level overrides in <span class="inline-code">design-system/pages/</span>.</p>
+    </div>
+    <div class="card">
+      <h4>scripts/</h4>
+      <p>Eval pipeline (<span class="inline-code">eval-pipeline.ts</span>), image generation scripts, eval fixtures per stage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AI PIPELINE -->
+<section id="pipeline" class="reveal">
+  <h2>AI Analysis Pipeline</h2>
+  <p>8-stage sequential pipeline in <span class="inline-code">src/lib/ai/pipeline.ts</span>. Streams progress via SSE to the client.</p>
+
+  <div class="pipeline">
+    <div class="pipe-step"><span class="num">1</span>Rekognition<span class="model">AWS</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">2</span>Face Shape<span class="model">GPT-4o</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">3</span>Color Season<span class="model">GPT-4o</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">4</span>Skin Vision<span class="model">GPT-4o</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">5</span>Skin Routine<span class="model">GPT-4o-mini</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">6</span>Face Features<span class="model">GPT-4o</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">7</span>Glasses<span class="model">GPT-4o</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">8</span>Hairstyle<span class="model">GPT-4o</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step"><span class="num">✓</span>Summary<span class="model">GPT-4o-mini</span></div>
+  </div>
+
+  <div class="card-grid" style="margin-top:16px">
+    <div class="card">
+      <h4>Key helpers</h4>
+      <ul>
+        <li><span class="inline-code">chatJSON&lt;T&gt;()</span> — all OpenAI calls, always <span class="inline-code">response_format: json_object</span></li>
+        <li><span class="inline-code">withRetry()</span> — 2 attempts, 250ms×attempt backoff</li>
+        <li><span class="inline-code">compressForAI()</span> — 512px max before sending to vision</li>
+        <li><span class="inline-code">blendConfidence()</span> — 0.7×GPT + 0.3×(Rekognition/100), threshold 0.65</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Models</h4>
+      <ul>
+        <li><span class="inline-code">env.openai.visionModel</span> → <span class="badge badge-pink">gpt-4o</span></li>
+        <li><span class="inline-code">env.openai.miniModel</span> → <span class="badge badge-violet">gpt-4o-mini</span></li>
+        <li>Do NOT change to GPT-5 — outputs are shaped for these models</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Output validation</h4>
+      <ul>
+        <li>All AI output validated by Zod schemas in <span class="inline-code">lib/ai/contracts.ts</span></li>
+        <li>Normalization functions safe-fallback on bad AI output</li>
+        <li>Every prompt MUST instruct JSON output</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Fire-and-forget visuals</h4>
+      <p>After pipeline completes, <span class="inline-code">POST /api/internal/trigger-visuals</span> fires async visual generation (maxDuration=300).</p>
+    </div>
+  </div>
+</section>
+
+<!-- REPORT SECTIONS -->
+<section id="report" class="reveal">
+  <h2>Report Sections &amp; Domain Types</h2>
+
+  <h3>ColorSeason (13 seasons)</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+    <span class="badge badge-pink">Spring True</span>
+    <span class="badge badge-pink">Spring Light</span>
+    <span class="badge badge-pink">Spring Bright</span>
+    <span class="badge badge-violet">Summer True</span>
+    <span class="badge badge-violet">Summer Light</span>
+    <span class="badge badge-violet">Summer Soft</span>
+    <span class="badge badge-orange">Autumn True</span>
+    <span class="badge badge-orange">Autumn Warm</span>
+    <span class="badge badge-orange">Autumn Deep</span>
+    <span class="badge badge-green">Winter True</span>
+    <span class="badge badge-green">Winter Deep</span>
+    <span class="badge badge-green">Winter Bright</span>
+    <span class="badge badge-green">Winter Cool</span>
+  </div>
+
+  <h3>FaceShape (8 shapes)</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+    <span class="badge badge-pink">Oval</span>
+    <span class="badge badge-pink">Round</span>
+    <span class="badge badge-pink">Square</span>
+    <span class="badge badge-violet">Heart</span>
+    <span class="badge badge-violet">Diamond</span>
+    <span class="badge badge-violet">Oblong</span>
+    <span class="badge badge-orange">Triangle</span>
+    <span class="badge badge-orange">Inverted Triangle</span>
+  </div>
+
+  <h3>SkinAnalysisResult — Backward Compat Gotcha</h3>
+  <div class="alert alert-yellow">
+    <strong>⚠ routine is a union type:</strong> old reports = flat array <span class="inline-code">{step, product}[]</span>, new reports = <span class="inline-code">{am: [...], pm: [...]}</span>. Always check <span class="inline-code">!Array.isArray(routine) &amp;&amp; "am" in routine</span> before assuming AM/PM structure.
+  </div>
+
+  <h3>Report Card Sections</h3>
+  <table class="tbl">
+    <thead><tr><th>Section</th><th>Component</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td>Face Shape</td><td>FaceShapeCard</td><td>Shape, confidence blend, traits, do/avoid</td></tr>
+      <tr><td>Color Season</td><td>ColorSeasonCard</td><td>Season, undertone, 6 best + 6 avoid colors, metals</td></tr>
+      <tr><td>Skin Analysis</td><td>SkinCard</td><td>Type, tone, concerns, AM/PM routine steps</td></tr>
+      <tr><td>Face Features</td><td>FeaturesCard</td><td>Eye shape, lip type, brow arch, cheekbones, nose bridge</td></tr>
+      <tr><td>Glasses</td><td>GlassesCard</td><td>Frame styles, bridge fit, lens tints, brands</td></tr>
+      <tr><td>Hairstyle</td><td>HairstyleCard</td><td>Recommended cuts, lengths, color suggestions</td></tr>
+      <tr><td>Style DNA</td><td>StyleDnaCard</td><td>Season vibe + face descriptor + undertone + skin type</td></tr>
+      <tr><td>Jewellery</td><td>JewelleryCard</td><td>Earrings, necklaces, gemstones by face/season/undertone</td></tr>
+      <tr><td>Wardrobe Capsule</td><td>WardrobeCapsuleCard</td><td>10-piece capsule, Myntra/Amazon links, SeedDream hero</td></tr>
+      <tr><td>Makeup Looks</td><td>MakeupLooksCard</td><td>4 looks: Everyday Natural, Bold Lip, Smoky Eye, Full Glam</td></tr>
+      <tr><td>AI Beauty Studio</td><td>AIBeautyStudio</td><td>Virtual try-on: clothing, makeup, hair</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- STUDIO -->
+<section id="studio" class="reveal">
+  <h2>AI Beauty Studio</h2>
+  <p>Component: <span class="inline-code">src/components/report/AIBeautyStudio.tsx</span></p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>3 Modes</h4>
+      <ul>
+        <li><strong>Clothing</strong> — virtual outfit try-on via Replicate Flux Kontext Pro</li>
+        <li><strong>Makeup</strong> — 4 looks × 11 styles × 4 intensities via FAL makeup-application</li>
+        <li><strong>Hair</strong> — hair color / style change via FAL hair-change (fal-ai/image-apps-v2)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Photo Mode</h4>
+      <ul>
+        <li><strong>Selfie</strong> — uses the analysis selfie</li>
+        <li><strong>Full body</strong> — user uploads separate full-body photo</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Makeup Options</h4>
+      <ul>
+        <li>11 styles: Natural Glow, Classic Elegance, Dewy Fresh, Bold Editorial, Soft Glam, Vintage Retro, No-Makeup Makeup, Sun-Kissed, Night Out, Bridal, Festive</li>
+        <li>4 intensities: Subtle, Moderate, Bold, Full Glam</li>
+        <li>12 lip colors, 9 eyeshadow palettes, blush/foundation/eyeliner enums</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Vault History</h4>
+      <p>Past try-on results are saved to <span class="inline-code">generated_assets</span> table and shown in a scrollable vault history panel.</p>
+    </div>
+  </div>
+
+  <h3>Quota (try_consume_generation RPC)</h3>
+  <table class="tbl">
+    <thead><tr><th>Plan</th><th>Monthly Generations</th><th>Reset</th></tr></thead>
+    <tbody>
+      <tr><td>Free</td><td>0</td><td>—</td></tr>
+      <tr><td>Report (one-time paid)</td><td>3</td><td>Monthly</td></tr>
+      <tr><td>Studio Pro</td><td>Unlimited (cap via RPC)</td><td>Monthly</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- INGREDIENTS -->
+<section id="ingredients" class="reveal">
+  <h2>Ingredient Analyzer</h2>
+  <p>Route: <span class="inline-code">POST /api/ingredients/analyze</span> (maxDuration=30, auth required)</p>
+  <p>Component: <span class="inline-code">src/components/IngredientAnalyzer.tsx</span></p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Input</h4>
+      <ul>
+        <li>Raw ingredient list text (max 4000 chars)</li>
+        <li>User must be authenticated</li>
+        <li>GPT-4o-mini analysis</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>IngredientAnalysisResult</h4>
+      <ul>
+        <li><span class="inline-code">overallScore</span> — 0–100</li>
+        <li><span class="inline-code">summary</span> — short text verdict</li>
+        <li><span class="inline-code">highlights</span> — beneficial ingredients[]</li>
+        <li><span class="inline-code">concerns</span> — problematic ingredients[]</li>
+        <li><span class="inline-code">flags[]</span> — per-ingredient verdict + reason</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>UI</h4>
+      <ul>
+        <li>SVG score ring with gradient fill</li>
+        <li>Per-ingredient flag cards with verdict color coding</li>
+        <li>Green / yellow / red severity system</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CAPSULE -->
+<section id="capsule" class="reveal">
+  <h2>Wardrobe Capsule Generator</h2>
+  <p>Route: <span class="inline-code">POST /api/capsule/generate</span></p>
+  <p>Component: <span class="inline-code">src/components/WardrobeCapsuleCard.tsx</span></p>
+
+  <div class="card">
+    <h4>CapsuleItem schema</h4>
+    <table class="tbl">
+      <thead><tr><th>Field</th><th>Values</th></tr></thead>
+      <tbody>
+        <tr><td>category</td><td>Base | Colour | Neutral | Pattern | Evening | Occasion</td></tr>
+        <tr><td>hex</td><td>Color swatch hex code</td></tr>
+        <tr><td>fabric</td><td>Fabric recommendation string</td></tr>
+        <tr><td>myntraQuery</td><td>Deep-link search query for Myntra</td></tr>
+        <tr><td>amazonQuery</td><td>Deep-link search query for Amazon</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Color Guard</h4>
+      <p>Euclidean color distance check (&lt;55 threshold) prevents near-duplicate swatches in the 10-piece capsule.</p>
+    </div>
+    <div class="card">
+      <h4>SeedDream Hero</h4>
+      <p>SeedDream 4.5 via Replicate generates a styled flat-lay hero image for the capsule. Cost: ~$0.03/gen. Paid users only.</p>
+    </div>
+    <div class="card">
+      <h4>SeedDream Palette</h4>
+      <p><span class="inline-code">seedream-palette.ts</span> generates mood board imagery per color season palette using the same SeedDream 4.5 model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- JEWELLERY -->
+<section id="jewellery" class="reveal">
+  <h2>Jewellery Recommendation Engine</h2>
+  <p>File: <span class="inline-code">src/lib/jewellery-rules.ts</span> — pure client-side rule engine, zero API calls.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Earring rules</h4>
+      <p>Determined by face shape. E.g. Round face → elongated drops, Oval → anything, Square → rounded hoops.</p>
+    </div>
+    <div class="card">
+      <h4>Necklace rules</h4>
+      <p>Determined by face shape + neckline. Guides length and pendant style per shape.</p>
+    </div>
+    <div class="card">
+      <h4>Gemstone rules</h4>
+      <p>Determined by color season. Warm seasons → amber, citrine, coral; Cool seasons → sapphire, amethyst, pearl.</p>
+    </div>
+    <div class="card">
+      <h4>Metal tone rules</h4>
+      <p>Determined by undertone: Warm undertone → gold, rose gold; Cool undertone → silver, platinum; Neutral → both.</p>
+    </div>
+  </div>
+
+  <p><span class="inline-code">src/lib/jewellery-affiliates.ts</span> — affiliate product links per jewellery category (Amazon + Nykaa).</p>
+</section>
+
+<!-- VISUAL GENERATION -->
+<section id="visuals" class="reveal">
+  <h2>Visual Asset Generation</h2>
+  <p>File: <span class="inline-code">src/lib/ai/</span> — various visual generation modules. All fire-and-forget after pipeline.</p>
+
+  <div class="alert alert-red">
+    <strong>⚠ Replicate SDK:</strong> Always <span class="inline-code">useFileOutput: false</span>. FileOutput objects break URL validation.
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Asset Type</th><th>Service</th><th>Model</th><th>Fallback</th></tr></thead>
+    <tbody>
+      <tr><td>Hairstyle try-ons</td><td>FAL AI</td><td>fal-ai/image-apps-v2/hair-change</td><td>Replicate Kontext → SDXL</td></tr>
+      <tr><td>Glasses try-on</td><td>Replicate</td><td>SDXL inpainting</td><td>—</td></tr>
+      <tr><td>Makeup looks (4)</td><td>FAL AI</td><td>Flux Kontext Pro makeup-application</td><td>—</td></tr>
+      <tr><td>Clothing swatches (12)</td><td>Replicate</td><td>Flux Kontext Pro megapixels=0.25</td><td>—</td></tr>
+      <tr><td>Capsule flat-lay hero</td><td>Replicate</td><td>SeedDream 4.5</td><td>—</td></tr>
+      <tr><td>Season mood board</td><td>Replicate</td><td>SeedDream 4.5</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Generated Assets Table</h3>
+  <p>All generated URLs stored in <span class="inline-code">generated_assets</span> table keyed by <span class="inline-code">report_id + asset_type + variant</span>. Retrieved via <span class="inline-code">src/lib/generated-assets.ts</span>.</p>
+</section>
+
+<!-- API ROUTES -->
+<section id="api" class="reveal">
+  <h2>API Routes</h2>
+  <table class="tbl">
+    <thead><tr><th>Route</th><th>Method</th><th>Purpose</th><th>Duration</th></tr></thead>
+    <tbody>
+      <tr><td>/api/analyze</td><td>POST</td><td>Full AI pipeline, SSE stream</td><td>maxDuration=60</td></tr>
+      <tr><td>/api/chat</td><td>POST</td><td>Streaming style consultant chat</td><td>maxDuration=30</td></tr>
+      <tr><td>/api/reports/[id]</td><td>GET</td><td>Fetch compiled report</td><td>default</td></tr>
+      <tr><td>/api/payments/create</td><td>POST</td><td>Create Razorpay order</td><td>default</td></tr>
+      <tr><td>/api/payments/verify</td><td>POST</td><td>Verify checkout signature (does NOT unlock)</td><td>default</td></tr>
+      <tr><td>/api/webhooks/razorpay</td><td>POST</td><td>Authoritative payment unlock source</td><td>default</td></tr>
+      <tr><td>/api/internal/trigger-visuals</td><td>POST</td><td>Fire-and-forget visual generation</td><td>maxDuration=300</td></tr>
+      <tr><td>/api/og/[token]</td><td>GET</td><td>OG image via Puppeteer/Chromium</td><td>default</td></tr>
+      <tr><td>/api/admin/canary-stats</td><td>GET</td><td>Prompt A/B variant stats</td><td>default</td></tr>
+      <tr><td>/api/ingredients/analyze</td><td>POST</td><td>Ingredient safety analysis</td><td>maxDuration=30</td></tr>
+      <tr><td>/api/capsule/generate</td><td>POST</td><td>Wardrobe capsule generation</td><td>default</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- DATABASE -->
+<section id="database" class="reveal">
+  <h2>Database Schema</h2>
+  <p>Source of truth: <span class="inline-code">supabase/migrations/</span> (20 migrations). RLS enabled on all tables.</p>
+
+  <h3>Key Tables</h3>
+  <table class="tbl">
+    <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>profiles</td><td>User profile: name, avatar, onboarding_done, is_paid, plan_tier</td></tr>
+      <tr><td>reports</td><td>Analysis results: status, pipeline_meta, face_shape, color_season, skin, etc.</td></tr>
+      <tr><td>payments</td><td>Razorpay order ID, payment ID, amount, currency, status</td></tr>
+      <tr><td>chat_messages</td><td>Style consultant chat history per report</td></tr>
+      <tr><td>user_style_prefs</td><td>Personalization memory: preferred styles, colors, dislikes</td></tr>
+      <tr><td>generated_assets</td><td>Visual AI output URLs keyed by report_id + asset_type + variant</td></tr>
+      <tr><td>plans</td><td>Plan definitions: tier, price_inr, price_usd, razorpay_plan_id</td></tr>
+      <tr><td>subscriptions</td><td>Active subscription records with status + period dates</td></tr>
+      <tr><td>usage_counters</td><td>Per-user monthly generation counts (reset monthly)</td></tr>
+      <tr><td>webhook_events</td><td>Idempotency store for Razorpay webhook events</td></tr>
+      <tr><td>image_hashes</td><td>Deduplication: perceptual hash of uploaded selfies</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Key RPCs (always prefer over raw multi-table writes)</h3>
+  <table class="tbl">
+    <thead><tr><th>RPC</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>complete_webhook_payment</td><td>Atomic payment + report + profile unlock — called ONLY by webhook handler</td></tr>
+      <tr><td>upsert_style_prefs</td><td>Personalization memory upsert</td></tr>
+      <tr><td>try_consume_generation</td><td>Atomic quota check + increment (returns ok/fail)</td></tr>
+      <tr><td>get_studio_entitlement</td><td>Returns tier, remaining gens, cap, reset date</td></tr>
+      <tr><td>record_webhook_event</td><td>Idempotency deduplication by Razorpay event ID</td></tr>
+      <tr><td>expire_stuck_reports</td><td>pg_cron job every 10 min — moves stuck processing reports to failed</td></tr>
+      <tr><td>complete_payment</td><td>Used by verify endpoint for checkout flow (not webhook)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Supabase Client Rules — Never Mix These</h3>
+  <table class="tbl">
+    <thead><tr><th>Client</th><th>File</th><th>When to use</th></tr></thead>
+    <tbody>
+      <tr><td>createSupabaseBrowserClient()</td><td>lib/supabase/client.ts</td><td>Client components only</td></tr>
+      <tr><td>createSupabaseServerClient()</td><td>lib/supabase/server.ts</td><td>Server components, Route Handlers, Server Actions</td></tr>
+      <tr><td>createSupabaseAdminClient()</td><td>lib/supabase/server.ts</td><td>Webhooks/background jobs only — bypasses RLS</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="reveal">
+  <h2>Pricing Strategy</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Free</h4>
+      <p style="font-size:1.5rem;font-weight:800;color:var(--text)">₹0 / $0</p>
+      <ul>
+        <li>Face shape + color season preview</li>
+        <li>Paywalled at full report</li>
+        <li>0 AI studio generations</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Report (one-time)</h4>
+      <p style="font-size:1.5rem;font-weight:800;color:var(--pink)">₹299 / $3.99</p>
+      <ul>
+        <li>Full 8-section AI report</li>
+        <li>Jewellery, capsule, ingredient analyzer</li>
+        <li>3 AI studio generations/month</li>
+        <li>PDF export</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Studio Pro (subscription)</h4>
+      <p style="font-size:1.5rem;font-weight:800;color:var(--violet)">₹999/mo / $12.99/mo</p>
+      <ul>
+        <li>Everything in Report</li>
+        <li>Unlimited AI studio generations</li>
+        <li>SeedDream mood boards + capsule heroes</li>
+        <li>Priority processing</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Cost per Report</h3>
+  <table class="tbl">
+    <thead><tr><th>Scenario</th><th>Cost</th></tr></thead>
+    <tbody>
+      <tr><td>Base pipeline (no visuals)</td><td>~$0.07</td></tr>
+      <tr><td>With 3 AI studio previews</td><td>~$0.27</td></tr>
+      <tr><td>SeedDream capsule hero</td><td>~$0.03</td></tr>
+      <tr><td>Target (optimised)</td><td>$0.15 per report</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Currency Detection</h3>
+  <p><span class="inline-code">src/lib/currency.ts</span> — <span class="inline-code">detectCurrency()</span>: Asia/Kolkata timezone → INR, else USD. Derived from <span class="inline-code">CF-IPCountry</span> / <span class="inline-code">X-Vercel-IP-Country</span> server headers. Never trust client currency hint.</p>
+</section>
+
+<!-- PAYMENTS -->
+<section id="payments" class="reveal">
+  <h2>Payment Flow</h2>
+
+  <div class="alert alert-red">
+    <strong>⚠ Critical:</strong> The webhook is the ONLY authoritative unlock source. <span class="inline-code">POST /api/payments/verify</span> does NOT set <span class="inline-code">is_paid</span>. Only the <span class="inline-code">payment.captured</span> webhook event does (via <span class="inline-code">complete_webhook_payment</span> RPC).
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Checkout flow (one-time)</h4>
+      <ol>
+        <li>Client calls <span class="inline-code">POST /api/payments/create</span> → Razorpay order ID</li>
+        <li>Razorpay checkout opens in browser</li>
+        <li>On success, client calls <span class="inline-code">POST /api/payments/verify</span> (signature check only — no unlock)</li>
+        <li>Webhook fires <span class="inline-code">payment.captured</span> → <span class="inline-code">complete_webhook_payment</span> RPC unlocks report</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4>Subscription flow</h4>
+      <ol>
+        <li>Client creates Razorpay subscription</li>
+        <li>Webhook fires <span class="inline-code">subscription.charged</span> → unlocks Studio Pro</li>
+        <li>Monthly renewal handled by Razorpay + webhook</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4>Security rules</h4>
+      <ul>
+        <li>HMAC-SHA256 via <span class="inline-code">timingSafeEqual</span> — never use <span class="inline-code">===</span></li>
+        <li>Webhook idempotency: <span class="inline-code">record_webhook_event(event_id)</span></li>
+        <li><span class="inline-code">PAYMENT_TEST_ALLOW_IN_PROD</span> must be <span class="badge badge-red">false</span> in prod</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CANARY -->
+<section id="canary" class="reveal">
+  <h2>Canary A/B System</h2>
+  <p>File: <span class="inline-code">src/lib/ai/canary.ts</span></p>
+  <p>Variant IDs stored in <span class="inline-code">pipeline_meta.stages[].variantId</span>. Stats at <span class="inline-code">GET /api/admin/canary-stats</span>.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>pickVariant(stageKey)</h4>
+      <p>Weighted random selection from registered variants for a stage. Returns variant ID and prompt string (or sentinel).</p>
+    </div>
+    <div class="card">
+      <h4>color_v1</h4>
+      <p>Weight = 0 (disabled). Legacy color prompt — do not re-enable without testing.</p>
+    </div>
+    <div class="card">
+      <h4>color_v2_dominant</h4>
+      <p>Active variant. Uses sentinel <span class="inline-code">"__dominant_color_variant__"</span> which triggers <span class="inline-code">buildColorAnalysisPrompt()</span> dynamically instead of using stored string.</p>
+    </div>
+  </div>
+
+  <h3>7 Stage Keys</h3>
+  <p>face_shape, color_season, skin_vision, skin_routine, face_features, glasses, hairstyle</p>
+</section>
+
+<!-- MEMORY -->
+<section id="memory" class="reveal">
+  <h2>Personalization Memory</h2>
+  <p>File: <span class="inline-code">src/lib/ai/memory.ts</span></p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>persistStylePrefs()</h4>
+      <p>Called after every analysis completes. Saves extracted style preferences (colors liked, styles avoided, etc.) to <span class="inline-code">user_style_prefs</span> via <span class="inline-code">upsert_style_prefs</span> RPC.</p>
+    </div>
+    <div class="card">
+      <h4>buildPersonalizedSystemBase()</h4>
+      <p>Called at start of next analysis or chat. Reads <span class="inline-code">user_style_prefs</span> and injects context into the system prompt so AI remembers past preferences.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AFFILIATES -->
+<section id="affiliates" class="reveal">
+  <h2>Affiliate Links</h2>
+  <p>File: <span class="inline-code">src/lib/affiliates.ts</span></p>
+  <p>File: <span class="inline-code">src/lib/jewellery-affiliates.ts</span></p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Skincare affiliates</h4>
+      <p><span class="inline-code">AFFILIATE_PRODUCTS</span> — keyed by routine step name. Each entry has Amazon + Nykaa product links shown alongside routine recommendations in the report.</p>
+    </div>
+    <div class="card">
+      <h4>Jewellery affiliates</h4>
+      <p>Affiliate links per jewellery category (earring style, necklace type, gemstone) on Amazon and Nykaa.</p>
+    </div>
+    <div class="card">
+      <h4>Wardrobe affiliates</h4>
+      <p>Each CapsuleItem includes <span class="inline-code">myntraQuery</span> and <span class="inline-code">amazonQuery</span> for direct deep-link shopping.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="security" class="reveal">
+  <h2>Security</h2>
+
+  <div class="alert alert-red">
+    <strong>🔒 Critical Rules</strong>
+  </div>
+
+  <ul>
+    <li><span class="inline-code">createSupabaseAdminClient()</span> bypasses RLS — always validate <span class="inline-code">user_id</span> ownership explicitly</li>
+    <li><span class="inline-code">selfies</span> storage bucket must remain <strong>private</strong></li>
+    <li><span class="inline-code">INTERNAL_API_SECRET</span> must be ≥16 chars — <span class="inline-code">/api/internal/trigger-visuals</span> returns 503 otherwise</li>
+    <li>Supabase Site URL must be set to production domain in Dashboard → Auth → URL Configuration</li>
+    <li>Webhook HMAC uses <span class="inline-code">timingSafeEqual</span> — never use <span class="inline-code">===</span> for signature comparison</li>
+    <li>Rate limiting: <span class="inline-code">/api/analyze</span> → 8 req/60s per IP, <span class="inline-code">/api/chat</span> → 30 req/60s per IP (in-process LRU)</li>
+    <li>Hard quota gate: <span class="inline-code">DAILY_ANALYSIS_QUOTA = 10</span> per user per day in the analyze route handler</li>
+    <li><span class="inline-code">PAYMENT_TEST_ALLOW_IN_PROD</span> must be false in production</li>
+    <li>Currency is derived from server headers only, never from client input</li>
+    <li>OWASP Top 10 compliance expected — no SQL injection (uses parameterised RPCs), no XSS (React escaping), no IDOR (RLS)</li>
+  </ul>
+</section>
+
+<!-- COMPONENTS -->
+<section id="components" class="reveal">
+  <h2>Key Components</h2>
+
+  <h3>Feature Components</h3>
+  <table class="tbl">
+    <thead><tr><th>Component</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>AIBeautyStudio.tsx</td><td>Virtual try-on: 3 modes (clothing/makeup/hair), photo mode, vault history</td></tr>
+      <tr><td>IngredientAnalyzer.tsx</td><td>Ingredient scanner UI with SVG score ring and per-flag verdict cards</td></tr>
+      <tr><td>StyleDnaCard.tsx</td><td>Combined identity: season vibe + face descriptor + undertone + skin type</td></tr>
+      <tr><td>WardrobeCapsuleCard.tsx</td><td>10-piece capsule grid + Myntra/Amazon links + SeedDream hero image</td></tr>
+      <tr><td>StyleChatDrawer.tsx</td><td>Slide-in style consultant chat powered by /api/chat SSE stream</td></tr>
+      <tr><td>Paywall.tsx</td><td>Upgrade prompt for locked report sections, handles INR/USD pricing</td></tr>
+      <tr><td>OnboardingModal.tsx</td><td>First-time user onboarding flow with step tracking</td></tr>
+      <tr><td>SkinQuestionnaireModal.tsx</td><td>Pre-analysis skin questionnaire to improve routine recommendations</td></tr>
+      <tr><td>ImageUploader.tsx</td><td>Selfie upload with preview, validation, compression before submit</td></tr>
+      <tr><td>ProgressTracker.tsx</td><td>SSE-driven pipeline progress bar during analysis</td></tr>
+      <tr><td>AnalysisLoading.tsx</td><td>Animated loading state shown during the 8-stage pipeline</td></tr>
+      <tr><td>Navbar.tsx</td><td>Top navigation, handles auth state, dashboard link</td></tr>
+      <tr><td>Footer.tsx</td><td>Site footer with legal links</td></tr>
+      <tr><td>VisitorChatWidget.tsx</td><td>Pre-auth visitor chat widget on marketing pages</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Design System — Color Gotcha</h3>
+  <div class="alert alert-yellow">
+    <strong>⚠ Tailwind alias inversion:</strong> Legacy aliases are semantically inverted. New code must use canonical names.
+  </div>
+  <table class="tbl">
+    <thead><tr><th>Tailwind alias</th><th>Actual color</th><th>Canonical name (use this)</th></tr></thead>
+    <tbody>
+      <tr><td><span class="inline-code">terracotta</span></td><td style="color:#EC4899">Pink #EC4899</td><td><span class="badge badge-pink">chrome</span></td></tr>
+      <tr><td><span class="inline-code">olive</span></td><td style="color:#8B5CF6">Violet #8B5CF6</td><td><span class="badge badge-violet">iris</span></td></tr>
+      <tr><td><span class="inline-code">obsidian</span></td><td>Soft pink bg #FDF2F8</td><td><span class="badge badge-pink">obsidian</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- PAGES -->
+<section id="pages" class="reveal">
+  <h2>App Pages</h2>
+  <table class="tbl">
+    <thead><tr><th>Route</th><th>Page</th><th>Auth?</th></tr></thead>
+    <tbody>
+      <tr><td>/</td><td>Landing page (home-content.json driven)</td><td>No</td></tr>
+      <tr><td>/upload</td><td>Selfie upload + pre-analysis questionnaire</td><td>Yes</td></tr>
+      <tr><td>/report/[id]</td><td>Full analysis report with all cards</td><td>Yes</td></tr>
+      <tr><td>/dashboard</td><td>User dashboard with report history</td><td>Yes</td></tr>
+      <tr><td>/success</td><td>Post-payment success page</td><td>Yes</td></tr>
+      <tr><td>/r/[token]</td><td>Public shared report (read-only, no paywall)</td><td>No</td></tr>
+      <tr><td>/auth/*</td><td>Supabase Auth UI flows (login, callback, etc.)</td><td>No</td></tr>
+      <tr><td>/admin</td><td>Admin dashboard (ADMIN_EMAIL_ALLOWLIST gated)</td><td>Yes + admin</td></tr>
+      <tr><td>/privacy</td><td>Privacy policy</td><td>No</td></tr>
+      <tr><td>/terms</td><td>Terms of service</td><td>No</td></tr>
+      <tr><td>/refund</td><td>Refund policy</td><td>No</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- MIDDLEWARE -->
+<section id="middleware" class="reveal">
+  <h2>Middleware</h2>
+  <p>File: <span class="inline-code">src/middleware.ts</span></p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>1. Rate Limiting (in-process LRU)</h4>
+      <ul>
+        <li>4096-entry LRU, resets on cold start</li>
+        <li><span class="inline-code">/api/analyze</span> → 8 req/60s per IP</li>
+        <li><span class="inline-code">/api/chat</span> → 30 req/60s per IP</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>2. Auth Protection</h4>
+      <p>Protected paths: <span class="inline-code">/upload</span>, <span class="inline-code">/report</span>, <span class="inline-code">/dashboard</span>, <span class="inline-code">/success</span>, <span class="inline-code">/admin</span> — all require Supabase session, redirect to login otherwise.</p>
+    </div>
+    <div class="card">
+      <h4>3. Session Refresh</h4>
+      <p><span class="inline-code">updateSession()</span> from <span class="inline-code">lib/supabase/middleware.ts</span> called on every request to refresh the Supabase session cookie.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ENV VARS -->
+<section id="env" class="reveal">
+  <h2>Environment Variables</h2>
+  <p>Centralized in <span class="inline-code">src/lib/env.ts</span> (server) and <span class="inline-code">src/lib/public-env.ts</span> (client-safe).</p>
+
+  <h3>Required Server Variables</h3>
+  <table class="tbl">
+    <thead><tr><th>Variable</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr><td>SUPABASE_SERVICE_ROLE_KEY</td><td>Admin RLS bypass — keep secret</td></tr>
+      <tr><td>OPENAI_API_KEY</td><td>GPT-4o + GPT-4o-mini access</td></tr>
+      <tr><td>RAZORPAY_KEY_SECRET</td><td>Order creation + HMAC verification</td></tr>
+      <tr><td>RAZORPAY_WEBHOOK_SECRET</td><td>Webhook HMAC verification</td></tr>
+      <tr><td>INTERNAL_API_SECRET</td><td>≥16 chars, gates /api/internal/* routes</td></tr>
+      <tr><td>ADMIN_EMAIL_ALLOWLIST</td><td>Comma-separated admin email addresses</td></tr>
+      <tr><td>FAL_KEY</td><td>FAL AI visual generation</td></tr>
+      <tr><td>REPLICATE_API_TOKEN</td><td>Replicate visual generation</td></tr>
+      <tr><td>AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY</td><td>AWS Rekognition face detection</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Required Public Variables</h3>
+  <table class="tbl">
+    <thead><tr><th>Variable</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>NEXT_PUBLIC_SUPABASE_URL</td><td>Supabase project URL</td></tr>
+      <tr><td>NEXT_PUBLIC_SUPABASE_ANON_KEY</td><td>Supabase anon/public key</td></tr>
+      <tr><td>NEXT_PUBLIC_RAZORPAY_KEY_ID</td><td>Razorpay publishable key for checkout</td></tr>
+      <tr><td>NEXT_PUBLIC_APP_URL</td><td>App base URL for OG, sharing, callbacks</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- TESTING -->
+<section id="testing" class="reveal">
+  <h2>Testing</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Unit Tests (Vitest)</h4>
+      <ul>
+        <li><span class="inline-code">src/lib/ai/confidence.test.ts</span></li>
+        <li><span class="inline-code">src/lib/ai/contracts.test.ts</span></li>
+        <li><span class="inline-code">src/lib/ai/pipeline.test.ts</span></li>
+      </ul>
+      <p>Config: node environment, isolate=true, <span class="inline-code">@</span> alias → <span class="inline-code">./src</span></p>
+    </div>
+    <div class="card">
+      <h4>Eval Pipeline</h4>
+      <p><span class="inline-code">npm run eval</span> — calls real OpenAI. Never run in CI without API key management.</p>
+      <p>Fixtures: <span class="inline-code">scripts/eval-fixtures/&lt;stage&gt;/&lt;id&gt;.json</span> with golden labels per stage (face_shape, glasses, hairstyle, summary).</p>
+    </div>
+    <div class="card">
+      <h4>Commands</h4>
+      <pre style="margin:0"><code>npm test               # Vitest single run
+npm run test:watch     # Vitest watch mode
+npm run eval           # Full eval (real OpenAI)
+npm run eval:stage -- face_shape --runs 5</code></pre>
+    </div>
+    <div class="card">
+      <h4>Build checks</h4>
+      <pre style="margin:0"><code>npm run typecheck      # tsc --noEmit
+npm run lint           # ESLint
+npm run build          # Production build</code></pre>
+      <div class="alert alert-yellow" style="margin-top:8px;font-size:12px">
+        Build fails without native sharp binaries. Run <span class="inline-code">npm install --include=optional sharp</span> on Linux/Vercel.
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.05 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Active nav highlighting
+const navLinks = document.querySelectorAll('#topnav a');
+const sections = document.querySelectorAll('section[id]');
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector('#topnav a[href="#' + e.target.id + '"]');
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-40% 0px -50% 0px' });
+sections.forEach(s => navObserver.observe(s));
+
+// Copy code buttons
+document.querySelectorAll('pre').forEach(pre => {
+  const code = pre.querySelector('code');
+  if (!code) return;
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'copy';
+  btn.onclick = () => {
+    navigator.clipboard.writeText(code.textContent || '');
+    btn.textContent = 'copied!';
+    setTimeout(() => btn.textContent = 'copy', 1500);
+  };
+  pre.appendChild(btn);
+});
+</script>
+</body>
+</html>

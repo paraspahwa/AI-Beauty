@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
@@ -6,6 +6,11 @@ import { Footer } from "@/components/Footer";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -105,7 +110,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-obsidian text-ink antialiased">
+<body className="min-h-screen flex flex-col bg-obsidian text-ink antialiased overflow-x-hidden">
 
         <Navbar />
         <div className="flex-1">{children}</div>

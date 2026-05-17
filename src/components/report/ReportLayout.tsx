@@ -317,9 +317,10 @@ export function ReportLayout({
         transition={{ delay: 0.4 }}
       >
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <div className="flex justify-center mb-8">
+          <div className="mb-8 overflow-x-auto -mx-4 sm:mx-0 [&::-webkit-scrollbar]:hidden">
+            <div className="flex justify-start md:justify-center px-4 sm:px-0">
             <TabsList
-              className="backdrop-blur-sm rounded-2xl p-1.5 gap-1"
+              className="backdrop-blur-sm rounded-2xl p-1.5 gap-1 flex-nowrap"
               style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}
             >
               {TABS.map((t) => {
@@ -331,7 +332,7 @@ export function ReportLayout({
                   <TabsTrigger
                     key={t.value}
                     value={t.value}
-                    className="relative rounded-xl text-[13px] font-medium px-4 py-2 transition-all data-[state=active]:shadow-sm"
+                    className="relative rounded-xl text-[13px] font-medium px-3 py-2 sm:px-4 transition-all data-[state=active]:shadow-sm whitespace-nowrap"
                     style={activeTab === t.value
                       ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff" }
                       : { color: "#9C7D5B" }}
@@ -344,6 +345,7 @@ export function ReportLayout({
                 );
               })}
             </TabsList>
+            </div>
           </div>
 
           <AnimatePresence mode="wait">
