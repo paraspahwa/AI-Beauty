@@ -41,10 +41,10 @@ function getClientIp(req: NextRequest): string | null {
   );
 }
 
-function isRateLimited(ip: string, max: number): boolean {
+function isRateLimited(ip: string, prefix: string, max: number): boolean {
   const now = Date.now();
-  // Key includes the max so different limits don't share counters
-  const key = `${ip}:${max}`;
+  // Key includes the route prefix so routes with the same max don't share counters
+  const key = `${ip}:${prefix}`;
   let entry = ipWindows.get(key);
 
   if (!entry || now > entry.resetAt) {
@@ -105,7 +105,7 @@ export async function middleware(request: NextRequest) {
     const ip = getClientIp(request);
     // If no identifiable IP (e.g. absent proxy headers), skip the in-process limiter
     // and fall through to the DB-layer burst/quota checks which are the hard gate.
-    if (ip !== null && isRateLimited(ip, matchedRoute.max)) {
+    if (ip !== null && isRateLimited(ip, matchedRoute.prefix, matchedRoute.max)) {
       return NextResponse.json(
         { error: "Too many requests. Please slow down." },
         {

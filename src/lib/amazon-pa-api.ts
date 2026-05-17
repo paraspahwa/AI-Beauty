@@ -30,7 +30,13 @@ interface CachedEntry {
   expiresAt: number;
 }
 
-const _cache = new Map<string, CachedEntry>();
+const _cache    = new Map<string, CachedEntry>();
+/**
+ * In-flight deduplication: if two concurrent callers request the same ASIN,
+ * the second awaits the same Promise instead of firing a duplicate API call.
+ * This prevents exceeding the PA-API 1 req/sec quota under load.
+ */
+const _inFlight = new Map<string, Promise<PaApiProductData[]>>();
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
@@ -77,8 +83,15 @@ export async function fetchAmazonProductImages(
   // PA-API max 10 items per call
   for (let i = 0; i < pending.length; i += 10) {
     const chunk = pending.slice(i, i + 10);
+    // Deduplicate concurrent calls for the same chunk using a stable cache key
+    const chunkKey = chunk.slice().sort().join(",");
+    let promise = _inFlight.get(chunkKey);
+    if (!promise) {
+      promise = _callPaApi(chunk, opts).finally(() => _inFlight.delete(chunkKey));
+      _inFlight.set(chunkKey, promise);
+    }
     try {
-      const items = await _callPaApi(chunk, opts);
+      const items = await promise;
       for (const item of items) {
         result.set(item.asin, item);
         _cache.set(item.asin, { imageUrl: item.imageUrl, expiresAt: now + CACHE_TTL_MS });
