@@ -11,7 +11,22 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
 const FAL_HAIR_MODEL       = "fal-ai/image-apps-v2/hair-change" as const;
 
-// Maps a free-text color name to the supported hair_color enum for change-haircut.
+// Maps FAL snake_case style values to Replicate's change-haircut enum values.
+const REPLICATE_STYLE_MAP: Record<string, string> = {
+  "short_hair":       "Straight",
+  "medium_long_hair": "Layered",
+  "long_hair":        "Straight",
+  "curly_hair":       "Curly",
+  "wavy_hair":        "Wavy",
+  "high_ponytail":    "High Ponytail",
+  "bun":              "Messy Bun",
+  "bob_cut":          "Bob",
+  "pixie_cut":        "Pixie Cut",
+  "braids":           "Box Braids",
+  "straight_hair":    "Straight",
+};
+
+// Maps FAL snake_case color values to Replicate's change-haircut hair_color enum.
 // Full supported list: Blonde, Golden Blonde, Honey Blonde, Ash Blonde, Platinum Blonde,
 // Strawberry Blonde, Brunette, Black, Jet Black, Blue-Black, Dark Brown, Medium Brown,
 // Light Brown, Ash Brown, Chestnut, Caramel, Auburn, Copper, Red, Mahogany, Burgundy,
@@ -49,7 +64,8 @@ const HAIR_COLOR_ENUM_MAP: Record<string, string> = {
 };
 
 function mapToHairColorEnum(colorName: string): string {
-  const key = colorName.toLowerCase().trim();
+  // Normalize snake_case to spaces (e.g. "dark_brown" → "dark brown")
+  const key = colorName.toLowerCase().trim().replace(/_/g, " ");
   if (HAIR_COLOR_ENUM_MAP[key]) return HAIR_COLOR_ENUM_MAP[key];
   // Partial match — e.g. "warm auburn" → "Auburn"
   for (const [k, v] of Object.entries(HAIR_COLOR_ENUM_MAP)) {
@@ -205,8 +221,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const { createFalClient } = await import("@fal-ai/client");
         const fal = createFalClient({ credentials: env.fal.apiKey });
         const falInput: Record<string, unknown> = { image_url: imageDataUri };
+        // FAL uses snake_case style values directly (e.g. "bob_cut", "curly_hair")
         if (styleName && styleName !== "No change") falInput["hair_style"] = styleName;
-        if (hairColorEnum && hairColorEnum !== "No change") falInput["hair_color"] = hairColorEnum;
+        // FAL uses snake_case color values directly (e.g. "auburn", "dark_brown")
+        if (colorName && colorName !== "natural") falInput["hair_color"] = colorName;
         // @ts-expect-error -- dynamic Record into strict generic
         const result = await fal.run(FAL_HAIR_MODEL, { input: falInput }) as { data?: { images?: { url?: string }[] }; image?: { url?: string }; images?: { url?: string }[]; url?: string };
         const raw = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
@@ -225,10 +243,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: "No AI service configured" }, { status: 503 });
       }
       const replicate = new Replicate({ auth: env.replicate.apiToken, useFileOutput: false });
+      // Map FAL snake_case style values to Replicate's enum (e.g. "bob_cut" → "Bob")
+      const replicateStyle = styleName && styleName !== "No change"
+        ? (REPLICATE_STYLE_MAP[styleName] ?? styleName)
+        : "No change";
       const output = await replicate.run(CHANGE_HAIRCUT_MODEL, {
         input: {
           input_image:      imageDataUri,
-          haircut:          styleName && styleName !== "No change" ? styleName : "No change",
+          haircut:          replicateStyle,
           hair_color:       hairColorEnum,
           gender:           "none",
           aspect_ratio:     "match_input_image",
