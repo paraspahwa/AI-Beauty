@@ -43,6 +43,7 @@ export interface FaceBox {
 }
 
 interface FalHairOutput {
+  data?: { images?: { url?: string }[] };
   image?: { url?: string };
   images?: { url?: string }[];
   url?: string;
@@ -230,7 +231,7 @@ export async function replicateHairPreview(
       if (hairColorEnum !== "No change") falInput["hair_color"] = hairColorEnum;
       // @ts-expect-error -- cast required to pass dynamic Record into strict generic RunOptions
       const result = await fal.run(FAL_HAIR_MODEL, { input: falInput }) as FalHairOutput;
-      const raw = result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
+      const raw = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
       if (raw?.startsWith("https://")) {
         url = raw;
         console.info(`[hair] fal primary OK for "${styleName}"`);

@@ -150,9 +150,9 @@ export async function POST(
       intensity,
       // style_description is not part of the typed input; log it for debugging.
     },
-  }) as { image?: { url: string }; images?: { url: string }[] };
-  console.info("[makeup route] prompt:", prompt);
+  }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
   const resultUrl: string =
+    falResult?.data?.images?.[0]?.url ??
     falResult?.image?.url ??
     (falResult?.images as { url: string }[] | undefined)?.[0]?.url ?? "";
   if (!resultUrl) {

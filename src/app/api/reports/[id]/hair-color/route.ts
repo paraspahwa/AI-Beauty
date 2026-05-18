@@ -208,8 +208,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (styleName && styleName !== "No change") falInput["hair_style"] = styleName;
         if (hairColorEnum && hairColorEnum !== "No change") falInput["hair_color"] = hairColorEnum;
         // @ts-expect-error -- dynamic Record into strict generic
-        const result = await fal.run(FAL_HAIR_MODEL, { input: falInput }) as { image?: { url?: string }; images?: { url?: string }[]; url?: string };
-        const raw = result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
+        const result = await fal.run(FAL_HAIR_MODEL, { input: falInput }) as { data?: { images?: { url?: string }[] }; image?: { url?: string }; images?: { url?: string }[]; url?: string };
+        const raw = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? result?.url;
         if (raw?.startsWith("https://")) {
           url = raw;
           console.info(`[hair-color] FAL OK for "${slug}"`);

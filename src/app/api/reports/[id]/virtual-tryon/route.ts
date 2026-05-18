@@ -147,9 +147,10 @@ export async function POST(
     } as unknown as Parameters<typeof falClient.run<"fal-ai/image-apps-v2/virtual-try-on">>[1]["input"];
     const falResult = await falClient.run("fal-ai/image-apps-v2/virtual-try-on", {
       input: tryonInput,
-    }) as { image?: { url: string }; images?: { url: string }[] };
+    }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
 
     const resultUrl: string =
+      falResult?.data?.images?.[0]?.url ??
       falResult?.image?.url ??
       (falResult?.images as { url: string }[] | undefined)?.[0]?.url ?? "";
 
