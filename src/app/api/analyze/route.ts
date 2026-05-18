@@ -248,7 +248,21 @@ export async function POST(req: NextRequest) {
             let skinUserContext: { ageRange?: string; selfReportedFeeling?: string; primaryConcern?: string } | undefined;
             const skinContextRaw = form.get("skinContext");
             if (typeof skinContextRaw === "string" && skinContextRaw.length > 0) {
-              try { skinUserContext = JSON.parse(skinContextRaw); } catch { /* ignore malformed */ }
+              try {
+                const raw = JSON.parse(skinContextRaw) as Record<string, unknown>;
+                // Sanitize: cap each field to 100 chars, strip characters outside
+                // printable ASCII to prevent prompt injection via skinContext.
+                const sanitize = (v: unknown): string | undefined => {
+                  if (typeof v !== "string") return undefined;
+                  // eslint-disable-next-line no-control-regex
+                  return v.replace(/[\x00-\x1F\x7F]/g, " ").slice(0, 100).trim() || undefined;
+                };
+                skinUserContext = {
+                  ageRange:            sanitize(raw.ageRange),
+                  selfReportedFeeling: sanitize(raw.selfReportedFeeling),
+                  primaryConcern:      sanitize(raw.primaryConcern),
+                };
+              } catch { /* ignore malformed */ }
             }
 
             if (!ALLOWED_TYPES.has(file.type)) {
@@ -495,7 +509,19 @@ export async function POST(req: NextRequest) {
     let skinUserContext: { ageRange?: string; selfReportedFeeling?: string; primaryConcern?: string } | undefined;
     const skinContextRaw = form.get("skinContext");
     if (typeof skinContextRaw === "string" && skinContextRaw.length > 0) {
-      try { skinUserContext = JSON.parse(skinContextRaw); } catch { /* ignore malformed */ }
+      try {
+        const raw = JSON.parse(skinContextRaw) as Record<string, unknown>;
+        const sanitize = (v: unknown): string | undefined => {
+          if (typeof v !== "string") return undefined;
+          // eslint-disable-next-line no-control-regex
+          return v.replace(/[\x00-\x1F\x7F]/g, " ").slice(0, 100).trim() || undefined;
+        };
+        skinUserContext = {
+          ageRange:            sanitize(raw.ageRange),
+          selfReportedFeeling: sanitize(raw.selfReportedFeeling),
+          primaryConcern:      sanitize(raw.primaryConcern),
+        };
+      } catch { /* ignore malformed */ }
     }
 
     // ── MIME type allowlist check ─────────────────────────────────────────────

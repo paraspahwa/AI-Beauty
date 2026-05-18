@@ -148,3 +148,7 @@ without removing any user-facing feature.
 - ✅ Done — implemented and committed
 - 🔄 In Progress — currently being worked on
 - ⬜ Pending — not yet started
+
+---
+
+> **Last audited: May 2026** — All phases 1–5 complete (Phase 5.3 skipped by design). Cost per report target achieved: ~$0.20–0.25.

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,6 +53,7 @@ export function ReportLayout({
   const handleTabChange = (value: string) => setActiveTab(value);
   const [copied, setCopied] = React.useState(false);
   const [shareLoading, setShareLoading] = React.useState(false);
+  const router = useRouter();
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
@@ -319,6 +321,7 @@ export function ReportLayout({
               externalOpen={paywallOpen}
               onExternalOpenChange={setPaywallOpen}
               onUnlocked={() => { setPaymentInitiated(true); setPaywallOpen(false); refresh(); }}
+              onSubscribed={() => { setPaywallOpen(false); router.push("/success?type=studio_pro"); }}
             />
           )}
         </motion.div>

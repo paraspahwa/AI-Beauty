@@ -516,6 +516,7 @@
   },
 
   "security": {
+    "last_audited": "2025-05",
     "rules": [
       "createSupabaseAdminClient() bypasses RLS — always validate user_id ownership explicitly",
       "selfies bucket must remain private",
@@ -524,7 +525,15 @@
       "Currency from server geo headers only",
       "Site URL must be set to prod domain in Supabase Auth settings",
       "PAYMENT_TEST_ALLOW_IN_PROD must be false in production",
-      "ADMIN_EMAIL_ALLOWLIST — never hardcode emails in source"
+      "ADMIN_EMAIL_ALLOWLIST — never hardcode emails in source; .env.example uses a placeholder",
+      "skinContext fields (ageRange, selfReportedFeeling, primaryConcern) stripped of control chars and capped at 100 chars before LLM injection",
+      "trigger-visuals timingSafeEqual: buffers padded to equal length before comparison to prevent secret-length side-channel"
+    ],
+    "fixes_applied": [
+      { "issue": "skinContext prompt injection", "severity": "MEDIUM", "file": "src/app/api/analyze/route.ts", "fix": "Control chars stripped, fields capped 100 chars" },
+      { "issue": "trigger-visuals timing side-channel", "severity": "LOW", "file": "src/app/api/internal/trigger-visuals/route.ts", "fix": "Buffers padded to max length before timingSafeEqual" },
+      { "issue": ".env.example real personal email", "severity": "LOW", "file": ".env.example", "fix": "Replaced with admin@yourdomain.com placeholder" },
+      { "issue": "onSubscribed not wired (Studio Pro no-op)", "severity": "BUG", "file": "src/components/report/ReportLayout.tsx", "fix": "onSubscribed navigates to /success?type=studio_pro" }
     ]
   }
 }

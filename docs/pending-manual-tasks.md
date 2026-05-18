@@ -2,6 +2,20 @@
 
 These require action outside the codebase. All code changes are already deployed/committed.
 
+## ✅ Completed in Code (no manual action needed)
+
+- Upload split-gate (Blueprint Report vs AI Studio intent cards) — `src/app/upload/`
+- ReportLayout two-mode switcher (Analysis Report | AI Studio toggle) — `src/components/report/ReportLayout.tsx`
+- Paywall per-card inline CTAs (separate Report + Studio Pro buttons) — `src/components/Paywall.tsx`
+- Studio Pro intercept: studio mode button opens Paywall if `!isPaid`
+- Success page Studio Pro differentiation (`?type=studio_pro` → violet gradient + Crown icon) — `src/app/success/`
+- Dashboard tier pill + Studio Pro upgrade card — `src/app/dashboard/`
+- `onSubscribed` wired in ReportLayout → navigates to `/success?type=studio_pro` after subscription
+- `skinContext` sanitization (control chars stripped, fields capped 100 chars) — `src/app/api/analyze/route.ts`
+- `trigger-visuals` timing normalization (buffers padded before `timingSafeEqual`) — `src/app/api/internal/trigger-visuals/route.ts`
+- `.env.example` personal email replaced with `admin@yourdomain.com` placeholder
+- All optimisation roadmap Phases 1–5 complete (5.3 skipped by design)
+
 ## 🔴 P1 — Do First (Revenue / Broken)
 
 1. **Affiliate tags** — Register accounts, then set in Vercel env vars:

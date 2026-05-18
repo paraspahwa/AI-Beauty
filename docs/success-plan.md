@@ -14,13 +14,26 @@
 | `npm run lint` | ✅ no warnings/errors |
 | `npm test` (vitest) | ✅ 15/15 passing |
 | `npm run build` | ✅ succeeds (after fix) |
-| Settings issues found | 2 — both fixed |
+| Settings issues found | 4 — all fixed |
 
 ### Settings / Env Issues Fixed
 1. **`sharp` missing linux-x64 binary** → `next build` failed at "Collecting page data" for `/api/og/[token]`. Fix: `npm install --include=optional sharp`.
 2. **`@rolldown/binding-linux-x64-gnu` missing** → `vitest` crashed at startup. Fix: install the optional native binding.
+3. **`.env.example` had real personal email** → `ADMIN_EMAIL_ALLOWLIST` placeholder was a developer email. Fixed: replaced with `admin@yourdomain.com`.
+4. **`skinContext` prompt injection** → User-submitted `ageRange`, `selfReportedFeeling`, `primaryConcern` were injected into LLM prompts without sanitization. Fixed: control characters stripped, fields capped at 100 chars each.
 
-> Action: add `optionalDependencies` pinning + a `postinstall` guard, or commit a `.npmrc` with `optional=true` and document Vercel build env. In CI/Vercel (linux-x64) this is rarely an issue, but add a smoke step `node -e "require('sharp')"` to the build to fail fast.
+### Security Fixes Applied (2025)
+- **SEC-MEDIUM** `skinContext` sanitization (`/api/analyze/route.ts`) — strips control chars, caps fields to 100 chars before prompt interpolation.
+- **SEC-LOW** `trigger-visuals` timing side-channel — `timingSafeEqual` now pads both buffers to equal length before comparison; length check happens after (no short-circuit timing leak on secret length).
+- **BUG** `onSubscribed` wired in `ReportLayout.tsx` — Studio Pro subscription now navigates to `/success?type=studio_pro` so users see the Studio Pro success experience.
+
+### Recent UI / Funnel Additions (2025)
+- Upload split-gate: two cards (Blueprint Report vs AI Studio) with intent routing.
+- ReportLayout two-mode switcher: "Analysis Report | AI Studio" tab toggle.
+- Paywall per-card inline CTAs: separate "Get Report" / "Go Studio Pro" buttons.
+- Studio Pro intercept: studio mode button opens Paywall if `!isPaid`.
+- Success page Studio Pro differentiation: `?type=studio_pro` → violet gradient, Crown icon, Studio perks, `/dashboard` CTA.
+- Dashboard tier pill (violet/pink/gray) + Studio Pro upgrade card (conditional on `tier !== "studio_pro"`).
 
 ### Other Settings to Double-Check Before Launch
 - `OPENAI_VISION_MODEL=gpt-4o`, `OPENAI_MINI_MODEL=gpt-4o-mini` (README warns: do not change to gpt-5*).
@@ -30,7 +43,7 @@
 - `PAYMENT_TEST_MODE=false` and `PAYMENT_TEST_ALLOW_IN_PROD=false` in production.
 - Vercel plan = **Pro** (needed for `maxDuration = 60` on `/api/analyze`).
 - Razorpay webhook URL points to prod domain; `RAZORPAY_WEBHOOK_SECRET` matches.
-- `ADMIN_EMAIL_ALLOWLIST` reviewed — currently contains a personal email.
+- `ADMIN_EMAIL_ALLOWLIST` must be set in Vercel env vars to your real admin email (`.env.example` now uses a placeholder).
 
 ---
 

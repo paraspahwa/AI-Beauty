@@ -37,7 +37,13 @@ export async function POST(req: NextRequest) {
     }
     const secretBuf    = Buffer.from(secret ?? "", "utf8");
     const configuredBuf = Buffer.from(configured, "utf8");
-    if (secretBuf.length !== configuredBuf.length || !timingSafeEqual(secretBuf, configuredBuf)) {
+    // Normalize both buffers to the same length before timingSafeEqual to
+    // avoid leaking length information via short-circuit timing.
+    const maxLen = Math.max(secretBuf.length, configuredBuf.length);
+    const aBuf = Buffer.concat([secretBuf,    Buffer.alloc(maxLen - secretBuf.length)]);
+    const bBuf = Buffer.concat([configuredBuf, Buffer.alloc(maxLen - configuredBuf.length)]);
+    const lengthMatch = secretBuf.length === configuredBuf.length;
+    if (!timingSafeEqual(aBuf, bBuf) || !lengthMatch) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
