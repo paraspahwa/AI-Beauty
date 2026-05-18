@@ -109,11 +109,56 @@ export async function runAnalysisPipeline(
     extractClothingColors(rawImage),
   ]);
 
+  // ── Photo quality gate (runs only when Rekognition succeeded) ───────────
+  // Rejects obviously bad selfies before any OpenAI call runs, saving cost
+  // and giving the user a specific, actionable error message.
+  if (rekognition) {
+    const faceConf   = rekognition.Confidence ?? 100;
+    const sharpness  = (rekognition.Quality as { Sharpness?: number } | undefined)?.Sharpness ?? 100;
+    const brightness = (rekognition.Quality as { Brightness?: number } | undefined)?.Brightness ?? 100;
+    const eyesOpen   = rekognition.EyesOpen as { Value?: boolean; Confidence?: number } | undefined;
+
+    if (faceConf < 80) {
+      throw new PipelineStageError(
+        "photo_quality",
+        "validation",
+        "No clear face detected. Please use a well-lit, front-facing photo.",
+      );
+    }
+    if (sharpness < 15) {
+      throw new PipelineStageError(
+        "photo_quality",
+        "validation",
+        "Photo is too blurry. Please retake with a steady hand and good lighting.",
+      );
+    }
+    if (brightness < 10) {
+      throw new PipelineStageError(
+        "photo_quality",
+        "validation",
+        "Photo is too dark. Please move to a brighter spot or turn on more lights.",
+      );
+    }
+    if (eyesOpen?.Value === false && (eyesOpen.Confidence ?? 0) > 85) {
+      throw new PipelineStageError(
+        "photo_quality",
+        "validation",
+        "Eyes appear closed. Please look at the camera and retake the photo.",
+      );
+    }
+
+    console.info(
+      "[pipeline] photo quality OK",
+      `faceConf=${faceConf.toFixed(1)} sharpness=${sharpness.toFixed(1)} brightness=${brightness.toFixed(1)} eyesOpen=${eyesOpen?.Value}`,
+    );
+  }
+
   // Extract Phase 4.1 rekognition attributes for injection into Features prompt
   const rekAttrs = rekognition ? {
     ageRange:          rekognition.AgeRange ? `${rekognition.AgeRange.Low}–${rekognition.AgeRange.High}` : undefined,
     wearingGlasses:    rekognition.Eyeglasses?.Value === true,
     wearingSunglasses: rekognition.Sunglasses?.Value === true,
+    gender:            rekognition.Gender?.Value?.toLowerCase() as "male" | "female" | undefined,
   } : undefined;
 
   // Personalized system base: fetches prior prefs from DB (soft prior for repeat users)

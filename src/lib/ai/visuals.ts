@@ -243,6 +243,7 @@ export async function generateHairstylePreviews(
   _rekognitionFace?: unknown,
   /** If provided, only generate previews for these slot indices (Phase 5.4 per-click). */
   indicesToGenerate?: number[],
+  gender?: "none" | "male" | "female",
 ): Promise<{ index: number; buffer: Buffer; style: string }[]> {
   const flatteningStyles = hairstyle.styles.slice(0, 5);
   const hairHex          = hairstyle.colors[0]?.hex ?? "#3B1F0A";
@@ -259,7 +260,7 @@ export async function generateHairstylePreviews(
       hairHex,
       env.replicate.apiToken,
       undefined,
-      undefined,
+      gender ?? "none",
       env.fal.isConfigured ? env.fal.apiKey : undefined,
     ).catch((err) => {
       console.warn("[visuals] hair batch failed:", (err as Error).message);

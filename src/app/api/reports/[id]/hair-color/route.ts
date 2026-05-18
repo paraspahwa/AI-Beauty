@@ -8,6 +8,21 @@ import { applyLogoWatermark } from "@/lib/watermark";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
+/** Extract Rekognition gender as a hair-model enum value. Falls back to "none". */
+function extractGender(rekognition: unknown): "none" | "male" | "female" {
+  if (
+    rekognition &&
+    typeof rekognition === "object" &&
+    "Gender" in rekognition &&
+    typeof (rekognition as Record<string, unknown>).Gender === "object"
+  ) {
+    const val = ((rekognition as Record<string, unknown>).Gender as Record<string, unknown>).Value;
+    if (val === "Male") return "male";
+    if (val === "Female") return "female";
+  }
+  return "none";
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
 const FAL_HAIR_MODEL       = "fal-ai/image-apps-v2/hair-change" as const;
@@ -114,7 +129,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const admin = createSupabaseAdminClient();
     const { data: row, error: rowErr } = await admin
       .from("reports")
-      .select("id, user_id, status, image_path")
+      .select("id, user_id, status, image_path, rekognition")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -253,7 +268,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           input_image:      imageDataUri,
           haircut:          replicateStyle,
           hair_color:       hairColorEnum,
-          gender:           "none",
+          gender:           extractGender(row.rekognition),
           aspect_ratio:     "match_input_image",
           output_format:    "jpg",
           safety_tolerance: 2,
