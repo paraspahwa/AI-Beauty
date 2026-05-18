@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Sparkles } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "How it works", href: "/#how" },

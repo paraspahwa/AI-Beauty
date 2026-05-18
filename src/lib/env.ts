@@ -151,14 +151,19 @@ export const env = {
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);
     required("SUPABASE_SERVICE_ROLE_KEY", this.supabase.serviceRoleKey);
     required("OPENAI_API_KEY", this.openai.apiKey);
-    required("AWS_ACCESS_KEY_ID", this.aws.accessKeyId);
-    required("AWS_SECRET_ACCESS_KEY", this.aws.secretAccessKey);
+    // AWS keys are only required for the /api/analyze route (Rekognition).
+    // AI Studio routes (makeup, hair-color, virtual-tryon) do not use Rekognition.
     if (process.env.NODE_ENV === "production" && this.flags.paymentTestAllowInProd) {
       console.error(
         "[env] DANGER: PAYMENT_TEST_ALLOW_IN_PROD=true in production — fake payments are enabled! " +
         "Disable this flag immediately."
       );
     }
+  },
+  /** Throws if AWS Rekognition credentials are missing. Call only from the analyze route. */
+  assertRekognition() {
+    required("AWS_ACCESS_KEY_ID", this.aws.accessKeyId);
+    required("AWS_SECRET_ACCESS_KEY", this.aws.secretAccessKey);
   },
 };
 

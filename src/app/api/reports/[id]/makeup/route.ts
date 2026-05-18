@@ -213,7 +213,9 @@ export async function POST(
 
       return NextResponse.json({ url: signed?.signedUrl ?? resultUrl, asset });
     } catch (err) {
+      const e = err as { status?: number; body?: unknown; message?: string };
       console.error("[makeup route]", err);
+      if (e?.body) console.error("[makeup route] body:", JSON.stringify(e.body));
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }

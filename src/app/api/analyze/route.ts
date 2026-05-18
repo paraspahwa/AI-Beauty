@@ -228,6 +228,7 @@ export async function POST(req: NextRequest) {
         void (async () => {
           try {
             env.assertServer();
+            env.assertRekognition();
 
             const supabase = await createSupabaseServerClient();
             const { data: { user } } = await supabase.auth.getUser();
