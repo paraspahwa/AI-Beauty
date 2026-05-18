@@ -1,0 +1,530 @@
+{
+  "app": {
+    "name": "Renovaara",
+    "tagline": "AI-Powered Beauty Analysis SaaS",
+    "version": "2.0",
+    "deploy": "Vercel Pro",
+    "stack": {
+      "framework": "Next.js 15 (App Router)",
+      "runtime": "React 19",
+      "language": "TypeScript",
+      "styling": "Tailwind CSS 3",
+      "testing": "Vitest",
+      "database": "Supabase (PostgreSQL)",
+      "auth": "Supabase Auth",
+      "storage": "Supabase Storage (selfies bucket — private)"
+    }
+  },
+
+  "layers": {
+
+    "frontend": {
+      "pages": [
+        { "route": "/", "file": "src/app/page.tsx", "description": "Landing page — hero, stats, sample showcase, FAQ, testimonials", "auth": "public" },
+        { "route": "/upload", "file": "src/app/upload/", "description": "Selfie upload with drag-and-drop ImageUploader", "auth": "protected" },
+        { "route": "/report/[id]", "file": "src/app/report/", "description": "Full AI beauty report with paywall gate", "auth": "protected" },
+        { "route": "/dashboard", "file": "src/app/dashboard/", "description": "User dashboard — report history, usage", "auth": "protected" },
+        { "route": "/success", "file": "src/app/success/", "description": "Post-payment success screen", "auth": "protected" },
+        { "route": "/admin", "file": "src/app/admin/", "description": "Admin panel (ADMIN_EMAIL_ALLOWLIST gated)", "auth": "admin" },
+        { "route": "/auth/*", "file": "src/app/auth/", "description": "Supabase auth callback handling", "auth": "public" },
+        { "route": "/r/[token]", "file": "src/app/r/", "description": "Public report sharing via short token", "auth": "public" },
+        { "route": "/privacy", "file": "src/app/privacy/", "description": "Privacy policy", "auth": "public" },
+        { "route": "/terms", "file": "src/app/terms/", "description": "Terms of service", "auth": "public" },
+        { "route": "/refund", "file": "src/app/refund/", "description": "Refund policy", "auth": "public" }
+      ],
+      "global_components": [
+        { "name": "Navbar", "file": "src/components/Navbar.tsx", "description": "Top navigation with auth state" },
+        { "name": "Footer", "file": "src/components/Footer.tsx", "description": "Site footer" },
+        { "name": "OnboardingModal", "file": "src/components/OnboardingModal.tsx", "description": "First-time user onboarding flow" },
+        { "name": "TourProvider", "file": "src/components/TourProvider.tsx", "description": "Product tour wrapper" },
+        { "name": "VisitorChatWidget", "file": "src/components/VisitorChatWidget.tsx", "description": "Floating chat for unauthenticated visitors" },
+        { "name": "ProgressTracker", "file": "src/components/ProgressTracker.tsx", "description": "Analysis pipeline progress indicator" },
+        { "name": "AnalysisLoading", "file": "src/components/AnalysisLoading.tsx", "description": "Animated loading state during analysis" }
+      ],
+      "home_components": [
+        { "name": "HeroText", "file": "src/components/home/HeroText.tsx" },
+        { "name": "HeroReportCard", "file": "src/components/home/HeroReportCard.tsx" },
+        { "name": "StatsCounters", "file": "src/components/home/StatsCounters.tsx" },
+        { "name": "SampleShowcase", "file": "src/components/home/SampleShowcase.tsx" },
+        { "name": "TestimonialsSection", "file": "src/components/home/TestimonialsSection.tsx" },
+        { "name": "FAQAccordion", "file": "src/components/home/FAQAccordion.tsx" },
+        { "name": "ActivityTicker", "file": "src/components/home/ActivityTicker.tsx" },
+        { "name": "RevealSection", "file": "src/components/home/RevealSection.tsx" },
+        { "name": "StickyMobileCta", "file": "src/components/home/StickyMobileCta.tsx" }
+      ],
+      "report_components": [
+        { "name": "ReportLayout", "file": "src/components/report/ReportLayout.tsx", "description": "Master layout for full report" },
+        { "name": "ColorAnalysisCard", "file": "src/components/report/ColorAnalysisCard.tsx" },
+        { "name": "SkinAnalysisCard", "file": "src/components/report/SkinAnalysisCard.tsx" },
+        { "name": "FaceFeaturesCard", "file": "src/components/report/FaceFeaturesCard.tsx" },
+        { "name": "HairstyleCard", "file": "src/components/report/HairstyleCard.tsx" },
+        { "name": "HairColorCard", "file": "src/components/report/HairColorCard.tsx" },
+        { "name": "SpectaclesCard", "file": "src/components/report/SpectaclesCard.tsx" },
+        { "name": "MakeupCard", "file": "src/components/report/MakeupCard.tsx" },
+        { "name": "JewelleryCard", "file": "src/components/report/JewelleryCard.tsx" },
+        { "name": "ShoppingGuideCard", "file": "src/components/report/ShoppingGuideCard.tsx" },
+        { "name": "VirtualTryOnCard", "file": "src/components/report/VirtualTryOnCard.tsx" },
+        { "name": "AIBeautyStudio", "file": "src/components/report/AIBeautyStudio.tsx", "description": "Studio Pro feature hub" }
+      ],
+      "feature_components": [
+        { "name": "Paywall", "file": "src/components/Paywall.tsx", "description": "Report paywall gate with Razorpay trigger" },
+        { "name": "StyleChatDrawer", "file": "src/components/StyleChatDrawer.tsx", "description": "Sliding drawer for style consultant chat" },
+        { "name": "StyleDnaCard", "file": "src/components/StyleDnaCard.tsx", "description": "Personalized style DNA summary card" },
+        { "name": "WardrobeCapsuleCard", "file": "src/components/WardrobeCapsuleCard.tsx", "description": "AI wardrobe capsule generator" },
+        { "name": "IngredientAnalyzer", "file": "src/components/IngredientAnalyzer.tsx", "description": "Skincare ingredient scanner" },
+        { "name": "ProductComparisonCard", "file": "src/components/ProductComparisonCard.tsx", "description": "Side-by-side product comparison" },
+        { "name": "SkinQuestionnaireModal", "file": "src/components/SkinQuestionnaireModal.tsx", "description": "Skin type questionnaire for personalization" },
+        { "name": "ImageUploader", "file": "src/components/ImageUploader.tsx", "description": "Drag-drop selfie upload to Supabase Storage" },
+        { "name": "DeleteReportButton", "file": "src/components/DeleteReportButton.tsx" },
+        { "name": "AdminCleanupButton", "file": "src/components/AdminCleanupButton.tsx" }
+      ],
+      "ui_primitives": [
+        { "name": "Button", "file": "src/components/ui/button.tsx", "lib": "Radix + CVA" },
+        { "name": "Card", "file": "src/components/ui/card.tsx", "lib": "Radix + CVA" },
+        { "name": "Badge", "file": "src/components/ui/badge.tsx", "lib": "Radix + CVA" },
+        { "name": "Dialog", "file": "src/components/ui/dialog.tsx", "lib": "Radix + CVA" },
+        { "name": "Progress", "file": "src/components/ui/progress.tsx", "lib": "Radix + CVA" },
+        { "name": "Tabs", "file": "src/components/ui/tabs.tsx", "lib": "Radix + CVA" },
+        { "name": "DoAvoidGuidanceCard", "file": "src/components/ui/DoAvoidGuidanceCard.tsx" }
+      ]
+    },
+
+    "api": {
+      "routes": [
+        {
+          "path": "POST /api/analyze",
+          "file": "src/app/api/analyze/",
+          "description": "Full AI beauty analysis pipeline — SSE streaming",
+          "maxDuration": 60,
+          "auth": "session required",
+          "rateLimit": "8 req/60s per IP",
+          "dailyQuota": 10,
+          "flow": ["Upload image", "compressForAI()", "runAnalysisPipeline()", "Store report in DB", "Trigger fire-and-forget visuals"]
+        },
+        {
+          "path": "POST /api/chat",
+          "file": "src/app/api/chat/",
+          "description": "Streaming style consultant chat (authenticated users)",
+          "maxDuration": 30,
+          "auth": "session required",
+          "rateLimit": "30 req/60s per IP"
+        },
+        {
+          "path": "POST /api/chat/visitor",
+          "file": "src/app/api/chat/visitor/",
+          "description": "Unauthenticated visitor chat widget",
+          "auth": "public",
+          "rateLimit": "10 req/60s per IP"
+        },
+        {
+          "path": "GET /api/reports/[id]",
+          "file": "src/app/api/reports/",
+          "description": "Fetch compiled report JSON",
+          "auth": "session required"
+        },
+        {
+          "path": "POST /api/payments/create",
+          "file": "src/app/api/payments/",
+          "description": "Create Razorpay order (one-time or subscription)",
+          "auth": "session required",
+          "rateLimit": "10 req/60s per IP",
+          "note": "Currency derived from CF-IPCountry header — never trust client hint"
+        },
+        {
+          "path": "POST /api/payments/verify",
+          "file": "src/app/api/payments/",
+          "description": "Verify Razorpay checkout signature — does NOT set is_paid",
+          "auth": "session required"
+        },
+        {
+          "path": "POST /api/webhooks/razorpay",
+          "file": "src/app/api/webhooks/",
+          "description": "Authoritative payment unlock — sets is_paid via complete_webhook_payment RPC",
+          "auth": "HMAC signature verification (timingSafeEqual)",
+          "idempotency": "record_webhook_event RPC deduplicates by event_id"
+        },
+        {
+          "path": "POST /api/internal/trigger-visuals",
+          "file": "src/app/api/internal/",
+          "description": "Fire-and-forget visual asset generation (hairstyle, glasses, makeup, clothing)",
+          "maxDuration": 300,
+          "auth": "INTERNAL_API_SECRET header (≥16 chars)"
+        },
+        {
+          "path": "GET /api/og/[token]",
+          "file": "src/app/api/og/",
+          "description": "OG image generation via Puppeteer/Chromium",
+          "auth": "public"
+        },
+        {
+          "path": "GET /api/admin/canary-stats",
+          "file": "src/app/api/admin/",
+          "description": "Prompt A/B variant performance stats",
+          "auth": "ADMIN_EMAIL_ALLOWLIST"
+        },
+        {
+          "path": "POST /api/subscriptions",
+          "file": "src/app/api/subscriptions/",
+          "description": "Manage Studio Pro subscriptions",
+          "auth": "session required",
+          "rateLimit": "10 req/60s per IP"
+        },
+        {
+          "path": "POST /api/capsule",
+          "file": "src/app/api/capsule/",
+          "description": "AI wardrobe capsule generation",
+          "auth": "session required",
+          "rateLimit": "15 req/60s per IP"
+        },
+        {
+          "path": "POST /api/ingredients",
+          "file": "src/app/api/ingredients/",
+          "description": "Skincare ingredient analysis",
+          "auth": "session required",
+          "rateLimit": "20 req/60s per IP"
+        },
+        {
+          "path": "POST /api/ingredients/compare",
+          "file": "src/app/api/ingredients/compare/",
+          "description": "Compare two ingredient lists (2 AI calls)",
+          "auth": "session required",
+          "rateLimit": "10 req/60s per IP"
+        },
+        {
+          "path": "GET /api/affiliate",
+          "file": "src/app/api/affiliate/",
+          "description": "Amazon PA-API affiliate product lookup",
+          "auth": "session required"
+        },
+        {
+          "path": "GET /api/vault",
+          "file": "src/app/api/vault/",
+          "description": "Generated assets vault (Studio Pro)",
+          "auth": "session required"
+        }
+      ]
+    },
+
+    "ai_pipeline": {
+      "entry": "src/lib/ai/pipeline.ts → runAnalysisPipeline()",
+      "description": "8-stage sequential pipeline triggered by POST /api/analyze",
+      "stages": [
+        { "order": 1, "name": "rekognition", "service": "AWS Rekognition", "purpose": "Face landmark detection — BoundingBox, Landmarks, Confidence", "file": "src/lib/ai/rekognition.ts", "model": null },
+        { "order": 2, "name": "face_shape", "service": "OpenAI", "purpose": "Classify face shape (Oval/Round/Square/Heart/Diamond/Oblong/Triangle)", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini", "outputType": "FaceShapeResult" },
+        { "order": 3, "name": "color_analysis", "service": "OpenAI", "purpose": "Season color, undertone, palette, metals, avoid colors", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini", "outputType": "ColorAnalysisResult", "canary": true },
+        { "order": 4, "name": "skin_vision", "service": "OpenAI", "purpose": "Skin type classification + zone observations", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini" },
+        { "order": 5, "name": "skin_routine", "service": "OpenAI", "purpose": "AM/PM skincare routine generation", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini", "outputType": "SkinAnalysisResult" },
+        { "order": 6, "name": "features", "service": "OpenAI", "purpose": "Eyes/nose/lips/cheeks feature breakdown", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini", "outputType": "FeatureBreakdown" },
+        { "order": 7, "name": "glasses", "service": "OpenAI", "purpose": "Eyeglass frame recommendations (uses face shape)", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini", "outputType": "GlassesResult" },
+        { "order": 8, "name": "hairstyle", "service": "OpenAI", "purpose": "Hairstyle/hair color recommendations (uses face shape)", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini", "outputType": "HairstyleResult" },
+        { "order": 9, "name": "summary", "service": "OpenAI", "purpose": "Compile narrative summary from all stage outputs", "file": "src/lib/ai/pipeline.ts", "model": "gpt-4o-mini" }
+      ],
+      "visual_generation": {
+        "description": "Fire-and-forget visual asset generation triggered after pipeline completes",
+        "file": "src/lib/ai/visuals.ts",
+        "assets": [
+          { "type": "hairstyle_tryons", "count": "variable", "primary": "FAL fal-ai/image-apps-v2/hair-change", "fallback1": "Replicate Kontext", "fallback2": "SDXL" },
+          { "type": "glasses_tryons", "count": "variable", "primary": "Replicate SDXL inpainting", "file": "src/lib/ai/replicate-glasses.ts" },
+          { "type": "makeup_looks", "count": 4, "primary": "FAL Flux Kontext Pro", "file": "src/lib/ai/replicate-makeup.ts" },
+          { "type": "clothing_swatches", "count": 12, "primary": "Replicate Flux Kontext Pro", "settings": "megapixels: 0.25" },
+          { "type": "color_swatches", "count": "variable", "file": "src/lib/ai/color-swatch-v2.ts" },
+          { "type": "palette_visualization", "file": "src/lib/ai/seedream-palette.ts" },
+          { "type": "capsule_wardrobe", "file": "src/lib/ai/seedream-capsule.ts" }
+        ]
+      },
+      "infrastructure": [
+        { "module": "chatJSON<T>()", "file": "src/lib/ai/openai.ts", "description": "All OpenAI calls — JSON mode forced, image base64 support" },
+        { "module": "withRetry()", "file": "src/lib/ai/resilience.ts", "description": "2 attempts, 250ms×attempt backoff, error classification" },
+        { "module": "pickVariant()", "file": "src/lib/ai/canary.ts", "description": "Prompt A/B variant sampler by weighted random" },
+        { "module": "compressForAI()", "file": "src/lib/ai/image.ts", "description": "Pre-compress image to 512px max before AI calls" },
+        { "module": "buildPersonalizedSystemBase()", "file": "src/lib/ai/memory.ts", "description": "Inject user style prefs into system prompt" },
+        { "module": "normalizeX()", "file": "src/lib/ai/contracts.ts", "description": "Zod validation + safe-fallback for all AI outputs" },
+        { "module": "detectFaceDetails()", "file": "src/lib/ai/rekognition.ts", "description": "AWS Rekognition DetectFaces API call" },
+        { "module": "blendConfidence()", "file": "src/lib/ai/confidence.ts", "description": "Blend GPT + Rekognition face shape confidence" }
+      ]
+    },
+
+    "database": {
+      "provider": "Supabase (PostgreSQL)",
+      "rls": "Enabled on all user tables",
+      "migrations_count": 20,
+      "tables": [
+        { "name": "profiles", "description": "User profile metadata, is_paid flag" },
+        { "name": "reports", "description": "AI analysis report JSON blobs per user" },
+        { "name": "payments", "description": "Payment records linked to reports" },
+        { "name": "chat_messages", "description": "Style chat history per user/report" },
+        { "name": "user_style_prefs", "description": "Personalization memory (skin concerns, style goals)" },
+        { "name": "generated_assets", "description": "URLs for visual try-on assets (hair, glasses, makeup, clothing)" },
+        { "name": "plans", "description": "Subscription plan definitions (free, report, studio_pro)" },
+        { "name": "subscriptions", "description": "Active user subscriptions" },
+        { "name": "usage_counters", "description": "Per-user AI generation quota counters" },
+        { "name": "webhook_events", "description": "Idempotency log for Razorpay webhook events" },
+        { "name": "image_hashes", "description": "Perceptual hash dedup for uploaded selfies" },
+        { "name": "canary_metrics", "description": "Prompt variant performance logs" },
+        { "name": "pipeline_meta", "description": "Per-report pipeline timing and stage metadata" }
+      ],
+      "key_rpcs": [
+        { "name": "complete_webhook_payment", "description": "Atomic: set is_paid + unlock report + update payment row" },
+        { "name": "upsert_style_prefs", "description": "Personalization memory upsert" },
+        { "name": "try_consume_generation", "description": "Atomic quota check + increment (Studio Pro)" },
+        { "name": "get_studio_entitlement", "description": "Return tier, remaining gens, cap, reset date" },
+        { "name": "record_webhook_event", "description": "Idempotency deduplication by Razorpay event_id" },
+        { "name": "expire_stuck_reports", "description": "pg_cron job — runs every 10 min" }
+      ],
+      "migrations": [
+        { "file": "0001_init.sql", "description": "Core tables: profiles, reports, payments" },
+        { "file": "0002_constraints_indexes_rpc.sql", "description": "Indexes, foreign keys, base RPCs" },
+        { "file": "0003_security_hardening.sql", "description": "RLS policies, storage policies" },
+        { "file": "0004_visual_assets.sql", "description": "generated_assets table" },
+        { "file": "0005_pipeline_meta.sql", "description": "Pipeline timing metadata" },
+        { "file": "0006_style_prefs.sql", "description": "user_style_prefs + upsert_style_prefs RPC" },
+        { "file": "0007_canary_metrics.sql", "description": "Prompt A/B metrics table" },
+        { "file": "0008_cleanup_and_idempotency.sql", "description": "webhook_events + record_webhook_event RPC" },
+        { "file": "0009_public_sharing.sql", "description": "Public report share token system" },
+        { "file": "0010_tighten_share_rls.sql", "description": "Tighter RLS on shared reports" },
+        { "file": "0011_ensure_visual_assets.sql", "description": "Visual asset storage policies" },
+        { "file": "0012_chat_history.sql", "description": "chat_messages table" },
+        { "file": "0013_chat_bookmarks.sql", "description": "Chat bookmark/save system" },
+        { "file": "0014_image_hash.sql", "description": "image_hashes dedup table" },
+        { "file": "0015_atomic_color_swatch_update.sql", "description": "Atomic color swatch asset update" },
+        { "file": "0016_makeup_storage_policies.sql", "description": "Makeup try-on storage policies" },
+        { "file": "0017_atomic_preview_slot_update.sql", "description": "Atomic preview slot update RPC" },
+        { "file": "0018_tryon_storage_policies.sql", "description": "Virtual try-on storage policies" },
+        { "file": "0019_plans_subscriptions.sql", "description": "plans + subscriptions tables" },
+        { "file": "0020_generated_assets_vault.sql", "description": "Studio Pro assets vault" }
+      ],
+      "storage": {
+        "bucket": "selfies",
+        "visibility": "private",
+        "note": "Must remain private — accessed via signed URLs only"
+      }
+    },
+
+    "auth": {
+      "provider": "Supabase Auth",
+      "clients": [
+        { "fn": "createSupabaseBrowserClient()", "file": "src/lib/supabase/client.ts", "use": "Client components only" },
+        { "fn": "createSupabaseServerClient()", "file": "src/lib/supabase/server.ts", "use": "Server components, Route Handlers, Server Actions" },
+        { "fn": "createSupabaseAdminClient()", "file": "src/lib/supabase/server.ts", "use": "Webhooks/background jobs only — bypasses RLS" }
+      ],
+      "session_refresh": "updateSession() in src/lib/supabase/middleware.ts — called on every request via src/middleware.ts",
+      "protected_routes": ["/upload", "/report", "/dashboard", "/success", "/admin"]
+    },
+
+    "payments": {
+      "provider": "Razorpay",
+      "file": "src/lib/payments/razorpay.ts",
+      "tiers": [
+        { "name": "One-time Report Unlock", "priceINR": 299, "priceUSD": 3.99 },
+        { "name": "Studio Pro Subscription", "priceINR": 999, "priceUSD": 12.99 }
+      ],
+      "flow": [
+        "1. POST /api/payments/create → Razorpay order/subscription created",
+        "2. Client: Razorpay Checkout modal",
+        "3. POST /api/payments/verify → signature verified (timingSafeEqual) — does NOT unlock",
+        "4. POST /api/webhooks/razorpay (payment.captured event) → complete_webhook_payment RPC → unlocks report"
+      ],
+      "security": [
+        "HMAC-SHA256 signature verification with timingSafeEqual",
+        "Currency from CF-IPCountry/X-Vercel-IP-Country header only",
+        "Webhook idempotency via record_webhook_event RPC",
+        "PAYMENT_TEST_ALLOW_IN_PROD must be false in production"
+      ]
+    },
+
+    "middleware": {
+      "file": "src/middleware.ts",
+      "responsibilities": [
+        "In-process IP rate limiting (LRU Map, 4096 entries, resets on cold start)",
+        "Auth protection — redirect unauthenticated users from protected routes",
+        "Session refresh — updateSession() on every request"
+      ],
+      "rate_limits": [
+        { "prefix": "/api/analyze", "max": 8, "window": "60s" },
+        { "prefix": "/api/chat/visitor", "max": 10, "window": "60s" },
+        { "prefix": "/api/chat", "max": 30, "window": "60s" },
+        { "prefix": "/api/reports", "max": 15, "window": "60s" },
+        { "prefix": "/api/payments", "max": 10, "window": "60s" },
+        { "prefix": "/api/subscriptions", "max": 10, "window": "60s" },
+        { "prefix": "/api/capsule", "max": 15, "window": "60s" },
+        { "prefix": "/api/ingredients/compare", "max": 10, "window": "60s" },
+        { "prefix": "/api/ingredients", "max": 20, "window": "60s" }
+      ]
+    },
+
+    "business_logic": {
+      "modules": [
+        { "name": "entitlement", "file": "src/lib/entitlement.ts", "description": "getStudioEntitlement() — plan tier, quota, reset date via RPC" },
+        { "name": "currency", "file": "src/lib/currency.ts", "description": "Currency detection from Vercel/CF geo headers" },
+        { "name": "season-colors", "file": "src/lib/season-colors.ts", "description": "Color season rules and palette data" },
+        { "name": "jewellery-rules", "file": "src/lib/jewellery-rules.ts", "description": "Jewellery recommendations by color season" },
+        { "name": "makeup-looks", "file": "src/lib/makeup-looks.ts", "description": "4 makeup look definitions for visual generation" },
+        { "name": "makeup-options", "file": "src/lib/makeup-options.ts", "description": "Makeup product option catalog" },
+        { "name": "generated-assets", "file": "src/lib/generated-assets.ts", "description": "Asset URL management and retrieval helpers" },
+        { "name": "affiliates", "file": "src/lib/affiliates.ts", "description": "Amazon affiliate product mapping" },
+        { "name": "jewellery-affiliates", "file": "src/lib/jewellery-affiliates.ts", "description": "Jewellery affiliate product links" },
+        { "name": "amazon-pa-api", "file": "src/lib/amazon-pa-api.ts", "description": "Amazon Product Advertising API client" },
+        { "name": "animations", "file": "src/lib/animations.ts", "description": "Framer Motion animation presets" },
+        { "name": "home-content", "file": "src/lib/home-content.ts", "description": "Structured homepage content loader" },
+        { "name": "track", "file": "src/lib/track.ts", "description": "Analytics event tracking helpers" },
+        { "name": "utils", "file": "src/lib/utils.ts", "description": "General utility functions (cn, clsx)" },
+        { "name": "env", "file": "src/lib/env.ts", "description": "Centralized env var access with validation" },
+        { "name": "public-env", "file": "src/lib/public-env.ts", "description": "Client-safe public env vars" }
+      ]
+    }
+  },
+
+  "data_flows": [
+    {
+      "name": "Analysis Flow",
+      "steps": [
+        "User uploads selfie → ImageUploader → Supabase Storage (selfies bucket)",
+        "POST /api/analyze called with signed URL",
+        "Middleware: rate limit check (8/60s per IP)",
+        "Route: session validated → daily quota checked (10/day)",
+        "compressForAI() → 512px JPEG base64",
+        "runAnalysisPipeline(): 9 stages sequential",
+        "Each stage: withRetry(2) → chatJSON<T>() → OpenAI JSON mode → Zod normalize",
+        "Pipeline result stored in reports table",
+        "SSE stream sends stage events to client in real-time",
+        "POST /api/internal/trigger-visuals (fire-and-forget) → visual generation"
+      ]
+    },
+    {
+      "name": "Payment & Unlock Flow",
+      "steps": [
+        "Paywall component detects is_paid = false",
+        "POST /api/payments/create → currency from geo header → Razorpay order created",
+        "Client: Razorpay Checkout modal",
+        "POST /api/payments/verify → HMAC signature check → update payment row status",
+        "Razorpay sends payment.captured webhook → POST /api/webhooks/razorpay",
+        "Webhook: HMAC verify → record_webhook_event (idempotency) → complete_webhook_payment RPC",
+        "RPC atomically: payments.status = paid, reports.is_paid = true, profiles.total_paid++",
+        "Client polls or listens → report unlocked"
+      ]
+    },
+    {
+      "name": "Visual Generation Flow",
+      "steps": [
+        "trigger-visuals endpoint called after main pipeline",
+        "Parallel: hairstyle FAL → glasses Replicate → makeup FAL × 4 → clothing Replicate × 12",
+        "Each asset URL stored in generated_assets table",
+        "VirtualTryOnCard / AIBeautyStudio reads generated_assets on report load"
+      ]
+    },
+    {
+      "name": "Style Chat Flow",
+      "steps": [
+        "User opens StyleChatDrawer on report page",
+        "POST /api/chat with report context + message history",
+        "OpenAI streaming response (gpt-4o-mini)",
+        "Messages stored in chat_messages table",
+        "Visitor flow: /api/chat/visitor (no auth, stricter rate limit)"
+      ]
+    }
+  ],
+
+  "external_services": [
+    { "name": "OpenAI", "models": ["gpt-4o (vision)", "gpt-4o-mini (pipeline)"], "purpose": "All AI analysis + chat", "env": "OPENAI_API_KEY" },
+    { "name": "AWS Rekognition", "purpose": "Face landmark detection (stage 1)", "env": "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION" },
+    { "name": "FAL.ai", "purpose": "Hairstyle try-ons (fal-ai/image-apps-v2/hair-change), makeup looks (Flux Kontext Pro)", "env": "FAL_KEY" },
+    { "name": "Replicate", "purpose": "Glasses inpainting (SDXL), fallback hair, clothing swatches (Flux Kontext Pro)", "env": "REPLICATE_API_TOKEN", "note": "useFileOutput: false always" },
+    { "name": "Razorpay", "purpose": "Payment processing (one-time + subscriptions)", "env": "NEXT_PUBLIC_RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET" },
+    { "name": "Supabase", "purpose": "Database, Auth, Storage (selfies bucket)", "env": "NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY" },
+    { "name": "Amazon PA-API", "purpose": "Affiliate product recommendations", "env": "AWS_ACCESS_KEY_ID (shared)" },
+    { "name": "Vercel", "purpose": "Deployment platform (Pro — maxDuration = 60/300)", "env": "VERCEL_URL (auto-set)" }
+  ],
+
+  "environment_variables": {
+    "required_server": [
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "OPENAI_API_KEY",
+      "RAZORPAY_KEY_SECRET",
+      "RAZORPAY_WEBHOOK_SECRET",
+      "INTERNAL_API_SECRET (≥16 chars)",
+      "ADMIN_EMAIL_ALLOWLIST",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "AWS_REGION"
+    ],
+    "required_public": [
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+      "NEXT_PUBLIC_APP_URL"
+    ],
+    "optional": [
+      "FAL_KEY",
+      "REPLICATE_API_TOKEN",
+      "OPENAI_VISION_MODEL (default: gpt-4o)",
+      "OPENAI_MINI_MODEL (default: gpt-4o-mini)",
+      "NEXT_PUBLIC_PRICE_REPORT_INR (default: 299)",
+      "NEXT_PUBLIC_PRICE_REPORT_USD (default: 3.99)",
+      "NEXT_PUBLIC_PRICE_STUDIO_PRO_INR (default: 999)",
+      "NEXT_PUBLIC_PRICE_STUDIO_PRO_USD (default: 12.99)",
+      "RAZORPAY_PLAN_ID_STUDIO_PRO_INR",
+      "RAZORPAY_PLAN_ID_STUDIO_PRO_USD",
+      "PAYMENT_TEST_ALLOW_IN_PROD (must be false in prod)",
+      "SUPABASE_STORAGE_BUCKET (default: selfies)",
+      "NEXT_PUBLIC_APP_NAME (default: Renovaara)"
+    ]
+  },
+
+  "prompts": {
+    "file": "src/prompts/index.ts",
+    "key_builders": [
+      { "fn": "buildColorAnalysisPrompt(opts?)", "description": "Dynamic color analysis prompt (canary color_v2_dominant active)" },
+      { "fn": "buildSkinRoutinePrompt()", "description": "AM/PM routine generation prompt" },
+      { "fn": "buildFeaturesPrompt()", "description": "Face features prompt" },
+      { "fn": "buildGlassesPrompt()", "description": "Glasses recommendation prompt" },
+      { "fn": "SYSTEM_BASE", "description": "Global system preamble for all pipeline calls" },
+      { "fn": "COMPILE_PROMPT", "description": "Final summary compilation prompt" },
+      { "fn": "SKIN_VISION_PROMPT", "description": "Skin type vision analysis prompt" }
+    ],
+    "canary_stages": ["face_shape", "color_analysis", "skin_analysis", "features", "glasses", "hairstyle", "summary"],
+    "active_variant": "color_v2_dominant (color_v1 disabled at weight 0)"
+  },
+
+  "testing": {
+    "framework": "Vitest",
+    "config": "vitest.config.ts",
+    "environment": "node",
+    "settings": { "isolate": true, "alias": "@ → ./src" },
+    "unit_tests": [
+      "src/lib/ai/confidence.test.ts",
+      "src/lib/ai/contracts.test.ts",
+      "src/lib/ai/pipeline.test.ts"
+    ],
+    "eval_pipeline": {
+      "script": "scripts/eval-pipeline.ts",
+      "command": "npm run eval",
+      "note": "Calls real OpenAI — never run in CI without API key",
+      "fixtures": "scripts/eval-fixtures/<stage>/<id>.json"
+    }
+  },
+
+  "design_system": {
+    "docs": "design-system/renovaara/MASTER.md",
+    "page_overrides": "design-system/pages/[page-name].md",
+    "tailwind_config": "tailwind.config.ts",
+    "color_aliases": [
+      { "tailwind": "terracotta", "actual": "#EC4899 (pink)", "canonical": "chrome" },
+      { "tailwind": "olive", "actual": "#8B5CF6 (violet)", "canonical": "iris" },
+      { "tailwind": "obsidian", "actual": "#FDF2F8 (soft pink bg)", "canonical": "obsidian" }
+    ],
+    "note": "Legacy aliases kept for backward compat — new code should use canonical names"
+  },
+
+  "security": {
+    "rules": [
+      "createSupabaseAdminClient() bypasses RLS — always validate user_id ownership explicitly",
+      "selfies bucket must remain private",
+      "INTERNAL_API_SECRET must be ≥16 chars",
+      "HMAC comparisons use timingSafeEqual — never ===",
+      "Currency from server geo headers only",
+      "Site URL must be set to prod domain in Supabase Auth settings",
+      "PAYMENT_TEST_ALLOW_IN_PROD must be false in production",
+      "ADMIN_EMAIL_ALLOWLIST — never hardcode emails in source"
+    ]
+  }
+}

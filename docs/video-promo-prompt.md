@@ -495,3 +495,243 @@ Slow-motion extreme close-ups in warm golden-hour light: a warm berry lip, cat-e
 | Prompt 5 is best with an input image | Upload a face photo as `image` input — P-Video excels at image-to-video close-ups |
 | If motion feels slow | Add "fast-cut montage" or "quick transitions" to the prompt |
 | If text on screen doesn't appear | P-Video doesn't render readable text natively — use a video editor to overlay text post-generation |
+
+---
+
+## Version 6 — Step-by-Step Tutorial / How-To Video
+
+> **Purpose:** Show a first-time user exactly how to create their beauty report — start to finish.  
+> **Formats provided:** AI video generator prompt · Screen recording script · Voiceover script · Reference image assignments · Callout style guide · Thumbnail guide.  
+> **Duration:** 90 seconds (condensed tutorial) · 3 minutes (full walkthrough).  
+> **Best tools:** HeyGen or Descript (screen recording + AI presenter) · CapCut AI (annotated screen recording) · Sora/Kling (cinematic impressionistic demo).
+
+---
+
+### The 9 Steps of the User Journey
+
+| Step | Screen | Action | Duration |
+|------|--------|---------|----------|
+| 0 | Hook | Flash end-result (completed report) — then pull back | 0–5s |
+| 1 | Homepage (`/`) | Land on Renovaara · see hero CTA | 5–15s |
+| 2 | Upload page (`/upload`) | Click "Analyze My Look" · arrive at upload UI | 15–25s |
+| 3 | Upload page | Upload or photograph your selfie | 25–40s |
+| 4 | Analysis screen | Watch 8-stage AI pipeline run | 40–65s |
+| 5 | Free preview | See partial report · paywall teaser | 65–75s |
+| 6 | Full report | Tour each section (Color · Face · Skin · Hairstyle · Glasses) | 75–115s |
+| 7 | Style Chat | Ask a follow-up style question | 115–125s |
+| 8 | Dashboard | Report saved — access anytime | 125–130s |
+
+---
+
+### Reference Images — Exact File Assignments
+
+> Use these files as visual inserts or style references. File paths are workspace-relative.
+
+| Timestamp | File | How to use |
+|-----------|------|------------|
+| **0–5s** (hook) | `public/samples/Before and after pair.jpg` | Full-screen flash — show the "before and after" transformation result to hook the viewer |
+| **25–40s** (upload) | `public/samples/sample-1-before.jpg` | Show as the "selfie being uploaded" — this is the input the AI receives |
+| **75–82s** (Color section) | `Images/ColorAnalysis.jpeg` | Insert as a B-roll overlay when the color season section is on screen |
+| **82–89s** (Face section) | `Images/FaceFeaturesAnalysis.jpeg` | Insert when the face features / face shape section is highlighted |
+| **89–96s** (Skin section) | `Images/SkinAnalysis.jpeg` | Insert when the skin analysis / AM-PM routine section is highlighted |
+| **96–103s** (Hairstyle section) | `Images/HairstyleAnalysis.jpeg` | Insert when hairstyle recommendations section is on screen |
+| **103–110s** (Glasses section) | `Images/SpectaclesGuide.jpeg` | Insert when the spectacles / glasses section is highlighted |
+| **110–115s** (Before/After) | `public/samples/sample-1-before.jpg` + `public/samples/sample-1-after.jpg` | Side-by-side before/after — show virtual try-on result |
+| **Thumbnail** | `public/samples/Before and after pair.jpg` | Best thumbnail — split before/after, add "FREE" badge and Renovaara logo |
+
+---
+
+### AI Video Generator Prompt (90 seconds — Sora / Kling / Runway)
+
+> Paste into Sora, Kling AI, or Runway Gen-3. Describes the tutorial cinematically.
+
+```
+A cinematic 90-second step-by-step tutorial video for Renovaara, an AI beauty analysis app. Warm, luxurious aesthetic — pink (#EC4899) and violet (#8B5CF6) palette. iPhone 15 Pro mockup for all UI screens. Numbered step badges appear in the top-left corner (Step 1, Step 2…) in a soft white pill shape with pink text. Pink animated tap rings show exactly where the user clicks.
+
+[0–5s] HOOK: Full-screen flash of a completed Renovaara beauty report — glowing Face Shape, Colour Season, and Skin Routine cards visible. Text slams in: "Your complete beauty blueprint — here's how." Camera pulls back slowly. Music: warm piano begins.
+
+[5–15s] STEP 1 — OPEN THE APP: An iPhone shows renovaara.com. The homepage hero is visible — a warm pink gradient, serif heading "AI Beauty Analysis", and a prominent pink CTA button "Analyze My Look". A pink animated tap ring pulses on the button. Step badge top-left: "Step 1 · Open Renovaara". Camera slowly pushes toward the phone screen.
+
+[15–25s] STEP 2 — UPLOAD PAGE: The screen transitions to the /upload page. A clean white card with "Upload Your Selfie" heading, an upload zone with a camera icon, and a pink dashed border. Three soft badges appear below: "Face Forward", "Good Lighting", "No Glasses". Step badge: "Step 2 · Head to the Upload Page". A soft callout arrow points to the upload zone.
+
+[25–40s] STEP 3 — UPLOAD YOUR SELFIE: A hand lifts a phone for a selfie. Warm window light. She smiles naturally. The camera icon pulses. She taps — a photo gallery opens, she selects a clear front-facing portrait. A progress bar fills pink. Step badge: "Step 3 · Upload Your Selfie". Upload confirmation animation — a pink tick appears.
+
+[40–65s] STEP 4 — AI ANALYSIS: The analysis screen fills the frame. Dark gradient background (#0a0a0f). Glowing pink and violet particles swirl around a face silhouette. A vertical list of 8 stages appears, each lighting up in sequence with a soft pink glow as they complete:
+  ✦ Face Detection
+  ✦ Face Shape
+  ✦ Colour Season
+  ✦ Skin Vision
+  ✦ Skin Routine
+  ✦ Feature Analysis
+  ✦ Glasses Guide
+  ✦ Hairstyle Guide
+A countdown timer shows "53 seconds…" ticking down. Step badge: "Step 4 · AI Analyses Your Face (60 seconds)". A "Did You Know?" tip card glows softly at the bottom: "Your colour season affects every beauty choice you make." Music: gentle build.
+
+[65–75s] STEP 5 — FREE PREVIEW: The screen transitions to a partial report. A Face Shape card is fully visible. A Colour Season card is partially visible. A soft blur overlay covers the lower sections with a soft glow and a button: "Unlock Full Report · ₹299". Step badge: "Step 5 · See Your Free Preview". Callout arrow points to the unlock button: "Full report unlocked instantly after payment."
+
+[75–115s] STEP 6 — EXPLORE YOUR REPORT (fast montage): Six report sections appear in 6-second cuts, each with a tab highlighted at the top of the screen and a matching B-roll overlay:
+  — COLOUR SEASON tab · Warm Autumn card · terracotta, rust, and gold swatches · "Your undertone is warm — gold jewellery suits you perfectly"
+  — FACE SHAPE tab · Oval face silhouette highlighted · hairstyle do's and don'ts in illustrated tiles
+  — SKIN ANALYSIS tab · AM routine: Vitamin C serum, SPF 50 moisturiser · PM routine: Retinol, hydrating mask
+  — HAIRSTYLE tab · 4 illustrated haircut recommendations with names (Layered Lob, French Bob, Curtain Bangs, Shoulder Length)
+  — GLASSES tab · 5 frame styles illustrated · Cat-eye and Oval frames ticked · Aviator crossed out
+  — MAKEUP STUDIO tab · AI try-on showing warm berry lip + peach blush on her face
+Each section has a step sub-badge in the bottom corner. Music: lifts, warm and bright.
+
+[115–125s] STEP 7 — STYLE CHAT: A chat drawer slides in from the bottom. The user types: "What lip shade suits my Warm Autumn season?" The AI responds instantly with 3 specific recommendations: terracotta, warm nude, burnt sienna — with hex codes. Step badge: "Step 7 · Ask the AI Anything". Callout: "Your personal AI style consultant — always available."
+
+[125–130s] STEP 8 — DASHBOARD: The dashboard screen shows a list of saved reports with dates and thumbnail previews. Step badge: "Step 8 · Your Report is Saved Forever". Text overlay: "Access your blueprint any time, on any device."
+
+[130–135s] CLOSING CARD: Soft pink gradient full-screen. Renovaara logo centered in pink (#EC4899), Lora serif. Four summary icons appear in a row: face silhouette, colour palette, skin leaf, hairstyle scissors — each in violet. Text below: "One selfie. 60 seconds. Your complete beauty blueprint." Violet pill CTA button pulses: "Try Free — No Card Needed →". Fade to white.
+
+VISUAL STYLE: iPhone 15 Pro (Space Black) for all screens. Step badges: white pill, pink text, top-left corner, fade in on each new step. Tap indicators: pink concentric circles pulsing at click point. Callout boxes: white rounded rectangles with a soft shadow and a pink arrow. Screen transitions: smooth slide-left (like native iOS navigation). Camera: slow push-in on every screen, occasional zoom on a specific UI element. Fonts: Lora (headings), Raleway (step badges and callouts). Mood: empowering, warm, educational — like a premium app tutorial meets lifestyle content.
+
+AUDIO: Soft warm piano throughout. Gentle beat lift at Step 6 (report exploration). Subtle "ping" SFX when each pipeline stage completes. Soft "whoosh" on screen transitions. No jarring cuts. Music resolves into a sustained warm chord at the closing card.
+```
+
+---
+
+### Screen Recording Script (HeyGen / Descript / Loom / CapCut)
+
+> Use this if you're recording the actual app. Read aloud as you perform each action. Time targets are guides.
+
+```
+[0–5s]
+START with a freeze-frame of a completed report on screen (use Images/ColorAnalysis.jpeg as a full-screen overlay).
+Then cut to the homepage.
+Voiceover: "This is your Renovaara beauty report — and here's exactly how to get it in 60 seconds."
+
+[5–15s]
+Navigate to renovaara.com. Show the homepage hero. Let the video background play for 2 seconds.
+Voiceover: "Open Renovaara on any device. You'll see your starting point right here — the Analyze My Look button."
+ACTION: Move cursor to / tap the main CTA button slowly. Add a pink animated circle around it.
+
+[15–25s]
+The upload page loads. Show the page fully for 2 seconds.
+Voiceover: "You'll arrive at the upload page. Three things to remember for the best result — face your camera directly, use natural light, and remove your glasses."
+ACTION: Zoom into the three selfie tips displayed on the page.
+
+[25–40s]
+Upload a selfie.
+Voiceover: "Now upload your selfie — either from your gallery or take one directly in the app."
+ACTION: Click the upload zone. Select a photo (use public/samples/sample-1-before.jpg as the sample selfie). Show the upload progress bar fill to 100%.
+
+[40–65s]
+The analysis loading screen appears. Let it run — do NOT fast-forward.
+Voiceover: "The AI now analyses your photo across 8 dimensions — face shape, colour season, undertone, skin type, skin concerns, facial features, ideal glasses frames, and hairstyle fit. This takes about 60 seconds. Watch each stage light up."
+ACTION: Keep the screen recording live. Let each stage tick off. Do not cut this section — the 60-second wait is part of the experience.
+
+[65–75s]
+Free preview loads. Show the partially blurred report.
+Voiceover: "Your free preview is ready. You can see your face shape and a taste of your colour season. The full report — including your skin routine, hairstyle guide, and virtual makeup studio — unlocks for a one-time ₹299 fee."
+ACTION: Scroll down slowly to show the paywall. Add callout arrow: "One-time unlock — yours forever."
+
+[75–115s]
+Click through each report tab. On each tab, pause for 4 seconds and zoom in on the key insight.
+  TAB 1 — Colour: Show the season name + swatch palette. Overlay Images/ColorAnalysis.jpeg as B-roll for 2 seconds.
+    Voiceover: "Your colour season tells you which shades light you up — and which ones wash you out. Here are your exact palette colours."
+  TAB 2 — Face Shape: Show the shape illustration. Overlay Images/FaceFeaturesAnalysis.jpeg as B-roll.
+    Voiceover: "Your face shape determines the most flattering haircuts, glasses frames, and necklines for you."
+  TAB 3 — Skin: Show AM and PM routine cards. Overlay Images/SkinAnalysis.jpeg as B-roll.
+    Voiceover: "Your personalised skin routine — morning and evening steps, with ingredients chosen for your skin type and concerns."
+  TAB 4 — Hairstyle: Show the recommended cuts. Overlay Images/HairstyleAnalysis.jpeg as B-roll.
+    Voiceover: "Four hairstyle recommendations, each tailored to your face shape and features."
+  TAB 5 — Glasses: Show the frame guide. Overlay Images/SpectaclesGuide.jpeg as B-roll.
+    Voiceover: "Your glasses guide — frames that flatter your face, and ones to avoid."
+  TAB 6 — Makeup Studio: Show the AI makeup try-on.
+    Voiceover: "And the Makeup Studio — try on four AI-generated looks before you buy a single product."
+
+[115–125s]
+Open the Style Chat drawer.
+Voiceover: "Have a follow-up question? Your AI style consultant is built into the report. Ask it anything — colour combinations, outfit ideas, product recommendations."
+ACTION: Type "What lip colour suits my season?" — show the response appear.
+
+[125–130s]
+Navigate to the dashboard.
+Voiceover: "And your report is saved in your dashboard — available any time, on any device."
+ACTION: Show the dashboard with the report card visible.
+
+[130s — END]
+Close with a tight crop of the Renovaara logo on a soft pink background.
+Voiceover: "One selfie. 60 seconds. Your complete beauty blueprint — free to start, yours to keep."
+```
+
+---
+
+### Voiceover Script Only (timestamped — warm Indian female voice, measured pace)
+
+```
+[0s]   "This is your Renovaara beauty report. And here's exactly how to get it."
+
+[15s]  "Open Renovaara and click Analyze My Look."
+
+[25s]  "Upload one clear selfie — face forward, natural light, no glasses."
+
+[40s]  "The AI analyses your face across eight dimensions — face shape, colour season, skin type,
+        and more. It takes about sixty seconds. Every stage runs in real time."
+
+[65s]  "Your free preview is ready instantly. The full report unlocks for a one-time fee of
+        two hundred and ninety-nine rupees — and it's yours to keep forever."
+
+[75s]  "Here's what's inside. Your colour season — with an exact palette of shades
+        that light you up."
+
+[82s]  "Your face shape — and what it means for haircuts, frames, and necklines."
+
+[89s]  "A personalised skin routine — morning and evening — built around your specific
+        skin type and concerns."
+
+[96s]  "Four hairstyle recommendations, tailored to your face shape."
+
+[103s] "A glasses frame guide — which shapes flatter you, and which to avoid."
+
+[110s] "And the AI Makeup Studio — try on complete looks before buying a single product."
+
+[115s] "Have a question after? Your built-in AI style consultant is always available."
+
+[125s] "And your report lives in your dashboard — accessible any time, any device."
+
+[130s] "One selfie. Sixty seconds. Your complete beauty blueprint. Free to start."
+```
+
+---
+
+### Callout / Annotation Style Guide
+
+> Apply these consistently across every step in CapCut, Descript, or After Effects.
+
+| Element | Style |
+|---------|-------|
+| **Step badge** | White pill `(border-radius: 999px)`, pink text `#EC4899`, `font: Raleway 600`, top-left corner, 16px padding, fades in with each new step |
+| **Tap indicator** | Three concentric pink circles `#EC4899` expanding outward, 0.6s animation, appears at the exact click/tap point |
+| **Callout box** | White rounded rectangle (shadow: `0 4px 16px rgba(0,0,0,0.12)`), left pink border `4px solid #EC4899`, Raleway 400, points to target with a pink arrow |
+| **Zoom-in highlight** | Smooth 0.5s ease-in to 140% zoom on a specific UI element, then ease-out back to full frame |
+| **Section tab highlight** | Add a pink underline glow `box-shadow: 0 2px 8px #EC4899` under the active tab name when narrating that section |
+| **B-roll overlay** | Reference image fills bottom-right quarter of screen (picture-in-picture), 12px rounded corners, 4px pink border, fades in for 4 seconds |
+| **Progress label** | Bottom-right corner: "Step X of 8" in Raleway 500, pink, small — updates each step |
+
+---
+
+### Condensed 30-Second Version (for paid Meta ads — single paste prompt)
+
+> Paste into Sora / Kling / Runway / P-Video.
+
+```
+Cinematic 30-second tutorial ad for Renovaara. Fast, warm, purposeful. Opens on a completed beauty report glowing on a phone screen — Face Shape, Colour Season swatches, Skin Routine visible. Text: "Your beauty blueprint — here's how." Quick cut: hand taps "Analyze My Look" on a warm pink homepage. Next cut: a selfie is uploaded — pink upload progress bar fills. Next cut: dark AI analysis screen — 8 stage names light up in pink sequence, countdown timer. Next cut: the full report slides into view — Colour Season swatch palette, illustrated hairstyle options, glasses frame guide. AI Makeup Studio preview: a warm berry lip applied virtually. Final card: Renovaara logo on soft pink gradient. "One selfie. 60 seconds. Free to start." Violet pill button: "Try Free →". Fade to white. iPhone 15 Pro mockup throughout. Pink (#EC4899) and violet (#8B5CF6) accent palette. Smooth transitions. Warm golden-hour lighting.
+```
+
+> **API settings:** `aspect_ratio: "9:16"`, `duration: 30`
+
+---
+
+### Thumbnail Guide
+
+| Element | Spec |
+|---------|------|
+| **Base image** | `public/samples/Before and after pair.jpg` — split left/right |
+| **Left label** | "Before" — Raleway 700, white, on dark overlay `rgba(0,0,0,0.45)` |
+| **Right label** | "After" — Raleway 700, white, on pink overlay `rgba(236,72,153,0.30)` |
+| **Top badge** | Pink pill: "FREE" — Raleway 800, white text, `#EC4899` background |
+| **Bottom overlay** | Renovaara logo in white Lora serif, centered |
+| **Border** | 3px pink gradient `linear-gradient(90deg, #EC4899, #8B5CF6)` around the entire thumbnail |
+| **Dimensions** | 1280×720 (YouTube) · 1080×1350 (Instagram) · 1080×1920 (Reels/TikTok) |
