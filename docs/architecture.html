@@ -1,1413 +1,1604 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Renovaara — App Architecture</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #0a0a0f;
-      --surface:   #12121a;
-      --card:      #1a1a26;
-      --border:    #2a2a3e;
-      --accent:    #EC4899;
-      --violet:    #8B5CF6;
-      --teal:      #14b8a6;
-      --amber:     #f59e0b;
-      --green:     #22c55e;
-      --red:       #ef4444;
-      --blue:      #3b82f6;
-      --text:      #e2e8f0;
-      --muted:     #64748b;
-      --label:     #94a3b8;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      font-size: 13px;
-      line-height: 1.5;
-      min-height: 100vh;
-    }
-
-    /* ── Header ── */
-    header {
-      background: linear-gradient(135deg, #1a0a2e 0%, #0a0a1e 50%, #0e1a1a 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 32px 48px;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(12px);
-    }
-
-    header .logo {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--accent), var(--violet));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    header .subtitle {
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    header .stack-tags {
-      margin-left: auto;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .tag {
-      background: rgba(139,92,246,0.15);
-      border: 1px solid rgba(139,92,246,0.3);
-      color: #a78bfa;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    /* ── Layout ── */
-    .main {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      min-height: calc(100vh - 97px);
-    }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 24px 0;
-      position: sticky;
-      top: 97px;
-      height: calc(100vh - 97px);
-      overflow-y: auto;
-    }
-
-    .sidebar-section {
-      padding: 0 16px 16px;
-    }
-
-    .sidebar-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      padding: 8px 8px 4px;
-      font-weight: 600;
-    }
-
-    .sidebar a {
-      display: block;
-      padding: 7px 12px;
-      border-radius: 8px;
-      color: var(--label);
-      text-decoration: none;
-      font-size: 12.5px;
-      transition: all 0.15s;
-    }
-
-    .sidebar a:hover {
-      background: rgba(236,72,153,0.1);
-      color: var(--accent);
-    }
-
-    /* ── Content ── */
-    .content {
-      padding: 40px 48px;
-      max-width: 1400px;
-    }
-
-    /* ── Section ── */
-    .section {
-      margin-bottom: 56px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .section-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .section-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .section-desc {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    /* ── Grid layouts ── */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-
-    /* ── Card ── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      transition: border-color 0.2s;
-    }
-
-    .card:hover { border-color: rgba(236,72,153,0.3); }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .card-desc {
-      font-size: 11.5px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .card-meta {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      background: rgba(20,184,166,0.12);
-      border: 1px solid rgba(20,184,166,0.25);
-      color: var(--teal);
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 10.5px;
-      font-weight: 500;
-    }
-
-    .pill.red   { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.25);  color: #f87171; }
-    .pill.amber { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); color: #fbbf24; }
-    .pill.violet{ background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
-    .pill.pink  { background: rgba(236,72,153,0.12); border-color: rgba(236,72,153,0.25); color: #f472b6; }
-    .pill.blue  { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); color: #60a5fa; }
-    .pill.green { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.25);  color: #4ade80; }
-
-    /* ── Pipeline stages ── */
-    .pipeline {
-      display: flex;
-      gap: 0;
-      overflow-x: auto;
-      padding: 8px 0 16px;
-    }
-
-    .pipeline-stage {
-      flex: 1;
-      min-width: 120px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 14px 12px;
-      position: relative;
-      text-align: center;
-      transition: background 0.2s;
-    }
-
-    .pipeline-stage:first-child { border-radius: 12px 0 0 12px; }
-    .pipeline-stage:last-child  { border-radius: 0 12px 12px 0; }
-
-    .pipeline-stage:not(:last-child)::after {
-      content: '→';
-      position: absolute;
-      right: -10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--accent);
-      font-size: 14px;
-      z-index: 1;
-    }
-
-    .pipeline-stage:hover { background: #22223a; }
-
-    .stage-num {
-      font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .stage-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .stage-model {
-      font-size: 10px;
-      color: var(--violet);
-      margin-bottom: 4px;
-    }
-
-    .stage-desc {
-      font-size: 10px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    /* ── API routes table ── */
-    .route-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .route-table th {
-      background: rgba(255,255,255,0.04);
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
-      padding: 10px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-weight: 600;
-    }
-
-    .route-table td {
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(42,42,62,0.5);
-      vertical-align: top;
-      color: var(--label);
-    }
-
-    .route-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-    .method {
-      display: inline-block;
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      font-family: monospace;
-      letter-spacing: 0.5px;
-    }
-
-    .method.post { background: rgba(34,197,94,0.15);  color: #4ade80; }
-    .method.get  { background: rgba(59,130,246,0.15);  color: #60a5fa; }
-
-    .route-path {
-      font-family: monospace;
-      font-size: 12px;
-      color: var(--text);
-    }
-
-    /* ── Data flow ── */
-    .flow-steps {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .flow-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 0;
-      border-left: 2px solid var(--border);
-      padding-left: 16px;
-      position: relative;
-    }
-
-    .flow-step::before {
-      content: '';
-      position: absolute;
-      left: -5px;
-      top: 14px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: 2px solid var(--bg);
-    }
-
-    .flow-step:last-child { border-left-color: transparent; }
-
-    .flow-step-num {
-      font-size: 10px;
-      color: var(--muted);
-      min-width: 20px;
-      margin-top: 1px;
-    }
-
-    .flow-step-text {
-      font-size: 12px;
-      color: var(--label);
-    }
-
-    .flow-step-text code {
-      background: rgba(139,92,246,0.15);
-      color: #a78bfa;
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: monospace;
-    }
-
-    /* ── DB Tables ── */
-    .db-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-    }
-
-    .db-table-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-    }
-
-    .db-table-name {
-      font-family: monospace;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--teal);
-      margin-bottom: 4px;
-    }
-
-    .db-table-desc {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    /* ── RPC list ── */
-    .rpc-list {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .rpc-item {
-      background: var(--card);
-      border: 1px solid rgba(20,184,166,0.2);
-      border-radius: 10px;
-      padding: 12px 14px;
-    }
-
-    .rpc-name {
-      font-family: monospace;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--teal);
-      margin-bottom: 4px;
-    }
-
-    .rpc-desc {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    /* ── External services ── */
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 14px;
-    }
-
-    .service-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-    }
-
-    .service-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .service-purpose {
-      font-size: 11.5px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .env-key {
-      font-family: monospace;
-      font-size: 10.5px;
-      background: rgba(0,0,0,0.3);
-      color: var(--amber);
-      padding: 2px 6px;
-      border-radius: 4px;
-      display: inline-block;
-      margin: 2px;
-    }
-
-    /* ── Security rules ── */
-    .security-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .security-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 14px;
-      background: rgba(239,68,68,0.06);
-      border: 1px solid rgba(239,68,68,0.15);
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--label);
-    }
-
-    .security-icon { color: #ef4444; margin-top: 1px; flex-shrink: 0; }
-
-    /* ── Rate limits ── */
-    .rl-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .rl-table th {
-      background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px;
-      text-transform: uppercase; letter-spacing: 0.7px; padding: 8px 12px;
-      text-align: left; border-bottom: 1px solid var(--border); font-weight: 600;
-    }
-    .rl-table td { padding: 8px 12px; border-bottom: 1px solid rgba(42,42,62,0.5); color: var(--label); }
-    .rl-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-    /* ── Env vars ── */
-    .env-section { margin-bottom: 20px; }
-    .env-title { font-size: 12px; font-weight: 600; color: var(--label); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .env-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-
-    /* ── Design tokens table ── */
-    .token-row {
-      display: grid;
-      grid-template-columns: 120px 120px 120px 1fr;
-      gap: 12px;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      align-items: center;
-      font-size: 12px;
-    }
-    .token-swatch {
-      width: 20px; height: 20px; border-radius: 50%; display: inline-block;
-      border: 2px solid rgba(255,255,255,0.1); margin-right: 6px; vertical-align: middle;
-    }
-
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--surface); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* ── Responsive ── */
-    @media (max-width: 1024px) {
-      .grid-3 { grid-template-columns: 1fr 1fr; }
-      .grid-4 { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 768px) {
-      .main { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      .content { padding: 24px 20px; }
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-      .rpc-list { grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Renovaara — Interactive Architecture Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0a0f;
+  --surface:   #12121a;
+  --card:      #1a1a26;
+  --card-hover:#1e1e2e;
+  --border:    #2a2a3e;
+  --border-hl: #3a3a5e;
+  --accent:    #EC4899;
+  --violet:    #8B5CF6;
+  --teal:      #14b8a6;
+  --amber:     #f59e0b;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --blue:      #3b82f6;
+  --orange:    #f97316;
+  --text:      #e2e8f0;
+  --muted:     #64748b;
+  --label:     #94a3b8;
+  --panel-w:   400px;
+  --header-h:  64px;
+  --sidebar-w: 220px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: rgba(10,10,15,0.96);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  z-index: 200;
+  backdrop-filter: blur(12px);
+}
+
+.logo {
+  font-size: 17px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.logo-sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+#searchInput {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 52px 7px 32px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#searchInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+}
+#searchInput::placeholder { color: var(--muted); }
+.search-kbd {
+  position: absolute;
+  right: 8px;
+  top: 50%; transform: translateY(-50%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: none;
+}
+.search-count {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.filters {
+  display: flex;
+  gap: 5px;
+}
+.filter-chip {
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+  background: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+  user-select: none;
+}
+.filter-chip:hover { color: var(--text); border-color: var(--border-hl); }
+.filter-chip[data-type="page"].active  { background: rgba(139,92,246,0.18); border-color: var(--violet); color: #c4b5fd; }
+.filter-chip[data-type="api"].active   { background: rgba(236,72,153,0.18); border-color: var(--accent); color: #f9a8d4; }
+.filter-chip[data-type="ai"].active    { background: rgba(59,130,246,0.18); border-color: var(--blue); color: #93c5fd; }
+.filter-chip[data-type="db"].active    { background: rgba(20,184,166,0.18); border-color: var(--teal); color: #5eead4; }
+.filter-chip[data-type="rpc"].active   { background: rgba(245,158,11,0.18); border-color: var(--amber); color: #fcd34d; }
+.filter-chip[data-type="ext"].active   { background: rgba(34,197,94,0.18); border-color: var(--green); color: #86efac; }
+
+.kbd-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+kbd {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── APP LAYOUT ── */
+.app-layout {
+  display: flex;
+  margin-top: var(--header-h);
+  min-height: calc(100vh - var(--header-h));
+  transition: margin-right 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.app-layout.panel-open { margin-right: var(--panel-w); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto;
+  padding: 12px 0;
+}
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  padding: 10px 16px 4px;
+  font-weight: 600;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  color: var(--label);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border-left: 2px solid transparent;
+  user-select: none;
+}
+.sidebar-link:hover { background: rgba(236,72,153,0.06); color: var(--text); border-left-color: rgba(236,72,153,0.4); }
+.sidebar-link.active { background: rgba(236,72,153,0.1); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+.sidebar-count {
+  font-size: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 5px;
+  color: var(--muted);
+}
+
+/* ── CANVAS ── */
+.canvas { flex: 1; min-width: 0; padding: 32px 40px; }
+
+/* ── SECTIONS ── */
+.section { margin-bottom: 52px; scroll-margin-top: calc(var(--header-h) + 12px); }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+.section-title { font-size: 15px; font-weight: 700; }
+.section-desc  { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.section-badge {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+/* ── GRIDS ── */
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.grid-2    { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid-3    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+/* ── NODE CARDS ── */
+.node {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, opacity 0.22s, box-shadow 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.node::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--node-color, var(--muted));
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.node:hover { background: var(--card-hover); border-color: var(--border-hl); transform: translateY(-1px); }
+.node:hover::after { opacity: 0.6; }
+
+.node.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(236,72,153,0.3), 0 4px 24px rgba(236,72,153,0.15);
+  background: rgba(236,72,153,0.04);
+}
+.node.selected::after { opacity: 1; background: var(--accent); }
+
+.node.connected { box-shadow: 0 0 0 1.5px var(--node-color, var(--teal)); }
+.node.connected::after { opacity: 1; }
+.node.connected .node-label { color: var(--node-color, var(--text)); }
+
+.node.dimmed { opacity: 0.18; pointer-events: none; filter: saturate(0.3); }
+.node.search-hidden { display: none !important; }
+.node.filter-hidden { display: none !important; }
+
+/* Type colors */
+.node[data-type="page"] { --node-color: var(--violet); }
+.node[data-type="api"]  { --node-color: var(--accent); }
+.node[data-type="ai"]   { --node-color: var(--blue); }
+.node[data-type="db"]   { --node-color: var(--teal); }
+.node[data-type="rpc"]  { --node-color: var(--amber); }
+.node[data-type="ext"]  { --node-color: var(--green); }
+
+.node-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.node-icon {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--node-color, var(--muted)) 12%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.node-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+.node-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.node-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+
+.meta-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.meta-tag.warn   { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--amber); }
+.meta-tag.danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--red); }
+.meta-tag.ok     { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+.meta-tag.info   { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: var(--blue); }
+
+.node-method {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.method-GET    { background: rgba(34,197,94,0.15); color: #4ade80; }
+.method-POST   { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.method-DELETE { background: rgba(239,68,68,0.15); color: #f87171; }
+.method-PATCH  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+/* RPC chips on DB table cards */
+.rpc-chip {
+  font-size: 9.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.22);
+  color: var(--amber);
+  cursor: pointer;
+  transition: background 0.12s;
+  font-weight: 500;
+}
+.rpc-chip:hover { background: rgba(245,158,11,0.18); }
+
+/* ── AI PIPELINE ── */
+.pipeline-flow {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  gap: 0;
+}
+.pipeline-flow::-webkit-scrollbar { height: 4px; }
+.pipeline-flow::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.pipeline-stage { display: flex; align-items: center; flex-shrink: 0; }
+
+.pipeline-node {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 13px;
+  cursor: pointer;
+  width: 122px;
+  position: relative;
+  transition: all 0.18s;
+  overflow: hidden;
+}
+.pipeline-node::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--blue);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.pipeline-node:hover { background: var(--card-hover); border-color: var(--blue); transform: translateY(-2px); }
+.pipeline-node:hover::after { opacity: 1; }
+.pipeline-node.selected { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+.pipeline-node.selected::after { opacity: 1; }
+.pipeline-node.dimmed { opacity: 0.18; pointer-events: none; filter: saturate(0.3); }
+.pipeline-node.connected { box-shadow: 0 0 0 1.5px var(--blue); }
+
+.stage-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.18);
+  border: 1px solid rgba(59,130,246,0.35);
+  color: var(--blue);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 6px;
+}
+.stage-name  { font-size: 11.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.stage-model { font-size: 9.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.stage-canary {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 8.5px;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.28);
+  color: var(--amber);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-weight: 600;
+}
+.pipeline-arrow { color: var(--muted); padding: 0 5px; font-size: 13px; align-self: center; flex-shrink: 0; }
+
+/* ── FLOW CARDS ── */
+.flow-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.flow-title { font-weight: 600; font-size: 13px; margin-bottom: 12px; }
+.flow-steps { display: flex; flex-direction: column; gap: 6px; }
+.flow-step { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--label); }
+.flow-step-num {
+  width: 18px; height: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 9px; font-weight: 700;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+
+/* ── DETAIL PANEL ── */
+.detail-panel {
+  position: fixed;
+  top: var(--header-h); right: 0;
+  width: var(--panel-w);
+  height: calc(100vh - var(--header-h));
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-panel::-webkit-scrollbar { width: 4px; }
+.detail-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.panel-header {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 2;
+}
+.panel-close {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.panel-close:hover { border-color: var(--text); color: var(--text); }
+
+.panel-type-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.panel-name  { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.panel-desc  { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+.panel-body  { padding: 14px 18px; flex: 1; }
+.panel-section { margin-bottom: 16px; }
+.panel-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.panel-file {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--teal);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  word-break: break-all;
+}
+.copy-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+.copy-btn:hover { color: var(--text); }
+
+.conn-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.conn-chip {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--label);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.3;
+}
+.conn-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.trace-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(236,72,153,0.07);
+  border: 1px solid rgba(236,72,153,0.22);
+  border-radius: 8px;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.trace-btn:hover { background: rgba(236,72,153,0.14); border-color: var(--accent); }
+
+.panel-kv { display: flex; flex-direction: column; gap: 5px; }
+.panel-kv-row { display: flex; gap: 8px; font-size: 12px; }
+.panel-kv-key { color: var(--muted); min-width: 80px; flex-shrink: 0; }
+.panel-kv-val { color: var(--text); font-weight: 500; word-break: break-all; }
+.panel-kv-val.mono { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--teal); }
+
+.env-var {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: var(--amber);
+  display: inline-block;
+  margin: 2px 2px 0 0;
+}
+.sec-flag {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--label);
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+  line-height: 1.4;
+}
+.sec-flag:first-child { border-top: none; padding-top: 0; }
+
+/* ── JOURNEY OVERLAY ── */
+.journey-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,5,10,0.88);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  backdrop-filter: blur(6px);
+}
+.journey-overlay.open { opacity: 1; pointer-events: all; }
+
+.journey-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: min(680px, 94vw);
+  max-height: 82vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+
+.journey-top {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.journey-title { font-size: 14px; font-weight: 700; flex: 1; }
+.journey-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(236,72,153,0.1);
+  border: 1px solid rgba(236,72,153,0.28);
+  border-radius: 7px;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.journey-play-btn:hover { background: rgba(236,72,153,0.18); }
+.journey-close-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.12s;
+}
+.journey-close-btn:hover { border-color: var(--text); color: var(--text); }
+
+.journey-scroll { overflow-y: auto; flex: 1; }
+.journey-scroll::-webkit-scrollbar { width: 4px; }
+.journey-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.journey-steps { padding: 18px 22px; display: flex; flex-direction: column; gap: 0; }
+
+.journey-step {
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.journey-step.visible { opacity: 1; transform: translateY(0); }
+
+.journey-step-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 34px;
+}
+.step-dot {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.step-request { background: rgba(139,92,246,0.18); border: 1px solid rgba(139,92,246,0.35); }
+.step-guard   { background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.35); }
+.step-process { background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.35); }
+.step-ai      { background: rgba(59,130,246,0.18); border: 1px solid rgba(59,130,246,0.35); }
+.step-db      { background: rgba(20,184,166,0.18); border: 1px solid rgba(20,184,166,0.35); }
+.step-ext     { background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.35); }
+.step-response{ background: rgba(236,72,153,0.18); border: 1px solid rgba(236,72,153,0.35); }
+.step-async   { background: rgba(249,115,22,0.18); border: 1px solid rgba(249,115,22,0.35); }
+
+.journey-line {
+  width: 2px;
+  flex: 1;
+  min-height: 14px;
+  background: var(--border);
+  margin: 3px auto;
+}
+.journey-step-right { padding: 4px 0 18px; flex: 1; }
+.step-actor {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.step-action { font-size: 12.5px; color: var(--text); font-weight: 500; line-height: 1.4; }
+
+/* ── MISC ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.empty-search {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+  padding: 32px 0;
+}
+
+@media (max-width: 1000px) {
+  :root { --sidebar-w: 0px; --panel-w: min(400px, 100vw); }
+  .sidebar { display: none; }
+  .canvas { padding: 20px 16px; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .filters { display: none; }
+  .kbd-hint { display: none; }
+}
+</style>
 </head>
 <body>
 
-<!-- ── HEADER ─────────────────────────────────────────── -->
+<!-- HEADER -->
 <header>
-  <div>
-    <div class="logo">✦ Renovaara</div>
-    <div class="subtitle">App Architecture Map · May 2026</div>
+  <span class="logo">Renovaara</span>
+  <span class="logo-sub">Architecture Explorer</span>
+
+  <div class="search-wrap">
+    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="searchInput" type="text" placeholder="Search nodes…" autocomplete="off" spellcheck="false">
+    <span class="search-kbd">⌘K</span>
   </div>
-  <div class="stack-tags">
-    <span class="tag">Next.js 15</span>
-    <span class="tag">React 19</span>
-    <span class="tag">TypeScript</span>
-    <span class="tag">Supabase</span>
-    <span class="tag">Tailwind 3</span>
-    <span class="tag">Vercel Pro</span>
-    <span class="tag">OpenAI gpt-4o</span>
+  <span class="search-count" id="searchCount"></span>
+
+  <div class="filters">
+    <span class="filter-chip" data-type="page">📄 Pages</span>
+    <span class="filter-chip" data-type="api">⚡ APIs</span>
+    <span class="filter-chip" data-type="ai">🧠 AI</span>
+    <span class="filter-chip" data-type="db">🗄 DB</span>
+    <span class="filter-chip" data-type="rpc">🔧 RPCs</span>
+    <span class="filter-chip" data-type="ext">🌐 Services</span>
   </div>
+
+  <span class="kbd-hint">Click any node to explore &nbsp;·&nbsp; <kbd>Esc</kbd> close &nbsp;·&nbsp; <kbd>▶</kbd> trace journey</span>
 </header>
 
-<div class="main">
+<!-- APP LAYOUT -->
+<div class="app-layout" id="appLayout">
 
-  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
-  <nav class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">Sections</div>
-      <a href="#overview">Overview</a>
-      <a href="#ai-pipeline">AI Pipeline</a>
-      <a href="#api-routes">API Routes</a>
-      <a href="#frontend">Frontend</a>
-      <a href="#database">Database</a>
-      <a href="#auth">Auth & Clients</a>
-      <a href="#payments">Payments</a>
-      <a href="#middleware">Middleware</a>
-      <a href="#data-flows">Data Flows</a>
-      <a href="#external-services">External Services</a>
-      <a href="#env-vars">Env Variables</a>
-      <a href="#business-logic">Business Logic</a>
-      <a href="#design-system">Design System</a>
-      <a href="#security">Security Rules</a>
-      <a href="#testing">Testing</a>
-    </div>
-  </nav>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Sections</div>
+    <div class="sidebar-link" onclick="jumpTo('sec-pages')">📄 Frontend Pages <span class="sidebar-count">10</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-api')">⚡ API Routes <span class="sidebar-count">11</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-ai')">🧠 AI Pipeline <span class="sidebar-count">9</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-db')">🗄 Database <span class="sidebar-count">13</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-rpc')">🔧 RPCs <span class="sidebar-count">6</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-auth')">🔐 Auth Clients <span class="sidebar-count">3</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-payments')">💳 Payment Flow</div>
+    <div class="sidebar-link" onclick="jumpTo('sec-ext')">🌐 External Services <span class="sidebar-count">7</span></div>
+    <div class="sidebar-link" onclick="jumpTo('sec-flows')">🔀 Data Flows</div>
+    <div class="sidebar-label" style="margin-top:6px">Quick Select</div>
+    <div class="sidebar-link" style="font-size:11px" onclick="selectNode('api:analyze')">POST /api/analyze ▶</div>
+    <div class="sidebar-link" style="font-size:11px" onclick="selectNode('api:webhooks:razorpay')">Webhook (payment) ▶</div>
+    <div class="sidebar-link" style="font-size:11px" onclick="selectNode('api:internal:visuals')">Visual generation ▶</div>
+    <div class="sidebar-link" style="font-size:11px" onclick="selectNode('db:reports')">reports table</div>
+    <div class="sidebar-link" style="font-size:11px" onclick="selectNode('rpc:complete_webhook_payment')">complete_webhook_payment</div>
+  </aside>
 
-  <!-- ── CONTENT ─────────────────────────────────────────── -->
-  <div class="content">
+  <!-- CANVAS -->
+  <main class="canvas" id="canvas">
 
-    <!-- OVERVIEW -->
-    <div class="section" id="overview">
+    <section class="section" id="sec-pages">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(236,72,153,0.15);">✦</div>
+        <div class="section-icon" style="background:rgba(139,92,246,0.14);color:var(--violet)">📄</div>
         <div>
-          <div class="section-title">Overview</div>
-          <div class="section-desc">AI-powered beauty analysis SaaS — full architecture summary</div>
+          <div class="section-title">Frontend Pages</div>
+          <div class="section-desc">Next.js 15 App Router · React 19 · Tailwind CSS 3</div>
         </div>
+        <span class="section-badge">10 routes</span>
       </div>
-      <div class="grid-4">
-        <div class="card">
-          <div class="card-title">📁 Pages</div>
-          <div class="card-desc">11 app routes — landing, upload, report, dashboard, admin, auth, sharing, legal</div>
-        </div>
-        <div class="card">
-          <div class="card-title">🔌 API Routes</div>
-          <div class="card-desc">15 route handlers — analysis, chat, payments, webhooks, OG images, admin stats</div>
-        </div>
-        <div class="card">
-          <div class="card-title">🤖 AI Pipeline</div>
-          <div class="card-desc">9-stage sequential pipeline — Rekognition + 8× GPT-4o-mini stages + visual gen</div>
-        </div>
-        <div class="card">
-          <div class="card-title">🗄️ Database</div>
-          <div class="card-desc">20 migrations — 13+ tables, 6 key RPCs, RLS on all user tables</div>
-        </div>
-        <div class="card">
-          <div class="card-title">💳 Payments</div>
-          <div class="card-desc">Razorpay — one-time unlock (₹299/$3.99) + Studio Pro subscription (₹999/$12.99)</div>
-        </div>
-        <div class="card">
-          <div class="card-title">🧩 Components</div>
-          <div class="card-desc">50+ React components — 9 home, 12 report cards, feature components, 7 UI primitives</div>
-        </div>
-        <div class="card">
-          <div class="card-title">🎨 Visual Gen</div>
-          <div class="card-desc">Fire-and-forget: 4 makeup looks, hair try-ons, glasses, 12 clothing swatches</div>
-        </div>
-        <div class="card">
-          <div class="card-title">🛡️ Middleware</div>
-          <div class="card-desc">Edge-safe IP rate limiter + session refresh + auth protection on every request</div>
-        </div>
-      </div>
-    </div>
+      <div class="grid-auto" id="pages-grid"></div>
+    </section>
 
-    <!-- AI PIPELINE -->
-    <div class="section" id="ai-pipeline">
+    <section class="section" id="sec-api">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(139,92,246,0.15);">🧠</div>
-        <div>
-          <div class="section-title">AI Pipeline</div>
-          <div class="section-desc">src/lib/ai/pipeline.ts → runAnalysisPipeline() — 9 sequential stages, SSE streaming</div>
-        </div>
-      </div>
-      <div class="pipeline">
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 1</div>
-          <div class="stage-name">Rekognition</div>
-          <div class="stage-model" style="color: var(--amber);">AWS</div>
-          <div class="stage-desc">Face landmarks, bounding box, confidence</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 2</div>
-          <div class="stage-name">Face Shape</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Oval/Round/Square/Heart/Diamond/Oblong/Triangle</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 3</div>
-          <div class="stage-name">Color Analysis</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Season, undertone, palette, metals, avoid colors</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 4</div>
-          <div class="stage-name">Skin Vision</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Skin type + zone observations (vision)</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 5</div>
-          <div class="stage-name">Skin Routine</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">AM/PM skincare routine steps</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 6</div>
-          <div class="stage-name">Features</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Eyes / nose / lips / cheeks breakdown</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 7</div>
-          <div class="stage-name">Glasses</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Frame style recs using face shape</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 8</div>
-          <div class="stage-name">Hairstyle</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Cut + color recs using face shape</div>
-        </div>
-        <div class="pipeline-stage">
-          <div class="stage-num">Stage 9</div>
-          <div class="stage-name">Summary</div>
-          <div class="stage-model">gpt-4o-mini</div>
-          <div class="stage-desc">Narrative summary compiled from all stages</div>
-        </div>
-      </div>
-      <div style="margin-top: 20px;">
-        <div class="grid-3">
-          <div class="card">
-            <div class="card-title">🔁 Retry Logic</div>
-            <div class="card-desc"><code style="color: var(--violet);">withRetry()</code> — 2 attempts, 250ms×attempt backoff. Error kinds: timeout, rate_limit, parse, validation, provider, unknown.</div>
-          </div>
-          <div class="card">
-            <div class="card-title">🧪 Canary A/B</div>
-            <div class="card-desc"><code style="color: var(--violet);">pickVariant()</code> — weighted random variant selection per stage. Variant ID stored in <code style="color: var(--violet);">pipeline_meta.stages[].variantId</code>. Active: <span class="pill violet">color_v2_dominant</span></div>
-          </div>
-          <div class="card">
-            <div class="card-title">✅ Validation</div>
-            <div class="card-desc">All AI outputs parsed by Zod schemas in <code style="color: var(--violet);">contracts.ts</code>. <code style="color: var(--violet);">normalizeX()</code> functions safe-fallback on bad AI output. All prompts enforce JSON output.</div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top: 16px;">
-        <div class="section-header" style="margin-bottom: 14px; padding-bottom: 8px;">
-          <div class="section-title" style="font-size: 15px;">Visual Generation (Fire-and-Forget)</div>
-        </div>
-        <div class="grid-4">
-          <div class="card">
-            <div class="card-title">💇 Hairstyle Try-Ons</div>
-            <div class="card-desc">FAL fal-ai/image-apps-v2/hair-change → Replicate Kontext (fallback) → SDXL (last resort)</div>
-          </div>
-          <div class="card">
-            <div class="card-title">👓 Glasses Try-Ons</div>
-            <div class="card-desc">Replicate SDXL inpainting — face landmark-aware compositing</div>
-          </div>
-          <div class="card">
-            <div class="card-title">💄 Makeup Looks × 4</div>
-            <div class="card-desc">FAL Flux Kontext Pro — 4 distinct look definitions from makeup-looks.ts</div>
-          </div>
-          <div class="card">
-            <div class="card-title">👗 Clothing Swatches × 12</div>
-            <div class="card-desc">Replicate Flux Kontext Pro at megapixels: 0.25 — color season palette swatches</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- API ROUTES -->
-    <div class="section" id="api-routes">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(20,184,166,0.15);">🔌</div>
+        <div class="section-icon" style="background:rgba(236,72,153,0.14);color:var(--accent)">⚡</div>
         <div>
           <div class="section-title">API Routes</div>
-          <div class="section-desc">src/app/api/ — all route handlers</div>
+          <div class="section-desc">Next.js Route Handlers · In-process rate limiting · SSE streaming</div>
         </div>
+        <span class="section-badge">11 routes</span>
       </div>
-      <table class="route-table">
-        <thead>
-          <tr>
-            <th>Method</th>
-            <th>Path</th>
-            <th>Description</th>
-            <th>Auth</th>
-            <th>Limits</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/analyze</td>
-            <td>Full AI pipeline — SSE stream, maxDuration=60</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">8/60s · 10/day</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/chat</td>
-            <td>Style consultant chat — streaming, maxDuration=30</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">30/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/chat/visitor</td>
-            <td>Unauthenticated visitor chat widget</td>
-            <td><span class="pill">Public</span></td>
-            <td><span class="pill amber">10/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method get">GET</span></td>
-            <td class="route-path">/api/reports/[id]</td>
-            <td>Fetch compiled report JSON</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">15/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/payments/create</td>
-            <td>Create Razorpay order — currency from geo header</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">10/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/payments/verify</td>
-            <td>Verify checkout signature — does NOT set is_paid</td>
-            <td><span class="pill green">Session</span></td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/webhooks/razorpay</td>
-            <td>Authoritative unlock — complete_webhook_payment RPC</td>
-            <td><span class="pill red">HMAC sig</span></td>
-            <td>Idempotent</td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/internal/trigger-visuals</td>
-            <td>Fire-and-forget visual generation, maxDuration=300</td>
-            <td><span class="pill red">Internal secret</span></td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td><span class="method get">GET</span></td>
-            <td class="route-path">/api/og/[token]</td>
-            <td>OG image via Puppeteer/Chromium</td>
-            <td><span class="pill">Public</span></td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td><span class="method get">GET</span></td>
-            <td class="route-path">/api/admin/canary-stats</td>
-            <td>Prompt A/B variant performance stats</td>
-            <td><span class="pill red">Admin email</span></td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/subscriptions</td>
-            <td>Studio Pro subscription management</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">10/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/capsule</td>
-            <td>AI wardrobe capsule generation</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">15/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/ingredients</td>
-            <td>Skincare ingredient analysis</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">20/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method post">POST</span></td>
-            <td class="route-path">/api/ingredients/compare</td>
-            <td>Compare 2 ingredient lists (2 AI calls)</td>
-            <td><span class="pill green">Session</span></td>
-            <td><span class="pill amber">10/60s</span></td>
-          </tr>
-          <tr>
-            <td><span class="method get">GET</span></td>
-            <td class="route-path">/api/affiliate</td>
-            <td>Amazon PA-API product lookup</td>
-            <td><span class="pill green">Session</span></td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td><span class="method get">GET</span></td>
-            <td class="route-path">/api/vault</td>
-            <td>Generated assets vault (Studio Pro)</td>
-            <td><span class="pill green">Session</span></td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="grid-2" id="api-grid"></div>
+    </section>
 
-    <!-- FRONTEND -->
-    <div class="section" id="frontend">
+    <section class="section" id="sec-ai">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(59,130,246,0.15);">🖥️</div>
+        <div class="section-icon" style="background:rgba(59,130,246,0.14);color:var(--blue)">🧠</div>
         <div>
-          <div class="section-title">Frontend</div>
-          <div class="section-desc">Pages, components, UI primitives</div>
+          <div class="section-title">AI Analysis Pipeline</div>
+          <div class="section-desc">9-stage sequential · All outputs Zod-validated · chatJSON&lt;T&gt;() + withRetry() + canary A/B</div>
         </div>
+        <span class="section-badge">src/lib/ai/pipeline.ts</span>
       </div>
+      <div class="pipeline-flow" id="pipeline-flow"></div>
+    </section>
 
-      <div style="margin-bottom: 20px;">
-        <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">App Pages</div>
-        <div class="grid-auto">
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /</div><div class="card-desc">Landing — hero, stats, testimonials, FAQ, sample showcase</div><div class="card-meta"><span class="pill">public</span></div></div>
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /upload</div><div class="card-desc">Selfie upload with ImageUploader + skin questionnaire</div><div class="card-meta"><span class="pill green">auth</span></div></div>
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /report/[id]</div><div class="card-desc">Full AI beauty report — 12 section cards + paywall</div><div class="card-meta"><span class="pill green">auth</span></div></div>
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /dashboard</div><div class="card-desc">User dashboard — report history, usage, Studio Pro</div><div class="card-meta"><span class="pill green">auth</span></div></div>
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /success</div><div class="card-desc">Post-payment success screen</div><div class="card-meta"><span class="pill green">auth</span></div></div>
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /admin</div><div class="card-desc">Admin panel — cleanup, canary stats</div><div class="card-meta"><span class="pill red">admin email</span></div></div>
-          <div class="card"><div class="card-title"><span class="pill blue">GET</span> /r/[token]</div><div class="card-desc">Public report sharing via short share token</div><div class="card-meta"><span class="pill">public</span></div></div>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 20px;">
-        <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">Report Section Components</div>
-        <div class="grid-4">
-          <div class="card"><div class="card-title">🎨 ColorAnalysisCard</div><div class="card-desc">Season, undertone, palette, do/avoid colors</div></div>
-          <div class="card"><div class="card-title">🧴 SkinAnalysisCard</div><div class="card-desc">Skin type, concerns, AM/PM routine</div></div>
-          <div class="card"><div class="card-title">👁️ FaceFeaturesCard</div><div class="card-desc">Eyes, nose, lips, cheeks breakdown</div></div>
-          <div class="card"><div class="card-title">💇 HairstyleCard</div><div class="card-desc">Hairstyle recommendations + virtual try-on</div></div>
-          <div class="card"><div class="card-title">🌈 HairColorCard</div><div class="card-desc">Hair color suggestions by season</div></div>
-          <div class="card"><div class="card-title">👓 SpectaclesCard</div><div class="card-desc">Frame style + virtual try-on</div></div>
-          <div class="card"><div class="card-title">💄 MakeupCard</div><div class="card-desc">4 makeup look try-ons</div></div>
-          <div class="card"><div class="card-title">💍 JewelleryCard</div><div class="card-desc">Metal + stone recommendations</div></div>
-          <div class="card"><div class="card-title">🛍️ ShoppingGuideCard</div><div class="card-desc">Amazon affiliate product picks</div></div>
-          <div class="card"><div class="card-title">🪞 VirtualTryOnCard</div><div class="card-desc">All generated visual assets viewer</div></div>
-          <div class="card"><div class="card-title">✨ AIBeautyStudio</div><div class="card-desc">Studio Pro feature hub — wardrobe capsule, ingredient scanner</div></div>
-          <div class="card"><div class="card-title">📄 ReportLayout</div><div class="card-desc">Master report layout wrapper with section nav</div></div>
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">Feature Components</div>
-        <div class="grid-auto">
-          <div class="card"><div class="card-title">🔒 Paywall</div><div class="card-desc">Report paywall gate — triggers Razorpay modal</div></div>
-          <div class="card"><div class="card-title">💬 StyleChatDrawer</div><div class="card-desc">Sliding style consultant chat — streams from /api/chat</div></div>
-          <div class="card"><div class="card-title">🧬 StyleDnaCard</div><div class="card-desc">Personalized style DNA summary</div></div>
-          <div class="card"><div class="card-title">👘 WardrobeCapsuleCard</div><div class="card-desc">AI wardrobe capsule via /api/capsule</div></div>
-          <div class="card"><div class="card-title">🔬 IngredientAnalyzer</div><div class="card-desc">Skincare ingredient scanner + comparison</div></div>
-          <div class="card"><div class="card-title">📦 ProductComparisonCard</div><div class="card-desc">Side-by-side skincare product comparison</div></div>
-          <div class="card"><div class="card-title">📋 SkinQuestionnaireModal</div><div class="card-desc">Pre-analysis skin type questionnaire</div></div>
-          <div class="card"><div class="card-title">📤 ImageUploader</div><div class="card-desc">Drag-drop selfie → Supabase Storage</div></div>
-          <div class="card"><div class="card-title">💬 VisitorChatWidget</div><div class="card-desc">Floating chat for unauthenticated users</div></div>
-          <div class="card"><div class="card-title">🗺️ TourProvider + OnboardingModal</div><div class="card-desc">First-time user guided tour</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DATABASE -->
-    <div class="section" id="database">
+    <section class="section" id="sec-db">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(20,184,166,0.15);">🗄️</div>
+        <div class="section-icon" style="background:rgba(20,184,166,0.14);color:var(--teal)">🗄</div>
         <div>
-          <div class="section-title">Database</div>
-          <div class="section-desc">Supabase PostgreSQL — 20 migrations, RLS on all user tables</div>
+          <div class="section-title">Database Tables</div>
+          <div class="section-desc">Supabase PostgreSQL · RLS on all user tables · 20 migration files</div>
         </div>
+        <span class="section-badge">13 tables</span>
       </div>
-      <div style="margin-bottom: 20px;">
-        <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">Tables</div>
-        <div class="db-grid">
-          <div class="db-table-card"><div class="db-table-name">profiles</div><div class="db-table-desc">User metadata, is_paid flag, total_paid counter</div></div>
-          <div class="db-table-card"><div class="db-table-name">reports</div><div class="db-table-desc">AI analysis JSON blobs per user — is_paid gated</div></div>
-          <div class="db-table-card"><div class="db-table-name">payments</div><div class="db-table-desc">Payment records linked to reports</div></div>
-          <div class="db-table-card"><div class="db-table-name">chat_messages</div><div class="db-table-desc">Style chat history per user/report</div></div>
-          <div class="db-table-card"><div class="db-table-name">user_style_prefs</div><div class="db-table-desc">Personalization memory — skin concerns, style goals</div></div>
-          <div class="db-table-card"><div class="db-table-name">generated_assets</div><div class="db-table-desc">Visual try-on asset URLs — hair, glasses, makeup, clothing</div></div>
-          <div class="db-table-card"><div class="db-table-name">plans</div><div class="db-table-desc">Plan definitions (free, report, studio_pro)</div></div>
-          <div class="db-table-card"><div class="db-table-name">subscriptions</div><div class="db-table-desc">Active user Studio Pro subscriptions</div></div>
-          <div class="db-table-card"><div class="db-table-name">usage_counters</div><div class="db-table-desc">Per-user AI generation quota counters</div></div>
-          <div class="db-table-card"><div class="db-table-name">webhook_events</div><div class="db-table-desc">Idempotency log — deduplicates Razorpay events</div></div>
-          <div class="db-table-card"><div class="db-table-name">image_hashes</div><div class="db-table-desc">Perceptual hash dedup for uploaded selfies</div></div>
-          <div class="db-table-card"><div class="db-table-name">canary_metrics</div><div class="db-table-desc">Prompt variant A/B performance logs</div></div>
-          <div class="db-table-card"><div class="db-table-name">pipeline_meta</div><div class="db-table-desc">Per-report pipeline timing + stage metadata</div></div>
-        </div>
-      </div>
-      <div>
-        <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">Key RPCs (always use over raw multi-table writes)</div>
-        <div class="rpc-list">
-          <div class="rpc-item"><div class="rpc-name">complete_webhook_payment()</div><div class="rpc-desc">Atomic: payments.status = paid + reports.is_paid = true + profiles.total_paid++</div></div>
-          <div class="rpc-item"><div class="rpc-name">upsert_style_prefs()</div><div class="rpc-desc">Personalization memory upsert for user style preferences</div></div>
-          <div class="rpc-item"><div class="rpc-name">try_consume_generation()</div><div class="rpc-desc">Atomic quota check + increment (Studio Pro gens)</div></div>
-          <div class="rpc-item"><div class="rpc-name">get_studio_entitlement()</div><div class="rpc-desc">Returns tier, remaining gens, cap, period reset date</div></div>
-          <div class="rpc-item"><div class="rpc-name">record_webhook_event()</div><div class="rpc-desc">Idempotency deduplication by Razorpay event_id</div></div>
-          <div class="rpc-item"><div class="rpc-name">expire_stuck_reports()</div><div class="rpc-desc">pg_cron job — cleans stuck pending reports every 10 min</div></div>
-        </div>
-      </div>
-      <div style="margin-top: 16px; padding: 12px 16px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px;">
-        <span style="color: #f87171; font-weight: 600; font-size: 12px;">⚠ Storage:</span>
-        <span style="color: var(--muted); font-size: 12px; margin-left: 8px;">selfies bucket must remain <strong style="color: var(--text);">private</strong> — accessed via signed URLs only.</span>
-      </div>
-    </div>
+      <div class="grid-3" id="db-grid"></div>
+    </section>
 
-    <!-- AUTH -->
-    <div class="section" id="auth">
+    <section class="section" id="sec-rpc">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(34,197,94,0.15);">🔐</div>
+        <div class="section-icon" style="background:rgba(245,158,11,0.14);color:var(--amber)">🔧</div>
         <div>
-          <div class="section-title">Auth & Supabase Clients</div>
-          <div class="section-desc">Three distinct clients — never mix them</div>
+          <div class="section-title">Stored Procedures (RPCs)</div>
+          <div class="section-desc">Always prefer RPCs over raw multi-table writes · SECURITY DEFINER functions</div>
         </div>
+        <span class="section-badge">6 RPCs</span>
       </div>
-      <div class="grid-3">
-        <div class="card" style="border-color: rgba(59,130,246,0.3);">
-          <div class="card-title">🌐 Browser Client</div>
-          <div class="card-desc" style="margin-bottom: 10px;"><code style="color: var(--teal);">createSupabaseBrowserClient()</code></div>
-          <div class="card-desc">src/lib/supabase/client.ts — Client components ONLY</div>
-          <div class="card-meta"><span class="pill blue">Client components</span></div>
-        </div>
-        <div class="card" style="border-color: rgba(34,197,94,0.3);">
-          <div class="card-title">🖥️ Server Client</div>
-          <div class="card-desc" style="margin-bottom: 10px;"><code style="color: var(--teal);">createSupabaseServerClient()</code></div>
-          <div class="card-desc">src/lib/supabase/server.ts — Server components, Route Handlers, Server Actions</div>
-          <div class="card-meta"><span class="pill green">Server</span></div>
-        </div>
-        <div class="card" style="border-color: rgba(239,68,68,0.3);">
-          <div class="card-title">⚡ Admin Client</div>
-          <div class="card-desc" style="margin-bottom: 10px;"><code style="color: var(--teal);">createSupabaseAdminClient()</code></div>
-          <div class="card-desc">src/lib/supabase/server.ts — Webhooks/background jobs ONLY. Bypasses RLS — validate user_id ownership explicitly.</div>
-          <div class="card-meta"><span class="pill red">Bypasses RLS</span></div>
-        </div>
-      </div>
-      <div style="margin-top: 14px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--muted);">
-        <strong style="color: var(--label);">Session refresh:</strong> <code style="color: var(--violet);">updateSession()</code> in src/lib/supabase/middleware.ts — called on every request via src/middleware.ts
-        <br/><br/>
-        <strong style="color: var(--label);">Protected routes:</strong> /upload · /report · /dashboard · /success · /admin → redirect unauthenticated users
-      </div>
-    </div>
+      <div class="grid-2" id="rpc-grid"></div>
+    </section>
 
-    <!-- PAYMENTS -->
-    <div class="section" id="payments">
+    <section class="section" id="sec-auth">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(245,158,11,0.15);">💳</div>
+        <div class="section-icon" style="background:rgba(34,197,94,0.14);color:var(--green)">🔐</div>
+        <div>
+          <div class="section-title">Auth &amp; Supabase Clients</div>
+          <div class="section-desc">Never mix browser/server/admin clients · updateSession() on every request via middleware</div>
+        </div>
+        <span class="section-badge">3 clients</span>
+      </div>
+      <div class="grid-3" id="auth-grid"></div>
+    </section>
+
+    <section class="section" id="sec-payments">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(59,130,246,0.14);color:var(--blue)">💳</div>
         <div>
           <div class="section-title">Payment Flow</div>
-          <div class="section-desc">Razorpay — one-time unlock + Studio Pro subscription</div>
+          <div class="section-desc">Razorpay · Webhook is the authoritative unlock source · HMAC-SHA256 timingSafeEqual</div>
         </div>
       </div>
-      <div class="grid-2" style="margin-bottom: 20px;">
-        <div class="card">
-          <div class="card-title">📄 One-Time Report Unlock</div>
-          <div class="card-meta" style="margin-bottom: 8px;"><span class="pill amber">₹299 India</span><span class="pill amber">$3.99 Intl</span></div>
-          <div class="card-desc">Permanent unlock for a single report. Triggered by Paywall component.</div>
-        </div>
-        <div class="card">
-          <div class="card-title">⭐ Studio Pro Subscription</div>
-          <div class="card-meta" style="margin-bottom: 8px;"><span class="pill amber">₹999/mo India</span><span class="pill amber">$12.99/mo Intl</span></div>
-          <div class="card-desc">150 AI gens/month, wardrobe capsule, ingredient scanner, assets vault.</div>
-        </div>
-      </div>
-      <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">Payment Flow Steps</div>
-      <div class="flow-steps">
-        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-text"><code>POST /api/payments/create</code> — currency from <code>CF-IPCountry</code>/<code>X-Vercel-IP-Country</code> header → Razorpay order/subscription created</div></div>
-        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-text">Client: Razorpay Checkout modal opens with order_id</div></div>
-        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-text"><code>POST /api/payments/verify</code> — HMAC-SHA256 signature check with <code>timingSafeEqual</code> → updates payment row status (does NOT unlock report)</div></div>
-        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-text">Razorpay sends <code>payment.captured</code> webhook → <code>POST /api/webhooks/razorpay</code></div></div>
-        <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-text">Webhook: HMAC verify → <code>record_webhook_event()</code> (idempotency) → <code>complete_webhook_payment()</code> RPC → atomically unlocks report</div></div>
-        <div class="flow-step"><div class="flow-step-num">6</div><div class="flow-step-text">Client polls or realtime → report unlocked, Paywall removed</div></div>
-      </div>
-    </div>
+      <div class="flow-item" id="payment-flow"></div>
+    </section>
 
-    <!-- MIDDLEWARE -->
-    <div class="section" id="middleware">
+    <section class="section" id="sec-ext">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(236,72,153,0.15);">🛡️</div>
-        <div>
-          <div class="section-title">Edge Middleware</div>
-          <div class="section-desc">src/middleware.ts — runs on every request</div>
-        </div>
-      </div>
-      <div class="grid-3" style="margin-bottom: 20px;">
-        <div class="card"><div class="card-title">⚡ Rate Limiter</div><div class="card-desc">In-process LRU Map (4096 entries). Resets on cold start — first-pass bot filter. Per-IP, per-route counters.</div></div>
-        <div class="card"><div class="card-title">🔒 Auth Guard</div><div class="card-desc">Redirects unauthenticated users from /upload, /report, /dashboard, /success, /admin to login.</div></div>
-        <div class="card"><div class="card-title">🔄 Session Refresh</div><div class="card-desc">updateSession() on every request — refreshes Supabase auth tokens via cookie.</div></div>
-      </div>
-      <div style="font-size: 13px; font-weight: 600; color: var(--label); margin-bottom: 12px;">Rate Limits per Route</div>
-      <table class="rl-table">
-        <thead><tr><th>Route Prefix</th><th>Max Requests</th><th>Window</th><th>Reason</th></tr></thead>
-        <tbody>
-          <tr><td class="route-path">/api/analyze</td><td><span class="pill red">8</span></td><td>60s</td><td>ML pipeline — very expensive</td></tr>
-          <tr><td class="route-path">/api/chat/visitor</td><td><span class="pill red">10</span></td><td>60s</td><td>Unauthenticated — stricter</td></tr>
-          <tr><td class="route-path">/api/chat</td><td><span class="pill amber">30</span></td><td>60s</td><td>OpenAI chat — moderate cost</td></tr>
-          <tr><td class="route-path">/api/reports</td><td><span class="pill amber">15</span></td><td>60s</td><td>Image generation</td></tr>
-          <tr><td class="route-path">/api/payments</td><td><span class="pill amber">10</span></td><td>60s</td><td>Payment abuse prevention</td></tr>
-          <tr><td class="route-path">/api/subscriptions</td><td><span class="pill amber">10</span></td><td>60s</td><td>Subscription abuse prevention</td></tr>
-          <tr><td class="route-path">/api/capsule</td><td><span class="pill amber">15</span></td><td>60s</td><td>AI wardrobe generation</td></tr>
-          <tr><td class="route-path">/api/ingredients/compare</td><td><span class="pill amber">10</span></td><td>60s</td><td>2 AI calls per request</td></tr>
-          <tr><td class="route-path">/api/ingredients</td><td><span class="pill">20</span></td><td>60s</td><td>Single AI analysis</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- DATA FLOWS -->
-    <div class="section" id="data-flows">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(139,92,246,0.15);">🔄</div>
-        <div>
-          <div class="section-title">Data Flows</div>
-          <div class="section-desc">End-to-end request paths for key user journeys</div>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title" style="font-size: 14px; margin-bottom: 12px;">📸 Analysis Flow</div>
-          <div class="flow-steps">
-            <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-text">User drops selfie → <code>ImageUploader</code> → Supabase Storage (private)</div></div>
-            <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-text">Middleware: IP rate limit + auth check</div></div>
-            <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-text">Route: session validated + daily quota (10/day) checked</div></div>
-            <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-text"><code>compressForAI()</code> → 512px JPEG → base64</div></div>
-            <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-text"><code>runAnalysisPipeline()</code> — 9 stages, SSE events to client</div></div>
-            <div class="flow-step"><div class="flow-step-num">6</div><div class="flow-step-text">Report stored in DB → client redirected to /report/[id]</div></div>
-            <div class="flow-step"><div class="flow-step-num">7</div><div class="flow-step-text"><code>trigger-visuals</code> called fire-and-forget → parallel visual gen</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title" style="font-size: 14px; margin-bottom: 12px;">💳 Payment & Unlock Flow</div>
-          <div class="flow-steps">
-            <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-text"><code>Paywall</code> detects <code>is_paid = false</code> on report</div></div>
-            <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-text">POST /api/payments/create → Razorpay order</div></div>
-            <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-text">Razorpay Checkout modal → user pays</div></div>
-            <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-text">POST /api/payments/verify → HMAC check</div></div>
-            <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-text">Razorpay webhook → HMAC → idempotency → RPC unlock</div></div>
-            <div class="flow-step"><div class="flow-step-num">6</div><div class="flow-step-text">Report unlocked → full report visible</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title" style="font-size: 14px; margin-bottom: 12px;">🎨 Visual Generation Flow</div>
-          <div class="flow-steps">
-            <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-text"><code>/api/internal/trigger-visuals</code> called after pipeline</div></div>
-            <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-text">Parallel: hairstyle (FAL) + glasses (Replicate) + makeup × 4 (FAL) + clothing × 12 (Replicate)</div></div>
-            <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-text">Each URL stored in <code>generated_assets</code> table</div></div>
-            <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-text"><code>VirtualTryOnCard</code> / <code>AIBeautyStudio</code> reads assets on report load</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title" style="font-size: 14px; margin-bottom: 12px;">💬 Style Chat Flow</div>
-          <div class="flow-steps">
-            <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-text">User opens <code>StyleChatDrawer</code> on report page</div></div>
-            <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-text">POST /api/chat with report context + message history</div></div>
-            <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-text">OpenAI streaming response (gpt-4o-mini, maxDuration=30)</div></div>
-            <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-text">Messages stored in <code>chat_messages</code> table</div></div>
-            <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-text">Visitor: /api/chat/visitor (no auth, 10/60s limit)</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- EXTERNAL SERVICES -->
-    <div class="section" id="external-services">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(245,158,11,0.15);">🌐</div>
+        <div class="section-icon" style="background:rgba(34,197,94,0.14);color:var(--green)">🌐</div>
         <div>
           <div class="section-title">External Services</div>
-          <div class="section-desc">Third-party integrations and their env vars</div>
+          <div class="section-desc">All env vars centralized in src/lib/env.ts (server) and src/lib/public-env.ts (client)</div>
         </div>
+        <span class="section-badge">7 services</span>
       </div>
-      <div class="services-grid">
-        <div class="service-card">
-          <div class="service-name">🤖 OpenAI</div>
-          <div class="service-purpose">All AI analysis + style chat. JSON mode on every call.</div>
-          <div><span class="env-key">gpt-4o</span><span class="env-key">gpt-4o-mini</span></div>
-          <div style="margin-top: 6px;"><span class="env-key">OPENAI_API_KEY</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">👁️ AWS Rekognition</div>
-          <div class="service-purpose">Stage 1 — face landmark detection, bounding box, confidence score</div>
-          <div><span class="env-key">AWS_ACCESS_KEY_ID</span></div>
-          <div><span class="env-key">AWS_SECRET_ACCESS_KEY</span></div>
-          <div><span class="env-key">AWS_REGION</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">⚡ FAL.ai</div>
-          <div class="service-purpose">Hairstyle try-ons (fal-ai/image-apps-v2/hair-change) + makeup looks (Flux Kontext Pro)</div>
-          <div><span class="env-key">FAL_KEY</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">🔁 Replicate</div>
-          <div class="service-purpose">Glasses inpainting (SDXL), fallback hair, clothing swatches. Always useFileOutput: false.</div>
-          <div><span class="env-key">REPLICATE_API_TOKEN</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">💳 Razorpay</div>
-          <div class="service-purpose">Payment processing — one-time unlocks + monthly subscriptions</div>
-          <div><span class="env-key">NEXT_PUBLIC_RAZORPAY_KEY_ID</span></div>
-          <div><span class="env-key">RAZORPAY_KEY_SECRET</span></div>
-          <div><span class="env-key">RAZORPAY_WEBHOOK_SECRET</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">🏢 Supabase</div>
-          <div class="service-purpose">PostgreSQL database + Auth + private selfies Storage bucket</div>
-          <div><span class="env-key">NEXT_PUBLIC_SUPABASE_URL</span></div>
-          <div><span class="env-key">NEXT_PUBLIC_SUPABASE_ANON_KEY</span></div>
-          <div><span class="env-key">SUPABASE_SERVICE_ROLE_KEY</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">🛍️ Amazon PA-API</div>
-          <div class="service-purpose">Affiliate product recommendations for shopping guide cards</div>
-          <div><span class="env-key">AWS_ACCESS_KEY_ID</span></div>
-        </div>
-        <div class="service-card">
-          <div class="service-name">▲ Vercel Pro</div>
-          <div class="service-purpose">Deployment — requires maxDuration=60 for analyze, maxDuration=300 for visuals</div>
-          <div><span class="env-key">VERCEL_URL (auto)</span></div>
-        </div>
-      </div>
-    </div>
+      <div class="grid-auto" id="ext-grid"></div>
+    </section>
 
-    <!-- ENV VARS -->
-    <div class="section" id="env-vars">
+    <section class="section" id="sec-flows">
       <div class="section-header">
-        <div class="section-icon" style="background: rgba(245,158,11,0.15);">⚙️</div>
+        <div class="section-icon" style="background:rgba(236,72,153,0.14);color:var(--accent)">🔀</div>
         <div>
-          <div class="section-title">Environment Variables</div>
-          <div class="section-desc">src/lib/env.ts (server) · src/lib/public-env.ts (client-safe)</div>
+          <div class="section-title">Key Data Flows</div>
+          <div class="section-desc">Select an API route and click "Trace Journey" for animated request walkthroughs</div>
         </div>
       </div>
-      <div class="env-section">
-        <div class="env-title" style="color: #f87171;">Required Server</div>
-        <div class="env-grid">
-          <span class="env-key">SUPABASE_SERVICE_ROLE_KEY</span>
-          <span class="env-key">OPENAI_API_KEY</span>
-          <span class="env-key">RAZORPAY_KEY_SECRET</span>
-          <span class="env-key">RAZORPAY_WEBHOOK_SECRET</span>
-          <span class="env-key">INTERNAL_API_SECRET ≥16 chars</span>
-          <span class="env-key">ADMIN_EMAIL_ALLOWLIST</span>
-          <span class="env-key">AWS_ACCESS_KEY_ID</span>
-          <span class="env-key">AWS_SECRET_ACCESS_KEY</span>
-          <span class="env-key">AWS_REGION</span>
-        </div>
-      </div>
-      <div class="env-section">
-        <div class="env-title" style="color: #60a5fa;">Required Public</div>
-        <div class="env-grid">
-          <span class="env-key">NEXT_PUBLIC_SUPABASE_URL</span>
-          <span class="env-key">NEXT_PUBLIC_SUPABASE_ANON_KEY</span>
-          <span class="env-key">NEXT_PUBLIC_RAZORPAY_KEY_ID</span>
-          <span class="env-key">NEXT_PUBLIC_APP_URL</span>
-        </div>
-      </div>
-      <div class="env-section">
-        <div class="env-title" style="color: var(--muted);">Optional</div>
-        <div class="env-grid">
-          <span class="env-key">FAL_KEY</span>
-          <span class="env-key">REPLICATE_API_TOKEN</span>
-          <span class="env-key">OPENAI_VISION_MODEL</span>
-          <span class="env-key">OPENAI_MINI_MODEL</span>
-          <span class="env-key">NEXT_PUBLIC_PRICE_REPORT_INR</span>
-          <span class="env-key">NEXT_PUBLIC_PRICE_REPORT_USD</span>
-          <span class="env-key">NEXT_PUBLIC_PRICE_STUDIO_PRO_INR</span>
-          <span class="env-key">NEXT_PUBLIC_PRICE_STUDIO_PRO_USD</span>
-          <span class="env-key">RAZORPAY_PLAN_ID_STUDIO_PRO_INR</span>
-          <span class="env-key">RAZORPAY_PLAN_ID_STUDIO_PRO_USD</span>
-          <span class="env-key">PAYMENT_TEST_ALLOW_IN_PROD</span>
-          <span class="env-key">SUPABASE_STORAGE_BUCKET</span>
-          <span class="env-key">NEXT_PUBLIC_APP_NAME</span>
-        </div>
-      </div>
-    </div>
+      <div class="grid-2" id="flows-grid"></div>
+    </section>
 
-    <!-- BUSINESS LOGIC -->
-    <div class="section" id="business-logic">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(20,184,166,0.15);">⚙️</div>
-        <div>
-          <div class="section-title">Business Logic Modules</div>
-          <div class="section-desc">src/lib/ — domain utilities</div>
-        </div>
-      </div>
-      <div class="grid-auto">
-        <div class="card"><div class="card-title">entitlement.ts</div><div class="card-desc">getStudioEntitlement() — plan tier, quota, reset via get_studio_entitlement RPC</div></div>
-        <div class="card"><div class="card-title">currency.ts</div><div class="card-desc">Currency detection from Vercel/Cloudflare geo headers</div></div>
-        <div class="card"><div class="card-title">season-colors.ts</div><div class="card-desc">Color season rules, palette definitions, undertone data</div></div>
-        <div class="card"><div class="card-title">jewellery-rules.ts</div><div class="card-desc">Jewellery recommendations by color season</div></div>
-        <div class="card"><div class="card-title">makeup-looks.ts</div><div class="card-desc">4 makeup look definitions for FAL visual generation</div></div>
-        <div class="card"><div class="card-title">makeup-options.ts</div><div class="card-desc">Makeup product option catalog</div></div>
-        <div class="card"><div class="card-title">generated-assets.ts</div><div class="card-desc">Asset URL management and retrieval helpers</div></div>
-        <div class="card"><div class="card-title">affiliates.ts</div><div class="card-desc">Amazon affiliate product mapping by category</div></div>
-        <div class="card"><div class="card-title">jewellery-affiliates.ts</div><div class="card-desc">Jewellery affiliate product links</div></div>
-        <div class="card"><div class="card-title">amazon-pa-api.ts</div><div class="card-desc">Amazon Product Advertising API client wrapper</div></div>
-        <div class="card"><div class="card-title">animations.ts</div><div class="card-desc">Framer Motion animation presets (fadeUp, stagger, etc.)</div></div>
-        <div class="card"><div class="card-title">track.ts</div><div class="card-desc">Analytics event tracking helpers</div></div>
-        <div class="card"><div class="card-title">env.ts</div><div class="card-desc">Centralized env var access — throws on missing required values</div></div>
-        <div class="card"><div class="card-title">public-env.ts</div><div class="card-desc">Client-safe public env vars only</div></div>
-        <div class="card"><div class="card-title">utils.ts</div><div class="card-desc">cn() — clsx + tailwind-merge, misc helpers</div></div>
-      </div>
-    </div>
+  </main>
+</div>
 
-    <!-- DESIGN SYSTEM -->
-    <div class="section" id="design-system">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(236,72,153,0.15);">🎨</div>
-        <div>
-          <div class="section-title">Design System</div>
-          <div class="section-desc">design-system/renovaara/MASTER.md · Tailwind 3 · Radix UI + CVA</div>
-        </div>
-      </div>
-      <div style="margin-bottom: 16px; padding: 12px 16px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 10px;">
-        <div style="font-size: 12px; font-weight: 700; color: #fbbf24; margin-bottom: 8px;">⚠ Color Alias Gotcha — Tailwind names are semantically inverted</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11.5px;">
-          <div style="padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px;">
-            <div style="color: var(--muted); margin-bottom: 4px;">Tailwind name</div>
-            <div style="color: var(--text); font-family: monospace;">terracotta</div>
-            <div style="color: var(--muted); font-size: 10.5px; margin-top: 2px;">→ Actual: <span style="color: #EC4899;">#EC4899 pink</span></div>
-            <div style="color: var(--muted); font-size: 10.5px;">Use canonical: <strong style="color: var(--text);">chrome</strong></div>
-          </div>
-          <div style="padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px;">
-            <div style="color: var(--muted); margin-bottom: 4px;">Tailwind name</div>
-            <div style="color: var(--text); font-family: monospace;">olive</div>
-            <div style="color: var(--muted); font-size: 10.5px; margin-top: 2px;">→ Actual: <span style="color: #8B5CF6;">#8B5CF6 violet</span></div>
-            <div style="color: var(--muted); font-size: 10.5px;">Use canonical: <strong style="color: var(--text);">iris</strong></div>
-          </div>
-          <div style="padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px;">
-            <div style="color: var(--muted); margin-bottom: 4px;">Tailwind name</div>
-            <div style="color: var(--text); font-family: monospace;">obsidian</div>
-            <div style="color: var(--muted); font-size: 10.5px; margin-top: 2px;">→ Actual: <span style="color: #FDF2F8; background: #333; padding: 0 3px;">#FDF2F8 soft pink bg</span></div>
-            <div style="color: var(--muted); font-size: 10.5px;">Canonical: <strong style="color: var(--text);">obsidian</strong></div>
-          </div>
-        </div>
-      </div>
-      <div class="grid-4">
-        <div class="card"><div class="card-title">Button</div><div class="card-desc">Radix + CVA — variants: default, destructive, outline, ghost, link</div></div>
-        <div class="card"><div class="card-title">Card</div><div class="card-desc">Radix + CVA — base report and UI cards</div></div>
-        <div class="card"><div class="card-title">Badge</div><div class="card-desc">Radix + CVA — status indicators</div></div>
-        <div class="card"><div class="card-title">Dialog</div><div class="card-desc">Radix + CVA — modals (paywall, questionnaire, onboarding)</div></div>
-        <div class="card"><div class="card-title">Progress</div><div class="card-desc">Radix + CVA — pipeline progress bar</div></div>
-        <div class="card"><div class="card-title">Tabs</div><div class="card-desc">Radix + CVA — report section tabs</div></div>
-        <div class="card"><div class="card-title">DoAvoidGuidanceCard</div><div class="card-desc">Do/avoid color guidance visualization</div></div>
-      </div>
-    </div>
+<!-- DETAIL PANEL -->
+<aside class="detail-panel" id="detailPanel">
+  <div id="panelContent"></div>
+</aside>
 
-    <!-- SECURITY -->
-    <div class="section" id="security">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(239,68,68,0.15);">🔒</div>
-        <div>
-          <div class="section-title">Security Rules</div>
-          <div class="section-desc">Critical invariants that must never be violated</div>
-        </div>
-      </div>
-      <div class="security-list">
-        <div class="security-item"><span class="security-icon">🔴</span>createSupabaseAdminClient() bypasses RLS — always validate user_id ownership explicitly before any query</div>
-        <div class="security-item"><span class="security-icon">🔴</span>selfies Storage bucket must remain <strong>private</strong> — access only via signed URLs, never public</div>
-        <div class="security-item"><span class="security-icon">🔴</span>INTERNAL_API_SECRET must be ≥16 chars — /api/internal/trigger-visuals returns 503 otherwise</div>
-        <div class="security-item"><span class="security-icon">🔴</span>HMAC comparisons always use timingSafeEqual (crypto) — never string equality ===</div>
-        <div class="security-item"><span class="security-icon">🔴</span>Currency derived from CF-IPCountry / X-Vercel-IP-Country server headers only — never trust client hint</div>
-        <div class="security-item"><span class="security-icon">🔴</span>Webhook is the ONLY authoritative unlock — POST /api/payments/verify must never set is_paid</div>
-        <div class="security-item"><span class="security-icon">🔴</span>PAYMENT_TEST_ALLOW_IN_PROD must be false in production</div>
-        <div class="security-item"><span class="security-icon">🔴</span>Supabase Site URL must be set to production domain in Dashboard → Auth → URL Configuration</div>
-        <div class="security-item"><span class="security-icon">🔴</span>ADMIN_EMAIL_ALLOWLIST — never hardcode email addresses in source code</div>
-        <div class="security-item"><span class="security-icon">🔴</span>Replicate SDK: always useFileOutput: false — FileOutput objects break URL validation</div>
-      </div>
-    </div>
-
-    <!-- TESTING -->
-    <div class="section" id="testing">
-      <div class="section-header">
-        <div class="section-icon" style="background: rgba(34,197,94,0.15);">🧪</div>
-        <div>
-          <div class="section-title">Testing</div>
-          <div class="section-desc">Vitest unit tests + OpenAI eval pipeline</div>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title">Unit Tests (Vitest)</div>
-          <div class="card-desc" style="margin-bottom: 10px;">Environment: node · isolate: true · alias @ → ./src</div>
-          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11.5px;">
-            <div style="padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; font-family: monospace; color: var(--teal);">src/lib/ai/confidence.test.ts</div>
-            <div style="padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; font-family: monospace; color: var(--teal);">src/lib/ai/contracts.test.ts</div>
-            <div style="padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; font-family: monospace; color: var(--teal);">src/lib/ai/pipeline.test.ts</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Eval Pipeline</div>
-          <div class="card-desc" style="margin-bottom: 10px;">scripts/eval-pipeline.ts — calls real OpenAI</div>
-          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; color: var(--muted);">
-            <div><code style="color: var(--violet);">npm run eval</code> — full eval run</div>
-            <div><code style="color: var(--violet);">npm run eval:stage -- face_shape --runs 5</code></div>
-            <div style="padding: 6px 10px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 6px; font-size: 11px;">⚠ Never run in CI without OPENAI_API_KEY management — costs real money</div>
-            <div>Fixtures: scripts/eval-fixtures/&lt;stage&gt;/&lt;id&gt;.json</div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top: 14px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--muted);">
-        <strong style="color: var(--label);">Commands:</strong>
-        <code style="color: var(--violet); margin: 0 8px;">npm run dev</code>
-        <code style="color: var(--violet); margin: 0 8px;">npm run build</code>
-        <code style="color: var(--violet); margin: 0 8px;">npm run typecheck</code>
-        <code style="color: var(--violet); margin: 0 8px;">npm run lint</code>
-        <code style="color: var(--violet); margin: 0 8px;">npm test</code>
-        <code style="color: var(--violet); margin: 0 8px;">npm run test:watch</code>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-</div><!-- /main -->
+<!-- JOURNEY OVERLAY -->
+<div class="journey-overlay" id="journeyOverlay" onclick="handleOverlayClick(event)">
+  <div class="journey-box" id="journeyBox"></div>
+</div>
 
 <script>
-  // Active sidebar highlight
-  const sections = document.querySelectorAll('.section');
-  const links = document.querySelectorAll('.sidebar a');
+// =============================================
+// GRAPH DATA
+// =============================================
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        links.forEach(l => l.style.color = '');
-        links.forEach(l => l.style.background = '');
-        const active = document.querySelector(`.sidebar a[href="#${entry.target.id}"]`);
-        if (active) {
-          active.style.color = '#EC4899';
-          active.style.background = 'rgba(236,72,153,0.08)';
-        }
-      }
+const NODES = {
+  // Pages
+  'page:home':       { type:'page', icon:'🏠', label:'/', name:'Landing Page', auth:'public', file:'src/app/page.tsx', desc:'Hero, stats, sample showcase, FAQ, testimonials, activity ticker' },
+  'page:upload':     { type:'page', icon:'📤', label:'/upload', name:'Upload', auth:'protected', file:'src/app/upload/', desc:'Selfie upload with drag-and-drop ImageUploader + skin questionnaire' },
+  'page:report':     { type:'page', icon:'📊', label:'/report/[id]', name:'Report', auth:'protected', file:'src/app/report/', desc:'Full AI beauty report with paywall gate, style chat drawer, virtual try-ons' },
+  'page:dashboard':  { type:'page', icon:'📋', label:'/dashboard', name:'Dashboard', auth:'protected', file:'src/app/dashboard/', desc:'User dashboard — report history, usage counters' },
+  'page:success':    { type:'page', icon:'✅', label:'/success', name:'Success', auth:'protected', file:'src/app/success/', desc:'Post-payment success screen with unlock confirmation' },
+  'page:admin':      { type:'page', icon:'🛡', label:'/admin', name:'Admin Panel', auth:'admin', file:'src/app/admin/', desc:'Admin panel gated by ADMIN_EMAIL_ALLOWLIST — canary stats, cleanup tools' },
+  'page:share':      { type:'page', icon:'🔗', label:'/r/[token]', name:'Shared Report', auth:'public', file:'src/app/r/', desc:'Public report sharing via short token — OG image support' },
+  'page:auth':       { type:'page', icon:'🔑', label:'/auth/*', name:'Auth Callback', auth:'public', file:'src/app/auth/', desc:'Supabase OAuth callback handling — magic link + Google auth' },
+  'page:privacy':    { type:'page', icon:'📃', label:'/privacy', name:'Privacy Policy', auth:'public', file:'src/app/privacy/', desc:'Privacy policy page' },
+  'page:terms':      { type:'page', icon:'📃', label:'/terms', name:'Terms of Service', auth:'public', file:'src/app/terms/', desc:'Terms of service page' },
+
+  // API Routes
+  'api:analyze': {
+    type:'api', icon:'⚡', label:'POST /api/analyze', method:'POST',
+    file:'src/app/api/analyze/route.ts', maxDuration:60, rateLimit:'8/60s', auth:'session',
+    desc:'Full 9-stage AI pipeline — SSE stream, Zod validation, triggers fire-and-forget visuals',
+    envVars:['OPENAI_API_KEY','AWS_ACCESS_KEY_ID','AWS_SECRET_ACCESS_KEY','SUPABASE_SERVICE_ROLE_KEY'],
+    hasJourney:true
+  },
+  'api:chat': {
+    type:'api', icon:'💬', label:'POST /api/chat', method:'POST',
+    file:'src/app/api/chat/route.ts', maxDuration:30, rateLimit:'30/60s', auth:'session',
+    desc:'Streaming style consultant chat — GPT-4o streaming SSE with report context injection',
+    envVars:['OPENAI_API_KEY'], hasJourney:true
+  },
+  'api:reports:get': {
+    type:'api', icon:'📊', label:'GET /api/reports/[id]', method:'GET',
+    file:'src/app/api/reports/[id]/route.ts', auth:'session',
+    desc:'Fetch compiled report — verifies ownership, checks is_paid, returns JSON'
+  },
+  'api:payments:create': {
+    type:'api', icon:'💳', label:'POST /api/payments/create', method:'POST',
+    file:'src/app/api/payments/create/route.ts', rateLimit:'10/60s', auth:'session',
+    desc:'Create Razorpay order or subscription — currency derived from CF-IPCountry header only',
+    envVars:['RAZORPAY_KEY_SECRET','NEXT_PUBLIC_RAZORPAY_KEY_ID'], hasJourney:true,
+    security:['Currency from server geo header only — never trust client hint']
+  },
+  'api:payments:verify': {
+    type:'api', icon:'✔️', label:'POST /api/payments/verify', method:'POST',
+    file:'src/app/api/payments/verify/route.ts', auth:'session',
+    desc:'Verify Razorpay checkout signature — does NOT set is_paid (webhook is authoritative source)',
+    envVars:['RAZORPAY_KEY_SECRET'],
+    security:['HMAC-SHA256 with timingSafeEqual — never ===','Does NOT unlock report — webhook does']
+  },
+  'api:webhooks:razorpay': {
+    type:'api', icon:'🪝', label:'POST /api/webhooks/razorpay', method:'POST',
+    file:'src/app/api/webhooks/razorpay/route.ts', auth:'HMAC signature',
+    desc:'Authoritative payment unlock — payment.captured event → complete_webhook_payment RPC → set is_paid',
+    envVars:['RAZORPAY_WEBHOOK_SECRET'], hasJourney:true,
+    security:['Idempotent — record_webhook_event deduplicates by event_id','HMAC-SHA256 timingSafeEqual']
+  },
+  'api:internal:visuals': {
+    type:'api', icon:'🎨', label:'POST /api/internal/trigger-visuals', method:'POST',
+    file:'src/app/api/internal/trigger-visuals/route.ts', maxDuration:300, auth:'INTERNAL_API_SECRET header',
+    desc:'Fire-and-forget visual generation — hairstyle try-ons, 4 makeup looks, glasses, 12 clothing swatches',
+    envVars:['INTERNAL_API_SECRET','FAL_KEY','REPLICATE_API_TOKEN'], hasJourney:true,
+    security:['INTERNAL_API_SECRET must be ≥16 chars — returns 503 otherwise']
+  },
+  'api:og:token': {
+    type:'api', icon:'🖼', label:'GET /api/og/[token]', method:'GET',
+    file:'src/app/api/og/[token]/route.ts', auth:'public',
+    desc:'OG image generation via Puppeteer/Chromium for report share links'
+  },
+  'api:admin:canary': {
+    type:'api', icon:'🛡', label:'GET /api/admin/canary-stats', method:'GET',
+    file:'src/app/api/admin/canary-stats/route.ts', auth:'ADMIN_EMAIL_ALLOWLIST',
+    desc:'Prompt A/B variant performance stats — wins/losses per stage variant',
+    security:['admin']
+  },
+  'api:subscriptions': {
+    type:'api', icon:'🔄', label:'/api/subscriptions', method:'POST',
+    file:'src/app/api/subscriptions/', rateLimit:'10/60s', auth:'session',
+    desc:'Studio Pro subscription management — create, cancel, status check'
+  },
+  'api:capsule': {
+    type:'api', icon:'👗', label:'/api/capsule', method:'POST',
+    file:'src/app/api/capsule/', rateLimit:'15/60s', auth:'session',
+    desc:'AI wardrobe capsule generation using color season + style prefs',
+    envVars:['OPENAI_API_KEY']
+  },
+
+  // AI Stages
+  'ai:rekognition': { type:'ai', icon:'👁', order:1, label:'Rekognition', name:'Face Detection', model:'AWS Rekognition', desc:'Face landmark detection — BoundingBox, Pose, Landmarks, Confidence', file:'src/lib/ai/rekognition.ts' },
+  'ai:face_shape':  { type:'ai', icon:'🔷', order:2, label:'Face Shape', name:'Face Shape', model:'gpt-4o-mini', desc:'Classify face shape: Oval/Round/Square/Heart/Diamond/Oblong/Triangle', file:'src/lib/ai/pipeline.ts' },
+  'ai:color':       { type:'ai', icon:'🎨', order:3, label:'Color Analysis', name:'Color Analysis', model:'gpt-4o-mini', desc:'Season color, undertone, palette, metals, avoid colors — canary A/B active', file:'src/lib/ai/pipeline.ts', hasCanary:true },
+  'ai:skin_vision': { type:'ai', icon:'🔬', order:4, label:'Skin Vision', name:'Skin Vision', model:'gpt-4o-mini', desc:'Skin type classification and zone-by-zone observations', file:'src/lib/ai/pipeline.ts' },
+  'ai:skin_routine':{ type:'ai', icon:'🧴', order:5, label:'Skin Routine', name:'Skin Routine', model:'gpt-4o-mini', desc:'AM/PM personalized skincare routine — buildSkinRoutinePrompt()', file:'src/lib/ai/pipeline.ts' },
+  'ai:features':    { type:'ai', icon:'✨', order:6, label:'Features', name:'Face Features', model:'gpt-4o-mini', desc:'Eyes, nose, lips, cheeks feature analysis — buildFeaturesPrompt()', file:'src/lib/ai/pipeline.ts' },
+  'ai:glasses':     { type:'ai', icon:'👓', order:7, label:'Glasses', name:'Glasses', model:'gpt-4o-mini', desc:'Eyeglass frame recommendations using face shape output — buildGlassesPrompt()', file:'src/lib/ai/pipeline.ts' },
+  'ai:hairstyle':   { type:'ai', icon:'💇', order:8, label:'Hairstyle', name:'Hairstyle', model:'gpt-4o-mini', desc:'Hairstyle + hair color recommendations using face shape output', file:'src/lib/ai/pipeline.ts' },
+  'ai:summary':     { type:'ai', icon:'📝', order:9, label:'Summary', name:'Summary', model:'gpt-4o-mini', desc:'Compile final narrative summary from all 8 preceding stage outputs — COMPILE_PROMPT', file:'src/lib/ai/pipeline.ts' },
+
+  // DB Tables
+  'db:profiles':         { type:'db', icon:'👤', label:'profiles', desc:'User profile metadata + is_paid flag', rls:true },
+  'db:reports':          { type:'db', icon:'📊', label:'reports', desc:'AI analysis report JSON blobs per user — main output table', rls:true },
+  'db:payments':         { type:'db', icon:'💳', label:'payments', desc:'Payment records linked to reports — Razorpay order IDs', rls:true },
+  'db:chat_messages':    { type:'db', icon:'💬', label:'chat_messages', desc:'Style chat conversation history per user and report', rls:true },
+  'db:user_style_prefs': { type:'db', icon:'🎯', label:'user_style_prefs', desc:'Personalization memory — skin concerns, style goals, preferred aesthetics', rls:true },
+  'db:generated_assets': { type:'db', icon:'🖼', label:'generated_assets', desc:'URLs for visual try-on assets: hair, glasses, makeup looks, clothing swatches', rls:true },
+  'db:plans':            { type:'db', icon:'📋', label:'plans', desc:'Subscription plan definitions: free, report (one-time), studio_pro' },
+  'db:subscriptions':    { type:'db', icon:'🔄', label:'subscriptions', desc:'Active user Studio Pro subscriptions', rls:true },
+  'db:usage_counters':   { type:'db', icon:'📈', label:'usage_counters', desc:'Per-user AI generation quota counters — reset monthly', rls:true },
+  'db:webhook_events':   { type:'db', icon:'🪝', label:'webhook_events', desc:'Idempotency log for Razorpay webhook events — dedup by event_id' },
+  'db:image_hashes':     { type:'db', icon:'#️⃣', label:'image_hashes', desc:'Perceptual hash deduplication for uploaded selfies — prevents re-analysis of same photo' },
+  'db:canary_metrics':   { type:'db', icon:'📉', label:'canary_metrics', desc:'Prompt A/B variant performance logs — wins/losses per variant ID' },
+  'db:pipeline_meta':    { type:'db', icon:'⏱', label:'pipeline_meta', desc:'Per-report pipeline timing, stage durations, and variant IDs' },
+
+  // RPCs
+  'rpc:complete_webhook_payment': { type:'rpc', icon:'🔒', label:'complete_webhook_payment', desc:'Atomic: UPDATE profiles.is_paid + reports.is_unlocked + payments.status in one transaction', security:['SECURITY DEFINER — fully atomic, cannot be partially applied'] },
+  'rpc:upsert_style_prefs':       { type:'rpc', icon:'🎯', label:'upsert_style_prefs', desc:'Personalization memory upsert — merge new style prefs with existing' },
+  'rpc:try_consume_generation':   { type:'rpc', icon:'📈', label:'try_consume_generation', desc:'Atomic quota check + increment — fails if Studio Pro monthly cap is reached' },
+  'rpc:get_studio_entitlement':   { type:'rpc', icon:'⭐', label:'get_studio_entitlement', desc:'Return tier, remaining_gens, cap, and next reset date for a user' },
+  'rpc:record_webhook_event':     { type:'rpc', icon:'📝', label:'record_webhook_event', desc:'Idempotency deduplication by Razorpay event_id — early-return if already processed' },
+  'rpc:expire_stuck_reports':     { type:'rpc', icon:'⏰', label:'expire_stuck_reports', desc:'pg_cron job — runs every 10 min to mark stuck processing reports as failed' },
+
+  // Auth clients (shown as ext nodes)
+  'auth:browser': { type:'ext', icon:'🌐', label:'createSupabaseBrowserClient()', name:'Browser Client', desc:'Client components ONLY — do not use in server context', file:'src/lib/supabase/client.ts' },
+  'auth:server':  { type:'ext', icon:'🖥', label:'createSupabaseServerClient()', name:'Server Client', desc:'Server components, Route Handlers, Server Actions — respects RLS', file:'src/lib/supabase/server.ts' },
+  'auth:admin':   { type:'ext', icon:'⚠️', label:'createSupabaseAdminClient()', name:'Admin Client (⚠️ bypasses RLS)', desc:'Webhooks and background jobs ONLY — always validate user_id ownership explicitly', file:'src/lib/supabase/server.ts', security:['Bypasses RLS — always validate user_id ownership explicitly'] },
+
+  // External Services
+  'ext:openai':      { type:'ext', icon:'🤖', label:'OpenAI', name:'OpenAI API', desc:'All AI analysis + style chat · gpt-4o (vision) + gpt-4o-mini (pipeline stages)', envVars:['OPENAI_API_KEY'] },
+  'ext:rekognition': { type:'ext', icon:'👁', label:'AWS Rekognition', name:'AWS Rekognition', desc:'Face landmark detection — Stage 1 of analysis pipeline — DetectFaces API', envVars:['AWS_ACCESS_KEY_ID','AWS_SECRET_ACCESS_KEY','AWS_REGION'] },
+  'ext:fal':         { type:'ext', icon:'✨', label:'FAL.ai', name:'FAL.ai', desc:'Hairstyle try-ons (fal-ai/image-apps-v2/hair-change) + 4 makeup looks (Flux Kontext Pro)', envVars:['FAL_KEY'] },
+  'ext:replicate':   { type:'ext', icon:'🔁', label:'Replicate', name:'Replicate', desc:'Glasses SDXL inpainting (fallback) + 12 clothing swatches Flux Kontext Pro · useFileOutput:false always', envVars:['REPLICATE_API_TOKEN'], security:['useFileOutput: false — FileOutput objects break URL validation'] },
+  'ext:razorpay':    { type:'ext', icon:'💳', label:'Razorpay', name:'Razorpay', desc:'Payment processing — one-time report unlocks + Studio Pro subscriptions', envVars:['NEXT_PUBLIC_RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET','RAZORPAY_WEBHOOK_SECRET'] },
+  'ext:supabase':    { type:'ext', icon:'🟢', label:'Supabase', name:'Supabase', desc:'PostgreSQL + Auth + Storage (selfies bucket — private, signed URLs only)', envVars:['NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY'], security:['selfies bucket MUST remain private'] },
+  'ext:amazon_pa':   { type:'ext', icon:'🛒', label:'Amazon PA-API', name:'Amazon PA-API', desc:'Affiliate product recommendations for skincare and accessories', envVars:['AWS_ACCESS_KEY_ID'] },
+};
+
+const EDGES = [
+  // Pages → APIs
+  { from:'page:upload',    to:'api:analyze',           label:'POST selfie to trigger analysis' },
+  { from:'page:report',    to:'api:reports:get',        label:'GET report data on load' },
+  { from:'page:report',    to:'api:payments:create',    label:'trigger checkout from paywall' },
+  { from:'page:report',    to:'api:chat',               label:'style chat messages from drawer' },
+  { from:'page:dashboard', to:'api:reports:get',        label:'list user reports' },
+  { from:'page:admin',     to:'api:admin:canary',       label:'fetch canary stats' },
+  { from:'page:share',     to:'api:og:token',           label:'OG image for share link' },
+
+  // APIs → DB
+  { from:'api:analyze',          to:'db:reports',          label:'INSERT full report JSON' },
+  { from:'api:analyze',          to:'db:profiles',         label:'quota check + update' },
+  { from:'api:analyze',          to:'db:image_hashes',     label:'perceptual hash dedup' },
+  { from:'api:analyze',          to:'db:pipeline_meta',    label:'INSERT stage timing' },
+  { from:'api:chat',             to:'db:chat_messages',    label:'INSERT + SELECT history' },
+  { from:'api:chat',             to:'db:reports',          label:'SELECT report for context' },
+  { from:'api:reports:get',      to:'db:reports',          label:'SELECT report' },
+  { from:'api:reports:get',      to:'db:profiles',         label:'check is_paid flag' },
+  { from:'api:payments:create',  to:'db:payments',         label:'INSERT payment record (pending)' },
+  { from:'api:payments:verify',  to:'db:payments',         label:'READ payment for sig check' },
+  { from:'api:webhooks:razorpay',to:'rpc:record_webhook_event',    label:'idempotency guard' },
+  { from:'api:webhooks:razorpay',to:'rpc:complete_webhook_payment', label:'atomic unlock' },
+  { from:'api:internal:visuals', to:'db:generated_assets', label:'UPDATE with result URLs' },
+  { from:'api:internal:visuals', to:'rpc:try_consume_generation',  label:'quota check + increment' },
+  { from:'api:admin:canary',     to:'db:canary_metrics',   label:'SELECT variant stats' },
+  { from:'api:og:token',         to:'db:reports',          label:'READ report for OG image' },
+  { from:'api:capsule',          to:'db:user_style_prefs', label:'SELECT style prefs' },
+
+  // APIs → External services
+  { from:'api:analyze',          to:'ext:openai',       label:'8× gpt-4o-mini calls (stages 2–9)' },
+  { from:'api:analyze',          to:'ext:rekognition',  label:'DetectFaces (stage 1)' },
+  { from:'api:analyze',          to:'ext:supabase',     label:'store report + selfie upload' },
+  { from:'api:chat',             to:'ext:openai',       label:'streaming chat completion' },
+  { from:'api:payments:create',  to:'ext:razorpay',     label:'create order / subscription' },
+  { from:'api:webhooks:razorpay',to:'ext:razorpay',     label:'verify HMAC-SHA256 webhook' },
+  { from:'api:internal:visuals', to:'ext:fal',          label:'hair try-ons + makeup looks' },
+  { from:'api:internal:visuals', to:'ext:replicate',    label:'glasses inpainting + clothing swatches' },
+  { from:'api:capsule',          to:'ext:openai',       label:'wardrobe capsule generation' },
+
+  // API chain
+  { from:'api:analyze', to:'api:internal:visuals', label:'fire-and-forget after pipeline completes' },
+
+  // AI Stages → External
+  { from:'ai:rekognition', to:'ext:rekognition', label:'DetectFaces API call' },
+  { from:'ai:face_shape',  to:'ext:openai',      label:'gpt-4o-mini prompt' },
+  { from:'ai:color',       to:'ext:openai',      label:'gpt-4o-mini + canary A/B' },
+  { from:'ai:skin_vision', to:'ext:openai',      label:'gpt-4o-mini prompt' },
+  { from:'ai:skin_routine',to:'ext:openai',      label:'gpt-4o-mini prompt' },
+  { from:'ai:features',    to:'ext:openai',      label:'gpt-4o-mini prompt' },
+  { from:'ai:glasses',     to:'ext:openai',      label:'gpt-4o-mini prompt' },
+  { from:'ai:hairstyle',   to:'ext:openai',      label:'gpt-4o-mini prompt' },
+  { from:'ai:summary',     to:'ext:openai',      label:'gpt-4o-mini compile' },
+
+  // RPCs → DB
+  { from:'rpc:complete_webhook_payment', to:'db:profiles',         label:'UPDATE is_paid' },
+  { from:'rpc:complete_webhook_payment', to:'db:reports',          label:'UPDATE is_unlocked' },
+  { from:'rpc:complete_webhook_payment', to:'db:payments',         label:'UPDATE status → captured' },
+  { from:'rpc:upsert_style_prefs',       to:'db:user_style_prefs', label:'UPSERT style prefs' },
+  { from:'rpc:try_consume_generation',   to:'db:usage_counters',   label:'atomic increment' },
+  { from:'rpc:get_studio_entitlement',   to:'db:plans',            label:'SELECT plan' },
+  { from:'rpc:get_studio_entitlement',   to:'db:subscriptions',    label:'SELECT active subscription' },
+  { from:'rpc:get_studio_entitlement',   to:'db:usage_counters',   label:'SELECT current usage' },
+  { from:'rpc:record_webhook_event',     to:'db:webhook_events',   label:'INSERT event for dedup' },
+  { from:'rpc:expire_stuck_reports',     to:'db:reports',          label:'UPDATE stuck → failed' },
+
+  // Auth clients → Supabase
+  { from:'auth:browser', to:'ext:supabase', label:'client-side auth + anon queries' },
+  { from:'auth:server',  to:'ext:supabase', label:'server queries respecting RLS' },
+  { from:'auth:admin',   to:'ext:supabase', label:'service role — bypasses RLS' },
+];
+
+// Journey definitions for the Trace feature
+const JOURNEYS = {
+  'api:analyze': {
+    title:'🧠 Analysis Request Journey',
+    steps:[
+      { type:'request', actor:'Client → /upload', action:'POST /api/analyze with selfie file + valid session token' },
+      { type:'guard',   actor:'Middleware', action:'Rate limit check (8 req/60s per IP) + Supabase session validation' },
+      { type:'process', actor:'Route Handler', action:'compressForAI() — resize selfie to 512px max, base64 encode for API' },
+      { type:'ai',      actor:'Stage 1 · AWS Rekognition', action:'detectFaceDetails() — extract BoundingBox, Landmarks, Confidence from selfie' },
+      { type:'ai',      actor:'Stage 2 · gpt-4o-mini', action:'Face shape classification → Oval/Round/Square/Heart/Diamond/Oblong/Triangle' },
+      { type:'ai',      actor:'Stage 3 · gpt-4o-mini (A/B)', action:'Color analysis via canary system — color_v2_dominant active, color_v1 disabled at weight 0' },
+      { type:'ai',      actor:'Stage 4 · gpt-4o-mini', action:'Skin vision — type classification + zone-by-zone observations (T-zone, cheeks, etc.)' },
+      { type:'ai',      actor:'Stage 5 · gpt-4o-mini', action:'Personalized AM/PM skincare routine via buildSkinRoutinePrompt()' },
+      { type:'ai',      actor:'Stage 6 · gpt-4o-mini', action:'Face features breakdown — eyes, nose, lips, cheeks via buildFeaturesPrompt()' },
+      { type:'ai',      actor:'Stage 7 · gpt-4o-mini', action:'Glasses frame recommendations using face shape output — buildGlassesPrompt()' },
+      { type:'ai',      actor:'Stage 8 · gpt-4o-mini', action:'Hairstyle + hair color recommendations using face shape classification' },
+      { type:'ai',      actor:'Stage 9 · gpt-4o-mini', action:'Compile narrative beauty summary from all 8 stage outputs — COMPILE_PROMPT' },
+      { type:'db',      actor:'Supabase', action:'INSERT full report JSON to reports table + write pipeline_meta timing' },
+      { type:'response',actor:'SSE Stream', action:'Progress events streamed throughout — client ProgressTracker updates in real-time' },
+      { type:'async',   actor:'Fire & Forget', action:'POST /api/internal/trigger-visuals — async visual asset generation begins independently' },
+    ]
+  },
+  'api:webhooks:razorpay': {
+    title:'💳 Payment Webhook Journey',
+    steps:[
+      { type:'request', actor:'Razorpay → Server', action:'POST payment.captured webhook event to /api/webhooks/razorpay' },
+      { type:'guard',   actor:'Route Handler', action:'HMAC-SHA256 signature verification using timingSafeEqual — never === comparison' },
+      { type:'db',      actor:'RPC: record_webhook_event()', action:'Insert event_id into webhook_events — if already exists, return 200 immediately (idempotent)' },
+      { type:'db',      actor:'RPC: complete_webhook_payment()', action:'Single atomic transaction: UPDATE profiles.is_paid, reports.is_unlocked, payments.status=captured' },
+      { type:'response',actor:'Response → Razorpay', action:'Return 200 OK within Razorpay 5s timeout — failure triggers retry' },
+      { type:'process', actor:'Client Polling', action:'Client next report fetch sees is_paid=true → paywall disappears → full report shown' },
+    ]
+  },
+  'api:chat': {
+    title:'💬 Style Chat Journey',
+    steps:[
+      { type:'request', actor:'StyleChatDrawer', action:'POST /api/chat with report context + user message text' },
+      { type:'guard',   actor:'Middleware', action:'Rate limit (30 req/60s per IP) + session auth validation' },
+      { type:'db',      actor:'Route Handler', action:'SELECT report + user_style_prefs from Supabase for context building' },
+      { type:'ai',      actor:'OpenAI', action:'GPT-4o streaming chat completion with personalized system prompt from buildPersonalizedSystemBase()' },
+      { type:'response',actor:'SSE Stream', action:'Stream token chunks back to StyleChatDrawer for real-time rendering' },
+      { type:'db',      actor:'Supabase', action:'INSERT chat_messages record for conversation history persistence' },
+    ]
+  },
+  'api:payments:create': {
+    title:'💳 Payment Creation Journey',
+    steps:[
+      { type:'request', actor:'Paywall Component', action:'POST /api/payments/create with tier: "report" or "studio_pro"' },
+      { type:'process', actor:'Route Handler', action:'Read CF-IPCountry / X-Vercel-IP-Country header to determine INR vs USD currency' },
+      { type:'ext',     actor:'Razorpay API', action:'Create order (one-time unlock) or subscription (Studio Pro) with correct amount' },
+      { type:'db',      actor:'Supabase', action:'INSERT payments record with status: pending + razorpay_order_id' },
+      { type:'response',actor:'Response', action:'Return {order_id, amount, currency, key_id} to client component' },
+      { type:'process', actor:'Client', action:'Open Razorpay Checkout modal — user completes payment in Razorpay UI' },
+    ]
+  },
+  'api:internal:visuals': {
+    title:'🎨 Visual Generation Journey',
+    steps:[
+      { type:'request', actor:'/api/analyze', action:'Fire-and-forget POST /api/internal/trigger-visuals with report_id after pipeline completes' },
+      { type:'guard',   actor:'Route Handler', action:'Verify INTERNAL_API_SECRET header — must be ≥16 chars, returns 503 if absent or too short' },
+      { type:'db',      actor:'RPC: try_consume_generation()', action:'Atomic quota check + increment — returns error if Studio Pro monthly cap reached' },
+      { type:'ai',      actor:'FAL.ai', action:'Hairstyle try-ons: fal-ai/image-apps-v2/hair-change for multiple style variations' },
+      { type:'ai',      actor:'FAL.ai', action:'4 makeup looks: Flux Kontext Pro — no_makeup, natural, glam, bold variations' },
+      { type:'ai',      actor:'Replicate', action:'Glasses inpainting: SDXL — useFileOutput: false to receive plain URLs not FileOutput objects' },
+      { type:'ai',      actor:'Replicate', action:'12 clothing color swatches: Flux Kontext Pro at megapixels: 0.25 for efficiency' },
+      { type:'db',      actor:'Supabase', action:'UPDATE generated_assets row with all result URLs — client can now render virtual try-ons' },
+    ]
+  },
+};
+
+// =============================================
+// STATE
+// =============================================
+let selectedId = null;
+let activeFilters = new Set();
+let searchQuery = '';
+
+// Build adjacency maps once
+const outEdges = {}, inEdges = {};
+Object.keys(NODES).forEach(id => { outEdges[id] = []; inEdges[id] = []; });
+EDGES.forEach(e => {
+  if (outEdges[e.from]) outEdges[e.from].push(e);
+  if (inEdges[e.to])   inEdges[e.to].push(e);
+});
+
+function getConnected(id) {
+  const s = new Set();
+  (outEdges[id]||[]).forEach(e => s.add(e.to));
+  (inEdges[id] ||[]).forEach(e => s.add(e.from));
+  return s;
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function typeColor(type) {
+  return {page:'var(--violet)',api:'var(--accent)',ai:'var(--blue)',db:'var(--teal)',rpc:'var(--amber)',ext:'var(--green)'}[type]||'var(--muted)';
+}
+function typeName(type) {
+  return {page:'Page',api:'API Route',ai:'AI Stage',db:'DB Table',rpc:'RPC',ext:'Service/Client'}[type]||type;
+}
+
+function buildNodeHTML(id, node) {
+  const method = node.method ? `<span class="node-method method-${node.method}">${node.method}</span>` : '';
+  const tags = [];
+  if (node.rateLimit)   tags.push(`<span class="meta-tag info">⏱ ${node.rateLimit}</span>`);
+  if (node.maxDuration) tags.push(`<span class="meta-tag warn">⚡ ${node.maxDuration}s</span>`);
+  if (node.auth === 'admin')  tags.push(`<span class="meta-tag danger">🛡 admin</span>`);
+  if (node.auth === 'protected') tags.push(`<span class="meta-tag">🔑 auth</span>`);
+  if (node.auth === 'HMAC signature') tags.push(`<span class="meta-tag warn">🔐 HMAC</span>`);
+  if (node.auth === 'INTERNAL_API_SECRET header') tags.push(`<span class="meta-tag warn">🔒 secret</span>`);
+  if (node.rls)         tags.push(`<span class="meta-tag ok">✓ RLS</span>`);
+  if (node.hasCanary)   tags.push(`<span class="meta-tag warn">🧪 A/B</span>`);
+  if (node.hasJourney)  tags.push(`<span class="meta-tag info">▶ traceable</span>`);
+  return `<div class="node" data-type="${node.type}" data-id="${id}" onclick="selectNode('${id}')">
+    <div class="node-top">
+      <div class="node-icon">${node.icon||'•'}</div>
+      <div><div class="node-label">${method}${node.label}</div>${node.name&&node.name!==node.label?`<div style="font-size:10.5px;color:var(--muted);margin-top:1px">${node.name}</div>`:''}</div>
+    </div>
+    <div class="node-desc">${node.desc||''}</div>
+    ${tags.length?`<div class="node-meta">${tags.join('')}</div>`:''}
+  </div>`;
+}
+
+// =============================================
+// RENDER
+// =============================================
+function renderAll() {
+  // Pages
+  document.getElementById('pages-grid').innerHTML =
+    Object.entries(NODES).filter(([,n])=>n.type==='page').map(([id,n])=>buildNodeHTML(id,n)).join('');
+
+  // APIs
+  document.getElementById('api-grid').innerHTML =
+    Object.entries(NODES).filter(([,n])=>n.type==='api').map(([id,n])=>buildNodeHTML(id,n)).join('');
+
+  // Pipeline
+  const stages = Object.entries(NODES).filter(([,n])=>n.type==='ai').sort((a,b)=>a[1].order-b[1].order);
+  document.getElementById('pipeline-flow').innerHTML = stages.map(([id,n],i)=>`
+    <div class="pipeline-stage">
+      <div class="pipeline-node" data-type="ai" data-id="${id}" onclick="selectNode('${id}')">
+        <div class="stage-num">${n.order}</div>
+        <div class="stage-name">${n.label}</div>
+        <div class="stage-model">${n.model||'Rekognition'}</div>
+        ${n.hasCanary?'<span class="stage-canary">A/B Canary</span>':''}
+      </div>
+      ${i<stages.length-1?'<div class="pipeline-arrow">→</div>':''}
+    </div>`).join('');
+
+  // DB Tables (with RPC chips)
+  document.getElementById('db-grid').innerHTML = Object.entries(NODES).filter(([,n])=>n.type==='db').map(([id,n])=>{
+    const rpcs = EDGES.filter(e=>e.to===id&&NODES[e.from]?.type==='rpc');
+    const chips = rpcs.map(e=>`<span class="rpc-chip" onclick="event.stopPropagation();selectNode('${e.from}')" title="${NODES[e.from]?.desc||''}">${NODES[e.from]?.label||e.from}</span>`).join('');
+    return `<div class="node" data-type="db" data-id="${id}" onclick="selectNode('${id}')">
+      <div class="node-top"><div class="node-icon">${n.icon}</div><div><div class="node-label">${n.label}</div></div></div>
+      <div class="node-desc">${n.desc}</div>
+      <div class="node-meta">${n.rls?'<span class="meta-tag ok">✓ RLS</span>':''}</div>
+      ${chips?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${chips}</div>`:''}
+    </div>`;
+  }).join('');
+
+  // RPCs
+  document.getElementById('rpc-grid').innerHTML =
+    Object.entries(NODES).filter(([,n])=>n.type==='rpc').map(([id,n])=>buildNodeHTML(id,n)).join('');
+
+  // Auth clients
+  document.getElementById('auth-grid').innerHTML =
+    ['auth:browser','auth:server','auth:admin'].map(id=>buildNodeHTML(id,NODES[id])).join('');
+
+  // Payment flow
+  const paySteps = [
+    '1. POST /api/payments/create → Razorpay order/subscription created, INSERT to payments (status: pending)',
+    '2. Client opens Razorpay Checkout modal with returned order_id + amount',
+    '3. POST /api/payments/verify → HMAC signature verified with timingSafeEqual — does NOT set is_paid',
+    '4. POST /api/webhooks/razorpay (payment.captured) → complete_webhook_payment RPC → atomically unlocks report',
+    '⚠️  Currency from CF-IPCountry / X-Vercel-IP-Country server header ONLY — never trust client-provided currency',
+    '⚠️  PAYMENT_TEST_ALLOW_IN_PROD must be false in production environments',
+  ];
+  document.getElementById('payment-flow').innerHTML = `
+    <div class="flow-title">Critical Payment Rules</div>
+    <div class="flow-steps">${paySteps.map((s,i)=>`<div class="flow-step"><div class="flow-step-num">${i+1}</div><div>${s}</div></div>`).join('')}</div>`;
+
+  // External services (exclude auth:* nodes)
+  document.getElementById('ext-grid').innerHTML =
+    Object.entries(NODES).filter(([id,n])=>n.type==='ext'&&!id.startsWith('auth:')).map(([id,n])=>buildNodeHTML(id,n)).join('');
+
+  // Data flows
+  const flows = [
+    { title:'🧠 Analysis Flow', steps:['User uploads selfie → /upload page','POST /api/analyze → compress image to 512px','9-stage AI pipeline streams progress via SSE','blendConfidence() merges Rekognition + GPT scores','INSERT report JSON to Supabase reports table','Fire-and-forget: trigger visual asset generation'] },
+    { title:'💳 Payment & Unlock Flow', steps:['Paywall triggers /api/payments/create','Client opens Razorpay Checkout modal','/api/payments/verify — signature check only','Razorpay fires payment.captured webhook','complete_webhook_payment RPC — atomic unlock','Client next fetch sees is_paid=true → full report'] },
+    { title:'🎨 Visual Generation Flow', steps:['trigger-visuals called with report_id','INTERNAL_API_SECRET header verified','try_consume_generation() — quota gate','FAL.ai: hairstyle try-ons + makeup looks','Replicate: glasses + 12 clothing swatches','UPDATE generated_assets with all result URLs'] },
+    { title:'💬 Style Chat Flow', steps:['StyleChatDrawer sends user message + report ctx','Rate-limited: 30 req/60s — session required','SELECT report + user_style_prefs for context','GPT-4o streams response via SSE','Token chunks rendered in real-time UI','INSERT chat_messages for conversation history'] },
+  ];
+  document.getElementById('flows-grid').innerHTML = flows.map(f=>`
+    <div class="flow-item">
+      <div class="flow-title">${f.title}</div>
+      <div class="flow-steps">${f.steps.map((s,i)=>`<div class="flow-step"><div class="flow-step-num">${i+1}</div><div>${s}</div></div>`).join('')}</div>
+    </div>`).join('');
+}
+
+// =============================================
+// SELECTION
+// =============================================
+function selectNode(id) {
+  if (selectedId === id) { clearSelection(); return; }
+  selectedId = id;
+  const connected = getConnected(id);
+
+  document.querySelectorAll('[data-id]').forEach(el => {
+    const eid = el.dataset.id;
+    el.classList.remove('selected','connected','dimmed');
+    if (eid === id) {
+      el.classList.add('selected');
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    } else if (connected.has(eid)) {
+      el.classList.add('connected');
+    } else {
+      el.classList.add('dimmed');
+    }
+  });
+  openPanel(id);
+}
+
+function clearSelection() {
+  selectedId = null;
+  document.querySelectorAll('[data-id]').forEach(el => el.classList.remove('selected','connected','dimmed'));
+  closePanel();
+}
+
+// Expose for sidebar quick-nav onclick
+window.selectNode = selectNode;
+
+// =============================================
+// DETAIL PANEL
+// =============================================
+function openPanel(id) {
+  const node = NODES[id];
+  if (!node) return;
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('appLayout').classList.add('panel-open');
+
+  const color = typeColor(node.type);
+  const outs = outEdges[id] || [];
+  const ins  = inEdges[id]  || [];
+
+  const makeChips = (edges, fromSide) => edges.map(e => {
+    const nid = fromSide ? e.from : e.to;
+    const n2 = NODES[nid]; if (!n2) return '';
+    const c2 = typeColor(n2.type);
+    return `<span class="conn-chip" onclick="selectNode('${nid}')" style="border-color:${c2}30;color:${c2}">
+      ${n2.icon||''} ${n2.label}<span style="color:var(--muted);font-size:10px;margin-left:3px">↔ ${e.label}</span>
+    </span>`;
+  }).join('');
+
+  const secHTML = () => {
+    const f = [];
+    if (node.security) node.security.forEach(s=>f.push(`<div class="sec-flag">🔐 ${s}</div>`));
+    if (node.rls) f.push(`<div class="sec-flag">✅ Row-Level Security enabled</div>`);
+    return f.length ? `<div class="panel-section"><div class="panel-section-title">Security Notes</div>${f.join('')}</div>` : '';
+  };
+
+  const envHTML = () => {
+    if (!node.envVars?.length) return '';
+    return `<div class="panel-section"><div class="panel-section-title">Environment Variables</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px">${node.envVars.map(v=>`<span class="env-var">${v}</span>`).join('')}</div></div>`;
+  };
+
+  const metaHTML = () => {
+    const rows = [];
+    if (node.method)      rows.push(['Method', `<span class="node-method method-${node.method}">${node.method}</span>`]);
+    if (node.rateLimit)   rows.push(['Rate Limit', node.rateLimit]);
+    if (node.maxDuration) rows.push(['Max Duration', `${node.maxDuration}s (Vercel)`]);
+    if (node.auth)        rows.push(['Auth', node.auth]);
+    if (node.model)       rows.push(['Model', `<span class="panel-kv-val mono">${node.model}</span>`]);
+    if (node.order)       rows.push(['Pipeline Stage', `#${node.order} of 9`]);
+    if (!rows.length)     return '';
+    return `<div class="panel-section"><div class="panel-section-title">Metadata</div>
+      <div class="panel-kv">${rows.map(([k,v])=>`<div class="panel-kv-row"><span class="panel-kv-key">${k}</span><span class="panel-kv-val">${v}</span></div>`).join('')}</div></div>`;
+  };
+
+  document.getElementById('panelContent').innerHTML = `
+    <div class="panel-header">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="panel-type-badge" style="background:${color}18;color:${color};border:1px solid ${color}35">${typeName(node.type)}</span>
+          ${node.hasCanary?`<span class="panel-type-badge" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.28)">A/B Canary</span>`:''}
+          ${node.auth==='admin'?`<span class="panel-type-badge" style="background:rgba(139,92,246,0.12);color:var(--violet);border:1px solid rgba(139,92,246,0.28)">Admin Only</span>`:''}
+        </div>
+        <div class="panel-name">${node.name||node.label}</div>
+        <div class="panel-desc">${node.desc||''}</div>
+      </div>
+      <button class="panel-close" onclick="clearSelection()">✕</button>
+    </div>
+    <div class="panel-body">
+      ${node.file?`<div class="panel-section"><div class="panel-section-title">Source File</div>
+        <div class="panel-file"><span style="word-break:break-all">${node.file}</span>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('${node.file}')" title="Copy path">📋</button>
+        </div></div>`:''}
+      ${metaHTML()}
+      ${envHTML()}
+      ${secHTML()}
+      ${outs.length?`<div class="panel-section"><div class="panel-section-title">Calls / Writes To (${outs.length})</div><div class="conn-chips">${makeChips(outs,false)}</div></div>`:''}
+      ${ins.length?`<div class="panel-section"><div class="panel-section-title">Called / Read By (${ins.length})</div><div class="conn-chips">${makeChips(ins,true)}</div></div>`:''}
+      ${node.hasJourney?`<div class="panel-section"><div class="panel-section-title">Journey Tracer</div>
+        <button class="trace-btn" onclick="openJourney('${id}')">▶&nbsp; Trace Request Journey — see step-by-step flow</button>
+      </div>`:''}
+    </div>`;
+}
+
+function closePanel() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('appLayout').classList.remove('panel-open');
+}
+
+// =============================================
+// JOURNEY TRACER
+// =============================================
+const STEP_ICONS = { request:'▶', guard:'🛡', process:'⚙', ai:'🧠', db:'🗄', ext:'🌐', response:'↩', async:'⚡' };
+
+function openJourney(id) {
+  const j = JOURNEYS[id]; if (!j) return;
+  const box = document.getElementById('journeyBox');
+  box.innerHTML = `
+    <div class="journey-top">
+      <div class="journey-title">${j.title}</div>
+      <button class="journey-play-btn" onclick="playJourney()">▶ Replay Animation</button>
+      <button class="journey-close-btn" onclick="closeJourney()">✕</button>
+    </div>
+    <div class="journey-scroll">
+      <div class="journey-steps" id="journeySteps">
+        ${j.steps.map((s,i)=>`
+          <div class="journey-step" id="jstep-${i}">
+            <div class="journey-step-left">
+              <div class="step-dot step-${s.type}">${STEP_ICONS[s.type]||'•'}</div>
+              ${i<j.steps.length-1?'<div class="journey-line"></div>':''}
+            </div>
+            <div class="journey-step-right">
+              <div class="step-actor">${s.actor}</div>
+              <div class="step-action">${s.action}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('journeyOverlay').classList.add('open');
+  // Show all steps immediately on first open
+  j.steps.forEach((_,i) => setTimeout(()=>document.getElementById(`jstep-${i}`)?.classList.add('visible'), i*80));
+}
+
+function playJourney() {
+  document.querySelectorAll('.journey-step').forEach(el=>el.classList.remove('visible'));
+  document.querySelectorAll('.journey-step').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'), i*280));
+}
+window.playJourney = playJourney;
+
+function closeJourney() {
+  document.getElementById('journeyOverlay').classList.remove('open');
+}
+window.closeJourney = closeJourney;
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('journeyOverlay')) closeJourney();
+}
+window.handleOverlayClick = handleOverlayClick;
+
+window.openJourney = openJourney;
+window.clearSelection = clearSelection;
+
+// =============================================
+// SEARCH
+// =============================================
+function applySearch(q) {
+  searchQuery = q.toLowerCase().trim();
+  let count = 0;
+  document.querySelectorAll('[data-id]').forEach(el => {
+    const id = el.dataset.id, node = NODES[id]; if (!node) return;
+    const text = [node.label,node.name,node.desc,node.file,id].join(' ').toLowerCase();
+    const match = !searchQuery || text.includes(searchQuery);
+    el.classList.toggle('search-hidden', !match);
+    if (match) count++;
+  });
+  const ce = document.getElementById('searchCount');
+  ce.textContent = searchQuery ? `${count} match${count!==1?'es':''}` : '';
+}
+
+// =============================================
+// FILTER CHIPS
+// =============================================
+function applyFilters() {
+  document.querySelectorAll('[data-id]').forEach(el => {
+    const t = el.dataset.type;
+    el.classList.toggle('filter-hidden', activeFilters.size > 0 && !activeFilters.has(t));
+  });
+}
+
+// =============================================
+// SIDEBAR SCROLL
+// =============================================
+function jumpTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+window.jumpTo = jumpTo;
+
+// =============================================
+// INIT
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
+
+  // Search input
+  const inp = document.getElementById('searchInput');
+  inp.addEventListener('input', e => applySearch(e.target.value));
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); inp.focus(); inp.select(); return; }
+    if (e.key === 'Escape') {
+      if (document.getElementById('journeyOverlay').classList.contains('open')) { closeJourney(); return; }
+      if (selectedId) { clearSelection(); return; }
+      if (searchQuery) { inp.value=''; applySearch(''); }
+    }
+  });
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const type = chip.dataset.type;
+      if (activeFilters.has(type)) { activeFilters.delete(type); chip.classList.remove('active'); }
+      else { activeFilters.add(type); chip.classList.add('active'); }
+      applyFilters();
     });
-  }, { threshold: 0.2 });
+  });
 
-  sections.forEach(s => observer.observe(s));
+  // Click on canvas background → deselect
+  document.getElementById('canvas').addEventListener('click', e => {
+    if (!e.target.closest('[data-id]') && !e.target.closest('.rpc-chip')) clearSelection();
+  });
+
+  // Sidebar section highlighting via IntersectionObserver
+  const sectionIds = ['sec-pages','sec-api','sec-ai','sec-db','sec-rpc','sec-auth','sec-payments','sec-ext','sec-flows'];
+  const links = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const idx = sectionIds.indexOf(entry.target.id);
+      if (idx < 0) return;
+      links.forEach(l => l.classList.remove('active'));
+      links[idx]?.classList.add('active');
+    });
+  }, { rootMargin:`-${64}px 0px -55% 0px`, threshold: 0 });
+  sectionIds.forEach(id => { const el = document.getElementById(id); if (el) obs.observe(el); });
+});
 </script>
-
 </body>
 </html>
