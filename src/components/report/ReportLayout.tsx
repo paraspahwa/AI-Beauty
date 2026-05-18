@@ -4,7 +4,7 @@ import Image from "next/image";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Share2, Sparkles, Lock, Loader2, X } from "lucide-react";
+import { Download, Share2, Sparkles, Lock, Loader2, Wand2, BarChart2, X } from "lucide-react";
 import { FaceFeaturesCard } from "./FaceFeaturesCard";
 import { AIBeautyStudio } from "./AIBeautyStudio";
 import { SkinAnalysisCard } from "./SkinAnalysisCard";
@@ -24,14 +24,13 @@ import type { CompiledReport } from "@/types/report";
 import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
 
 const TABS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "face",    label: "Face" },
-  { value: "skin",    label: "Skin" },
-  { value: "glasses", label: "Spectacles" },
-  { value: "hair",    label: "Hairstyle" },
-  { value: "studio",  label: "AI Studio" },
-  { value: "shop",       label: "Shop" },
-  { value: "jewellery",  label: "Jewellery" },
-  ...(publicEnv.flags.doAvoidModule ? [{ value: "style", label: "Style Guide" }] : []),
+  { value: "face",      label: "Face" },
+  { value: "skin",      label: "Skin" },
+  { value: "hair",      label: "Hairstyle" },
+  { value: "glasses",   label: "Spectacles" },
+  ...(publicEnv.flags.doAvoidModule ? [{ value: "style", label: "Do & Avoid Guide" }] : []),
+  { value: "shop",      label: "Shop" },
+  { value: "jewellery", label: "Jewellery" },
 ];
 
 interface Props {
@@ -57,8 +56,12 @@ export function ReportLayout({
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
   const [hairstyleBestLoading, setHairstyleBestLoading] = React.useState(false);
+  const [paymentInitiated, setPaymentInitiated] = React.useState(false);
+  const [paywallOpen, setPaywallOpen] = React.useState(false);
+  const [activeMode, setActiveMode] = React.useState<"report" | "studio">(initialTab === "studio" ? "studio" : "report");
   const hairstyleBestRequested = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
+  const isStudioPro = report.studioEntitlement?.tier === "studio_pro";
   const isProcessing = report.status === "processing" || report.status === "pending";
 
   const refresh = React.useCallback(async () => {
@@ -311,7 +314,12 @@ export function ReportLayout({
               <Download className="h-4 w-4" /> Download PDF
             </a>
           ) : !isReadOnly && (
-            <Paywall reportId={report.id} onUnlocked={refresh} />
+            <Paywall
+              reportId={report.id}
+              externalOpen={paywallOpen}
+              onExternalOpenChange={setPaywallOpen}
+              onUnlocked={() => { setPaymentInitiated(true); setPaywallOpen(false); refresh(); }}
+            />
           )}
         </motion.div>
       </motion.header>
@@ -321,6 +329,48 @@ export function ReportLayout({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
+        {/* Payment-initiated bridge state — shown between Razorpay success and webhook confirmation */}
+        {paymentInitiated && !isPaid && (
+          <div className="mb-8 flex flex-col items-center justify-center gap-3 rounded-2xl p-6 text-center" style={{ background: "rgba(236,72,153,0.06)", border: "1px solid rgba(236,72,153,0.2)" }}>
+            <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#EC4899" }} />
+            <p className="text-base font-semibold" style={{ color: "#EC4899" }}>Payment received — unlocking your report…</p>
+            <p className="text-sm" style={{ color: "rgba(0,0,0,0.5)" }}>This takes 5–15 seconds. Hang tight!</p>
+          </div>
+        )}
+
+        {/* ── Top-level mode switcher ── */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="inline-flex rounded-2xl p-1 gap-1" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}>
+            <button
+              onClick={() => setActiveMode("report")}
+              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+              style={activeMode === "report"
+                ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff", boxShadow: "0 2px 8px rgba(139,92,246,0.25)" }
+                : { color: "#5C4232" }}
+            >
+              <BarChart2 className="h-4 w-4" />
+              Analysis Report
+            </button>
+            <button
+              onClick={() => setActiveMode("studio")}
+              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+              style={activeMode === "studio"
+                ? { background: "linear-gradient(135deg,#8B5CF6,#6D28D9)", color: "#fff", boxShadow: "0 2px 8px rgba(109,40,217,0.25)" }
+                : { color: "#5C4232" }}
+            >
+              <Wand2 className="h-4 w-4" />
+              AI Studio
+              {isStudioPro ? (
+                <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.25)" : "rgba(139,92,246,0.15)", color: activeMode === "studio" ? "#fff" : "#8B5CF6" }}>PRO</span>
+              ) : (
+                <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.18)" : "rgba(201,149,107,0.15)", color: activeMode === "studio" ? "rgba(255,255,255,0.85)" : "#C8A96E" }}>↑ Try</span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Analysis Report Mode ── */}
+        {activeMode === "report" && (
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <div className="relative mb-8">
             <div className="overflow-x-auto -mx-4 sm:mx-0 [&::-webkit-scrollbar]:hidden">
@@ -331,8 +381,7 @@ export function ReportLayout({
             >
               {TABS.map((t) => {
                 const isLocked =
-                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "studio" || t.value === "shop" || t.value === "jewellery");
-                // "style" tab is always free
+                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "shop" || t.value === "jewellery" || t.value === "style");
 
                 return (
                   <TabsTrigger
@@ -380,27 +429,6 @@ export function ReportLayout({
                   ) : (
                     <Empty />
                   )}
-                </motion.div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="studio" className="mt-0">
-              {activeTab === "studio" && (
-                <motion.div
-                  key="studio"
-                  variants={tabContent}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                >
-                  <AIBeautyStudio
-                    reportId={report.id}
-                    photoUrl={report.imageUrl}
-                    isPaid={isPaid}
-                    studioEntitlement={report.studioEntitlement}
-                    colorAnalysis={report.colorAnalysis}
-                    initialSourceAssetId={initialStudioSourceAssetId}
-                  />
                 </motion.div>
               )}
             </TabsContent>
@@ -591,10 +619,55 @@ export function ReportLayout({
             )}
           </AnimatePresence>
         </Tabs>
+        )}
+
+        {/* ── AI Studio Mode ── */}
+        {activeMode === "studio" && (
+          <motion.div
+            key="studio-mode"
+            variants={tabContent}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <AIBeautyStudio
+              reportId={report.id}
+              photoUrl={report.imageUrl}
+              isPaid={isPaid}
+              studioEntitlement={report.studioEntitlement}
+              colorAnalysis={report.colorAnalysis}
+              initialSourceAssetId={initialStudioSourceAssetId}
+            />
+          </motion.div>
+        )}
+
       </motion.div>
 
-      {/* Style Consultant Chat — only for the authenticated owner */}
-      {!isReadOnly && <StyleChatDrawer reportId={report.id} report={report} />}
+      {/* Sticky upgrade bar — shown to unpaid owners only */}
+      {!isReadOnly && !isPaid && !paymentInitiated && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-4 px-4 py-3 sm:px-6"
+          style={{
+            background: "linear-gradient(90deg,#EC4899,#8B5CF6)",
+            boxShadow: "0 -4px 24px rgba(139,92,246,0.25)",
+          }}
+        >
+          <p className="text-sm font-medium text-white">
+            <span className="font-bold">Unlock your complete analysis</span>
+            <span className="hidden sm:inline"> — skin routine, hairstyle guide, AI try-ons &amp; more</span>
+          </p>
+          <button
+            onClick={() => setPaywallOpen(true)}
+            className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-bold transition-opacity hover:opacity-90"
+            style={{ color: "#EC4899" }}
+          >
+            Unlock now →
+          </button>
+        </div>
+      )}
+
+      {/* Style Consultant Chat — only for the authenticated owner (paid, to avoid FAB + sticky bar conflict) */}
+      {!isReadOnly && isPaid && <StyleChatDrawer reportId={report.id} report={report} />}
     </div>
     </div>
   );

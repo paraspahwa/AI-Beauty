@@ -404,16 +404,17 @@ export function StyleChatDrawer({ reportId, report }: Props) {
       {/* FAB trigger */}
       <motion.button
         onClick={() => setOpen(true)}
-        aria-label="Open style consultant chat"
+        aria-label="Chat with your Style Consultant"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full px-4 shadow-lg h-14"
         style={{
           background: "linear-gradient(135deg,#EC4899,#8B5CF6)",
           boxShadow: "0 4px 24px rgba(201,149,107,0.45)",
         }}
       >
-        <MessageCircle className="h-6 w-6 text-obsidian" />
+        <MessageCircle className="h-5 w-5 text-white shrink-0" />
+        <span className="text-sm font-semibold text-white hidden sm:inline">Style Consultant</span>
       </motion.button>
 
       {/* Drawer */}
@@ -476,10 +477,10 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: "#F0E8D8" }}>
-                        Style Consultant
+                        Your Style Consultant
                       </p>
-                      <p className="text-xs" style={{ color: "rgba(131,24,67,0.55)" }}>
-                        Knows your full style report
+                      <p className="text-xs" style={{ color: "rgba(240,232,216,0.45)" }}>
+                        Knows your full report · ask anything
                       </p>
                     </div>
                   </div>

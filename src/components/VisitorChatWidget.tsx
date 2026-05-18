@@ -124,8 +124,8 @@ export function VisitorChatWidget() {
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-ink leading-none">Aria</p>
-                  <p className="text-xs text-ink-stone mt-0.5">Renovaara style assistant</p>
+                  <p className="text-sm font-semibold text-ink leading-none">Aria — Pre-sales Advisor</p>
+                  <p className="text-xs text-ink-stone mt-0.5">Questions before you sign up? Ask away</p>
                 </div>
                 <button
                   onClick={() => setOpen(false)}

@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SampleShowcase } from "@/components/home/SampleShowcase";
-import { DoAvoidEducationStrip } from "./DoAvoidEducationStrip";
 import { VisitorChatWidget } from "@/components/VisitorChatWidget";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
 import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
@@ -172,12 +171,12 @@ const PLANS: {
     items: ["Face shape overview", "Starter style summary", "Shareable report link"],
   },
   {
-    name: "Full Report",
+    name: "Complete Analysis",
     price: "₹299",
     originalPrice: "₹599",
     note: "One-time payment",
-    cta: "Get my report",
-    href: "/upload",
+    cta: "Buy Complete Analysis — ₹299",
+    href: "/upload?intent=purchase",
     featured: true,
     items: [
       "Everything in Free",
@@ -193,8 +192,8 @@ const PLANS: {
     name: "Studio Pro",
     price: "₹999/mo",
     note: "Cancel anytime",
-    cta: "Start Studio Pro",
-    href: "/upload",
+    cta: "Start Studio Pro — ₹999/mo",
+    href: "/upload?intent=studio",
     featured: false,
     items: [
       "Everything in Full Report",
@@ -252,6 +251,26 @@ export default function HomePage() {
       <RevealSection>
         <StatsCounters items={STATS} />
       </RevealSection>
+
+      <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
+        <RevealSection>
+          <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl text-ink">How it works</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Four quick steps from upload to confidence.</p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((step, index) => (
+              <article key={step.title} className="card-soft">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/15 text-xs font-semibold text-terracotta">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-4 text-lg text-ink">{step.title}</h3>
+                <p className="mt-2 text-sm text-ink-stone">{step.description}</p>
+              </article>
+            ))}
+          </div>
+        </RevealSection>
+      </section>
 
       <section id="features" className="container max-w-6xl py-16 scroll-mt-20">
         <RevealSection>
@@ -398,9 +417,6 @@ export default function HomePage() {
         </RevealSection>
       </section>
 
-      {/* MVP Do vs Avoid education strip */}
-      <DoAvoidEducationStrip />
-
       {/* AI Makeup Studio spotlight — full-bleed with makeup flat lay background */}
       <section className="relative isolate overflow-hidden py-24 sm:py-32">
         {/* Background image */}
@@ -442,26 +458,6 @@ export default function HomePage() {
             </div>
           </RevealSection>
         </div>
-      </section>
-
-      <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
-        <RevealSection>
-          <div className="text-center">
-            <h2 className="text-3xl sm:text-4xl text-ink">How it works</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Four quick steps from upload to confidence.</p>
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, index) => (
-              <article key={step.title} className="card-soft">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/15 text-xs font-semibold text-terracotta">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3 className="mt-4 text-lg text-ink">{step.title}</h3>
-                <p className="mt-2 text-sm text-ink-stone">{step.description}</p>
-              </article>
-            ))}
-          </div>
-        </RevealSection>
       </section>
 
       {/* Cinematic ad video — pre-pricing conversion moment */}

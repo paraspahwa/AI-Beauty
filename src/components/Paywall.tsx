@@ -57,6 +57,9 @@ export interface PaywallProps {
   reportId: string;
   onUnlocked?: () => void;
   onSubscribed?: () => void;
+  /** When true, forces the dialog open (e.g. from a sticky upgrade bar). */
+  externalOpen?: boolean;
+  onExternalOpenChange?: (v: boolean) => void;
 }
 
 // ── Plan perk lists ───────────────────────────────────────────────────────────
@@ -92,12 +95,22 @@ function fmtINR(n: number) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
+export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onExternalOpenChange }: PaywallProps) {
   const [open, setOpen]       = React.useState(false);
   const [plan, setPlan]       = React.useState<"report" | "studio_pro">("report");
   const [loading, setLoading] = React.useState(false);
   const [error, setError]     = React.useState<string | null>(null);
   const [currency, setCurrency] = React.useState<SupportedCurrency>("INR");
+
+  // Sync external open state
+  React.useEffect(() => {
+    if (externalOpen !== undefined) setOpen(externalOpen);
+  }, [externalOpen]);
+
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    onExternalOpenChange?.(v);
+  };
 
   React.useEffect(() => { setCurrency(detectCurrency()); }, []);
 
@@ -251,7 +264,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button variant="accent" size="lg" className="group relative overflow-hidden">
             <motion.div
@@ -265,7 +278,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
             />
             <span className="relative flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Unlock Full Report — {reportLabel}
+              Unlock Complete Analysis — {reportLabel}
               <Zap className="h-4 w-4 animate-pulse-slow" />
             </span>
           </Button>
@@ -312,9 +325,12 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                 <motion.div variants={fadeUp} className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                   {/* ── Card 1 · One-Time Report ── */}
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setPlan("report")}
-                    className="relative rounded-2xl p-4 text-left transition-all focus:outline-none"
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("report"); } }}
+                    className="relative rounded-2xl p-4 text-left transition-all focus:outline-none cursor-pointer"
                     style={{
                       background: plan === "report" ? "rgba(236,72,153,0.12)" : "rgba(131,24,67,0.08)",
                       border:     plan === "report" ? "2px solid rgba(236,72,153,0.45)" : "2px solid rgba(131,24,67,0.16)",
@@ -352,12 +368,25 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                         </li>
                       ))}
                     </ul>
-                  </button>
+                    {/* ── Inline CTA ── */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPlan("report"); startReportCheckout(); }}
+                      disabled={loading}
+                      className="mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      style={{ background: "linear-gradient(135deg,#EC4899,#be185d)" }}
+                    >
+                      {loading && plan === "report" ? "Starting checkout…" : `Unlock This Report — ${reportLabel}`}
+                    </button>
+                  </div>
 
                   {/* ── Card 2 · Studio Pro ── */}
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setPlan("studio_pro")}
-                    className="relative rounded-2xl p-4 text-left transition-all focus:outline-none"
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("studio_pro"); } }}
+                    className="relative rounded-2xl p-4 text-left transition-all focus:outline-none cursor-pointer"
                     style={{
                       background: plan === "studio_pro" ? "rgba(123,110,158,0.14)" : "rgba(131,24,67,0.08)",
                       border:     plan === "studio_pro" ? "2px solid rgba(139,92,246,0.5)" : "2px solid rgba(131,24,67,0.16)",
@@ -403,7 +432,17 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                         </li>
                       ))}
                     </ul>
-                  </button>
+                    {/* ── Inline CTA ── */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPlan("studio_pro"); startProCheckout(); }}
+                      disabled={loading}
+                      className="mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      style={{ background: "linear-gradient(135deg,#7B6E9E,#9B7CB6)" }}
+                    >
+                      {loading && plan === "studio_pro" ? "Starting checkout…" : `Start Studio Pro — ${proLabel}/mo`}
+                    </button>
+                  </div>
                 </motion.div>
 
                 {/* Error */}
@@ -415,45 +454,6 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                     style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}
                   >
                     {error}
-                  </motion.p>
-                )}
-
-                {/* CTA */}
-                <motion.div variants={fadeUp} className="mt-4">
-                  <Button
-                    variant="accent"
-                    size="lg"
-                    className="w-full text-base h-14 shadow-premium relative overflow-hidden"
-                    onClick={handleCTA}
-                    disabled={loading}
-                    style={plan === "studio_pro"
-                      ? { background: "linear-gradient(135deg,#7B6E9E,#9B7CB6)", color: "#fff", border: "none" }
-                      : undefined}
-                  >
-                    <span className="relative flex items-center justify-center gap-2">
-                      {loading ? (
-                        <>
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          >
-                            <Sparkles className="h-4 w-4" />
-                          </motion.div>
-                          Starting checkout…
-                        </>
-                      ) : plan === "report" ? (
-                        <><Sparkles className="h-4 w-4" />Unlock Report — {reportLabel}</>
-                      ) : (
-                        <><Crown className="h-4 w-4" />Start Studio Pro — {proLabel}/mo</>
-                      )}
-                    </span>
-                  </Button>
-                </motion.div>
-
-                {/* Upgrade hint */}
-                {plan === "report" && (
-                  <motion.p variants={fadeUp} className="mt-2 text-center text-[11px]" style={{ color: "#4A3A2A" }}>
-                    Upgrade to Studio Pro anytime — your {reportLabel} report is always yours.
                   </motion.p>
                 )}
 
