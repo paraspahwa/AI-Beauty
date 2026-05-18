@@ -43,9 +43,9 @@ export const metadata: Metadata = {
       "Upload a selfie. Try on clothes & makeup. Get your personalised spectacles, hairstyle & skin blueprint — all powered by AI.",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "/1779024315.png",
+        width: 1456,
+        height: 816,
         alt: "Renovaara — AI Personal Stylist",
       },
     ],
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: "Renovaara — Your AI Personal Stylist",
     description:
       "Virtual try-on, makeup try-on, spectacles, hairstyle & skin analysis — all from one selfie.",
-    images: ["/og-image.png"],
+    images: ["/1779024315.png"],
   },
   robots: {
     index: true,
@@ -111,9 +111,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
 <body className="min-h-screen flex flex-col bg-obsidian text-ink antialiased overflow-x-hidden">
-
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-ink focus:font-semibold focus:shadow-lg"
+        >
+          Skip to content
+        </a>
         <Navbar />
-        <div className="flex-1">{children}</div>
+        <div id="main-content" className="flex-1">{children}</div>
         <Footer />
       </body>
     </html>

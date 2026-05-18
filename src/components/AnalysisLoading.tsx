@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Sparkles, Palette, Glasses, FileText, Check } from "lucide-react";
+import { Camera, Sparkles, Palette, Glasses, FileText, Check, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/animations";
 
@@ -63,10 +63,7 @@ function formatRemaining(seconds: number): string {
 
 export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSeconds = 0 }: AnalysisLoadingProps) {
   const currentFact = FUN_FACTS[currentStep % FUN_FACTS.length];
-  const countdownText =
-    remainingSeconds > 0
-      ? `${formatRemaining(remainingSeconds)} remaining`
-      : "Finalizing your report...";
+  const showSpinner = remainingSeconds === 0;
 
   return (
     <motion.div
@@ -85,12 +82,19 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
         >
           {/* Header */}
           <motion.div variants={fadeUp} className="mb-12">
-            <h2 className="text-3xl sm:text-4xl text-ink mb-3">
+            <h2 className="text-3xl sm:text-4xl text-white mb-3">
               Analyzing your beauty profile
             </h2>
-            <p className="text-ink-stone">
-              {countdownText}
-            </p>
+            {showSpinner ? (
+              <p className="flex items-center justify-center gap-2 text-white/60">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Almost there — compiling your report…
+              </p>
+            ) : (
+              <p className="text-white/60">
+                {formatRemaining(remainingSeconds)} remaining
+              </p>
+            )}
           </motion.div>
 
           {/* Progress steps */}
@@ -114,13 +118,15 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
                   }`}
                   style={{
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))"
+                      ? "linear-gradient(145deg, rgba(236,72,153,0.18), rgba(139,92,246,0.14))"
                       : isComplete
-                      ? "rgba(123,110,158,0.08)"
-                      : "rgba(255,247,251,0.85)",
+                      ? "rgba(139,92,246,0.15)"
+                      : "rgba(255,255,255,0.06)",
                     border: isActive
                       ? "1px solid rgba(236,72,153,0.3)"
-                      : "1px solid rgba(131,24,67,0.10)",
+                      : isComplete
+                      ? "1px solid rgba(139,92,246,0.20)"
+                      : "1px solid rgba(255,255,255,0.08)",
                     boxShadow: isActive ? "0 10px 24px rgba(131,24,67,0.16)" : "none",
                   }}
                 >
@@ -154,12 +160,12 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
 
                   {/* Label */}
                   <div className="flex-1 text-left">
-                    <p className="font-medium text-ink">{step.label}</p>
+                    <p className="font-medium text-white">{step.label}</p>
                     {isActive && (
                       <motion.p
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-sm text-ink-stone"
+                        className="text-sm text-white/70"
                       >
                         {step.description}
                       </motion.p>
@@ -179,7 +185,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
           <motion.div
             variants={scaleIn}
             className="rounded-2xl p-6 backdrop-blur-sm"
-            style={{ background: "rgba(255,247,251,0.9)", border: "1px solid rgba(131,24,67,0.14)" }}
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
           >
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#EC4899" }}>
               Did you know?
@@ -189,7 +195,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-sm text-ink-stone leading-relaxed"
+              className="text-sm text-white/60 leading-relaxed"
             >
               {currentFact}
             </motion.p>

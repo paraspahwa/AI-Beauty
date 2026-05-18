@@ -255,7 +255,7 @@ Renovaara — know yourself first.
 ### Seedance Prompt 1 — "One Selfie" (Problem → Solution)
 
 ```
-Cinematic 15-second vertical 9:16 short video, soft luxury aesthetic. A woman's hand picks up a glowing smartphone in warm morning light. She raises it to take a selfie. The screen transitions to a beautiful app interface with swirling pink and violet particles forming a glowing face outline. Four elegant white cards appear one by one with spring animations — Face Shape, Color Season palette swatches in terracotta and rust, a Skin Routine card, a Style Guide card. Each card glows softly. The final shot shows the phone screen with a complete beauty report, pink and violet gradient glow. End on a full-screen pink gradient with the Renovaara logo in elegant serif letters and a violet pill button. Warm bokeh background throughout. Smooth dissolve transitions.
+Cinematic short video, soft luxury aesthetic. A smartphone lies screen-up on a warm white surface surrounded by beauty objects — terracotta and rust colour swatches fanned out, gold jewellery, soft blush fabric. Warm golden-hour side lighting falls across the flat lay. Pink and violet gradient light washes slowly across the composition. The phone screen glows and transitions to a beauty app — four elegant white cards appear one by one: Face Shape, Colour Season palette swatches, Skin Routine steps, Style Guide silhouettes. Each card glows with soft pink light. Camera drifts on a slow smooth parallax over the objects. Final shot: the phone screen shows a complete glowing beauty report. Closes on soft pink gradient, Renovaara serif logo, violet pill button. Warm bokeh throughout.
 ```
 
 ---
@@ -263,7 +263,7 @@ Cinematic 15-second vertical 9:16 short video, soft luxury aesthetic. A woman's 
 ### Seedance Prompt 2 — "Stop Guessing" (Before / After)
 
 ```
-Cinematic 15-second vertical 9:16 short video. Screen split down the center. Left half: cool, desaturated tones — cluttered beauty products, scattered cosmetics, chaotic shelves. Right half: warm soft pink — a clean smartphone showing a sleek beauty app with organized color swatches and a glowing report. Bold white serif text appears at the center split: "STOP GUESSING." The split dissolves. Full warm pink screen. A smartphone displays a scrolling beauty report with sections for Face Shape, Color Season, Skin Routine. The camera slowly pushes toward the screen. Text overlay in Raleway sans-serif: "One selfie. Your complete beauty blueprint." Closes on Renovaara logo centered on a soft pink gradient. Violet CTA pill button pulses once. Fade to white.
+Cinematic short video. Two flat lay compositions divide the frame. Left: cluttered mismatched beauty products — foundations, blushes, lipsticks on a grey surface, cool desaturated tones. Right: a clean warm arrangement — a glowing smartphone showing a Renovaara report, terracotta swatches fanned neatly, gold jewellery, blush fabric — warm pink side lighting. The divide dissolves slowly. The warm flat lay fills the entire frame. Camera drifts on a slow smooth parallax. The smartphone screen scrolls through a glowing beauty report — Face Shape, Colour Season, Skin Routine sections lighting up one by one. Pink and violet gradient light washes across the scene. Closes on the phone screen glowing on a warm pink surface. Renovaara logo fades in. Violet pill button. Fade to white.
 ```
 
 ---
@@ -271,7 +271,7 @@ Cinematic 15-second vertical 9:16 short video. Screen split down the center. Lef
 ### Seedance Prompt 3 — "60 Seconds" (Speed)
 
 ```
-Cinematic 15-second vertical 9:16 short video, energetic and premium. A large bold number "60" appears on a soft pink background in elegant serif font, then fades. A hand lifts a smartphone to take a selfie. Fast-cut montage of six glowing white UI cards sliding in: an oval face silhouette illustration, a warm terracotta color swatch row, an AM skincare routine list, a PM routine list, a virtual makeup preview with a warm lip color, a style guide with illustrated silhouettes. Each card appears for less than one second. All cards collapse into one glowing phone screen. Camera pulls back slowly. Text appears word by word: "Everything. Personalized. Free." Closes on Renovaara logo and violet pill CTA button on soft pink. Subtle sparkle particles. Fade to white.
+Cinematic short video, energetic and premium. A large bold countdown number "60" glows on a soft pink background in elegant serif, then dissolves. A smartphone on a warm white surface — the screen ignites with swirling pink and violet particles. Fast-cut montage of six bright white UI cards entering frame with crisp slide-in motion: a face silhouette illustration, a terracotta colour swatch row, an AM skincare list, a PM skincare list, a warm berry makeup preview on screen, a style guide with clothing silhouettes. Each card fills the frame for under one second. All cards collapse into one glowing smartphone screen on its surface. Camera pulls back slowly. Three words appear one at a time: "Everything. Personalized. Free." Closes on soft pink gradient, Renovaara logo, violet pill button. Sparkle particles. Fade to white.
 ```
 
 ---
@@ -279,7 +279,7 @@ Cinematic 15-second vertical 9:16 short video, energetic and premium. A large bo
 ### Seedance Prompt 4 — "Undertone" (Education)
 
 ```
-Cinematic 15-second vertical 9:16 short video, warm and intimate. Text appears on soft pink background in bold serif: "Do you know your colour season?" Screen splits — left half shows cool-toned accessories: silver jewellery, lavender fabric swatches. Right half shows warm-toned items: gold jewellery, terracotta fabric swatches. Soft animated checkmark appears on the right. The split dissolves to a smartphone screen showing a Renovaara Color Season card: "Warm Autumn — golden, peachy, earthy tones." A beautiful row of terracotta and rust palette swatches animates in. A virtual makeup preview shows a perfectly matched warm berry lip colour. Text fades in in Raleway font, violet: "Renovaara finds it. Instantly." Closes on Renovaara logo, soft pink gradient. Violet CTA button: "Analyze My Face." Fade out.
+Cinematic short video, warm and educational. A flat lay split composition: left side holds cool-toned objects — silver jewellery, lavender fabric swatches, a cool-toned lipstick on a grey surface; right side holds warm-toned objects — gold jewellery, terracotta fabric, rust swatches on a warm white surface. Warm golden-hour side lighting falls across both halves. A soft animated checkmark glows on the right. The split dissolves. A smartphone screen fills the frame showing a Renovaara Colour Season card — a row of terracotta, rust, and warm gold swatches, lit with pink and violet gradient glow. Each swatch pops in with a soft animation. Camera slowly pushes in toward the phone. Closes on Renovaara logo on soft pink gradient. Violet CTA button. Warm bokeh. Fade out.
 ```
 
 ---
@@ -287,7 +287,7 @@ Cinematic 15-second vertical 9:16 short video, warm and intimate. Text appears o
 ### Seedance Prompt 5 — "She Knew" (Aspirational / Lifestyle)
 
 ```
-Cinematic 15-second vertical 9:16 lifestyle short, slow motion throughout, editorial fashion film aesthetic. A woman walks through a sun-lit minimal room — warm terracotta outfit, gold jewellery, glowing skin, perfectly styled layered haircut. Camera tracks at shoulder height. Warm golden-hour color grade, lifted shadows, soft bokeh background. Slow-motion close-ups: a warm berry lip, cat-eye tortoiseshell glasses, glowing dewy skin, a layered lob haircut catching the light. She glances down at a phone showing a glowing beauty app report. A quiet smile. Text fades in, white Lora serif: "She knew exactly what suited her." Soft pink background. Text: "Face shape. Colour season. Skin routine. One selfie." Closes on Renovaara logo centered on soft pink. Tagline in Raleway: "Know yourself first." Violet pill CTA fades in. Fade to white.
+Cinematic lifestyle short video, slow motion throughout, editorial luxury aesthetic. A sun-lit minimal white surface holds a curated arrangement: a warm terracotta silk blouse folded softly, cat-eye tortoiseshell glasses resting at an angle, a warm berry lipstick, gold hoop earrings, a smartphone showing a glowing Renovaara report. Warm golden-hour side lighting falls from the left. Camera drifts on a slow smooth parallax over the composition. Slow-motion close-up shots drift between objects: gold jewellery catching warm light, the lipstick rose tone, the glasses frame, the glowing report screen. Pink and violet gradient light washes gently across the flat lay. Camera pulls back slowly to reveal the full composition. Text fades in, white Lora serif: "She knew exactly what suited her." Closes on Renovaara logo centred on soft pink. Tagline: "Know yourself first." Violet pill CTA. Fade to white.
 ```
 
 ---
@@ -325,10 +325,10 @@ The "vertical 9:16" phrase in the prompt text has no effect — it is always the
 
 ### Enhanced Prompt 3 (v2) — "60 Seconds" (Improved)
 
-> Refinements over the original: tighter object descriptions, explicit camera instruction, removed filler phrases the model ignored.
+> Refinements over original: flat lay object composition matching confirmed-working hero video aesthetic, removed body part references, added golden-hour lighting and parallax camera.
 
 ```
-Cinematic 15-second short video, energetic and premium. A large bold countdown number "60" glows on a soft pink background, then dissolves. A hand raises a smartphone and takes a selfie — the phone screen lights up with swirling pink and violet particles. Fast-cut montage of six bright white UI cards entering frame with crisp slide-in motion: a face silhouette illustration, a terracotta colour swatch row, an AM skincare list, a PM skincare list, a warm berry makeup preview on screen, a style guide with clothing silhouettes. Each card fills the frame for under one second. All six cards collapse into one glowing smartphone screen showing a full report. Camera pulls back slowly from the phone. Three words appear one at a time: "Everything. Personalized. Free." Closes on a soft pink gradient with the Renovaara logo centered and a violet pill button. Sparkle particles. Fade to white.
+Cinematic short video, energetic and premium. A large bold countdown "60" glows on a soft pink background, then dissolves in a bright flash. A smartphone on a warm white surface — the screen ignites with swirling pink and violet particles forming a glowing face outline. Fast-cut montage of six bright white UI cards entering frame with crisp slide-in motion: a face silhouette, a terracotta colour swatch row, an AM skincare list, a PM skincare list, a warm berry makeup preview on screen, a clothing style guide. Each card fills the frame for under one second. All cards collapse into one glowing phone screen on its warm surface. Camera pulls back on a slow smooth parallax. Three words appear one at a time: "Everything. Personalized. Free." Closes on soft pink gradient, Renovaara logo centred, violet pill button. Gold sparkle particles drift. Fade to white.
 ```
 
 > **API settings:** `aspect_ratio: "9:16"`, `duration: 15`, `motion_level: high` (if available)
@@ -337,10 +337,10 @@ Cinematic 15-second short video, energetic and premium. A large bold countdown n
 
 ### Website Hero Background (16:9, Loopable)
 
-> For the landing page hero section — play muted behind the headline text. No people, no text in video.
+> ⚠️ Confirmed working — this prompt generated the hero video currently live on the website. For the landing page hero section — play muted behind the headline text. No people, no text in video.
 
 ```
-Cinematic abstract beauty brand video, seamless loop, soft luxury aesthetic. Slow camera drift over a flat lay of elegant beauty objects — a glowing smartphone screen showing a pink app interface, terracotta and rust colour swatches fanned out, gold jewellery pieces, soft fabric in warm blush tones. Warm golden-hour side lighting. Pink and violet gradient light washes across the frame slowly. Soft bokeh depth. No text. No people. Objects gently shift in the warm light. Camera moves on a slow, smooth parallax. Ends in the same composition it started — suitable for looping. Colours: pink #EC4899, violet #8B5CF6, warm white background.
+Cinematic abstract beauty brand video, seamless loop, soft luxury aesthetic. A flat lay of elegant beauty objects on a warm white marble surface — a glowing smartphone showing a pink app interface, terracotta and rust colour swatches fanned out, faceted gold jewellery, soft blush fabric draped gently. Warm golden-hour side lighting from the left. Pink and violet gradient light washes slowly across the composition from right to left. Soft bokeh depth of field. No text. No people. Objects rest still while the camera drifts on a slow ultra-smooth parallax — left to right, then gently down — ending in the exact starting composition for a seamless loop. Colours: pink #EC4899, violet #8B5CF6, warm white background.
 ```
 
 > **API settings:** `aspect_ratio: "16:9"`, `duration: 10`, play on loop muted in the website hero
@@ -352,7 +352,7 @@ Cinematic abstract beauty brand video, seamless loop, soft luxury aesthetic. Slo
 > Embed below the feature list — shows the AI pipeline visually.
 
 ```
-Cinematic 15-second video of a smartphone screen only, held in a woman's hand against a soft pink background. The screen shows a beauty app running an AI analysis — glowing pink and violet particles orbit a face silhouette on screen, then four sections light up one by one with a soft ping animation: Face Shape, Colour Season, Skin Routine, Style Guide. Each section glows as it activates. The full report slides into view, beautifully formatted. Camera slowly pushes in toward the phone screen. Warm, soft lighting. No additional text or UI outside the phone frame. Ends with the complete report visible on screen, glowing softly.
+Cinematic 15-second video. A smartphone lies on a warm white surface, angled slightly. The screen shows a Renovaara beauty app running an AI analysis — glowing pink and violet particles slowly orbit a face silhouette on the phone screen, then four sections light up one by one with a soft pulse: Face Shape, Colour Season, Skin Routine, Style Guide. Each section glows with pink and violet light as it activates. The full report slides into view on screen, beautifully formatted with warm colour swatches and clean typography. Camera slowly pushes in toward the phone from a low angle. Warm golden-hour side lighting falls across the surface. Pink gradient light washes gently over the scene. Ends with the complete glowing report on screen. Soft bokeh surrounds the phone.
 ```
 
 > **API settings:** `aspect_ratio: "16:9"`, `duration: 15`
@@ -364,7 +364,7 @@ Cinematic 15-second video of a smartphone screen only, held in a woman's hand ag
 > Designed for maximum retention in the first 3 seconds — hook is a fast reveal.
 
 ```
-Cinematic 15-second vertical short video. Opens on a close-up of a glowing smartphone screen already showing a completed beauty analysis report — Face Shape, Colour Season swatches in terracotta and rust, Skin Routine. The camera pulls back slowly to reveal the full phone in a woman's hand against a warm pink background. Bold text fades in: "Your results. In seconds." Cut to a fast montage of the report cards scrolling — colour swatches, skincare steps, style guide illustrations, a warm makeup preview on screen. Camera pushes back in toward the phone. Final card: Renovaara logo on soft pink, violet pill CTA button. Warm bokeh. Smooth transitions.
+Cinematic 15-second short video. Opens directly on an extreme close-up of a glowing smartphone screen already showing a completed Renovaara beauty analysis report — Face Shape card, Colour Season swatches in terracotta and rust, Skin Routine steps. Camera pulls back slowly to reveal the full phone lying on a warm pink surface surrounded by terracotta swatches and gold jewellery. Warm golden-hour side lighting. Pink gradient glow washes across the scene. Fast montage of report cards cycling on screen — colour swatches, skincare steps, style guide silhouettes, makeup preview. Camera pushes back in toward the phone screen. Final frame: Renovaara logo on soft pink gradient, violet pill CTA button glowing. Warm bokeh throughout. Smooth transitions.
 ```
 
 > **API settings:** `aspect_ratio: "9:16"`, `duration: 15`
@@ -376,7 +376,7 @@ Cinematic 15-second vertical short video. Opens on a close-up of a glowing smart
 > Education hook — satisfying colour palette reveal, high share potential.
 
 ```
-Cinematic 15-second vertical short video, warm and satisfying. Opens on a close-up of gold jewellery and terracotta fabric swatches on a white surface — warm, rich tones. A smartphone screen slides into frame showing a Renovaara Colour Season card: "Warm Autumn" with a beautiful row of terracotta, rust, and gold swatches. Each swatch animates in with a soft pop. Camera slowly pulls back. More warm-toned objects enter frame — a warm berry lipstick, gold earrings, a rust-coloured scarf. The composition is harmonious and beautiful. Text fades in: "This is your colour season." Renovaara logo on soft pink. Violet CTA button. Warm bokeh. Fade out.
+Cinematic 15-second short video, warm and satisfying. Opens on a close-up flat lay — gold jewellery and terracotta fabric swatches arranged on a warm white surface catching golden-hour side light from the left. A smartphone slides smoothly into the composition showing a Renovaara Colour Season card — "Warm Autumn" — with a row of terracotta, rust, and gold swatches. Each swatch animates in with a soft pop, lit by pink and violet gradient light. Camera pulls back on a slow smooth parallax to reveal the full flat lay — warm berry lipstick, gold earrings, a rust scarf, the glowing phone. Everything harmonious and bathed in warm golden light. Closes on Renovaara logo on soft pink gradient. Violet CTA button. Warm bokeh. Fade out.
 ```
 
 > **API settings:** `aspect_ratio: "9:16"`, `duration: 15`
@@ -388,7 +388,7 @@ Cinematic 15-second vertical short video, warm and satisfying. Opens on a close-
 > Use as a pre-roll ad or embed on the About / How It Works page.
 
 ```
-Cinematic 15-second horizontal video, premium and clean. Split into three equal acts. Act 1 (0–5s): A smartphone lies on a white surface. A hand picks it up, opens a camera, takes a selfie. Screen glows pink — analysis begins. Act 2 (5–10s): The phone screen shows four glowing report sections appearing one by one — a face silhouette, a warm colour palette swatch strip, a skincare routine list, a style guide. Each section slides in cleanly. Act 3 (10–15s): The phone is set down on a surface surrounded by perfectly matched items — gold jewellery, terracotta fabric, a warm berry lipstick. Everything cohesive. Text fades in: "One selfie. Your complete beauty blueprint." Renovaara logo. Violet CTA. Fade to white.
+Cinematic 15-second horizontal video, premium and clean. Three seamless acts. Act 1 (0–5s): A smartphone lies on a clean warm white surface. The screen glows pink — analysis begins, pink and violet particles swirl on screen. Warm golden-hour side lighting. Act 2 (5–10s): Close-up on the phone screen — four glowing report sections appear one by one: a face silhouette, a warm colour palette swatch strip, a skincare routine list, a style guide. Each slides in cleanly with pink light. Act 3 (10–15s): Camera pulls back on a slow smooth parallax to reveal a full flat lay — the phone surrounded by matched objects: gold jewellery, terracotta fabric, a warm berry lipstick. Pink and violet gradient light washes across the composition. Text fades in: "One selfie. Your complete beauty blueprint." Renovaara logo. Violet CTA. Fade to white.
 ```
 
 > **API settings:** `aspect_ratio: "16:9"`, `duration: 15`
@@ -400,7 +400,7 @@ Cinematic 15-second horizontal video, premium and clean. Split into three equal 
 > Static-feeling, object-focused — for Instagram feed carousels and paid ads.
 
 ```
-Cinematic 15-second square video. Opens on a chaotic close-up of too many mismatched beauty products — foundations, lipsticks, blushes cluttered together, desaturated tones. A hand sweeps them away. Clean white surface revealed. A smartphone slides into frame showing the Renovaara app — a curated Colour Season palette: terracotta, rust, and warm gold swatches arranged neatly. A second card appears: a personalised Skin Routine. A third: a Style Guide. Each card is clean, bright, and well-spaced. Camera slowly pushes in. Text appears: "Stop guessing. Start knowing." Renovaara logo on soft pink square background. Violet pill button. Fade to white.
+Cinematic 15-second square video. Opens on a close-up of cluttered mismatched beauty products — foundations, lipsticks, blushes piled on a grey surface, cool desaturated tones. A sharp cut to a clean warm flat lay on a white surface: a smartphone showing the Renovaara app with a curated Colour Season palette — terracotta, rust, and warm gold swatches arranged neatly — beside gold jewellery and blush fabric. Warm golden-hour side lighting. A second card appears on screen: a personalised Skin Routine. A third: a Style Guide with clothing silhouettes. Camera slowly pushes in toward the phone. Pink and violet gradient light washes across the scene. Text appears: "Stop guessing. Start knowing." Renovaara logo on soft pink square background. Violet pill button. Fade to white.
 ```
 
 > **API settings:** `aspect_ratio: "1:1"`, `duration: 15`

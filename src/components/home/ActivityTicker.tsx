@@ -12,7 +12,7 @@ const PINGS = [
   "Rhea picked her perfect frame shape · 6 min ago",
   "Lina found her seasonal color palette · 1 min ago",
   "Aisha previewed 3 hairstyle cuts · Chennai · 8 min ago",
-  "Sofia saved Rs 4,000 by trying on looks first · 9 min ago",
+  "Sofia skipped 6 products that didn't suit her · 9 min ago",
 ];
 
 export function ActivityTicker() {

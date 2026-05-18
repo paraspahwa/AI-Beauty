@@ -115,13 +115,14 @@ function ResultPreview({
         />
       )}
 
-      {/* AI result */}
+      {/* AI result — key={url} causes re-mount (and re-triggers image-reveal animation) when URL appears */}
       {url && !loading && (
         <Image
+          key={url}
           src={url}
           alt="Makeup preview"
           fill
-          className="object-cover object-top makeup-preview"
+          className="object-cover object-top image-reveal"
           sizes="(max-width: 768px) 100vw, 50vw"
         />
       )}
@@ -269,7 +270,7 @@ export function MakeupCard({ colorAnalysis, isPaid, reportId, photoUrl }: Props)
                            transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                 style={{
                   background: "linear-gradient(135deg,#EC4899,#8B5CF6)",
-                  color: "#3D2B1F",
+                  color: "#fff",
                   boxShadow: "0 2px 12px rgba(201,149,107,0.3)",
                 }}
               >

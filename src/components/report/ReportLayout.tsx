@@ -105,10 +105,13 @@ export function ReportLayout({
     }
   }, [report.status, report.id, isReadOnly, visualsLoading, report.visualAssets?.assets?.paletteBoard, triggerVisuals]);
 
-  // Poll every 8s while any slot is actively generating (to pick up completed results)
+  // Poll while any slot is actively generating.
+  // Use 4s when the tab is visible (user is watching), 10s when backgrounded.
+  // This cuts worst-case perceived wait from 23s → ~19s for tab-visible users.
   React.useEffect(() => {
     if (generatingSlots.size === 0) return;
-    const timer = setInterval(refresh, 8000);
+    const cadence = document.visibilityState === "visible" ? 4000 : 10000;
+    const timer = setInterval(refresh, cadence);
     return () => clearInterval(timer);
   }, [generatingSlots.size, refresh]);
 
@@ -198,7 +201,7 @@ export function ReportLayout({
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F5EFE7" }}>
+    <div className="min-h-screen" style={{ background: "#F5EFE7", borderTop: "4px solid transparent", borderImage: "linear-gradient(90deg,#EC4899,#8B5CF6) 1" }}>
     <div className="container max-w-5xl py-10 sm:py-14">
       <motion.header
         variants={staggerContainer}
@@ -218,7 +221,9 @@ export function ReportLayout({
           className="mt-3 font-serif text-4xl sm:text-5xl"
           style={{ color: "#3D2B1F" }}
         >
-          Personal Beauty Profile
+          {report.colorAnalysis?.season
+            ? `Your ${report.colorAnalysis.season} Beauty Profile`
+            : "Personal Beauty Profile"}
         </motion.h1>
         {report.summary && (
           <motion.p
@@ -317,7 +322,8 @@ export function ReportLayout({
         transition={{ delay: 0.4 }}
       >
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <div className="mb-8 overflow-x-auto -mx-4 sm:mx-0 [&::-webkit-scrollbar]:hidden">
+          <div className="relative mb-8">
+            <div className="overflow-x-auto -mx-4 sm:mx-0 [&::-webkit-scrollbar]:hidden">
             <div className="flex justify-start md:justify-center px-4 sm:px-0">
             <TabsList
               className="backdrop-blur-sm rounded-2xl p-1.5 gap-1 flex-nowrap"
@@ -325,7 +331,7 @@ export function ReportLayout({
             >
               {TABS.map((t) => {
                 const isLocked =
-                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "studio" || t.value === "shop");
+                  !isPaid && (t.value === "skin" || t.value === "glasses" || t.value === "hair" || t.value === "studio" || t.value === "shop" || t.value === "jewellery");
                 // "style" tab is always free
 
                 return (
@@ -335,7 +341,7 @@ export function ReportLayout({
                     className="relative rounded-xl text-[13px] font-medium px-3 py-2 sm:px-4 transition-all data-[state=active]:shadow-sm whitespace-nowrap"
                     style={activeTab === t.value
                       ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff" }
-                      : { color: "#9C7D5B" }}
+                      : { color: "#5C4232" }}
                   >
                     {isLocked && (
                       <Lock className="h-3 w-3 mr-1.5 animate-pulse-slow" style={{ color: "#C8A96E" }} />
@@ -346,6 +352,12 @@ export function ReportLayout({
               })}
             </TabsList>
             </div>
+            </div>
+            {/* Right-side fade — visual hint that more tabs are hidden on mobile */}
+            <div
+              className="pointer-events-none absolute right-0 top-0 h-full w-12 sm:hidden"
+              style={{ background: "linear-gradient(to left, #FDFAF6 0%, transparent 100%)" }}
+            />
           </div>
 
           <AnimatePresence mode="wait">
@@ -402,7 +414,13 @@ export function ReportLayout({
                   animate="visible"
                   exit="exit"
                 >
-                  {isPaid && report.skinAnalysis ? (
+                  {!isPaid ? (
+                    <Locked
+                      reportId={report.id}
+                      onUnlocked={refresh}
+                      title="Skin Analysis"
+                    />
+                  ) : report.skinAnalysis ? (
                     <>
                       <SkinAnalysisCard
                         data={report.skinAnalysis}
@@ -422,11 +440,7 @@ export function ReportLayout({
                       />
                     </>
                   ) : (
-                    <Locked
-                      reportId={report.id}
-                      onUnlocked={refresh}
-                      title="Skin Analysis"
-                    />
+                    <Empty />
                   )}
                 </motion.div>
               )}
@@ -441,7 +455,13 @@ export function ReportLayout({
                   animate="visible"
                   exit="exit"
                 >
-                  {isPaid && report.glasses ? (
+                  {!isPaid ? (
+                    <Locked
+                      reportId={report.id}
+                      onUnlocked={refresh}
+                      title="Spectacles Guide"
+                    />
+                  ) : report.glasses ? (
                     <SpectaclesCard
                       data={report.glasses}
                       photoUrl={report.imageUrl}
@@ -452,11 +472,7 @@ export function ReportLayout({
                       faceTraits={report.faceShape?.traits}
                     />
                   ) : (
-                    <Locked
-                      reportId={report.id}
-                      onUnlocked={refresh}
-                      title="Spectacles Guide"
-                    />
+                    <Empty />
                   )}
                 </motion.div>
               )}
@@ -471,7 +487,13 @@ export function ReportLayout({
                   animate="visible"
                   exit="exit"
                 >
-                  {isPaid && report.hairstyle ? (
+                  {!isPaid ? (
+                    <Locked
+                      reportId={report.id}
+                      onUnlocked={refresh}
+                      title="Hairstyle Guide"
+                    />
+                  ) : report.hairstyle ? (
                     <HairstyleCard
                       data={report.hairstyle}
                       photoUrl={report.imageUrl}
@@ -493,11 +515,7 @@ export function ReportLayout({
                       hairType={report.hairstyle.hairType}
                     />
                   ) : (
-                    <Locked
-                      reportId={report.id}
-                      onUnlocked={refresh}
-                      title="Hairstyle Guide"
-                    />
+                    <Empty />
                   )}
                 </motion.div>
               )}
@@ -590,9 +608,14 @@ function Empty() {
       className="rounded-3xl p-12 text-center"
       style={{ background: "#FDFAF6", border: "1px dashed #E8DDD0" }}
     >
-      <Sparkles className="h-10 w-10 mx-auto mb-3" style={{ color: "#C8B89A" }} />
-      <p className="text-sm font-medium mb-1" style={{ color: "#3D2B1F" }}>Analysis is still processing</p>
-      <p className="text-xs" style={{ color: "#9C7D5B" }}>Refresh in a moment to see your results</p>
+      <motion.div
+        animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 1.8, repeat: Infinity }}
+      >
+        <Sparkles className="h-10 w-10 mx-auto mb-3" style={{ color: "#C8B89A" }} />
+      </motion.div>
+      <p className="text-sm font-medium mb-1" style={{ color: "#3D2B1F" }}>Your analysis is on its way</p>
+      <p className="text-xs" style={{ color: "#9C7D5B" }}>This page updates automatically — no need to refresh.</p>
     </motion.div>
   );
 }

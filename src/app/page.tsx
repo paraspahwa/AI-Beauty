@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
@@ -163,7 +164,7 @@ const PLANS: {
 }[] = [
   {
     name: "Free Preview",
-    price: "Rs 0",
+    price: "₹0",
     note: "No card required",
     cta: "Try for free",
     href: "/upload",
@@ -172,8 +173,8 @@ const PLANS: {
   },
   {
     name: "Full Report",
-    price: "Rs 299",
-    originalPrice: "Rs 599",
+    price: "₹299",
+    originalPrice: "₹599",
     note: "One-time payment",
     cta: "Get my report",
     href: "/upload",
@@ -190,7 +191,7 @@ const PLANS: {
   },
   {
     name: "Studio Pro",
-    price: "Rs 999/mo",
+    price: "₹999/mo",
     note: "Cancel anytime",
     cta: "Start Studio Pro",
     href: "/upload",
@@ -287,28 +288,161 @@ export default function HomePage() {
         </RevealSection>
       </section>
 
+      {/* Report showcase video — warm flatlay with Colour Season + Skin Routine + Style Guide */}
+      <section className="container max-w-4xl py-8">
+        <RevealSection>
+          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-terracotta/20">
+            <video
+              src="/e6672f79-03ed-48f9-8259-eacd582aba8d.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              className="w-full h-auto block"
+            />
+          </div>
+        </RevealSection>
+      </section>
+
       <section className="container max-w-6xl py-8 sm:py-12">
-        <div className="rounded-3xl border border-iris/20 bg-[linear-gradient(135deg,rgba(249,168,212,0.25),rgba(196,181,253,0.25))] px-6 py-10 text-center shadow-card sm:px-10">
-          <h2 className="text-2xl sm:text-3xl text-ink">{HOME_CONTENT.ctaBanner.title}</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
-            {HOME_CONTENT.ctaBanner.description}
-          </p>
-          <div className="mt-6">
-            <Button asChild size="lg" variant="accent" className="group">
-              <Link href={HOME_CONTENT.ctaBanner.buttonHref}>
-                {HOME_CONTENT.ctaBanner.buttonLabel}
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
-              </Link>
-            </Button>
+        <div className="rounded-3xl border border-iris/20 bg-[linear-gradient(135deg,rgba(249,168,212,0.25),rgba(196,181,253,0.25))] overflow-hidden shadow-card">
+          <div className="grid md:grid-cols-2 items-center">
+            {/* Text side */}
+            <div className="px-8 py-10 sm:px-12 sm:py-12 text-left">
+              <h2 className="text-2xl sm:text-3xl text-ink leading-snug">{HOME_CONTENT.ctaBanner.title}</h2>
+              <p className="mt-3 text-ink-stone leading-relaxed">
+                {HOME_CONTENT.ctaBanner.description}
+              </p>
+              <div className="mt-6">
+                <Button asChild size="lg" variant="accent" className="group">
+                  <Link href={HOME_CONTENT.ctaBanner.buttonHref}>
+                    {HOME_CONTENT.ctaBanner.buttonLabel}
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            {/* Promo image side */}
+            <div className="relative hidden md:block h-full min-h-[280px]">
+              <Image
+                src="/1779024309.png"
+                alt="Stop guessing. Start knowing — Renovaara beauty analysis preview"
+                fill
+                className="object-cover object-left"
+                sizes="(max-width: 768px) 0vw, 50vw"
+              />
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Color Season Spotlight */}
+      <section className="container max-w-6xl py-12 sm:py-16">
+        <RevealSection>
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            {/* Lifestyle image */}
+            <div className="relative rounded-3xl overflow-hidden aspect-[4/3] shadow-card">
+              <Image
+                src="/1779024304.png"
+                alt="Renovaara colour season palette — terracotta, rust and warm gold on iPhone"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+            {/* Text */}
+            <div>
+              <span className="section-label">Colour Analysis</span>
+              <h2 className="mt-3 text-3xl sm:text-4xl text-ink leading-tight">
+                Know exactly which <span className="gradient-text">colours light you up</span>
+              </h2>
+              <p className="mt-4 text-ink-stone leading-relaxed">
+                Your colour season tells you which shades of clothing, makeup, and metals make you glow — and which ones wash you out. Renovaara identifies your season from a single selfie and builds a curated palette around it.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {["Warm Autumn", "Soft Summer", "Clear Spring", "True Winter", "Deep Autumn", "Light Spring"].map((s) => (
+                  <span key={s} className="rounded-full border border-terracotta/30 bg-terracotta/10 px-3 py-1 text-xs text-terracotta">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </RevealSection>
+      </section>
 
       <SampleShowcase items={showcaseItems} tuning={HOME_CONTENT.showcase.tuning} />
 
+      {/* Product demo video — report flatlay */}
+      <section className="container max-w-5xl py-16">
+        <RevealSection>
+          <div className="text-center mb-8">
+            <span className="section-label">Your report, beautifully delivered</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl text-ink">
+              Everything you need,{" "}
+              <span className="gradient-text">in one place</span>
+            </h2>
+          </div>
+          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-olive/20">
+            <video
+              src="/replicate-prediction-40w1zw6ctnrmt0cy6r8a9ny7bm.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              className="w-full h-auto block"
+            />
+          </div>
+        </RevealSection>
+      </section>
+
       {/* MVP Do vs Avoid education strip */}
       <DoAvoidEducationStrip />
+
+      {/* AI Makeup Studio spotlight — full-bleed with makeup flat lay background */}
+      <section className="relative isolate overflow-hidden py-24 sm:py-32">
+        {/* Background image */}
+        <Image
+          src="/1779024298.png"
+          alt=""
+          fill
+          aria-hidden
+          className="object-cover object-center -z-20"
+          sizes="100vw"
+        />
+        {/* Dark overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          aria-hidden
+          style={{ background: "linear-gradient(135deg, rgba(15,10,20,0.82) 0%, rgba(30,15,35,0.75) 100%)" }}
+        />
+        <div className="container max-w-6xl text-center">
+          <RevealSection>
+            <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm">
+              AI Makeup Studio
+            </span>
+            <h2 className="mt-5 text-3xl sm:text-5xl font-bold text-white leading-tight tracking-tight">
+              Stop buying the{" "}
+              <span className="bg-gradient-to-r from-pink-300 to-violet-300 bg-clip-text text-transparent">
+                wrong products
+              </span>
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-white/70 text-base sm:text-lg leading-relaxed">
+              Preview lip, eye, blush, and contour combinations on your own face before spending a rupee. The Makeup Studio lets you try hundreds of looks in seconds — matched to your undertone and features.
+            </p>
+            <div className="mt-8">
+              <Button asChild size="lg" variant="accent" className="group cta-shimmer">
+                <Link href="/upload">
+                  Try the Makeup Studio
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </div>
+          </RevealSection>
+        </div>
+      </section>
 
       <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
         <RevealSection>
@@ -326,6 +460,23 @@ export default function HomePage() {
                 <p className="mt-2 text-sm text-ink-stone">{step.description}</p>
               </article>
             ))}
+          </div>
+        </RevealSection>
+      </section>
+
+      {/* Cinematic ad video — pre-pricing conversion moment */}
+      <section className="container max-w-5xl py-8">
+        <RevealSection>
+          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-iris/20">
+            <video
+              src="/tmp2jo1gddn.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              className="w-full h-auto block"
+            />
           </div>
         </RevealSection>
       </section>
@@ -386,12 +537,75 @@ export default function HomePage() {
 
       <TestimonialsSection items={TESTIMONIALS} />
 
+      {/* Brand cinematic — Seedance promo */}
+      <section className="container max-w-3xl py-16">
+        <RevealSection>
+          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-terracotta/20">
+            <video
+              src="/Seedance Prompt3.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="none"
+              className="w-full h-auto block"
+            />
+          </div>
+          <p className="mt-4 text-center text-sm text-ink-mist tracking-wide">
+            Where beauty meets intelligence — powered by AI
+          </p>
+        </RevealSection>
+      </section>
+
       <section id="faq" className="container max-w-4xl py-16 scroll-mt-20">
         <RevealSection>
           <h2 className="text-center text-3xl sm:text-4xl text-ink">Frequently asked questions</h2>
           <FAQAccordion items={FAQS} />
         </RevealSection>
       </section>
+      {/* Structured data — SoftwareApplication */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "Renovaara",
+            applicationCategory: "LifestyleApplication",
+            operatingSystem: "Web",
+            url: "https://renovaara.in",
+            description:
+              "AI-powered personal stylist: face shape, colour season, skin analysis, and virtual try-on for makeup, hairstyles, clothing, and spectacles — all from one selfie.",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "INR",
+              description: "Free preview — paid full report from Rs 299",
+            },
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: "4.9",
+              bestRating: "5",
+              ratingCount: "50000",
+            },
+          }),
+        }}
+      />
+      {/* Structured data — FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQS.map((f) => ({
+              "@type": "Question",
+              name: f.question,
+              acceptedAnswer: { "@type": "Answer", text: f.answer },
+            })),
+          }),
+        }}
+      />
       <StickyMobileCta />
       <VisitorChatWidget />
     </main>

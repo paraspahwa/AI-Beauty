@@ -498,11 +498,12 @@ export function HairstyleCard({
             {heroImageUrl ? (
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ maxWidth: 300, aspectRatio: "3/4" }}>
                 <Image
+                  key={heroImageUrl}
                   src={heroImageUrl}
                   alt={heroImageAlt}
                   fill
                   unoptimized
-                  className="object-cover"
+                  className={`object-cover${bestPreview ? " image-reveal" : ""}`}
                   style={{ objectPosition: "top center" }}
                 />
                 {!bestPreview && (

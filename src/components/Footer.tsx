@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 
 const NAV_LINKS = [
   { label: "How it works", href: "/#how" },
@@ -22,16 +22,14 @@ export function Footer() {
       <div className="container max-w-6xl py-10 flex flex-col gap-8">
         {/* Top row — brand + nav */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div
-              className="flex h-7 w-7 items-center justify-center rounded-full"
-              style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
-            >
-              <Sparkles className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="font-serif text-lg text-ink group-hover:text-terracotta transition-colors">
-              Renovaara
-            </span>
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/1779024315.png"
+              alt="Renovaara"
+              width={180}
+              height={101}
+              className="h-10 w-auto transition-opacity group-hover:opacity-80"
+            />
           </Link>
 
           <nav className="flex items-center gap-6 text-sm text-ink-stone">

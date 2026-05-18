@@ -12,6 +12,9 @@
  *
  * Fallback 2: fofr/become-image (SDXL + IP-Adapter)
  *   - Last resort if both primary and fallback 1 fail
+ *
+ * Tier gate: only called for paid reports. Free reports skip visual generation
+ * entirely in trigger-visuals/route.ts; images are generated after payment.
  */
 
 import Replicate from "replicate";
@@ -20,7 +23,8 @@ import sharp from "sharp";
 // -- Constants -----------------------------------------------------------------
 const FAL_HAIR_MODEL       = "fal-ai/image-apps-v2/hair-change" as const;
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
-const BECOME_IMAGE_MODEL   = "fofr/become-image:4af11083a4e2c9dd1b1f18ce37ade3f4d38d21e8d3a62a9c3b7fcf1d8b53db8" as const;
+// Last-resort fallback: SDXL + IP-Adapter identity model (unpinned — use latest published version)
+const BECOME_IMAGE_MODEL   = "fofr/become-image" as const;
 const SELFIE_SEND_SIZE = 768;
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
@@ -181,11 +185,11 @@ function buildPromptFallback(styleName: string, hairHex: string): string {
 /**
  * Generate one photorealistic hairstyle try-on.
  *
- * Strategy:
- *  1. fal-ai/image-apps-v2/hair-change  (primary, when falApiKey provided)
- *  2. flux-kontext-apps/change-haircut  (fallback 1, Replicate)
- *  3. fofr/become-image                 (fallback 2, last resort)
+ * 1. fal-ai/image-apps-v2/hair-change  (primary, when falApiKey provided)
+ * 2. flux-kontext-apps/change-haircut  (fallback 1, Replicate)
+ * 3. fofr/become-image                 (fallback 2, last resort)
  *
+ * Only called for paid reports — tier gate in trigger-visuals/route.ts.
  * _faceBox is kept for API compatibility with callers; unused by any model.
  */
 export async function replicateHairPreview(
@@ -216,7 +220,7 @@ export async function replicateHairPreview(
 
   let url: string | null = null;
 
-  // Option 1: fal-ai/image-apps-v2/hair-change (primary) ----------------------
+  // Option 1: fal-ai/image-apps-v2/hair-change (primary) ---------------------
   if (falApiKey) {
     try {
       const { createFalClient } = await import("@fal-ai/client");
@@ -305,9 +309,8 @@ export async function replicateHairPreview(
 // -- Batch generator with concurrency cap -------------------------------------
 /**
  * Generate up to 5 hairstyle previews.
- * Primary: fal-ai/image-apps-v2/hair-change (when falApiKey provided).
- * Fallback 1: flux-kontext-apps/change-haircut.
- * Fallback 2: fofr/become-image.
+ * Paid tier:   fal-ai/image-apps-v2/hair-change → change-haircut → become-image.
+ * Free tier:   flux-kontext-schnell (fast, cheap; falls back to paid pipeline on error).
  */
 export async function replicateHairPreviewBatch(
   selfieBuf: Buffer,

@@ -13,14 +13,21 @@ const REPORT_ITEMS = [
 
 export function HeroReportCard() {
   const [active, setActive] = useState(0);
+  const [hovering, setHovering] = useState(false);
 
   useEffect(() => {
-    const t = setInterval(() => setActive((i) => (i + 1) % REPORT_ITEMS.length), 1400);
+    const t = setInterval(() => {
+      if (!hovering) setActive((i) => (i + 1) % REPORT_ITEMS.length);
+    }, 1400);
     return () => clearInterval(t);
-  }, []);
+  }, [hovering]);
 
   return (
-    <div className="card-soft relative">
+    <div
+      className="card-soft relative"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+    >
       <div className="absolute right-4 top-4 rounded-full bg-terracotta/15 px-3 py-1 text-xs font-semibold text-terracotta">
         Sample Report
       </div>

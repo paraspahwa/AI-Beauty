@@ -513,3 +513,29 @@
     animation: none !important;
   }
 }
+
+/* ── AI image reveal — blur-in transition when a generated try-on image loads ── */
+/* Applied via key={url} on Next.js Image components: the element re-mounts       */
+/* (re-triggers animation) precisely when the URL transitions null → actual URL.  */
+@keyframes image-reveal {
+  from {
+    filter: blur(10px);
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-reveal {
+  animation: image-reveal 0.45s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-reveal {
+    animation: none;
+  }
+}

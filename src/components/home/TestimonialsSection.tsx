@@ -29,21 +29,25 @@ export function TestimonialsSection({ items }: TestimonialsSectionProps) {
     <section className="container max-w-6xl py-16">
       <div className="mb-2 flex flex-col items-center gap-2 text-center">
         <h2 className="text-3xl text-ink sm:text-4xl">Loved by thousands</h2>
-        <p className="mt-3 text-5xl font-semibold text-ink">4.9</p>
-        <div className="flex gap-1">
-          {[...Array(5)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.07, type: "spring", stiffness: 260 }}
-            >
-              <Star className="h-5 w-5 fill-terracotta text-terracotta" />
-            </motion.div>
-          ))}
+        <div className="flex items-center gap-3 mt-3">
+          <p className="text-5xl font-semibold text-ink">4.9</p>
+          <div className="flex flex-col gap-1 items-start">
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.07, type: "spring", stiffness: 260 }}
+                >
+                  <Star className="h-5 w-5 fill-terracotta text-terracotta" />
+                </motion.div>
+              ))}
+            </div>
+            <p className="text-xs text-ink-stone">from 50,000+ analyses</p>
+          </div>
         </div>
-        <p className="text-sm text-ink-stone">from 50,000+ beauty analyses</p>
       </div>
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => (

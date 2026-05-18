@@ -453,7 +453,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed }: PaywallProps) {
                 {/* Upgrade hint */}
                 {plan === "report" && (
                   <motion.p variants={fadeUp} className="mt-2 text-center text-[11px]" style={{ color: "#4A3A2A" }}>
-                    Upgrade to Studio Pro anytime — your ₹299 report is always yours.
+                    Upgrade to Studio Pro anytime — your {reportLabel} report is always yours.
                   </motion.p>
                 )}
 

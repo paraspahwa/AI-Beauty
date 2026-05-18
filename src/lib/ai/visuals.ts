@@ -195,7 +195,8 @@ export function createVisualAssetsSkeleton(userId: string, reportId: string, buc
 
 /**
  * Generate photoreal glasses try-on images for top 3 recommended styles.
- * Uses Flux Kontext Fast — no mask or faceBox required.
+ * Paid users: Flux Kontext Pro (~$0.05/image, best quality).
+ * Free users: Flux Kontext Schnell (~$0.005/image, fast preview).
  * Falls back to empty array when Replicate is not configured; SpectaclesCard
  * then uses its built-in FrameIllustration SVG fallbacks.
  */
@@ -231,10 +232,10 @@ export async function generateGlassesPreviews(
 
 /**
  * Generate photorealistic hairstyle try-on previews for top 5 flattering styles.
- * Primary: fal-ai/image-apps-v2/hair-change (when FAL_KEY is configured).
- * Fallbacks: flux-kontext-apps/change-haircut → fofr/become-image.
+ * fal-ai/image-apps-v2/hair-change (primary) → change-haircut → become-image.
  * Falls back to empty array when neither service is configured; HairstyleCard
  * uses its built-in HairOverlay SVG fallbacks.
+ * Only called for paid reports — tier gate in trigger-visuals/route.ts.
  */
 export async function generateHairstylePreviews(
   selfieBuf: Buffer,

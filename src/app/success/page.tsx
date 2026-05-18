@@ -19,7 +19,7 @@ const PERKS = [
 function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [countdown, setCountdown] = useState(8);
+  const [countdown, setCountdown] = useState(5);
 
   const reportId = searchParams.get("reportId");
   const reportHref = reportId ? `/report/${reportId}` : "/dashboard";
@@ -93,14 +93,12 @@ function SuccessContent() {
             <Link href={reportHref}>
               <FileText className="h-4 w-4" />
               View my full report
+              {countdown > 0 && (
+                <span className="opacity-60 text-xs ml-1">({countdown}s)</span>
+              )}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
-          {countdown > 0 && (
-            <p className="text-sm text-ink-mist">
-              Redirecting in <span className="font-medium" style={{ color: "#EC4899" }}>{countdown}s</span>…
-            </p>
-          )}
         </motion.div>
       </motion.div>
     </div>

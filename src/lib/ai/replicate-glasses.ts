@@ -7,6 +7,9 @@
  *   - No mask or faceBox geometry required — instruction-based
  *   - Note: flux-kontext-apps/glasses does not yet exist on Replicate;
  *     swap to it when BFL publishes the dedicated app.
+ *
+ * Tier gate: only called for paid reports. Free reports skip visual generation
+ * entirely in trigger-visuals/route.ts; images are generated after payment.
  */
 
 import Replicate from "replicate";
@@ -14,7 +17,8 @@ import sharp from "sharp";
 import type { FaceBox } from "./replicate-hair";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const FLUX_KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro" as const;
+// Always Pro: called only for paid reports (tier gate in trigger-visuals/route.ts)
+const FLUX_KONTEXT_PRO_MODEL = "black-forest-labs/flux-kontext-pro" as const;
 const SELFIE_SEND_SIZE = 640;
 const OUTPUT_W = 400;
 const OUTPUT_H = 530;
@@ -46,12 +50,17 @@ const STYLE_MAP: Record<string, string> = {
   "rimless":   "rimless glasses with barely visible frame",
 };
 
-function buildPrompt(styleName: string): string {
+function buildPrompt(styleName: string, eyeLevelFraction?: number): string {
   const lower = styleName.toLowerCase();
   const desc  = Object.entries(STYLE_MAP).find(([k]) => lower.includes(k))?.[1]
     ?? `${styleName} style glasses`;
+  // Anchor the model to the exact vertical eye position derived from Rekognition landmarks.
+  // This significantly improves frame placement accuracy vs. letting the model guess.
+  const eyeHint = eyeLevelFraction !== undefined
+    ? `The eyes are at approximately ${Math.round(eyeLevelFraction * 100)}% down from the top of the image. `
+    : "";
   return (
-    `Add ${desc} to the person — the glasses should sit naturally at eye level on the face. ` +
+    `Add ${desc} to the person — ${eyeHint}the glasses should sit naturally at eye level on the face. ` +
     `The person's face, skin tone, eyes, nose, lips, hair, clothing, and background must remain EXACTLY the same. ` +
     `Only the glasses are added — nothing else changes. Photorealistic, natural lighting.`
   );
@@ -59,16 +68,26 @@ function buildPrompt(styleName: string): string {
 
 // ── Single preview generator ───────────────────────────────────────────────────
 /**
- * Generate one photorealistic glasses try-on using Flux Kontext Pro.
+ * Generate one glasses try-on image using Flux Kontext Pro.
+ * Only called for paid reports — tier gate in trigger-visuals/route.ts.
  * No mask or faceBox required — the model handles placement from the prompt.
- * _faceBox param kept for API compatibility with callers; it is unused.
+ * faceBox is used to derive the eye Y-level fraction for placement accuracy.
  */
 export async function replicateGlassesPreview(
   selfieBuf: Buffer,
-  _faceBox: FaceBox | null,
+  faceBox: FaceBox | null,
   styleName: string,
   replicateToken: string,
 ): Promise<Buffer> {
+  // Derive eye-level as a fraction of image height from the face bounding box.
+  // Rekognition top + ~35% of face height ≈ eye level (eyes sit in upper third of face).
+  let eyeLevelFraction: number | undefined;
+  if (faceBox) {
+    const eyeY = faceBox.top + faceBox.faceH * 0.35;
+    eyeLevelFraction = eyeY / OUTPUT_H;
+    // Clamp to a sensible range to avoid degenerate values on edge-cropped selfies
+    if (eyeLevelFraction < 0.1 || eyeLevelFraction > 0.9) eyeLevelFraction = undefined;
+  }
   const smallBuf = await sharp(selfieBuf)
     .rotate()
     .resize(SELFIE_SEND_SIZE, SELFIE_SEND_SIZE, { fit: "inside", withoutEnlargement: true })
@@ -78,14 +97,13 @@ export async function replicateGlassesPreview(
   const imageDataUri = `data:image/jpeg;base64,${smallBuf.toString("base64")}`;
   const client = getClient(replicateToken);
 
-  const output = await client.run(FLUX_KONTEXT_MODEL, {
+  const output = await client.run(FLUX_KONTEXT_PRO_MODEL, {
     input: {
-      input_image:      imageDataUri,   // flux-kontext-pro uses input_image, not img_cond_path
-      prompt:           buildPrompt(styleName),
+      input_image:      imageDataUri,
+      prompt:           buildPrompt(styleName, eyeLevelFraction),
       output_format:    "jpg",
       output_quality:   92,
-      // "0.25" = preview/cost-saving tier — ~4× cheaper than "1" MP.
-      // Glasses try-on cards are 400×530 px; 0.25 MP (~512×512) is sufficient.
+      // "0.25" = cost-saving tier — glasses cards are 400×530 px so 0.25 MP is sufficient.
       megapixels:       "0.25",
       aspect_ratio:     "match_input_image",
       safety_tolerance: 2,

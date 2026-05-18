@@ -127,6 +127,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Fire-and-forget: kick off Pro-quality visual generation now that is_paid = true.
+    // trigger-visuals is idempotent — already-ready slots (color swatches, palette) are skipped;
+    // only the locked glasses/hair/makeup slots (still "missing") will be generated at Pro quality.
+    if (row.report_id) {
+      const internalSecret = process.env.INTERNAL_API_SECRET;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://renovaara.in";
+      if (internalSecret) {
+        fetch(`${appUrl}/api/internal/trigger-visuals`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": internalSecret,
+          },
+          body: JSON.stringify({ reportId: row.report_id }),
+        }).catch((e) => console.error("[webhook/razorpay] trigger-visuals fire failed", e));
+      }
+    }
+
     // Fire-and-forget receipt email via Resend.
     // Set RESEND_API_KEY in Vercel env vars to enable (free tier: 3,000 emails/mo).
     const resendKey = process.env.RESEND_API_KEY;

@@ -274,6 +274,13 @@ export async function POST(req: NextRequest) {
     const missingMakeupIndices = (visualAssets.assets.makeupPreviews ?? [])
       .map((s, i) => (s.status === "missing" ? i : -1)).filter((i) => i >= 0);
 
+    // ── Tier gate: glasses/hair/makeup are premium-only ──────────────────────
+    // Free reports skip all three to save cost and avoid locking in low-quality
+    // images that would be visible after the user upgrades.
+    // trigger-visuals is re-fired from the payment webhook (post is_paid = true),
+    // at which point the slots are still "missing" and get generated at Pro quality.
+    const isPaidReport = !!row.is_paid;
+
     // Run all four generation jobs concurrently to stay within maxDuration
     const [colorSwatchResults, glassesResults, hairstyleResults, makeupResults] = await Promise.all([
       generateAllColorSwatchPreviews(
@@ -283,19 +290,19 @@ export async function POST(req: NextRequest) {
         console.warn("[trigger-visuals] swatches failed:", (err as Error).message);
         return [] as { index: number; buffer: Buffer; colorName: string; isBest: boolean }[];
       }),
-      missingGlassesIndices.length > 0
+      (isPaidReport && missingGlassesIndices.length > 0)
         ? generateGlassesPreviews(buffer, glassesResult, row.rekognition, missingGlassesIndices).catch((err) => {
             console.warn("[trigger-visuals] glasses failed:", (err as Error).message);
             return [] as { index: number; buffer: Buffer }[];
           })
         : Promise.resolve([] as { index: number; buffer: Buffer }[]),
-      missingHairstyleIndices.length > 0
+      (isPaidReport && missingHairstyleIndices.length > 0)
         ? generateHairstylePreviews(buffer, hairstyleResult, row.rekognition, missingHairstyleIndices).catch((err) => {
             console.warn("[trigger-visuals] hairstyle failed:", (err as Error).message);
             return [] as { index: number; buffer: Buffer; style: string }[];
           })
         : Promise.resolve([] as { index: number; buffer: Buffer; style: string }[]),
-      missingMakeupIndices.length > 0
+      (isPaidReport && missingMakeupIndices.length > 0)
         ? generateMakeupPreviews(buffer, colorResult, missingMakeupIndices).catch((err) => {
             console.warn("[trigger-visuals] makeup failed:", (err as Error).message);
             return [] as { index: number; buffer: Buffer; label: string }[];

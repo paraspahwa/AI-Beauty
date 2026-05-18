@@ -37,6 +37,56 @@ function getClient(token: string): Replicate {
   return _client;
 }
 
+// ── Hex → human-readable makeup color descriptor ──────────────────────────────
+/**
+ * Converts a hex color to a natural-language descriptor for diffusion models.
+ * Diffusion models are trained on natural language, not hex notation — raw hex
+ * like "#B03060" is poorly understood. Describing it as "deep raspberry-rose"
+ * produces far more accurate color rendering in the output image.
+ */
+function hexToMakeupColor(hex: string): string {
+  const h = hex.replace("#", "").toLowerCase();
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return hex;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 510;  // 0–1
+  const saturation = max === min ? 0 : (max - min) / (lightness < 0.5 ? max + min : 510 - max - min);
+
+  // Neutral / low saturation
+  if (saturation < 0.12) {
+    if (lightness > 0.85) return `soft ivory-nude (${hex})`;
+    if (lightness > 0.65) return `warm taupe-nude (${hex})`;
+    if (lightness > 0.40) return `cool mauve-nude (${hex})`;
+    if (lightness > 0.20) return `deep espresso (${hex})`;
+    return `near-black deep tone (${hex})`;
+  }
+
+  // Hue-based naming (hue in degrees)
+  const delta = max - min;
+  let hue = 0;
+  if (max === r) hue = 60 * (((g - b) / delta + 6) % 6);
+  else if (max === g) hue = 60 * ((b - r) / delta + 2);
+  else hue = 60 * ((r - g) / delta + 4);
+
+  const sat = saturation;
+  const lit = lightness;
+
+  if (hue < 15 || hue >= 345)   return lit > 0.6 ? `light coral-rose (${hex})` : sat > 0.6 ? `true red (${hex})` : `deep burgundy (${hex})`;
+  if (hue < 30)                  return lit > 0.6 ? `warm peach-coral (${hex})` : sat > 0.5 ? `terracotta (${hex})` : `burnt sienna (${hex})`;
+  if (hue < 50)                  return lit > 0.7 ? `golden champagne (${hex})` : sat > 0.5 ? `warm amber (${hex})` : `caramel-bronze (${hex})`;
+  if (hue < 75)                  return `olive-gold (${hex})`;
+  if (hue < 150)                 return `sage-green (${hex})`;
+  if (hue < 195)                 return lit > 0.7 ? `soft aqua (${hex})` : `teal (${hex})`;
+  if (hue < 255)                 return lit > 0.7 ? `soft periwinkle (${hex})` : sat > 0.5 ? `vivid cobalt (${hex})` : `dusty navy (${hex})`;
+  if (hue < 285)                 return lit > 0.7 ? `lavender (${hex})` : `deep violet (${hex})`;
+  if (hue < 315)                 return lit > 0.7 ? `light orchid (${hex})` : sat > 0.5 ? `bold magenta (${hex})` : `plum (${hex})`;
+  return lit > 0.7 ? `rosy pink (${hex})` : sat > 0.5 ? `deep raspberry-rose (${hex})` : `mauve-berry (${hex})`;
+}
+
 // ── Prompt builder ────────────────────────────────────────────────────────────
 /**
  * Build a flux-kontext-pro makeup prompt for a specific look.
@@ -60,31 +110,31 @@ function buildPrompt(
   switch (look.index) {
     case 0:
       return (
-        `Apply a natural everyday makeup look: a sheer lip tint in ${lipHex}, soft blush in ${blushHex} ` +
+        `Apply a natural everyday makeup look: a sheer lip tint in ${hexToMakeupColor(lipHex)}, soft blush in ${hexToMakeupColor(blushHex)} ` +
         `on the cheeks, light foundation smoothing, and a coat of mascara. ` +
         `Keep it fresh and effortless — no heavy contouring. ${PRESERVE}`
       );
     case 1:
       return (
-        `Apply a bold lip look: a saturated, precisely applied lip color in ${lipHex} with a clean edge. ` +
+        `Apply a bold lip look: a saturated, precisely applied lip color in ${hexToMakeupColor(lipHex)} with a clean edge. ` +
         `Add groomed, defined brows and a thin coat of mascara. Keep eye makeup minimal — no eyeshadow. ` +
-        `Blush in ${blushHex} on the cheeks. ${PRESERVE}`
+        `Blush in ${hexToMakeupColor(blushHex)} on the cheeks. ${PRESERVE}`
       );
     case 2:
       return (
-        `Apply a smoky eye makeup look: blend ${eyeHex} eyeshadow on the lids with a deeper shade in the ` +
+        `Apply a smoky eye makeup look: blend ${hexToMakeupColor(eyeHex)} eyeshadow on the lids with a deeper shade in the ` +
         `crease and a lighter highlight on the brow bone. Add black eyeliner on the upper lash line and ` +
-        `dramatic mascara. Keep lips nude or barely-there. Soft blush in ${blushHex}. ${PRESERVE}`
+        `dramatic mascara. Keep lips nude or barely-there. Soft blush in ${hexToMakeupColor(blushHex)}. ${PRESERVE}`
       );
     case 3:
       return (
-        `Apply a full glam makeup look: bold lip color in ${lipHex}, ${eyeHex} eyeshadow blended on the ` +
+        `Apply a full glam makeup look: bold lip color in ${hexToMakeupColor(lipHex)}, ${hexToMakeupColor(eyeHex)} eyeshadow blended on the ` +
         `lids with shimmer highlight on the brow bone and inner corner. Precise black eyeliner, false-lash ` +
-        `effect mascara. Sculpted blush and highlight in ${blushHex} on cheekbones. Full-coverage foundation ` +
+        `effect mascara. Sculpted blush and highlight in ${hexToMakeupColor(blushHex)} on cheekbones. Full-coverage foundation ` +
         `with a dewy finish. ${PRESERVE}`
       );
     default:
-      return `Apply makeup with color ${lipHex}. ${PRESERVE}`;
+      return `Apply makeup with color ${hexToMakeupColor(lipHex)}. ${PRESERVE}`;
   }
 }
 
@@ -113,6 +163,8 @@ export async function replicateMakeupPreview(
       prompt,
       output_format:    "jpg",
       output_quality:   92,
+      // 0.25 MP: output is 400×530 (0.21MP) — no quality loss, ~75% cost saving vs 1MP default
+      megapixels:       "0.25",
       aspect_ratio:     "match_input_image",
       safety_tolerance: 2,
     },

@@ -342,12 +342,13 @@ export function SpectaclesCard({
           {firstReadyUrl || photoUrl ? (
             <div className="relative rounded-2xl overflow-hidden" style={{ maxWidth: 280, width: "100%" }}>
               <Image
+                key={firstReadyUrl || photoUrl}
                 src={firstReadyUrl || photoUrl!}
                 alt="Your photo with glasses"
                 width={560}
                 height={700}
                 unoptimized
-                className="w-full object-cover rounded-2xl"
+                className={`w-full object-cover rounded-2xl${firstReadyUrl ? " image-reveal" : ""}`}
                 style={{ maxHeight: 380 }}
               />
               {/* dashed oval — tracks head outline, stops at chin (~85%) */}

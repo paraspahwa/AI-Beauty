@@ -147,8 +147,8 @@ If expanding to non-English markets, add `alternates.languages` in metadata and 
 | `NEXT_PUBLIC_APP_URL` in Vercel | 🔴 P1 | ⬜ TODO |
 | Submit sitemap to Google Search Console | 🟡 P2 | ⬜ TODO |
 | Google OAuth authorised domain | 🟡 P2 | ⬜ TODO |
-| Per-page metadata exports | 🟡 P2 | ⬜ TODO |
-| JSON-LD structured data | 🟡 P2 | ⬜ TODO |
+| Per-page metadata exports | 🟡 P2 | ✅ Done |
+| JSON-LD structured data | 🟡 P2 | ✅ Done |
 | `sitemap.ts` — dynamic sitemap generation | ✅ Done | ✅ |
 | `robots.ts` — robots.txt | ✅ Done | ✅ |
 | Root layout metadata overhaul | ✅ Done | ✅ |

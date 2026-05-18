@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna, TrendingUp, ShoppingBag } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna, TrendingUp, ShoppingBag, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -22,6 +22,8 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
   const [user, setUser] = React.useState<User | null>(null);
+  const [dashOpen, setDashOpen] = React.useState(false);
+  const dashRef = React.useRef<HTMLDivElement>(null);
   const isHome = pathname === "/";
 
   React.useEffect(() => {
@@ -30,7 +32,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  React.useEffect(() => { setMenuOpen(false); }, [pathname]);
+  React.useEffect(() => { setMenuOpen(false); setDashOpen(false); }, [pathname]);
 
   // Sync auth state
   React.useEffect(() => {
@@ -41,6 +43,17 @@ export function Navbar() {
       setUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Close dashboard dropdown on outside click
+  React.useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dashRef.current && !dashRef.current.contains(e.target as Node)) {
+        setDashOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   async function handleSignOut() {
@@ -107,34 +120,41 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3 shrink-0">
           {user ? (
             <>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard">
+              {/* Dashboard dropdown */}
+              <div ref={dashRef} className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDashOpen((v) => !v)}
+                  aria-haspopup="true"
+                  aria-expanded={dashOpen}
+                >
                   <LayoutDashboard className="h-3.5 w-3.5" />
-                  My Reports
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/style-dna">
-                  <Dna className="h-3.5 w-3.5" />
-                  Style DNA
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/progress">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  Progress
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/wardrobe-capsule">
-                  <ShoppingBag className="h-3.5 w-3.5" />
-                  Capsule
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-3.5 w-3.5" />
-                Sign out
-              </Button>
+                  Dashboard
+                  <ChevronDown className={`h-3 w-3 ml-1 transition-transform duration-200 ${dashOpen ? "rotate-180" : ""}`} />
+                </Button>
+                {dashOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-terracotta/20 bg-white shadow-lg py-1 z-50">
+                    <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                      <LayoutDashboard className="h-3.5 w-3.5" /> My Reports
+                    </Link>
+                    <Link href="/dashboard/style-dna" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                      <Dna className="h-3.5 w-3.5" /> Style DNA
+                    </Link>
+                    <Link href="/dashboard/progress" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                      <TrendingUp className="h-3.5 w-3.5" /> Progress
+                    </Link>
+                    <Link href="/dashboard/wardrobe-capsule" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                      <ShoppingBag className="h-3.5 w-3.5" /> Capsule
+                    </Link>
+                    <div className="border-t border-terracotta/15 mt-1 pt-1">
+                      <button className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={handleSignOut}>
+                        <LogOut className="h-3.5 w-3.5" /> Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <Button asChild variant="accent" size="sm" className="group">
                 <Link href="/upload">
                   <Camera className="h-3.5 w-3.5" />
@@ -159,10 +179,11 @@ export function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden ml-auto p-2 rounded-full text-ink-stone hover:text-ink hover:bg-terracotta/10 transition-colors"
+          className="md:hidden ml-auto p-2.5 rounded-full text-ink-stone hover:text-ink hover:bg-terracotta/10 transition-colors"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle navigation menu"
           aria-expanded={menuOpen}
+          aria-controls="mobile-nav"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -187,6 +208,7 @@ export function Navbar() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="md:hidden overflow-hidden border-t border-terracotta/20 backdrop-blur-xl surface-deep"
+            id="mobile-nav"
           >
             <div className="container py-4 space-y-1">
               {isHome &&

@@ -42,9 +42,8 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
   const [afterSrc, setAfterSrc] = useState(item.afterSrc);
   const [sliderPct, setSliderPct] = useState(100);
   const animating = useRef(true);
-  const sampleLabel = item.id || "sample";
-  const beforeBadgeLabel = `${sampleLabel} before`;
-  const afterBadgeLabel = `${sampleLabel} after`;
+  const beforeBadgeLabel = "Before";
+  const afterBadgeLabel = "After";
 
   useEffect(() => {
     setBeforeSrc(item.beforeSrc);
