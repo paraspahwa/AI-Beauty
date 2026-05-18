@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag, MessageCircle, Images } from "lucide-react";
+import { getStudioEntitlement } from "@/lib/entitlement";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag, MessageCircle, Images, Crown, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -49,6 +50,8 @@ export default async function DashboardPage() {
 
   const rows = (reports ?? []) as ReportRow[];
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
+  const entitlement = await getStudioEntitlement(user.id);
+  const tier = entitlement.tier;
 
   return (
     <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
@@ -56,7 +59,22 @@ export default async function DashboardPage() {
         <div>
           <span className="section-label mb-3 inline-flex">Dashboard</span>
           <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-2">My Reports</h1>
-          <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
+            {tier === "studio_pro" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(139,92,246,0.15)", color: "#8B5CF6", border: "1px solid rgba(139,92,246,0.3)" }}>
+                <Crown className="h-3 w-3" /> Studio Pro
+              </span>
+            ) : tier === "report" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(236,72,153,0.12)", color: "#EC4899", border: "1px solid rgba(236,72,153,0.25)" }}>
+                <FileText className="h-3 w-3" /> Report
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(131,24,67,0.10)", color: "rgba(131,24,67,0.55)", border: "1px solid rgba(131,24,67,0.18)" }}>
+                Free
+              </span>
+            )}
+          </div>
         </div>
         <div data-tour="upload-cta">
           <Button asChild variant="accent" size="sm">
@@ -110,6 +128,21 @@ export default async function DashboardPage() {
             <p className="text-xs text-ink-stone">All generated looks with date and time</p>
           </div>
         </Link>
+        {tier !== "studio_pro" && (
+          <Link
+            href="/upload?intent=studio"
+            className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+            style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.10),rgba(109,40,217,0.06))", border: "1px solid rgba(139,92,246,0.22)" }}
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(139,92,246,0.18)" }}>
+              <Wand2 className="h-5 w-5" style={{ color: "#8B5CF6" }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink">Upgrade to Studio Pro</p>
+              <p className="text-xs text-ink-stone">150 AI gens/mo · Unlimited reports</p>
+            </div>
+          </Link>
+        )}
       </div>
 
       {/* Style DNA teaser — shown when prefs exist */}
