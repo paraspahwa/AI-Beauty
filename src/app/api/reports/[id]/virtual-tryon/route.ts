@@ -15,6 +15,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { applyLogoWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -162,12 +163,13 @@ export async function POST(
     const resultRes = await fetch(resultUrl);
     if (!resultRes.ok) return NextResponse.json({ error: "Download failed" }, { status: 500 });
     const resultBuf = Buffer.from(await resultRes.arrayBuffer());
+    const watermarkedBuf = await applyLogoWatermark(resultBuf);
 
     const ts = Date.now();
     const storagePath = `tryon-results/${user.id}/${id}/${ts}.jpg`;
     const { error: upErr } = await admin.storage
       .from(env.supabase.bucket)
-      .upload(storagePath, resultBuf, { contentType: "image/jpeg", upsert: false });
+      .upload(storagePath, watermarkedBuf, { contentType: "image/jpeg", upsert: false });
 
     if (upErr) {
       // Fall back to returning the FAL URL directly (short-lived but usable)

@@ -19,6 +19,7 @@ import {
   makeupCacheKey,
 } from "@/lib/makeup-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { applyLogoWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -165,11 +166,12 @@ export async function POST(
     return NextResponse.json({ error: "Download failed" }, { status: 500 });
   }
   const resultBuf = Buffer.from(await dlRes.arrayBuffer());
+  const watermarkedBuf = await applyLogoWatermark(resultBuf);
 
   const storagePath = `makeup-results/${user.id}/${id}/${cacheSlug}.jpg`;
   await admin.storage
     .from(env.supabase.bucket)
-    .upload(storagePath, resultBuf, { contentType: "image/jpeg", upsert: true });
+    .upload(storagePath, watermarkedBuf, { contentType: "image/jpeg", upsert: true });
 
   // ── Update cache in visual_assets ───────────────────────────────────────────
   const updatedCache = {

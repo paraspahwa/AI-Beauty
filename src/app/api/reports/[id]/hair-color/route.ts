@@ -3,6 +3,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import Replicate from "replicate";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { applyLogoWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -276,11 +277,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!resultRes.ok) return NextResponse.json({ error: "Failed to download generated image" }, { status: 502 });
     const resultBuf = Buffer.from(await resultRes.arrayBuffer());
 
-    // Resize output to a consistent preview size
-    const finalBuf = await sharp(resultBuf)
+    // Resize output to a consistent preview size, then watermark
+    const resized = await sharp(resultBuf)
       .resize(400, 530, { fit: "cover", position: "top" })
       .jpeg({ quality: 90 })
       .toBuffer();
+    const finalBuf = await applyLogoWatermark(resized);
 
     const { error: uploadErr } = await admin.storage
       .from(env.supabase.bucket)
