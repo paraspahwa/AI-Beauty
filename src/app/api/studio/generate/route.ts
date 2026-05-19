@@ -4,6 +4,12 @@ import { env } from "@/lib/env";
 import { compressForAI } from "@/lib/ai/image";
 import { chatJSON } from "@/lib/ai/openai";
 import { getCanvasQuota } from "@/lib/entitlement";
+import {
+  MAKEUP_INTENSITIES,
+  MAKEUP_STYLES,
+  type MakeupIntensityValue,
+  type MakeupStyleValue,
+} from "@/lib/makeup-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 import type { StudioOutfitResult } from "@/types/report";
 
@@ -12,6 +18,22 @@ export const maxDuration = 60;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_MODES = new Set(["makeup", "hair", "outfit"]);
+
+function parseMakeupStyle(value: unknown): MakeupStyleValue {
+  if (typeof value === "string") {
+    const v = value.trim() as MakeupStyleValue;
+    if ((MAKEUP_STYLES as readonly string[]).includes(v)) return v;
+  }
+  return "natural";
+}
+
+function parseMakeupIntensity(value: unknown): MakeupIntensityValue {
+  if (typeof value === "string") {
+    const v = value.trim() as MakeupIntensityValue;
+    if ((MAKEUP_INTENSITIES as readonly string[]).includes(v)) return v;
+  }
+  return "medium";
+}
 
 function escapeXml(value: string) {
   return value
@@ -258,8 +280,8 @@ export async function POST(request: NextRequest) {
     const compressed = await compressForAI(Buffer.from(await imgData.arrayBuffer()));
 
     if (body.mode === "makeup") {
-      const makeupStyle = typeof options.makeupStyle === "string" && options.makeupStyle.trim() ? options.makeupStyle.trim() : "natural";
-      const makeupIntensity = typeof options.makeupIntensity === "string" && options.makeupIntensity.trim() ? options.makeupIntensity.trim() : "medium";
+      const makeupStyle: MakeupStyleValue = parseMakeupStyle(options.makeupStyle);
+      const makeupIntensity: MakeupIntensityValue = parseMakeupIntensity(options.makeupIntensity);
       const { createFalClient } = await import("@fal-ai/client");
       const fal = createFalClient({ credentials: env.fal.apiKey });
       const result = await fal.run("fal-ai/image-apps-v2/makeup-application", {
