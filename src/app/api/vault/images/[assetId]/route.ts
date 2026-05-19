@@ -5,8 +5,8 @@ import { env } from "@/lib/env";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-export async function GET(req: NextRequest, { params }: { params: { assetId: string } }) {
-  const { assetId } = params;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ assetId: string }> }) {
+  const { assetId } = await params;
   if (!assetId) return NextResponse.json({ error: "Missing assetId" }, { status: 400 });
   const admin = createSupabaseAdminClient();
   const { data: asset } = await admin
