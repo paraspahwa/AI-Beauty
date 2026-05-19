@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { VisitorChatWidget } from "@/components/VisitorChatWidget";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
@@ -119,6 +120,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <Navbar />
         <div id="main-content" className="flex-1">{children}</div>
+        <VisitorChatWidget />
         <Footer />
       </body>
     </html>

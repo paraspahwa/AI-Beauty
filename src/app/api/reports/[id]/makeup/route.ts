@@ -19,7 +19,6 @@ import {
   makeupCacheKey,
 } from "@/lib/makeup-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
-import { applyLogoWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -166,17 +165,34 @@ export async function POST(
     return NextResponse.json({ error: "Download failed" }, { status: 500 });
   }
   const resultBuf = Buffer.from(await dlRes.arrayBuffer());
-  const watermarkedBuf = await applyLogoWatermark(resultBuf);
 
-  const storagePath = `makeup-results/${user.id}/${id}/${cacheSlug}.jpg`;
+
+  // Save both low-res (400px) and HD (1024px) versions
+  const { default: sharp } = await import("sharp");
+  const lowRes = await sharp(resultBuf)
+    .resize(400, 530, { fit: "cover", position: "top" })
+    .jpeg({ quality: 90 })
+    .toBuffer();
+  const hdRes = await sharp(resultBuf)
+    .resize(1024, 1356, { fit: "cover", position: "top" })
+    .jpeg({ quality: 98 })
+    .toBuffer();
+
+  const lowResPath = `makeup-results/${user.id}/${id}/${cacheSlug}-low.jpg`;
+  const hdResPath = `makeup-results/${user.id}/${id}/${cacheSlug}-hd.jpg`;
+
   await admin.storage
     .from(env.supabase.bucket)
-    .upload(storagePath, watermarkedBuf, { contentType: "image/jpeg", upsert: true });
+    .upload(lowResPath, lowRes, { contentType: "image/jpeg", upsert: true });
+  await admin.storage
+    .from(env.supabase.bucket)
+    .upload(hdResPath, hdRes, { contentType: "image/jpeg", upsert: true });
+
 
   // ── Update cache in visual_assets ───────────────────────────────────────────
   const updatedCache = {
     ...makeupCache,
-    [cacheSlug]: { path: storagePath, status: "ready" },
+    [cacheSlug]: { path: hdResPath, status: "ready", lowResPath, hdResPath },
   };
   await admin
     .from("reports")
@@ -188,6 +204,7 @@ export async function POST(
     })
     .eq("id", id);
 
+
   let asset: { id: string; createdAt: string } | null = null;
   try {
     asset = await insertGeneratedAsset({
@@ -196,24 +213,33 @@ export async function POST(
       reportId: id,
       sourceAssetId: sourceResolved.sourceAssetId,
       sourceImagePath: sourceResolved.sourceImagePath,
-      resultImagePath: storagePath,
+      resultImagePath: hdResPath,
       tool: "makeup",
       variant: cacheSlug,
       meta: {
         style,
         intensity,
+        lowResPath,
+        hdResPath,
       },
     });
   } catch (insertErr) {
     console.warn("[makeup route] failed to persist generated_assets row:", (insertErr as Error).message);
   }
 
-      // ── Return signed URL ──────────────────────────────────────────────────────
-      const { data: signed } = await admin.storage
+      // ── Return signed URLs for both (1 hour) ───────────────────────────────────
+      const { data: signedLow } = await admin.storage
         .from(env.supabase.bucket)
-        .createSignedUrl(storagePath, 3600);
+        .createSignedUrl(lowResPath, 3600);
+      const { data: signedHd } = await admin.storage
+        .from(env.supabase.bucket)
+        .createSignedUrl(hdResPath, 3600);
 
-      return NextResponse.json({ url: signed?.signedUrl ?? resultUrl, asset });
+      return NextResponse.json({
+        lowResUrl: signedLow?.signedUrl ?? resultUrl,
+        hdUrl: signedHd?.signedUrl ?? resultUrl,
+        asset,
+      });
     } catch (err) {
       const e = err as { status?: number; body?: unknown; message?: string };
       console.error("[makeup route]", err);

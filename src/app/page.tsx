@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SampleShowcase } from "@/components/home/SampleShowcase";
-import { VisitorChatWidget } from "@/components/VisitorChatWidget";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
 import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
 import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
@@ -603,7 +602,6 @@ export default function HomePage() {
         }}
       />
       <StickyMobileCta />
-      <VisitorChatWidget />
     </main>
   );
 }

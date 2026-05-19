@@ -6,18 +6,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
+  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian disabled:opacity-40 disabled:pointer-events-none cursor-pointer active:scale-[0.985]",
   {
     variants: {
       variant: {
-        default: "bg-terracotta text-white hover:opacity-90 hover:-translate-y-px shadow-card",
-        accent: [
-          "text-white shadow-glow-iris",
-          "bg-[linear-gradient(135deg,#8B5CF6_0%,#A78BFA_100%)]",
+        default: [
+          "text-white shadow-chrome",
+          "bg-[linear-gradient(135deg,#DB2777_0%,#EC4899_55%,#F97316_100%)]",
           "hover:opacity-95 hover:-translate-y-px",
         ].join(" "),
-        outline: "border border-terracotta/40 text-terracotta bg-white/60 hover:bg-terracotta/10",
-        ghost: "text-ink hover:bg-terracotta/10",
+        accent: [
+          "text-white shadow-glow-iris",
+          "bg-[linear-gradient(135deg,#0EA5A4_0%,#14B8A6_55%,#22D3EE_100%)]",
+          "hover:opacity-95 hover:-translate-y-px",
+        ].join(" "),
+        outline: "border border-terracotta/35 text-terracotta bg-white/75 hover:bg-terracotta/10 hover:border-terracotta/55",
+        ghost: "text-ink hover:bg-terracotta/10 hover:text-terracotta-dark",
       },
       size: {
         sm: "h-9  px-4 text-sm",

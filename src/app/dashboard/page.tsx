@@ -128,6 +128,30 @@ export default async function DashboardPage() {
             <p className="text-xs text-ink-stone">All generated looks with date and time</p>
           </div>
         </Link>
+        <div
+          className="flex items-center gap-4 rounded-2xl px-5 py-4"
+          style={{ background: "rgba(16,185,129,0.08)", border: "1px dashed rgba(16,185,129,0.28)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(16,185,129,0.16)" }}>
+            <Clock className="h-5 w-5" style={{ color: "#10B981" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">Routine Tracker</p>
+            <p className="text-xs text-ink-stone">Daily AM/PM check-ins and streaks (coming soon)</p>
+          </div>
+        </div>
+        <div
+          className="flex items-center gap-4 rounded-2xl px-5 py-4"
+          style={{ background: "rgba(59,130,246,0.08)", border: "1px dashed rgba(59,130,246,0.28)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(59,130,246,0.16)" }}>
+            <Images className="h-5 w-5" style={{ color: "#3B82F6" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">Community Gallery</p>
+            <p className="text-xs text-ink-stone">Inspiration looks and public style boards (coming soon)</p>
+          </div>
+        </div>
         {tier !== "studio_pro" && (
           <Link
             href="/upload?intent=studio"

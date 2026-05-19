@@ -3,7 +3,6 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import Replicate from "replicate";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
-import { applyLogoWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -292,23 +291,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!resultRes.ok) return NextResponse.json({ error: "Failed to download generated image" }, { status: 502 });
     const resultBuf = Buffer.from(await resultRes.arrayBuffer());
 
-    // Resize output to a consistent preview size, then watermark
-    const resized = await sharp(resultBuf)
+    // Save both low-res (400px) and HD (1024px) versions
+    const lowRes = await sharp(resultBuf)
       .resize(400, 530, { fit: "cover", position: "top" })
       .jpeg({ quality: 90 })
       .toBuffer();
-    const finalBuf = await applyLogoWatermark(resized);
+    const hdRes = await sharp(resultBuf)
+      .resize(1024, 1356, { fit: "cover", position: "top" })
+      .jpeg({ quality: 98 })
+      .toBuffer();
 
-    const { error: uploadErr } = await admin.storage
+    const lowResPath = `users/${user.id}/reports/${id}/hair-color-${slug}-low.jpg`;
+    const hdResPath = `users/${user.id}/reports/${id}/hair-color-${slug}-hd.jpg`;
+
+    await admin.storage
       .from(env.supabase.bucket)
-      .upload(storagePath, finalBuf, { contentType: "image/jpeg", upsert: true });
-
-    if (uploadErr) return NextResponse.json({ error: "Upload failed" }, { status: 500 });
-
-    // Return a signed URL (1 hour)
-    const { data: signed } = await admin.storage
+      .upload(lowResPath, lowRes, { contentType: "image/jpeg", upsert: true });
+    await admin.storage
       .from(env.supabase.bucket)
-      .createSignedUrl(storagePath, 3600);
+      .upload(hdResPath, hdRes, { contentType: "image/jpeg", upsert: true });
+
+
+    // Return signed URLs for both (1 hour)
+    const { data: signedLow } = await admin.storage
+      .from(env.supabase.bucket)
+      .createSignedUrl(lowResPath, 3600);
+    const { data: signedHd } = await admin.storage
+      .from(env.supabase.bucket)
+      .createSignedUrl(hdResPath, 3600);
 
     let asset: { id: string; createdAt: string } | null = null;
     try {
@@ -318,19 +328,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         reportId: id,
         sourceAssetId: sourceResolved.sourceAssetId,
         sourceImagePath: sourceResolved.sourceImagePath,
-        resultImagePath: storagePath,
+        resultImagePath: hdResPath,
         tool: "hair",
         variant: slug,
         meta: {
           colorName,
           styleName: styleName || "No change",
+          lowResPath,
+          hdResPath,
         },
       });
     } catch (insertErr) {
       console.warn("[hair-color] failed to persist generated_assets row:", (insertErr as Error).message);
     }
 
-    return NextResponse.json({ signedUrl: signed?.signedUrl ?? null, asset });
+    return NextResponse.json({
+      lowResUrl: signedLow?.signedUrl ?? null,
+      hdUrl: signedHd?.signedUrl ?? null,
+      asset,
+    });
   } catch (err) {
     console.error("[hair-color] unexpected error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

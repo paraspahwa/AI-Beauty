@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna, TrendingUp, ShoppingBag, ChevronDown } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna, TrendingUp, ShoppingBag, ChevronDown, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -23,6 +23,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
   const [user, setUser] = React.useState<User | null>(null);
   const [dashOpen, setDashOpen] = React.useState(false);
+  const [theme, setTheme] = React.useState<"light" | "dark">("light");
   const dashRef = React.useRef<HTMLDivElement>(null);
   const isHome = pathname === "/";
 
@@ -45,6 +46,13 @@ export function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const stored = (localStorage.getItem("renovaara_theme") as "light" | "dark" | null) ?? "light";
+    setTheme(stored);
+    root.classList.toggle("dark", stored === "dark");
+  }, []);
+
   // Close dashboard dropdown on outside click
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -62,6 +70,13 @@ export function Navbar() {
     setUser(null);
     setMenuOpen(false);
     router.push("/");
+  }
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    localStorage.setItem("renovaara_theme", next);
   }
 
   return (
@@ -118,6 +133,10 @@ export function Navbar() {
 
         {/* Right side CTA */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
+          <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="Toggle dark mode">
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            {theme === "dark" ? "Light" : "Dark"}
+          </Button>
           {user ? (
             <>
               {/* Dashboard dropdown */}
@@ -223,6 +242,9 @@ export function Navbar() {
                   </Link>
                 ))}
               <div className="pt-3 flex flex-col gap-2 border-t border-terracotta/20">
+                <Button variant="outline" className="w-full" onClick={toggleTheme}>
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {theme === "dark" ? "Light mode" : "Dark mode"}
+                </Button>
                 {user ? (
                   <>
                     <Button asChild variant="outline" className="w-full">

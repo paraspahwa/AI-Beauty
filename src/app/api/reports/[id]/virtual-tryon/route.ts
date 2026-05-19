@@ -15,7 +15,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
-import { applyLogoWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -159,36 +158,56 @@ export async function POST(
       return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
     }
 
-    // ── Download result and persist to Supabase storage ────────────────────
+
+    // ── Download result and persist both low-res and HD ─────────────────────
     const resultRes = await fetch(resultUrl);
     if (!resultRes.ok) return NextResponse.json({ error: "Download failed" }, { status: 500 });
     const resultBuf = Buffer.from(await resultRes.arrayBuffer());
-    const watermarkedBuf = await applyLogoWatermark(resultBuf);
+
+    const { default: sharp } = await import("sharp");
+    const lowRes = await sharp(resultBuf)
+      .resize(400, 530, { fit: "cover", position: "top" })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+    const hdRes = await sharp(resultBuf)
+      .resize(1024, 1356, { fit: "cover", position: "top" })
+      .jpeg({ quality: 98 })
+      .toBuffer();
 
     const ts = Date.now();
-    const storagePath = `tryon-results/${user.id}/${id}/${ts}.jpg`;
-    const { error: upErr } = await admin.storage
-      .from(env.supabase.bucket)
-      .upload(storagePath, watermarkedBuf, { contentType: "image/jpeg", upsert: false });
+    const lowResPath = `tryon-results/${user.id}/${id}/${ts}-low.jpg`;
+    const hdResPath = `tryon-results/${user.id}/${id}/${ts}-hd.jpg`;
 
-    if (upErr) {
+    const { error: upErrLow } = await admin.storage
+      .from(env.supabase.bucket)
+      .upload(lowResPath, lowRes, { contentType: "image/jpeg", upsert: false });
+    const { error: upErrHd } = await admin.storage
+      .from(env.supabase.bucket)
+      .upload(hdResPath, hdRes, { contentType: "image/jpeg", upsert: false });
+
+    if (upErrLow || upErrHd) {
       // Fall back to returning the FAL URL directly (short-lived but usable)
-      return NextResponse.json({ url: resultUrl, stored: false, asset: null });
+      return NextResponse.json({ lowResUrl: resultUrl, hdUrl: resultUrl, stored: false, asset: null });
     }
+
 
     // ── Persist latest tryon path in visual_assets for history ─────────────
     const existingVa = (row.visual_assets ?? {}) as Record<string, unknown>;
     const history = ((existingVa.tryonHistory ?? []) as string[]).slice(-9); // keep last 10
-    history.push(storagePath);
+    history.push(hdResPath);
     await admin
       .from("reports")
-      .update({ visual_assets: { ...existingVa, tryonHistory: history, tryonLatest: storagePath } })
+      .update({ visual_assets: { ...existingVa, tryonHistory: history, tryonLatest: hdResPath } })
       .eq("id", id);
 
-    // ── Return signed URL ───────────────────────────────────────────────────
-    const { data: signed } = await admin.storage
+
+    // ── Return signed URLs for both (1 hour) ───────────────────────────────
+    const { data: signedLow } = await admin.storage
       .from(env.supabase.bucket)
-      .createSignedUrl(storagePath, 3600);
+      .createSignedUrl(lowResPath, 3600);
+    const { data: signedHd } = await admin.storage
+      .from(env.supabase.bucket)
+      .createSignedUrl(hdResPath, 3600);
 
     let asset: { id: string; createdAt: string } | null = null;
     try {
@@ -198,11 +217,13 @@ export async function POST(
         reportId: id,
         sourceAssetId: sourceAssetIdResolved,
         sourceImagePath,
-        resultImagePath: storagePath,
+        resultImagePath: hdResPath,
         tool: "virtual_tryon",
         variant: null,
         meta: {
           usedPersonUpload: !!personFile,
+          lowResPath,
+          hdResPath,
         },
       });
     } catch (insertErr) {
@@ -210,7 +231,8 @@ export async function POST(
     }
 
     return NextResponse.json({
-      url: signed?.signedUrl ?? resultUrl,
+      lowResUrl: signedLow?.signedUrl ?? resultUrl,
+      hdUrl: signedHd?.signedUrl ?? resultUrl,
       stored: true,
       asset,
     });
