@@ -359,7 +359,7 @@ export async function POST(request: NextRequest) {
     const hairColor: FalHairColor = parseHairColor(options.hairColor);
     const { createFalClient } = await import("@fal-ai/client");
     const fal = createFalClient({ credentials: env.fal.apiKey });
-    const falInput: Record<string, unknown> = {
+    const falInput: any = {
       image_url: `data:image/jpeg;base64,${compressed.toString("base64")}`,
     };
     if (hairStyle !== "No change") falInput.hair_style = hairStyle;
