@@ -457,6 +457,7 @@ export async function POST(req: NextRequest) {
             } catch (pipelineErr) {
               console.error("[analyze] pipeline failed:", pipelineErr);
               const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
+              const isValidationError = pe.name === "PipelineStageError" && pe.kind === "validation";
               const internalError = pe.name === "PipelineStageError"
                 ? `${pe.stage}:${pe.kind}:${pe.message}`
                 : (pipelineErr as Error).message;
@@ -464,7 +465,12 @@ export async function POST(req: NextRequest) {
                 status: "failed",
                 error: internalError?.slice(0, 500),
               }).eq("id", report.id);
-              emit({ type: "failed", message: "Analysis failed. Please try again." });
+              // Surface photo quality / validation errors directly to the user.
+              // All other failures show a generic message to avoid leaking internals.
+              const userMessage = isValidationError && pe.message
+                ? pe.message
+                : "Analysis failed. Please try again.";
+              emit({ type: "failed", message: userMessage });
               controller.close();
               return;
             }

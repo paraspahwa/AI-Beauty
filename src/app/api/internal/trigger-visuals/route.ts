@@ -21,6 +21,21 @@ import { SEASON_COLOR_PALETTES, normalizeSeasonKey } from "@/lib/season-colors";
 import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
+/** Extract Rekognition gender as a hair-model enum value. Falls back to "none". */
+function extractGender(rekognition: unknown): "none" | "male" | "female" {
+  if (
+    rekognition &&
+    typeof rekognition === "object" &&
+    "Gender" in rekognition &&
+    typeof (rekognition as Record<string, unknown>).Gender === "object"
+  ) {
+    const val = ((rekognition as Record<string, unknown>).Gender as Record<string, unknown>).Value;
+    if (val === "Male") return "male";
+    if (val === "Female") return "female";
+  }
+  return "none";
+}
+
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -303,7 +318,10 @@ export async function POST(req: NextRequest) {
           })
         : Promise.resolve([] as { index: number; buffer: Buffer }[]),
       (isPaidReport && missingHairstyleIndices.length > 0)
-        ? generateHairstylePreviews(buffer, hairstyleResult, row.rekognition, missingHairstyleIndices).catch((err) => {
+        ? generateHairstylePreviews(
+            buffer, hairstyleResult, row.rekognition, missingHairstyleIndices,
+            extractGender(row.rekognition),
+          ).catch((err) => {
             console.warn("[trigger-visuals] hairstyle failed:", (err as Error).message);
             return [] as { index: number; buffer: Buffer; style: string }[];
           })
