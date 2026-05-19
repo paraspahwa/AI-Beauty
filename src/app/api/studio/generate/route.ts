@@ -359,12 +359,14 @@ export async function POST(request: NextRequest) {
     const hairColor: FalHairColor = parseHairColor(options.hairColor);
     const { createFalClient } = await import("@fal-ai/client");
     const fal = createFalClient({ credentials: env.fal.apiKey });
+    const falInput: Record<string, unknown> = {
+      image_url: `data:image/jpeg;base64,${compressed.toString("base64")}`,
+    };
+    if (hairStyle !== "No change") falInput.hair_style = hairStyle;
+    if (hairColor !== "natural") falInput.hair_color = hairColor;
+    // @ts-expect-error -- the FAL SDK types are stricter than the runtime accepts for this app model
     const result = await fal.run("fal-ai/image-apps-v2/hair-change", {
-      input: {
-        image_url: `data:image/jpeg;base64,${compressed.toString("base64")}`,
-        hair_style: hairStyle,
-        hair_color: hairColor,
-      },
+      input: falInput,
     }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
 
     const resultUrl = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? "";
