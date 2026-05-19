@@ -153,15 +153,22 @@ export default async function ReportPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/auth?redirect=/report/${id}`);
 
-  const { data: row } = await supabase
-    .from("reports")
-    .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, visual_assets, pipeline_meta, created_at")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
+  const admin = createSupabaseAdminClient();
+
+  // Batch report fetch and entitlement lookup (store signing needs row.image_path)
+  const [{ data: row }, studioEntitlement] = await Promise.all([
+    supabase
+      .from("reports")
+      .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, visual_assets, pipeline_meta, created_at")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single(),
+    getStudioEntitlement(user.id),
+  ]);
+
   if (!row) notFound();
 
-  const admin = createSupabaseAdminClient();
+  // Sign image URL now that we have row.image_path
   const { data: signed, error: signErr } = await admin.storage
     .from(env.supabase.bucket)
     .createSignedUrl(row.image_path, 60 * 30);
@@ -171,9 +178,6 @@ export default async function ReportPage({
   }
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
-
-  // Fetch studio entitlement (plan tier + remaining quota)
-  const studioEntitlement = await getStudioEntitlement(user.id);
   // studio_pro users always get premium content access
   const effectivePremium = hasPremium || studioEntitlement.tier === "studio_pro";
 

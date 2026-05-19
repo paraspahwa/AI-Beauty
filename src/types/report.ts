@@ -158,6 +158,18 @@ export interface PipelineMeta {
   stages: { stage: string; durationMs: number; degraded: boolean }[];
 }
 
+export interface StudioOutfitResult {
+  occasion: string;
+  vibe: string;
+  looks: {
+    title: string;
+    pieces: string[];
+    notes: string;
+    palette?: { name: string; hex: string }[];
+  }[];
+  summary: string;
+}
+
 /** Auto-detected face landmark dot positions (0-1 fractions of image size). */
 export interface FaceLandmarks {
   faceShape: { x: number; y: number };

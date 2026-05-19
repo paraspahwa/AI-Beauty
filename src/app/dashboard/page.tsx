@@ -32,25 +32,26 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/auth?redirect=/dashboard");
 
-  // Fetch style prefs for DNA teaser
   const admin = createSupabaseAdminClient();
-  const { data: prefsRow } = await admin
-    .from("user_style_prefs")
-    .select("color_season, face_shape, skin_type, prefs")
-    .eq("user_id", user.id)
-    .maybeSingle();
 
-  const prefs = prefsRow as { color_season?: string | null; face_shape?: string | null; skin_type?: string | null; prefs?: { palette?: string[] } | null } | null;
+  // Batch style prefs and reports queries, plus entitlement lookup
+  const [{ data: prefsRow }, { data: reports }, entitlement] = await Promise.all([
+    admin
+      .from("user_style_prefs")
+      .select("color_season, face_shape, prefs")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("reports")
+      .select("id, status, is_paid, created_at, summary, face_shape, share_token")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    getStudioEntitlement(user.id),
+  ]);
 
-  const { data: reports } = await supabase
-    .from("reports")
-    .select("id, status, is_paid, created_at, summary, face_shape, share_token")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
+  const prefs = prefsRow as { color_season?: string | null; face_shape?: string | null; prefs?: { palette?: string[] } | null } | null;
   const rows = (reports ?? []) as ReportRow[];
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
-  const entitlement = await getStudioEntitlement(user.id);
   const tier = entitlement.tier;
 
   return (
@@ -152,6 +153,32 @@ export default async function DashboardPage() {
             <p className="text-xs text-ink-stone">Inspiration looks and public style boards (coming soon)</p>
           </div>
         </div>
+        <Link
+          href="/studio"
+          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+          style={{ background: "linear-gradient(135deg,rgba(236,72,153,0.10),rgba(201,149,107,0.08))", border: "1px solid rgba(236,72,153,0.18)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
+            <Sparkles className="h-5 w-5" style={{ color: "#EC4899" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">Try Studio Canvas</p>
+            <p className="text-xs text-ink-stone">Quick scan, makeup, hair, outfits</p>
+          </div>
+        </Link>
+        <Link
+          href="/dashboard/studio-vault"
+          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+          style={{ background: "rgba(201,149,107,0.08)", border: "1px solid rgba(201,149,107,0.18)" }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(201,149,107,0.16)" }}>
+            <Images className="h-5 w-5" style={{ color: "#C8A96E" }} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink">Studio Vault</p>
+            <p className="text-xs text-ink-stone">All try-on creations in one gallery</p>
+          </div>
+        </Link>
         {tier !== "studio_pro" && (
           <Link
             href="/upload?intent=studio"

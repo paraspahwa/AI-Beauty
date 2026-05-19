@@ -3,7 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export type GeneratedTool = "virtual_tryon" | "makeup" | "hair";
+export type GeneratedTool = "virtual_tryon" | "makeup" | "hair" | "outfit";
 
 export function normalizeSourceAssetId(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -44,7 +44,8 @@ export async function resolveSourceImagePath(input: {
 export async function insertGeneratedAsset(input: {
   admin: ReturnType<typeof createSupabaseAdminClient>;
   userId: string;
-  reportId: string;
+  reportId?: string | null;
+  studioCanvasId?: string | null;
   sourceAssetId: string | null;
   sourceImagePath: string;
   resultImagePath: string;
@@ -58,7 +59,8 @@ export async function insertGeneratedAsset(input: {
     .from("generated_assets")
     .insert({
       user_id: input.userId,
-      report_id: input.reportId,
+      report_id: input.reportId ?? null,
+      studio_canvas_id: input.studioCanvasId ?? null,
       source_asset_id: input.sourceAssetId,
       source_image_path: input.sourceImagePath,
       result_image_path: input.resultImagePath,
