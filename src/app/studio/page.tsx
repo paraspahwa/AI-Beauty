@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles, Upload, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth/useAuth";
-import { env } from "@/lib/public-env";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 /**
  * AI Beauty Studio Canvas
@@ -18,12 +18,27 @@ import { env } from "@/lib/public-env";
  */
 export default function StudioPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const [user, setUser] = React.useState<User | null>(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [preview, setPreview] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [canvasId, setCanvasId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ?? null);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,7 +86,6 @@ export default function StudioPage() {
       }
 
       const data = await res.json();
-      setCanvasId(data.canvasId);
 
       // Navigate to studio session page
       router.push(`/studio/${data.canvasId}`);
