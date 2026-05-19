@@ -64,7 +64,7 @@ export async function DELETE(
     }),
   ]);
 
-  const { error } = await admin.from("reports").delete().eq("id", id);
+  const { error } = await admin.from("reports").delete().eq("id", id).eq("user_id", user.id);
   if (error) {
     console.error("[DELETE /api/reports/[id]]", error);
     return NextResponse.json({ error: "Failed to delete report" }, { status: 500 });

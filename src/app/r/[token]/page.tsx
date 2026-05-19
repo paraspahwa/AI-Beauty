@@ -40,7 +40,7 @@ export async function generateMetadata({
     (row.summary as string | null) ??
     "A personalized AI beauty analysis — face shape, color season, skincare, hairstyle & spectacles.";
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/og/${token}`;
+  const imageUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/og/${token}`;
 
   return {
     title: `${title} — Renovaara`,
