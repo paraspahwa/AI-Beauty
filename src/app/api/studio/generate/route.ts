@@ -18,6 +18,11 @@ export const maxDuration = 60;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_MODES = new Set(["makeup", "hair", "outfit"]);
+type FalHairColor =
+  | "blonde" | "black" | "auburn" | "red" | "silver"
+  | "blue" | "purple" | "pink" | "green"
+  | "dark_brown" | "light_brown" | "platinum_blonde"
+  | "gray" | "rainbow" | "natural" | "highlights" | "ombre" | "balayage";
 
 function parseMakeupStyle(value: unknown): MakeupStyleValue {
   if (typeof value === "string") {
@@ -33,6 +38,44 @@ function parseMakeupIntensity(value: unknown): MakeupIntensityValue {
     if ((MAKEUP_INTENSITIES as readonly string[]).includes(v)) return v;
   }
   return "medium";
+}
+
+function parseHairColor(value: unknown): FalHairColor {
+  if (typeof value === "string") {
+    const key = value.trim().toLowerCase();
+    const mapped: Record<string, FalHairColor> = {
+      blonde: "blonde",
+      black: "black",
+      auburn: "auburn",
+      red: "red",
+      silver: "silver",
+      blue: "blue",
+      purple: "purple",
+      pink: "pink",
+      green: "green",
+      dark_brown: "dark_brown",
+      "dark brown": "dark_brown",
+      brunette: "dark_brown",
+      light_brown: "light_brown",
+      "light brown": "light_brown",
+      caramel: "light_brown",
+      platinum_blonde: "platinum_blonde",
+      "platinum blonde": "platinum_blonde",
+      gray: "gray",
+      grey: "gray",
+      rainbow: "rainbow",
+      natural: "natural",
+      highlights: "highlights",
+      ombre: "ombre",
+      balayage: "balayage",
+      "rose gold": "balayage",
+    };
+
+    const direct = mapped[key];
+    if (direct) return direct;
+  }
+
+  return "natural";
 }
 
 function escapeXml(value: string) {
@@ -313,7 +356,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hairStyle = typeof options.hairStyle === "string" && options.hairStyle.trim() ? options.hairStyle.trim() : "No change";
-    const hairColor = typeof options.hairColor === "string" && options.hairColor.trim() ? options.hairColor.trim() : "natural";
+    const hairColor: FalHairColor = parseHairColor(options.hairColor);
     const { createFalClient } = await import("@fal-ai/client");
     const fal = createFalClient({ credentials: env.fal.apiKey });
     const result = await fal.run("fal-ai/image-apps-v2/hair-change", {
