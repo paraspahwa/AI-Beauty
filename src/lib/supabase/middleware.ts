@@ -9,9 +9,10 @@ import { env } from "../env";
  */
 export async function updateSession(
   request: NextRequest,
-  options?: { requireUser?: boolean },
+  options?: { requireUser?: boolean; requireSession?: boolean },
 ): Promise<{ response: NextResponse; user: User | null }> {
   const requireUser = options?.requireUser ?? true;
+  const requireSession = options?.requireSession ?? false;
   let response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(env.supabase.url, env.supabase.anonKey, {
@@ -31,6 +32,12 @@ export async function updateSession(
   });
 
   if (!requireUser) {
+    if (requireSession) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      return { response, user: session?.user ?? null };
+    }
     return { response, user: null };
   }
 

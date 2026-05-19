@@ -13,33 +13,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
 const REPORT_TABS: readonly ReportTab[] = ["face", "skin", "glasses", "hair", "studio", "shop"] as const;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return {};
-
-  const admin = createSupabaseAdminClient();
-  const { data: row } = await admin
-    .from("reports")
-    .select("face_shape, color_analysis, status")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (!row || row.status !== "ready") return { title: "Beauty Report — Renovaara" };
-
-  const faceShape = (row.face_shape as { shape?: string } | null)?.shape;
-  const season = (row.color_analysis as { season?: string } | null)?.season;
-  const title = [faceShape ? `${faceShape} Face` : null, season ?? null]
-    .filter(Boolean)
-    .join(" · ") || "Beauty Report";
-
-  return { title: `${title} — Renovaara` };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Beauty Report — Renovaara" };
 }
 
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
