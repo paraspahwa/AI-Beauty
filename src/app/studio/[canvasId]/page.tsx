@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { getCanvasQuota } from "@/lib/entitlement";
-import { CanvasStudio } from "@/components/studio/CanvasStudio";
+import { AIBeautyStudio } from "@/components/report/AIBeautyStudio";
 import { CanvasShareButton } from "@/components/studio/CanvasShareButton";
 import type { StudioEntitlement } from "@/types/report";
 
@@ -124,9 +124,11 @@ export default async function StudioSessionPage({
         )}
 
         {/* Try-On Component */}
-        <CanvasStudio
-          canvasId={canvasId}
+        <AIBeautyStudio
+          contextType="canvas"
+          contextId={canvasId}
           photoUrl={signed?.signedUrl ?? ""}
+          isPaid={true}
           studioEntitlement={studioEntitlement}
           initialSourceAssetId={null}
         />

@@ -13,6 +13,7 @@ import {
   type LipColorValue, type EyeshadowValue, type BlushColorValue,
   type BlushIntensityValue, type FoundationShadeValue, type EyelinerStyleValue,
   type MakeupGranularControls,
+  deriveStyle,
 } from "@/lib/makeup-options";
 
 // ── Shared animation CSS ──────────────────────────────────────────────────────
@@ -84,19 +85,21 @@ type OutfitSession = {
 
 type VaultItem = {
   id: string;
-  reportId: string;
-  tool: "virtual_tryon" | "makeup" | "hair";
+  reportId?: string;
+  tool: "virtual_tryon" | "makeup" | "hair" | "outfit";
   imageUrl: string | null;
   createdAt: string;
 };
 
 interface Props {
-  reportId: string;
+  reportId?: string;
   photoUrl: string;
   isPaid: boolean;
   studioEntitlement?: StudioEntitlement;
   colorAnalysis?: ColorAnalysisResult;
   initialSourceAssetId?: string | null;
+  contextType?: "report" | "canvas";
+  contextId?: string;
 }
 
 // ── Upload zone ───────────────────────────────────────────────────────────────
@@ -411,8 +414,12 @@ export function AIBeautyStudio({
   studioEntitlement,
   colorAnalysis,
   initialSourceAssetId = null,
+  contextType = "report",
+  contextId,
 }: Props) {
-  const [mode, setMode] = React.useState<StudioMode>("clothing");
+  const isCanvas = contextType === "canvas";
+  const resolvedContextId = isCanvas ? (contextId ?? reportId ?? "") : (reportId ?? "");
+  const [mode, setMode] = React.useState<StudioMode>(isCanvas ? "makeup" : "clothing");
 
   // ── Clothing state ──
   const [clothFile, setClothFile]           = React.useState<File | null>(null);
@@ -487,6 +494,10 @@ export function AIBeautyStudio({
   const [vaultLoading, setVaultLoading] = React.useState(false);
   const [sourceAssetId, setSourceAssetId] = React.useState<string | null>(initialSourceAssetId);
   const [sourcePreviewUrl, setSourcePreviewUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isCanvas && mode === "clothing") setMode("makeup");
+  }, [isCanvas, mode]);
 
   // Helper functions for batch
   function addBatchResult(m: StudioMode, result: BatchResult) {
@@ -585,10 +596,29 @@ export function AIBeautyStudio({
   const loadVault = React.useCallback(async () => {
     setVaultLoading(true);
     try {
-      const res = await fetch(`/api/vault/images?limit=36&reportId=${reportId}`);
+      const res = await fetch(
+        isCanvas
+          ? "/api/studio/vault?limit=36&offset=0"
+          : `/api/vault/images?limit=36&reportId=${resolvedContextId}`
+      );
       if (!res.ok) return;
-      const json = await res.json() as { items?: VaultItem[] };
-      const items = (json.items ?? []).filter((it) => !!it.imageUrl);
+
+      let items: VaultItem[] = [];
+      if (isCanvas) {
+        const json = await res.json() as {
+          assets?: Array<{ id: string; tool: "makeup" | "hair" | "outfit"; hdUrl?: string; lowResUrl?: string; createdAt: string }>;
+        };
+        items = (json.assets ?? []).map((asset) => ({
+          id: asset.id,
+          tool: asset.tool,
+          imageUrl: asset.hdUrl ?? asset.lowResUrl ?? null,
+          createdAt: asset.createdAt,
+        })).filter((it) => !!it.imageUrl);
+      } else {
+        const json = await res.json() as { items?: VaultItem[] };
+        items = (json.items ?? []).filter((it) => !!it.imageUrl);
+      }
+
       setVault(items);
 
       if (sourceAssetId) {
@@ -607,7 +637,7 @@ export function AIBeautyStudio({
     } finally {
       setVaultLoading(false);
     }
-  }, [reportId, sourceAssetId]);
+  }, [isCanvas, resolvedContextId, sourceAssetId]);
 
   React.useEffect(() => {
     if (!isPaid) return;
@@ -615,12 +645,12 @@ export function AIBeautyStudio({
   }, [isPaid, loadVault]);
 
   React.useEffect(() => {
-    if (!isPaid || mode !== "outfit") return;
+    if (!isPaid || mode !== "outfit" || isCanvas) return;
     let active = true;
     const loadOutfitHistory = async () => {
       setOutfitHistoryLoading(true);
       try {
-        const res = await fetch(`/api/reports/${reportId}/outfit-generator`);
+        const res = await fetch(`/api/reports/${resolvedContextId}/outfit-generator`);
         if (!res.ok) return;
         const json = (await res.json()) as { history?: OutfitSession[] };
         if (!active) return;
@@ -637,7 +667,7 @@ export function AIBeautyStudio({
     };
     void loadOutfitHistory();
     return () => { active = false; };
-  }, [isPaid, mode, reportId]);
+  }, [isCanvas, isPaid, mode, resolvedContextId]);
 
   // ── Clothing handlers ──
   function handleClothFile(f: File) {
@@ -662,6 +692,7 @@ export function AIBeautyStudio({
 
   // ── Generate functions ──
   async function generateClothing() {
+    if (isCanvas) return;
     if (!clothFile) return;
     const idx = pushPendingResult("clothing", { photoMode, sourceAssetId, hasFullBody: !!fullBodyFile });
     try {
@@ -669,7 +700,7 @@ export function AIBeautyStudio({
       form.append("clothImage", clothFile);
       if (photoMode === "full" && fullBodyFile) form.append("personImage", fullBodyFile);
       if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
-      const res  = await fetch(`/api/reports/${reportId}/virtual-tryon`, { method: "POST", body: form });
+      const res  = await fetch(`/api/reports/${resolvedContextId}/virtual-tryon`, { method: "POST", body: form });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
       if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Generation failed");
       updateBatchResult("clothing", idx, {
@@ -712,10 +743,24 @@ export function AIBeautyStudio({
       eyeliner:       mkEyeliner,
     };
     try {
-      const res  = await fetch(`/api/reports/${reportId}/makeup`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...controls, sourceAssetId }),
-      });
+      const res = isCanvas
+        ? await fetch("/api/studio/generate", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contextType: "canvas",
+              contextId: resolvedContextId,
+              mode: "makeup",
+              options: {
+                sourceAssetId,
+                makeupStyle: deriveStyle(controls),
+                makeupIntensity: "medium",
+              },
+            }),
+          })
+        : await fetch(`/api/reports/${resolvedContextId}/makeup`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...controls, sourceAssetId }),
+          });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
       if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Generation failed");
       updateBatchResult("makeup", idx, {
@@ -739,14 +784,28 @@ export function AIBeautyStudio({
   async function generateHair() {
     const idx = pushPendingResult("hair", { colorName: hairColor, styleName: hairStyle, sourceAssetId });
     try {
-      const res  = await fetch(`/api/reports/${reportId}/hair-color`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          colorName: hairColor,
-          styleName: hairStyle === "No change" ? undefined : hairStyle,
-          sourceAssetId,
-        }),
-      });
+      const res = isCanvas
+        ? await fetch("/api/studio/generate", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contextType: "canvas",
+              contextId: resolvedContextId,
+              mode: "hair",
+              options: {
+                sourceAssetId,
+                hairStyle,
+                hairColor,
+              },
+            }),
+          })
+        : await fetch(`/api/reports/${resolvedContextId}/hair-color`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              colorName: hairColor,
+              styleName: hairStyle === "No change" ? undefined : hairStyle,
+              sourceAssetId,
+            }),
+          });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
       if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Generation failed");
       updateBatchResult("hair", idx, {
@@ -771,21 +830,46 @@ export function AIBeautyStudio({
     setOutfitLoading(true);
     setOutfitError(null);
     try {
-      const res = await fetch(`/api/reports/${reportId}/outfit-generator`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ occasion: outfitOccasion, vibe: outfitVibe }),
-      });
-      const json = (await res.json()) as {
-        looks?: OutfitLook[];
-        history?: OutfitSession[];
-        error?: string;
-      };
-      if (!res.ok || !json.looks || json.looks.length === 0) {
-        throw new Error(json.error ?? "Could not generate outfits");
+      if (isCanvas) {
+        const res = await fetch("/api/studio/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contextType: "canvas",
+            contextId: resolvedContextId,
+            mode: "outfit",
+            options: {
+              sourceAssetId,
+              occasion: outfitOccasion,
+              vibe: outfitVibe,
+            },
+          }),
+        });
+        const json = (await res.json()) as {
+          outfit?: { looks: OutfitLook[] };
+          error?: string;
+        };
+        if (!res.ok || !json.outfit || json.outfit.looks.length === 0) {
+          throw new Error(json.error ?? "Could not generate outfits");
+        }
+        setOutfitLooks(json.outfit.looks);
+      } else {
+        const res = await fetch(`/api/reports/${resolvedContextId}/outfit-generator`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ occasion: outfitOccasion, vibe: outfitVibe }),
+        });
+        const json = (await res.json()) as {
+          looks?: OutfitLook[];
+          history?: OutfitSession[];
+          error?: string;
+        };
+        if (!res.ok || !json.looks || json.looks.length === 0) {
+          throw new Error(json.error ?? "Could not generate outfits");
+        }
+        setOutfitLooks(json.looks);
+        if (json.history) setOutfitHistory(json.history);
       }
-      setOutfitLooks(json.looks);
-      if (json.history) setOutfitHistory(json.history);
     } catch (err) {
       setOutfitLooks([]);
       setOutfitError((err as Error).message || "Could not generate outfits");
@@ -795,6 +879,7 @@ export function AIBeautyStudio({
   }
 
   async function setOutfitFeedback(sessionId: string, field: "liked" | "saved" | "worn", value?: boolean) {
+    if (isCanvas) return;
     const previous = outfitHistory;
     const optimistic = outfitHistory.map((session) => {
       if (session.id !== sessionId) return session;
@@ -813,7 +898,7 @@ export function AIBeautyStudio({
     });
     setOutfitHistory(optimistic);
     try {
-      const res = await fetch(`/api/reports/${reportId}/outfit-generator`, {
+      const res = await fetch(`/api/reports/${resolvedContextId}/outfit-generator`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, field, value }),
@@ -946,11 +1031,11 @@ export function AIBeautyStudio({
         {/* ── Mode tabs ── */}
         <div className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-1 rounded-2xl p-1" style={{ background: "#F0E8DF" }}>
-            <ModeTab label="👗 Clothing" active={mode === "clothing"} onClick={() => switchMode("clothing")} />
+            {!isCanvas && <ModeTab label="👗 Clothing" active={mode === "clothing"} onClick={() => switchMode("clothing")} />}
             <ModeTab label="💄 Makeup"   active={mode === "makeup"}   onClick={() => switchMode("makeup")} />
             <ModeTab label="💇 Hair"     active={mode === "hair"}     onClick={() => switchMode("hair")} />
             <ModeTab label="🧥 Outfit"   active={mode === "outfit"}   onClick={() => switchMode("outfit")} />
-            <ModeTab label="🕶 AR"       active={mode === "ar"}       onClick={() => switchMode("ar")} />
+            {!isCanvas && <ModeTab label="🕶 AR" active={mode === "ar"} onClick={() => switchMode("ar")} />}
           </div>
         </div>
 
