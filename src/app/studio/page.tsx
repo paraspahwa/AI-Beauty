@@ -137,7 +137,7 @@ export default function StudioPage() {
           </Button>
 
           <p className="text-xs text-ink-stone mt-6">
-            Don't have an account? <Link href="/auth" className="underline hover:no-underline">Create one free</Link>
+            Don&apos;t have an account? <Link href="/auth" className="underline hover:no-underline">Create one free</Link>
           </p>
         </div>
 
