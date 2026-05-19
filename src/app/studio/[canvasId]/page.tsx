@@ -29,7 +29,7 @@ export default async function StudioSessionPage({
   // Fetch canvas
   const { data: canvas } = await supabase
     .from("studio_canvases")
-    .select("id, user_id, selfie_path, color_palette, share_token, created_at")
+    .select("id, user_id, selfie_path, color_palette, created_at")
     .eq("id", canvasId)
     .single();
 
@@ -80,7 +80,7 @@ export default async function StudioSessionPage({
         <div className="mb-6">
           <CanvasShareButton
             canvasId={canvasId}
-            initialShareUrl={canvas.share_token ? `${env.app.url}/c/${canvas.share_token}` : null}
+            initialShareUrl={null}
           />
         </div>
 
