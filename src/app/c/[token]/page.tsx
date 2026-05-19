@@ -46,7 +46,9 @@ export default async function CanvasSharePage({ params }: { params: Promise<{ to
   const paletteItems = Array.isArray(colorPalette)
     ? colorPalette
     : (colorPalette?.palette ?? []);
-  const paletteSeason = Array.isArray(colorPalette) ? null : colorPalette?.season ?? null;
+  const paletteSeason = !Array.isArray(colorPalette) && colorPalette && "season" in colorPalette
+    ? colorPalette.season ?? null
+    : null;
 
   return (
     <main className="min-h-screen py-10 sm:py-16" style={{ background: "linear-gradient(to bottom, #FDF2F8, #FEFBF8)" }}>
