@@ -110,15 +110,18 @@ export default function TermsPage() {
           </ul>
         </Section>
 
-        <Section title="6. Refunds">
+        <Section title="6. Digital Product and Cancellations">
           <p>
-            Please refer to our{" "}
-            <Link href="/refund" className="text-chrome-gold hover:underline">
-              Refund Policy
-            </Link>{" "}
-            for full details. In summary: you may request a refund within{" "}
-            <strong>72 hours</strong> of payment if the AI report fails to generate or
-            produces a clearly erroneous result.
+            {APP_NAME} is a digital service that is generated and delivered instantly after
+            purchase. Once a report is successfully delivered, payments are final and
+            non-refundable.
+          </p>
+          <p>
+            If there is a technical delivery failure caused by our platform, please contact{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
+              {CONTACT_EMAIL}
+            </a>{" "}
+            and we will investigate and resolve the issue.
           </p>
         </Section>
 
@@ -201,7 +204,6 @@ export default function TermsPage() {
         {/* Footer nav */}
         <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap gap-4 text-sm text-ink-stone">
           <Link href="/privacy" className="hover:text-ink transition-colors">Privacy Policy</Link>
-          <Link href="/refund" className="hover:text-ink transition-colors">Refund Policy</Link>
           <Link href="/" className="hover:text-ink transition-colors">← Back to Home</Link>
         </div>
       </article>

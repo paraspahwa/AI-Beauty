@@ -33,10 +33,10 @@
       "suffix": "/5"
     },
     {
-      "id": "refund",
-      "label": "Money-back guarantee",
-      "value": 30,
-      "suffix": " days"
+      "id": "security",
+      "label": "Secure checkout",
+      "value": 256,
+      "suffix": "-bit"
     }
   ],
   "showcase": {

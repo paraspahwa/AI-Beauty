@@ -53,10 +53,9 @@ These require action outside the codebase. All code changes are already deployed
    - `apple-touch-icon.png` — 180×180 px
    - Tool: https://realfavicongenerator.net (upload 512×512 SVG → generates all sizes)
 
-5. **Receipt + refund emails** — Set in Vercel env vars:
+5. **Receipt emails** — Set in Vercel env vars:
    - `RESEND_API_KEY` = your Resend API key (free tier: 3,000 emails/mo at https://resend.com)
-   - `REFUND_NOTIFY_EMAIL` = internal email to receive refund request notifications
-   - `/api/payments/refund` and webhook receipt email are already wired — just needs keys
+   - Payment webhook receipt email is already wired — just needs key
 
 6. **Google Search Console** — Verify domain ownership:
    - Go to https://search.google.com/search-console

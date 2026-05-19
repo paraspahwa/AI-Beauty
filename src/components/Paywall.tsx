@@ -84,10 +84,10 @@ const PRO_PERKS = [
 const SOCIAL_PROOF = [
   { icon: Award,    text: "50,000+ analyses done" },
   { icon: Sparkles, text: "4.9 / 5 stars" },
-  { icon: Shield,   text: "30-day refund" },
+  { icon: Shield,   text: "Secure payment" },
 ];
 
-const TRUST_BADGES = ["256-bit SSL", "Instant delivery", "Money back guarantee"];
+const TRUST_BADGES = ["256-bit SSL", "Instant delivery", "Digital product"];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function fmtINR(n: number) {

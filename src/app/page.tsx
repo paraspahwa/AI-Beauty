@@ -124,11 +124,6 @@ const FAQS: FAQItem[] = [
       "The free preview includes core face-shape insights. Paid plans unlock full beauty and style recommendations.",
   },
   {
-    id: "refund",
-    question: "Can I request a refund?",
-    answer: "Yes. Paid plans are covered by a 30-day money-back guarantee.",
-  },
-  {
     id: "style-guide",
     question: "What is the Do vs Avoid Style Guide?",
     answer:
@@ -525,7 +520,7 @@ export default function HomePage() {
           </div>
           <div className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-sage/10 px-6 py-3 text-sm text-ink-stone">
             <ShieldCheck className="h-4 w-4 shrink-0 text-sage" />
-            30-day money-back guarantee — no questions asked
+            Secure checkout and instant report delivery
           </div>
         </RevealSection>
       </section>

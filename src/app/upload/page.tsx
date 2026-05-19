@@ -163,7 +163,7 @@ export default function UploadPage() {
           <motion.div variants={fadeUp} className="mt-6 flex flex-wrap justify-center gap-6 text-xs text-ink-stone">
             <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-sage" /> Your photo is private, never sold</span>
             <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-sage" /> Results in ~60 seconds</span>
-            <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-sage" /> 30-day refund guarantee</span>
+            <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-sage" /> Digital product with instant delivery</span>
           </motion.div>
 
           {/* ── Tips ── */}

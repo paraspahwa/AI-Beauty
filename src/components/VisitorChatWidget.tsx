@@ -14,7 +14,7 @@ const QUICK_STARTERS = [
   "How accurate is the AI?",
   "Is my photo kept private?",
   "What's in the Full Report?",
-  "Do you offer a refund?",
+  "How fast will I get my report?",
 ];
 
 const GREETING: Message = {
@@ -27,7 +27,7 @@ const GREETING: Message = {
 function shouldShowCta(reply: string): boolean {
   const triggers = [
     "free analysis", "free preview", "free report", "no card required",
-    "rs 299", "full report", "paid plan", "30-day", "money-back",
+    "rs 299", "full report", "paid plan",
     "start", "upload", "try",
   ];
   const lower = reply.toLowerCase();

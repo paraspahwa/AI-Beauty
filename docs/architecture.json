@@ -30,7 +30,7 @@
         { "route": "/r/[token]", "file": "src/app/r/", "description": "Public report sharing via short token", "auth": "public" },
         { "route": "/privacy", "file": "src/app/privacy/", "description": "Privacy policy", "auth": "public" },
         { "route": "/terms", "file": "src/app/terms/", "description": "Terms of service", "auth": "public" },
-        { "route": "/refund", "file": "src/app/refund/", "description": "Refund policy", "auth": "public" }
+        { "route": "/refund", "file": "src/app/refund/", "description": "Legacy route that redirects to /terms", "auth": "public" }
       ],
       "global_components": [
         { "name": "Navbar", "file": "src/components/Navbar.tsx", "description": "Top navigation with auth state" },

@@ -75,7 +75,7 @@ export default function PrivacyPage() {
             <li>Generate your personalised AI beauty report and style recommendations.</li>
             <li>Authenticate your account and gate paid features.</li>
             <li>Process and verify payments via Razorpay webhooks.</li>
-            <li>Send transactional emails (receipt, report ready, refund confirmation) via
+            <li>Send transactional emails (receipt and report-ready notifications) via
               Resend.
             </li>
             <li>Detect and prevent abuse, fraud, and unauthorised access.</li>
@@ -225,7 +225,6 @@ export default function PrivacyPage() {
         {/* Footer nav */}
         <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap gap-4 text-sm text-ink-stone">
           <Link href="/terms" className="hover:text-ink transition-colors">Terms of Service</Link>
-          <Link href="/refund" className="hover:text-ink transition-colors">Refund Policy</Link>
           <Link href="/" className="hover:text-ink transition-colors">← Back to Home</Link>
         </div>
       </article>
