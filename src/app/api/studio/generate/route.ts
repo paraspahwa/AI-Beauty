@@ -364,7 +364,6 @@ export async function POST(request: NextRequest) {
     };
     if (hairStyle !== "No change") falInput.hair_style = hairStyle;
     if (hairColor !== "natural") falInput.hair_color = hairColor;
-    // @ts-expect-error -- the FAL SDK types are stricter than the runtime accepts for this app model
     const result = await fal.run("fal-ai/image-apps-v2/hair-change", {
       input: falInput,
     }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
