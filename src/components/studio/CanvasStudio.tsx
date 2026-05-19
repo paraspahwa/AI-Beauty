@@ -87,7 +87,12 @@ export function CanvasStudio({
   const [result, setResult] = React.useState<CanvasResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
-  const canGenerate = studioEntitlement?.remainingGens === null ? true : (studioEntitlement.remainingGens ?? 0) > 0;
+  const canGenerate =
+    studioEntitlement == null
+      ? true
+      : studioEntitlement.remainingGens === null
+        ? true
+        : studioEntitlement.remainingGens > 0;
 
   const loadVault = React.useCallback(async () => {
     setVaultLoading(true);
