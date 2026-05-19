@@ -137,8 +137,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(callbackUrl);
   }
 
-  const { response, user } = await updateSession(request);
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const { response, user } = await updateSession(request, { requireUser: isProtected });
 
   if (isProtected && !user) {
     const signIn = new URL("/auth", request.url);

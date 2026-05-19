@@ -9,7 +9,9 @@ import { env } from "../env";
  */
 export async function updateSession(
   request: NextRequest,
+  options?: { requireUser?: boolean },
 ): Promise<{ response: NextResponse; user: User | null }> {
+  const requireUser = options?.requireUser ?? true;
   let response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(env.supabase.url, env.supabase.anonKey, {
@@ -27,6 +29,10 @@ export async function updateSession(
       },
     },
   });
+
+  if (!requireUser) {
+    return { response, user: null };
+  }
 
   const {
     data: { user },
