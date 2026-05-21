@@ -5,6 +5,7 @@ import { Check, History, Loader2, Palette, ScanFace, Shirt, Sparkles, Wand2 } fr
 import { Button } from "@/components/ui/button";
 import type { StudioEntitlement, StudioOutfitResult } from "@/types/report";
 import { MAKEUP_STYLES, MAKEUP_STYLE_LABELS, MAKEUP_INTENSITIES, MAKEUP_INTENSITY_LABELS } from "@/lib/makeup-options";
+import { type HairGender, type HairStyleValue, getHairStyleOptionsForGender } from "@/lib/hair-options";
 
 type VaultItem = {
   id: string;
@@ -29,20 +30,6 @@ type CanvasResult = {
   outfit?: StudioOutfitResult;
 };
 
-const HAIR_STYLES = [
-  "No change",
-  "Layered",
-  "Bob",
-  "Pixie Cut",
-  "Curtain Bangs",
-  "Curly",
-  "Wavy",
-  "Straight",
-  "High Ponytail",
-  "Messy Bun",
-  "Braids",
-] as const;
-
 const HAIR_COLORS = [
   "natural",
   "blonde",
@@ -62,11 +49,13 @@ export function CanvasStudio({
   canvasId,
   photoUrl,
   studioEntitlement,
+  detectedGender = "none",
   initialSourceAssetId = null,
 }: {
   canvasId: string;
   photoUrl: string;
   studioEntitlement?: StudioEntitlement;
+  detectedGender?: HairGender;
   initialSourceAssetId?: string | null;
 }) {
   const [mode, setMode] = React.useState<"scan" | "makeup" | "hair" | "outfit">("scan");
@@ -79,7 +68,8 @@ export function CanvasStudio({
   const [selectedPalette, setSelectedPalette] = React.useState<ColorScanResult | null>(null);
   const [makeupStyle, setMakeupStyle] = React.useState<(typeof MAKEUP_STYLES)[number]>("natural");
   const [makeupIntensity, setMakeupIntensity] = React.useState<(typeof MAKEUP_INTENSITIES)[number]>("medium");
-  const [hairStyle, setHairStyle] = React.useState<(typeof HAIR_STYLES)[number]>("No change");
+  const hairStyleOptions = React.useMemo(() => getHairStyleOptionsForGender(detectedGender), [detectedGender]);
+  const [hairStyle, setHairStyle] = React.useState<HairStyleValue>("No change");
   const [hairColor, setHairColor] = React.useState<(typeof HAIR_COLORS)[number]>("natural");
   const [occasion, setOccasion] = React.useState<(typeof OCCASIONS)[number]>("casual");
   const [vibe, setVibe] = React.useState<(typeof VIBES)[number]>("minimal");
@@ -111,6 +101,12 @@ export function CanvasStudio({
   React.useEffect(() => {
     void loadVault();
   }, [loadVault]);
+
+  React.useEffect(() => {
+    if (!hairStyleOptions.some((opt) => opt.value === hairStyle)) {
+      setHairStyle("No change");
+    }
+  }, [hairStyle, hairStyleOptions]);
 
   const quickScan = async () => {
     setScanLoading(true);
@@ -291,7 +287,7 @@ export function CanvasStudio({
                 <label className="space-y-2">
                   <span className="text-xs font-medium text-ink-stone">Hair Style</span>
                   <select className="w-full rounded-2xl border px-4 py-3 text-sm" value={hairStyle} onChange={(e) => setHairStyle(e.target.value as typeof hairStyle)}>
-                    {HAIR_STYLES.map((style) => <option key={style} value={style}>{style}</option>)}
+                    {hairStyleOptions.map((style) => <option key={style.value} value={style.value}>{style.label}</option>)}
                   </select>
                 </label>
                 <label className="space-y-2">

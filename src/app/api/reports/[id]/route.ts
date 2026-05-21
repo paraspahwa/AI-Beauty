@@ -3,6 +3,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
 import { extractFaceLandmarks } from "@/lib/ai/landmarks";
+import { normalizeRekognitionGender } from "@/lib/hair-options";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -180,6 +181,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
     isPaid: hasPremium,
+    detectedGender: normalizeRekognitionGender(row.rekognition),
     faceShape: row.face_shape ?? undefined,
     colorAnalysis: row.color_analysis ?? undefined,
     // Free preview shows ONLY face shape + color analysis

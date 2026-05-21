@@ -4,6 +4,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
 import { getStudioEntitlement } from "@/lib/entitlement";
+import { normalizeRekognitionGender } from "@/lib/hair-options";
 import { ReportLayout } from "@/components/report/ReportLayout";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 
@@ -159,7 +160,7 @@ export default async function ReportPage({
   const [{ data: row }, studioEntitlement] = await Promise.all([
     supabase
       .from("reports")
-      .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, visual_assets, pipeline_meta, created_at")
+      .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, rekognition, summary, visual_assets, pipeline_meta, created_at")
       .eq("id", id)
       .eq("user_id", user.id)
       .single(),
@@ -210,6 +211,7 @@ export default async function ReportPage({
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
     isPaid: effectivePremium,
+    detectedGender: normalizeRekognitionGender(row.rekognition),
     studioEntitlement,
     shareToken: (row as Record<string, unknown>).share_token as string | null ?? null,
     faceShape: row.face_shape ?? undefined,

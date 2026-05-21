@@ -15,6 +15,12 @@ import {
   type MakeupGranularControls,
   deriveStyle,
 } from "@/lib/makeup-options";
+import {
+  HAIR_STYLE_OPTIONS,
+  type HairGender,
+  type HairStyleValue,
+  getHairStyleOptionsForGender,
+} from "@/lib/hair-options";
 
 // ── Shared animation CSS ──────────────────────────────────────────────────────
 const STUDIO_CSS = `
@@ -95,6 +101,7 @@ interface Props {
   reportId?: string;
   photoUrl: string;
   isPaid: boolean;
+  detectedGender?: HairGender;
   studioEntitlement?: StudioEntitlement;
   colorAnalysis?: ColorAnalysisResult;
   initialSourceAssetId?: string | null;
@@ -263,23 +270,6 @@ function StyledDropdown<T extends string>({
   );
 }
 
-// ── HAIR constants ────────────────────────────────────────────────────────────
-const HAIR_STYLES = [
-  { value: "No change",        label: "No change (color only)" },
-  { value: "short_hair",       label: "Short Hair" },
-  { value: "medium_long_hair", label: "Medium-Long Hair" },
-  { value: "long_hair",        label: "Long Hair" },
-  { value: "curly_hair",       label: "Curly Hair" },
-  { value: "wavy_hair",        label: "Wavy Hair" },
-  { value: "high_ponytail",    label: "High Ponytail" },
-  { value: "bun",              label: "Bun" },
-  { value: "bob_cut",          label: "Bob Cut" },
-  { value: "pixie_cut",        label: "Pixie Cut" },
-  { value: "braids",           label: "Braids" },
-  { value: "straight_hair",    label: "Straight Hair" },
-] as const;
-type HairStyleValue = (typeof HAIR_STYLES)[number]["value"];
-
 const HAIR_COLORS = [
   { value: "natural",         label: "Natural",          hex: "#6B3A2A", group: "Natural" },
   { value: "black",           label: "Black",            hex: "#0a0a0a", group: "Natural" },
@@ -411,6 +401,7 @@ export function AIBeautyStudio({
   reportId,
   photoUrl,
   isPaid,
+  detectedGender = "none",
   studioEntitlement,
   colorAnalysis,
   initialSourceAssetId = null,
@@ -442,6 +433,18 @@ export function AIBeautyStudio({
   // ── Hair state ──
   const [hairStyle, setHairStyle]   = React.useState<HairStyleValue>("No change");
   const [hairColor, setHairColor]   = React.useState<HairColorValue>("natural");
+  const hairStyleOptions = React.useMemo(
+    () => getHairStyleOptionsForGender(detectedGender),
+    [detectedGender],
+  );
+
+  React.useEffect(() => {
+    if (!hairStyleOptions.some((opt) => opt.value === hairStyle)) {
+      setHairStyle("No change");
+      setModeResult("hair", null, null);
+      setModeStatus("hair", "idle");
+    }
+  }, [hairStyle, hairStyleOptions]);
 
   // ── Outfit Generator state ──
   const [outfitOccasion, setOutfitOccasion] = React.useState<OutfitOccasion>("casual");
@@ -1413,7 +1416,7 @@ export function AIBeautyStudio({
             <div className="flex flex-col gap-4">
               <StyledDropdown
                 label="Target Hairstyle" value={hairStyle}
-                options={HAIR_STYLES.map((s) => ({ value: s.value, label: s.label }))}
+                options={hairStyleOptions.map((s) => ({ value: s.value, label: s.label }))}
                 onChange={(v) => { setHairStyle(v); setModeResult("hair", null, null); setModeStatus("hair", "idle"); }}
                 disabled={status === "loading"}
               />
@@ -1442,7 +1445,7 @@ export function AIBeautyStudio({
                 {currentHairColor && (
                   <p className="text-xs" style={{ color: "#9C7D5B" }}>
                     Selected: <strong>{currentHairColor.label}</strong>
-                    {hairStyle !== "No change" ? ` + ${HAIR_STYLES.find((s) => s.value === hairStyle)?.label}` : ""}
+                    {hairStyle !== "No change" ? ` + ${HAIR_STYLE_OPTIONS.find((s) => s.value === hairStyle)?.label}` : ""}
                   </p>
                 )}
               </div>

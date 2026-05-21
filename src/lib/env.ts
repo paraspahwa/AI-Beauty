@@ -151,8 +151,8 @@ export const env = {
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);
     required("SUPABASE_SERVICE_ROLE_KEY", this.supabase.serviceRoleKey);
     required("OPENAI_API_KEY", this.openai.apiKey);
-    // AWS keys are only required for the /api/analyze route (Rekognition).
-    // AI Studio routes (makeup, hair-color, virtual-tryon) do not use Rekognition.
+    // AWS keys are required for /api/analyze and canvas hair generation in /api/studio/generate
+    // when strict gender detection is enabled.
     if (process.env.NODE_ENV === "production" && this.flags.paymentTestAllowInProd) {
       console.error(
         "[env] DANGER: PAYMENT_TEST_ALLOW_IN_PROD=true in production — fake payments are enabled! " +

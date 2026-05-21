@@ -186,6 +186,7 @@ export interface CompiledReport {
   imageUrl: string;
   status: ReportStatus;
   isPaid: boolean;
+  detectedGender?: "none" | "male" | "female";
   /** Entitlement for AI Studio — governs generation gating and monthly quota. */
   studioEntitlement?: StudioEntitlement;
   shareToken?: string | null;

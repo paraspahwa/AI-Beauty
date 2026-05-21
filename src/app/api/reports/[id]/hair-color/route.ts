@@ -3,24 +3,10 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import Replicate from "replicate";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
-
-/** Extract Rekognition gender as a hair-model enum value. Falls back to "none". */
-function extractGender(rekognition: unknown): "none" | "male" | "female" {
-  if (
-    rekognition &&
-    typeof rekognition === "object" &&
-    "Gender" in rekognition &&
-    typeof (rekognition as Record<string, unknown>).Gender === "object"
-  ) {
-    const val = ((rekognition as Record<string, unknown>).Gender as Record<string, unknown>).Value;
-    if (val === "Male") return "male";
-    if (val === "Female") return "female";
-  }
-  return "none";
-}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
@@ -135,6 +121,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (rowErr || !row) return NextResponse.json({ error: "Report not found" }, { status: 404 });
     if (row.status !== "ready") return NextResponse.json({ error: "Report not ready" }, { status: 409 });
+
+    const detectedGender = normalizeRekognitionGender(row.rekognition);
+    if (styleName && styleName !== "No change" && !isHairStyleAllowedForGender(styleName, detectedGender)) {
+      return NextResponse.json(
+        { error: `Selected hairstyle is not available for detected gender (${detectedGender}).` },
+        { status: 400 },
+      );
+    }
 
     let sourceResolved: { sourceImagePath: string; sourceAssetId: string | null };
     try {
@@ -267,7 +261,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           input_image:      imageDataUri,
           haircut:          replicateStyle,
           hair_color:       hairColorEnum,
-          gender:           extractGender(row.rekognition),
+          gender:           detectedGender,
           aspect_ratio:     "match_input_image",
           output_format:    "jpg",
           safety_tolerance: 2,

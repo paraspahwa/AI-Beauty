@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { getCanvasQuota } from "@/lib/entitlement";
+import { detectFaceDetails } from "@/lib/ai/rekognition";
+import { normalizeRekognitionGender } from "@/lib/hair-options";
 import { AIBeautyStudio } from "@/components/report/AIBeautyStudio";
 import { CanvasShareButton } from "@/components/studio/CanvasShareButton";
 import type { StudioEntitlement } from "@/types/report";
@@ -47,6 +49,20 @@ export default async function StudioSessionPage({
   const { data: signed } = await admin.storage
     .from(env.supabase.bucket)
     .createSignedUrl(canvas.selfie_path, 60 * 60 * 24); // 24h
+
+  // Best-effort Rekognition gender detection for hairstyle option filtering.
+  let detectedGender: "none" | "male" | "female" = "none";
+  try {
+    const { data: selfieData, error: selfieErr } = await admin.storage
+      .from(env.supabase.bucket)
+      .download(canvas.selfie_path);
+    if (!selfieErr && selfieData) {
+      const face = await detectFaceDetails(Buffer.from(await selfieData.arrayBuffer()));
+      detectedGender = normalizeRekognitionGender(face);
+    }
+  } catch (err) {
+    console.warn("[studio/page] Rekognition gender detection skipped:", (err as Error).message);
+  }
 
   // Get quota
   const quota = await getCanvasQuota(user.id);
@@ -129,6 +145,7 @@ export default async function StudioSessionPage({
           contextId={canvasId}
           photoUrl={signed?.signedUrl ?? ""}
           isPaid={true}
+          detectedGender={detectedGender}
           studioEntitlement={studioEntitlement}
           initialSourceAssetId={null}
         />

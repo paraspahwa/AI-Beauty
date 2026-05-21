@@ -640,6 +640,7 @@ export function ReportLayout({
               reportId={report.id}
               photoUrl={report.imageUrl}
               isPaid={isPaid}
+              detectedGender={report.detectedGender}
               studioEntitlement={report.studioEntitlement}
               colorAnalysis={report.colorAnalysis}
               initialSourceAssetId={initialStudioSourceAssetId}

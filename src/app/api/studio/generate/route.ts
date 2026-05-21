@@ -3,6 +3,7 @@ import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import { compressForAI } from "@/lib/ai/image";
 import { chatJSON } from "@/lib/ai/openai";
+import { detectFaceDetails } from "@/lib/ai/rekognition";
 import { getCanvasQuota } from "@/lib/entitlement";
 import {
   MAKEUP_INTENSITIES,
@@ -10,6 +11,7 @@ import {
   type MakeupIntensityValue,
   type MakeupStyleValue,
 } from "@/lib/makeup-options";
+import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 import type { StudioOutfitResult } from "@/types/report";
 
@@ -320,7 +322,8 @@ export async function POST(request: NextRequest) {
       .download(sourceResolved.sourceImagePath);
     if (imgErr || !imgData) return NextResponse.json({ error: "Source image unavailable" }, { status: 422 });
 
-    const compressed = await compressForAI(Buffer.from(await imgData.arrayBuffer()));
+    const sourceBuffer = Buffer.from(await imgData.arrayBuffer());
+    const compressed = await compressForAI(sourceBuffer);
 
     if (body.mode === "makeup") {
       const makeupStyle: MakeupStyleValue = parseMakeupStyle(options.makeupStyle);
@@ -357,6 +360,33 @@ export async function POST(request: NextRequest) {
 
     const hairStyle = typeof options.hairStyle === "string" && options.hairStyle.trim() ? options.hairStyle.trim() : "No change";
     const hairColor: FalHairColor = parseHairColor(options.hairColor);
+
+    let detectedGender: "none" | "male" | "female" = "none";
+    try {
+      const face = await detectFaceDetails(sourceBuffer);
+      detectedGender = normalizeRekognitionGender(face);
+    } catch (err) {
+      console.warn("[studio/generate] Rekognition gender detection skipped:", (err as Error).message);
+      return NextResponse.json(
+        { error: "Gender detection is currently unavailable. Please try again in a moment." },
+        { status: 503 },
+      );
+    }
+
+    if (detectedGender === "none") {
+      return NextResponse.json(
+        { error: "Could not detect male/female from this photo. Please upload a clear, front-facing selfie for hair try-on." },
+        { status: 422 },
+      );
+    }
+
+    if (hairStyle !== "No change" && !isHairStyleAllowedForGender(hairStyle, detectedGender)) {
+      return NextResponse.json(
+        { error: `Selected hairstyle is not available for detected gender (${detectedGender}).` },
+        { status: 400 },
+      );
+    }
+
     const { createFalClient } = await import("@fal-ai/client");
     const fal = createFalClient({ credentials: env.fal.apiKey });
     const falInput: any = {

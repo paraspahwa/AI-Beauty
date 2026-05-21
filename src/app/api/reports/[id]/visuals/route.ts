@@ -3,6 +3,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { env } from "@/lib/env";
 import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import { isAdminUserEmail } from "@/lib/auth/access";
+import { normalizeRekognitionGender } from "@/lib/hair-options";
 import type { GlassesResult, HairstyleResult, ColorAnalysisResult, ReportVisualAsset } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -190,7 +191,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               ?? (hairstyleResult?.styles?.[i]?.name ?? `Style ${i}`),
           }));
           const results = await generateHairstylePreviews(
-            sectionBuffer, hairstyleResult, row.rekognition, indicesToGenerate,
+            sectionBuffer,
+            hairstyleResult,
+            row.rekognition,
+            indicesToGenerate,
+            normalizeRekognitionGender(row.rekognition),
           ).catch(() => [] as { index: number; buffer: Buffer; style: string }[]);
 
           for (const { index, buffer: imgBuf } of results) {
