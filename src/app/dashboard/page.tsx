@@ -26,7 +26,11 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge style={{ background: "rgba(131,24,67,0.14)", color: "rgba(131,24,67,0.62)", border: "1px solid rgba(131,24,67,0.18)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -54,6 +58,19 @@ export default async function DashboardPage() {
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
   const tier = entitlement.tier;
   const latestReadyReport = rows.find((report) => report.status === "ready") ?? null;
+  const params = searchParams ? await searchParams : {};
+  const activeView = params.view === "history" ? "history" : "continue";
+
+  const inFlightReports = rows.filter((report) => report.status === "processing");
+  const failedReports = rows.filter((report) => report.status === "failed" || report.status === "error");
+  const continueReports = [...inFlightReports, ...failedReports];
+  if (latestReadyReport && !continueReports.some((report) => report.id === latestReadyReport.id)) {
+    continueReports.push(latestReadyReport);
+  }
+  const historyReports = rows.filter(
+    (report) => report.status === "ready" && report.id !== latestReadyReport?.id,
+  );
+  const activeReports = activeView === "continue" ? continueReports : historyReports;
 
   return (
     <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
@@ -246,7 +263,46 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {rows.map((report) => {
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/dashboard?view=continue"
+              className="rounded-full px-4 py-2 text-sm font-medium transition-all"
+              style={{
+                background: activeView === "continue" ? "rgba(236,72,153,0.14)" : "rgba(255,255,255,0.7)",
+                border: activeView === "continue" ? "1px solid rgba(236,72,153,0.35)" : "1px solid rgba(131,24,67,0.14)",
+                color: activeView === "continue" ? "#EC4899" : "#3D2B1F",
+              }}
+            >
+              Continue
+            </Link>
+            <Link
+              href="/dashboard?view=history"
+              className="rounded-full px-4 py-2 text-sm font-medium transition-all"
+              style={{
+                background: activeView === "history" ? "rgba(123,110,158,0.14)" : "rgba(255,255,255,0.7)",
+                border: activeView === "history" ? "1px solid rgba(123,110,158,0.35)" : "1px solid rgba(131,24,67,0.14)",
+                color: activeView === "history" ? "#7B6E9E" : "#3D2B1F",
+              }}
+            >
+              History
+            </Link>
+          </div>
+
+          {activeReports.length === 0 ? (
+            <div className="rounded-2xl p-6" style={{ background: "rgba(255,247,251,0.92)", border: "1px solid rgba(131,24,67,0.14)" }}>
+              <p className="text-sm text-ink font-medium">
+                {activeView === "continue"
+                  ? "You are all caught up."
+                  : "No older completed reports yet."}
+              </p>
+              <p className="mt-1 text-xs text-ink-stone">
+                {activeView === "continue"
+                  ? "Start a new analysis anytime to get fresh recommendations."
+                  : "Your previous completed reports will appear here as your history grows."}
+              </p>
+            </div>
+          ) : (
+            activeReports.map((report) => {
             const date = new Date(report.created_at).toLocaleDateString("en-IN", {
               year: "numeric", month: "short", day: "numeric",
             });
@@ -299,7 +355,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
       )}
       </div>
