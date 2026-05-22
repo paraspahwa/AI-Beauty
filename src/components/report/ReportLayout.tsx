@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,6 +54,8 @@ export function ReportLayout({
   const [copied, setCopied] = React.useState(false);
   const [shareLoading, setShareLoading] = React.useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [shareToken, setShareToken] = React.useState<string | null>(initial.shareToken ?? null);
   const [visualsLoading, setVisualsLoading] = React.useState(false);
   const [visualsFailed, setVisualsFailed] = React.useState(false);
@@ -65,6 +67,30 @@ export function ReportLayout({
   const isPaid = report.isPaid;
   const isStudioPro = report.studioEntitlement?.tier === "studio_pro";
   const isProcessing = report.status === "processing" || report.status === "pending";
+  const isStudioView = activeMode === "studio";
+
+  const setModeAndSyncUrl = React.useCallback((mode: "report" | "studio") => {
+    setActiveMode(mode);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "studio") params.set("tab", "studio");
+    else if (params.get("tab") === "studio") params.delete("tab");
+
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  const headerEyebrow = isStudioView ? "✦ Your Renovaara Studio ✦" : "✦ Your Renovaara Report ✦";
+  const headerTitle = isStudioView
+    ? report.colorAnalysis?.season
+      ? `${report.colorAnalysis.season} Studio Session`
+      : "AI Beauty Studio"
+    : report.colorAnalysis?.season
+      ? `Your ${report.colorAnalysis.season} Beauty Profile`
+      : "Personal Beauty Profile";
+  const headerDescription = isStudioView
+    ? "Try looks on your own photo first. Switch back to the report when you want the detailed why behind each recommendation."
+    : report.summary;
 
   const refresh = React.useCallback(async () => {
     const res = await fetch(`/api/reports/${report.id}`, { cache: "no-store" });
@@ -219,24 +245,22 @@ export function ReportLayout({
           className="text-[10px] uppercase tracking-[0.35em] font-semibold"
           style={{ color: "#C8A96E" }}
         >
-          ✦ Your Renovaara Report ✦
+          {headerEyebrow}
         </motion.p>
         <motion.h1
           variants={fadeUp}
           className="mt-3 font-serif text-4xl sm:text-5xl"
           style={{ color: "#3D2B1F" }}
         >
-          {report.colorAnalysis?.season
-            ? `Your ${report.colorAnalysis.season} Beauty Profile`
-            : "Personal Beauty Profile"}
+          {headerTitle}
         </motion.h1>
-        {report.summary && (
+        {headerDescription && (
           <motion.p
             variants={fadeUp}
             className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed"
             style={{ color: "#6B5344" }}
           >
-            {report.summary}
+            {headerDescription}
           </motion.p>
         )}
         {/* Visuals generating banner — shown while color swatches are being created */}
@@ -345,19 +369,9 @@ export function ReportLayout({
         <div className="flex items-center justify-center mb-8">
           <div className="inline-flex rounded-2xl p-1 gap-1" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 4px 16px rgba(61,43,31,0.08)" }}>
             <button
-              onClick={() => setActiveMode("report")}
-              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
-              style={activeMode === "report"
-                ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff", boxShadow: "0 2px 8px rgba(139,92,246,0.25)" }
-                : { color: "#5C4232" }}
-            >
-              <BarChart2 className="h-4 w-4" />
-              Analysis Report
-            </button>
-            <button
               onClick={() => {
                 if (!isPaid) { setPaywallOpen(true); return; }
-                setActiveMode("studio");
+                setModeAndSyncUrl("studio");
               }}
               className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
               style={activeMode === "studio"
@@ -371,6 +385,16 @@ export function ReportLayout({
               ) : (
                 <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.18)" : "rgba(201,149,107,0.15)", color: activeMode === "studio" ? "rgba(255,255,255,0.85)" : "#C8A96E" }}>↑ Try</span>
               )}
+            </button>
+            <button
+              onClick={() => setModeAndSyncUrl("report")}
+              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+              style={activeMode === "report"
+                ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff", boxShadow: "0 2px 8px rgba(139,92,246,0.25)" }
+                : { color: "#5C4232" }}
+            >
+              <BarChart2 className="h-4 w-4" />
+              Analysis Report
             </button>
           </div>
         </div>
