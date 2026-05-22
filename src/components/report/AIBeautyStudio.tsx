@@ -1438,7 +1438,8 @@ export function AIBeautyStudio({
                   <button
                     onClick={() => { setMkContour((v) => !v); resetMakeupResult(); }}
                     disabled={status === "loading"}
-                    className="relative shrink-0 h-6 w-11 rounded-full transition-colors disabled:opacity-40"
+                    type="button"
+                    className="relative ml-auto h-6 w-11 flex-none appearance-none overflow-hidden rounded-full border-0 p-0 transition-colors disabled:opacity-40"
                     style={{ background: mkContour ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#D8CEC4" }}
                   >
                     <span
