@@ -22,6 +22,7 @@ import { StickyMobileCta } from "@/components/home/StickyMobileCta";
 import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
 import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
+import { AiStoryPanels } from "@/components/home/AiStoryPanels";
 
 const FEATURES = [
   {
@@ -300,6 +301,10 @@ export default function HomePage() {
           </div>
         </RevealSection>
       </section>
+
+      <RevealSection>
+        <AiStoryPanels />
+      </RevealSection>
 
       {/* Report showcase video — warm flatlay with Colour Season + Skin Routine + Style Guide */}
       <section className="container max-w-4xl py-8">
