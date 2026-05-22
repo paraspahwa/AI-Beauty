@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles, Upload, LogIn } from "lucide-react";
@@ -184,7 +185,14 @@ export default function StudioPage() {
         {preview ? (
           <div className="mb-6">
             <div className="relative inline-block rounded-2xl overflow-hidden" style={{ maxWidth: "300px" }}>
-              <img src={preview} alt="Preview" className="w-full h-auto" />
+              <Image
+                src={preview}
+                alt="Preview"
+                width={300}
+                height={400}
+                unoptimized
+                className="w-full h-auto"
+              />
             </div>
             <p className="text-sm text-ink-stone mt-4">{selectedFile?.name}</p>
           </div>

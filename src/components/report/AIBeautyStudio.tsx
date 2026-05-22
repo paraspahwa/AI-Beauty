@@ -448,7 +448,6 @@ export function AIBeautyStudio({
   React.useEffect(() => {
     if (!hairStyleOptions.some((opt) => opt.value === hairStyle)) {
       setHairStyle("No change");
-      setModeResult("hair", null, null);
       setModeStatus("hair", "idle");
     }
   }, [hairStyle, hairStyleOptions]);
