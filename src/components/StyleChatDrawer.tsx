@@ -416,10 +416,20 @@ export function StyleChatDrawer({ reportId, report }: Props) {
         aria-label="Chat with your Style Consultant"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className={`${CHAT_DOCK.styleConsultantFab} flex h-[60px] items-center gap-2.5 rounded-full bg-[linear-gradient(135deg,#F472B6,#8B5CF6)] px-5 shadow-[0_10px_30px_rgba(236,72,153,0.35)] ring-1 ring-white/10`}
+        className={`${CHAT_DOCK.styleConsultantFab} flex items-center gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(244,114,182,0.96),rgba(139,92,246,0.96))] px-4 py-3 text-left shadow-[0_14px_40px_rgba(236,72,153,0.35)] backdrop-blur`}
       >
-        <MessageCircle className="h-[22px] w-[22px] shrink-0 text-white" />
-        <span className="hidden text-sm font-semibold tracking-wide text-white sm:inline">Style Consultant</span>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/16 ring-1 ring-white/10">
+          <MessageCircle className="h-5 w-5 text-white" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-sm font-semibold tracking-wide text-white">Ask Your Stylist</span>
+            <span className="rounded-full bg-white/18 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90">AI</span>
+          </div>
+          <span className="mt-0.5 block max-w-[220px] text-xs text-white/85">
+            Makeup, hair, colors, outfits
+          </span>
+        </div>
       </motion.button>
 
       {/* Drawer */}

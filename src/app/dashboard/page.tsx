@@ -97,9 +97,9 @@ export default async function DashboardPage({
         </div>
         <div data-tour="upload-cta">
           <Button asChild variant="accent" size="sm">
-            <Link href="/upload">
-              <Camera className="h-4 w-4" />
-              New analysis
+            <Link href="/studio">
+              <Sparkles className="h-4 w-4" />
+              Open AI Studio
             </Link>
           </Button>
         </div>
@@ -111,26 +111,26 @@ export default async function DashboardPage({
           className="rounded-2xl p-5"
           style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
         >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#EC4899" }}>Next best action</p>
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#EC4899" }}>Primary workspace</p>
           <p className="mt-2 text-base font-semibold text-ink">
-            {latestReadyReport ? "Continue your latest report" : "Start your first analysis"}
+            {latestReadyReport ? "Continue in AI Studio" : "Start in AI Studio"}
           </p>
           <p className="mt-1 text-xs text-ink-stone">
             {latestReadyReport
-              ? "Jump back into your latest result and continue with chat or try-ons."
-              : "Upload one selfie and get your personalized Renovaara report."}
+              ? "Jump back into try-ons, saved looks, and fast experiments from your latest analysis."
+              : "Start with one selfie, test looks quickly, and create a full report only when you need deeper guidance."}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button asChild variant="accent" size="sm">
-              <Link href={latestReadyReport ? `/report/${latestReadyReport.id}` : "/upload"}>
-                <Camera className="h-4 w-4" />
-                {latestReadyReport ? "Continue report" : "Start analysis"}
+              <Link href={latestReadyReport ? `/report/${latestReadyReport.id}?tab=studio` : "/studio"}>
+                <Sparkles className="h-4 w-4" />
+                {latestReadyReport ? "Continue Studio" : "Open Studio"}
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/studio-vault">
-                <Images className="h-4 w-4" />
-                My Looks
+              <Link href="/upload">
+                <FileText className="h-4 w-4" />
+                Create report
               </Link>
             </Button>
           </div>
@@ -141,22 +141,22 @@ export default async function DashboardPage({
           style={{ background: "rgba(123,110,158,0.08)", border: "1px solid rgba(123,110,158,0.18)" }}
           data-tour="style-chat"
         >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#A69CC4" }}>Style profile</p>
-          <p className="mt-2 text-base font-semibold text-ink">Understand your style trends</p>
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#A69CC4" }}>Guided help</p>
+          <p className="mt-2 text-base font-semibold text-ink">Get deeper advice when you need it</p>
           <p className="mt-1 text-xs text-ink-stone">
-            View your Style DNA and progress timeline in one place.
+            Use your full report for detailed reasoning, saved tips, and longer-term style guidance.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={latestReadyReport ? `/report/${latestReadyReport.id}?chat=1` : "/upload"}>
+                <MessageCircle className="h-4 w-4" />
+                {latestReadyReport ? "Ask stylist" : "Create report first"}
+              </Link>
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link href="/dashboard/style-dna">
                 <Dna className="h-4 w-4" />
                 Style DNA
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/progress">
-                <TrendingUp className="h-4 w-4" />
-                Progress
               </Link>
             </Button>
           </div>
@@ -179,16 +179,16 @@ export default async function DashboardPage({
           </div>
         </Link>
         <Link
-          href="/studio"
+          href="/upload"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
           style={{ background: "linear-gradient(135deg,rgba(236,72,153,0.10),rgba(201,149,107,0.08))", border: "1px solid rgba(236,72,153,0.18)" }}
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
-            <Sparkles className="h-5 w-5" style={{ color: "#EC4899" }} />
+            <FileText className="h-5 w-5" style={{ color: "#EC4899" }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-ink">Try Studio Canvas</p>
-            <p className="text-xs text-ink-stone">Quick scan, makeup, hair, outfits</p>
+            <p className="text-sm font-semibold text-ink">Create Full Report</p>
+            <p className="text-xs text-ink-stone">Deeper analysis, recommendations, and guided chat</p>
           </div>
         </Link>
       </div>
@@ -350,6 +350,7 @@ export default async function DashboardPage({
                     <Button asChild variant="outline" size="sm" title="Open style chat">
                       <Link href={`/report/${report.id}?chat=1`}>
                         <MessageCircle className="h-4 w-4" />
+                        <span className="hidden sm:inline">Ask stylist</span>
                       </Link>
                     </Button>
                   )}

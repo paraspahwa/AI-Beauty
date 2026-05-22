@@ -169,9 +169,9 @@ export function Navbar() {
                 )}
               </div>
               <Button asChild variant="accent" size="sm" className="group">
-                <Link href="/upload">
-                  <Camera className="h-3.5 w-3.5" />
-                  <span>New report</span>
+                <Link href="/studio">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Open Studio</span>
                 </Link>
               </Button>
             </>
@@ -181,9 +181,9 @@ export function Navbar() {
                 <Link href="/auth">Sign in</Link>
               </Button>
               <Button asChild variant="accent" size="sm" className="group">
-                <Link href="/upload">
-                  <Camera className="h-3.5 w-3.5" />
-                  <span>Get my report</span>
+                <Link href="/studio">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Try AI Studio</span>
                 </Link>
               </Button>
             </>
@@ -252,8 +252,13 @@ export function Navbar() {
                       </Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">
+                      <Link href="/studio" onClick={() => setMenuOpen(false)}>
+                        <Sparkles className="h-4 w-4" /> Open Studio
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
                       <Link href="/upload" onClick={() => setMenuOpen(false)}>
-                        <Camera className="h-4 w-4" /> New report
+                        <Camera className="h-4 w-4" /> Create report
                       </Link>
                     </Button>
                     <Button variant="outline" className="w-full" onClick={handleSignOut}>
@@ -266,8 +271,13 @@ export function Navbar() {
                       <Link href="/auth" onClick={() => setMenuOpen(false)}>Sign in</Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">
+                      <Link href="/studio" onClick={() => setMenuOpen(false)}>
+                        <Sparkles className="h-4 w-4" /> Try AI Studio
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
                       <Link href="/upload" onClick={() => setMenuOpen(false)}>
-                        <Camera className="h-4 w-4" /> Get my report
+                        <Camera className="h-4 w-4" /> Create report
                       </Link>
                     </Button>
                   </>

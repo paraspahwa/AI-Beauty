@@ -3,12 +3,12 @@
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const REPORT_ITEMS = [
-  "Top lipstick families",
-  "Best frame geometry",
-  "Hair length recommendations",
-  "AM and PM skin routine",
-  "Do vs Avoid style rules",
+const STUDIO_ITEMS = [
+  "Soft glam makeup preview",
+  "Curtain bangs and layers",
+  "Warm gold frame styling",
+  "Date-night outfit palette",
+  "Saved look ready to download",
 ];
 
 export function HeroReportCard() {
@@ -17,7 +17,7 @@ export function HeroReportCard() {
 
   useEffect(() => {
     const t = setInterval(() => {
-      if (!hovering) setActive((i) => (i + 1) % REPORT_ITEMS.length);
+      if (!hovering) setActive((i) => (i + 1) % STUDIO_ITEMS.length);
     }, 1400);
     return () => clearInterval(t);
   }, [hovering]);
@@ -29,18 +29,18 @@ export function HeroReportCard() {
       onMouseLeave={() => setHovering(false)}
     >
       <div className="absolute right-4 top-4 rounded-full bg-terracotta/15 px-3 py-1 text-xs font-semibold text-terracotta">
-        Sample Report
+        Live AI Studio
       </div>
       <div className="flex items-center gap-2 text-sm text-ink-stone">
         <Sparkles className="h-4 w-4 text-terracotta animate-pulse" />
-        Renovaara preview
+        Renovaara studio preview
       </div>
-      <h2 className="mt-3 text-2xl text-ink">Soft Autumn profile</h2>
+      <h2 className="mt-3 text-2xl text-ink">Your lookboard updates live</h2>
       <p className="mt-2 text-sm text-ink-stone">
-        Warm undertone, balanced oval face shape, medium contrast features.
+        Try ideas first, save what flatters you most, then open a full report when you want the reasoning behind every choice.
       </p>
       <div className="mt-5 space-y-2">
-        {REPORT_ITEMS.map((item, idx) => (
+        {STUDIO_ITEMS.map((item, idx) => (
           <div
             key={item}
             className={`flex items-center justify-between rounded-xl border px-4 py-2.5 transition-all duration-500 ${
@@ -59,7 +59,7 @@ export function HeroReportCard() {
         ))}
       </div>
       <p className="mt-4 text-center text-xs text-ink-mist animate-pulse">
-        AI analysis running…
+        Studio generation running…
       </p>
     </div>
   );

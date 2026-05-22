@@ -1,23 +1,23 @@
 {
   "hero": {
     "badge": "AI Personal Stylist",
-    "title": "Beauty guidance that feels",
-    "titleAccent": "made for you",
-    "description": "Upload one selfie and get your personalized beauty report — makeup, hairstyle, spectacles, skin routine, and a Do vs Avoid Style Guide tailored to your unique features.",
+    "title": "Try your next look",
+    "titleAccent": "before you decide",
+    "description": "Start in AI Studio with one selfie to try makeup, hair, and outfit ideas instantly. Generate your full beauty report only when you want deeper guidance.",
     "primaryCta": {
-      "label": "Start free analysis",
-      "href": "/upload"
+      "label": "Open AI Studio",
+      "href": "/studio"
     },
     "secondaryCta": {
-      "label": "How it works",
-      "href": "#how"
+      "label": "Create full report",
+      "href": "/upload"
     }
   },
   "ctaBanner": {
-    "title": "Start with one selfie and see your best look",
-    "description": "Join 50,000+ people who discovered their most flattering colors, cuts, and routines without guesswork.",
-    "buttonLabel": "Get my personalized report",
-    "buttonHref": "/upload"
+    "title": "Start in Studio, unlock deeper analysis later",
+    "description": "Use AI Studio for fast try-ons and save your best looks. When you want deeper guidance, generate your full Renovaara report from the same journey.",
+    "buttonLabel": "Start AI Studio",
+    "buttonHref": "/studio"
   },
   "stats": [
     {
