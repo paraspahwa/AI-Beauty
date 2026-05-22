@@ -56,8 +56,6 @@ export function VisitorChatWidget() {
     if (hideOnRoute && open) setOpen(false);
   }, [hideOnRoute, open]);
 
-  if (hideOnRoute) return null;
-
   // Scroll to bottom whenever messages change
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -123,6 +121,8 @@ export function VisitorChatWidget() {
     e.preventDefault();
     void sendMessage(input);
   }
+
+  if (hideOnRoute) return null;
 
   return (
     <>
