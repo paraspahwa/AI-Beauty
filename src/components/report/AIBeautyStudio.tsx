@@ -89,6 +89,68 @@ type OutfitSession = {
   };
 };
 
+type MakeupPreset = {
+  id: string;
+  label: string;
+  caption: string;
+  controls: Partial<MakeupGranularControls>;
+};
+
+const MAKEUP_PRESETS: MakeupPreset[] = [
+  {
+    id: "everyday-glow",
+    label: "Everyday Glow",
+    caption: "Soft pink, neutral eyes, fresh skin",
+    controls: {
+      lipColor: "soft_pink",
+      eyeshadow: "neutral",
+      blushColor: "peach",
+      blushIntensity: "soft",
+      contour: false,
+      eyeliner: "subtle",
+    },
+  },
+  {
+    id: "soft-glam",
+    label: "Soft Glam",
+    caption: "Rose lips, bronze eyes, polished finish",
+    controls: {
+      lipColor: "rose",
+      eyeshadow: "bronze",
+      blushColor: "rose",
+      blushIntensity: "medium",
+      contour: true,
+      eyeliner: "classic",
+    },
+  },
+  {
+    id: "date-night",
+    label: "Date Night",
+    caption: "Berry lips with more lift and definition",
+    controls: {
+      lipColor: "berry",
+      eyeshadow: "pink_rose",
+      blushColor: "rose",
+      blushIntensity: "flushed",
+      contour: true,
+      eyeliner: "winged",
+    },
+  },
+  {
+    id: "bold-statement",
+    label: "Bold Statement",
+    caption: "Classic red lips and smoky eyes",
+    controls: {
+      lipColor: "classic_red",
+      eyeshadow: "smoky",
+      blushColor: "bronze",
+      blushIntensity: "medium",
+      contour: true,
+      eyeliner: "winged",
+    },
+  },
+];
+
 type VaultItem = {
   id: string;
   reportId?: string;
@@ -410,7 +472,7 @@ export function AIBeautyStudio({
 }: Props) {
   const isCanvas = contextType === "canvas";
   const resolvedContextId = isCanvas ? (contextId ?? reportId ?? "") : (reportId ?? "");
-  const [mode, setMode] = React.useState<StudioMode>(isCanvas ? "makeup" : "clothing");
+  const [mode, setMode] = React.useState<StudioMode>("makeup");
 
   // ── Clothing state ──
   const [clothFile, setClothFile]           = React.useState<File | null>(null);
@@ -434,6 +496,7 @@ export function AIBeautyStudio({
   const [mkFoundation, setMkFoundation] = React.useState<FoundationShadeValue>("medium");
   const [mkContour, setMkContour]       = React.useState(false);
   const [mkEyeliner, setMkEyeliner]     = React.useState<EyelinerStyleValue>("classic");
+  const [showAdvancedMakeup, setShowAdvancedMakeup] = React.useState(false);
 
   function resetMakeupResult() { setModeResult("makeup", null, null); setModeStatus("makeup", "idle"); }
 
@@ -1033,8 +1096,33 @@ export function AIBeautyStudio({
   const isAtLimit = remainingGens !== null && remainingGens <= 0;
   const effectiveSourcePhoto = sourcePreviewUrl ?? photoUrl;
   const selectedVaultItem = sourceAssetId ? vault.find((v) => v.id === sourceAssetId) : undefined;
+  const currentMakeupControls: MakeupGranularControls = {
+    lipColor: mkLip,
+    eyeshadow: mkEye,
+    blushColor: mkBlush,
+    blushIntensity: mkBlushInt,
+    foundation: mkFoundation,
+    contour: mkContour,
+    eyeliner: mkEyeliner,
+  };
 
   const currentHairColor = HAIR_COLORS.find((c) => c.value === hairColor);
+
+  function isMakeupPresetActive(preset: MakeupPreset) {
+    return Object.entries(preset.controls).every(([key, value]) => currentMakeupControls[key as keyof MakeupGranularControls] === value);
+  }
+
+  function applyMakeupPreset(preset: MakeupPreset) {
+    if (preset.controls.lipColor) setMkLip(preset.controls.lipColor);
+    if (preset.controls.eyeshadow) setMkEye(preset.controls.eyeshadow);
+    if (preset.controls.blushColor) setMkBlush(preset.controls.blushColor);
+    if (preset.controls.blushIntensity) setMkBlushInt(preset.controls.blushIntensity);
+    if (typeof preset.controls.contour === "boolean") setMkContour(preset.controls.contour);
+    if (preset.controls.eyeliner) setMkEyeliner(preset.controls.eyeliner);
+    resetMakeupResult();
+    setMkSubMode("custom");
+    setShowAdvancedMakeup(false);
+  }
 
   return (
     <>
@@ -1312,6 +1400,61 @@ export function AIBeautyStudio({
 
                 {/* Custom controls */}
                 {mkSubMode === "custom" && <>
+                <section className="rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: "#E8DDD0", background: "#FFFBF8" }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Start with a preset</p>
+                      <p className="text-[11px]" style={{ color: "#9C7D5B" }}>
+                        Pick a ready-made look first. Open fine-tune only if you want deeper control.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvancedMakeup((value) => !value)}
+                      className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-80"
+                      style={{ background: "rgba(123,110,158,0.10)", border: "1px solid rgba(123,110,158,0.18)", color: "#7B6E9E" }}
+                    >
+                      {showAdvancedMakeup ? "Hide fine-tune" : "Fine-tune manually"}
+                    </button>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {MAKEUP_PRESETS.map((preset) => {
+                      const active = isMakeupPresetActive(preset);
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => applyMakeupPreset(preset)}
+                          disabled={status === "loading"}
+                          className="rounded-2xl px-4 py-3 text-left transition-all disabled:opacity-40"
+                          style={{
+                            background: active ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0",
+                            color: active ? "#fff" : "#3D2B1F",
+                            border: active ? "1px solid transparent" : "1px solid #E8DDD0",
+                            boxShadow: active ? "0 4px 16px rgba(139,92,246,0.18)" : "none",
+                          }}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold">{preset.label}</span>
+                            {active && <span className="text-[10px] font-bold uppercase tracking-[0.16em]">Active</span>}
+                          </div>
+                          <p className="mt-1 text-[11px] leading-snug" style={{ color: active ? "rgba(255,255,255,0.9)" : "#9C7D5B" }}>
+                            {preset.caption}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {!showAdvancedMakeup && (
+                    <div className="rounded-xl px-3 py-2 text-[11px]" style={{ background: "rgba(200,169,110,0.08)", border: "1px solid rgba(200,169,110,0.18)", color: "#7C5A3A" }}>
+                      Current look direction: <strong>{deriveStyle(currentMakeupControls).replaceAll("_", " ")}</strong>
+                    </div>
+                  )}
+                </section>
+
+                {showAdvancedMakeup && <>
                 {/* Lip Colour */}
               <section className="flex flex-col gap-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Lip Colour</p>
@@ -1469,6 +1612,7 @@ export function AIBeautyStudio({
                   ))}
                 </div>
               </section>
+              </>}
 
               {/* Generate button */}
               <button onClick={generateMakeup} disabled={status === "loading"}
