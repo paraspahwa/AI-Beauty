@@ -630,24 +630,22 @@ export function AIBeautyStudio({
       }
 
       setVault(items);
-
-      if (sourceAssetId) {
-        const selected = items.find((item) => item.id === sourceAssetId);
-        if (selected?.imageUrl) {
-          setSourcePreviewUrl(selected.imageUrl);
-        }
-      }
-
-      if (!sourceAssetId && items.length > 0 && items[0].imageUrl) {
-        setSourceAssetId(items[0].id);
-        setSourcePreviewUrl(items[0].imageUrl);
-      }
     } catch {
       // Silent fail keeps studio usable even if vault endpoint is unavailable.
     } finally {
       setVaultLoading(false);
     }
-  }, [isCanvas, resolvedContextId, sourceAssetId]);
+  }, [isCanvas, resolvedContextId]);
+
+  React.useEffect(() => {
+    if (!sourceAssetId) return;
+    const selected = vault.find((item) => item.id === sourceAssetId);
+    if (selected?.imageUrl) {
+      setSourcePreviewUrl(selected.imageUrl);
+      return;
+    }
+    setSourcePreviewUrl(null);
+  }, [sourceAssetId, vault]);
 
   React.useEffect(() => {
     if (!isPaid) return;
