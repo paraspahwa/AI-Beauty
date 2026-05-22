@@ -19,28 +19,17 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { createHmac, timingSafeEqual } from "crypto";
+import { verifySubscriptionSignature } from "@/lib/payments/razorpay";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
 const Body = z.object({
-  razorpay_payment_id:      z.string().min(1),
-  razorpay_subscription_id: z.string().min(1),
-  razorpay_signature:       z.string().min(1),
-});
-
-function verifySubscriptionSig(paymentId: string, subscriptionId: string, signature: string): boolean {
-  if (!env.razorpay.keySecret) return false;
-  const expected = createHmac("sha256", env.razorpay.keySecret)
-    .update(`${paymentId}|${subscriptionId}`)
-    .digest("hex");
-  const a = Buffer.from(expected, "hex");
-  const b = Buffer.from(signature, "hex");
-  if (a.length !== b.length) { timingSafeEqual(a, a); return false; }
-  return timingSafeEqual(a, b);
-}
+  razorpay_payment_id: z.string().min(8).max(64).regex(/^pay_[A-Za-z0-9]+$/),
+  razorpay_subscription_id: z.string().min(8).max(64).regex(/^sub_[A-Za-z0-9]+$/),
+  razorpay_signature: z.string().regex(/^[a-f0-9]{64}$/i),
+}).strict();
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,7 +46,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    if (!verifySubscriptionSig(body.razorpay_payment_id, body.razorpay_subscription_id, body.razorpay_signature)) {
+    if (!verifySubscriptionSignature({
+      paymentId: body.razorpay_payment_id,
+      subscriptionId: body.razorpay_subscription_id,
+      signature: body.razorpay_signature,
+    })) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 

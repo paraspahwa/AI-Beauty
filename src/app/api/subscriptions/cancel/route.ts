@@ -18,8 +18,8 @@ export const runtime = "nodejs";
 export const maxDuration = 20;
 
 const Body = z.object({
-  subscriptionId: z.string().min(1),
-});
+  subscriptionId: z.string().min(8).max(64).regex(/^sub_[A-Za-z0-9]+$/),
+}).strict();
 
 export async function POST(req: NextRequest) {
   try {

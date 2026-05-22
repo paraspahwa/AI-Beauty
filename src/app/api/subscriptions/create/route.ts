@@ -19,7 +19,7 @@ export const maxDuration = 30;
 
 const Body = z.object({
   currencyHint: z.enum(["INR", "USD"]).optional(),
-});
+}).strict();
 
 function deriveServerCurrency(req: NextRequest, hint?: "INR" | "USD"): "INR" | "USD" {
   const country =
@@ -65,6 +65,12 @@ export async function POST(req: NextRequest) {
           code: "SUBSCRIPTION_NOT_CONFIGURED",
           retryable: false,
         },
+        { status: 503 },
+      );
+    }
+    if (!/^plan_[A-Za-z0-9]+$/.test(razorpayPlanId)) {
+      return NextResponse.json(
+        { error: "Invalid Razorpay plan configuration", code: "SUBSCRIPTION_NOT_CONFIGURED", retryable: false },
         { status: 503 },
       );
     }

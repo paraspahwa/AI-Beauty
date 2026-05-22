@@ -4,6 +4,8 @@ import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, X, Send, Loader2, Sparkles, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { announceChatOpened, CHAT_DOCK, subscribeToOtherChatOpen } from "@/lib/chat-coordinator";
 import { track } from "@/lib/track";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -35,12 +37,26 @@ function shouldShowCta(reply: string): boolean {
 }
 
 export function VisitorChatWidget() {
+  const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([GREETING]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // Keep Aria as a pre-sales assistant on marketing/auth flows only.
+  // Product/report routes have their own in-context chat surfaces.
+  const hideOnRoute = React.useMemo(
+    () => ["/report", "/dashboard", "/studio", "/success"].some((prefix) => pathname?.startsWith(prefix)),
+    [pathname],
+  );
+
+  React.useEffect(() => {
+    if (hideOnRoute && open) setOpen(false);
+  }, [hideOnRoute, open]);
+
+  if (hideOnRoute) return null;
 
   // Scroll to bottom whenever messages change
   React.useEffect(() => {
@@ -51,9 +67,14 @@ export function VisitorChatWidget() {
   React.useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 150);
+      announceChatOpened("aria-sales");
       track("visitor_chat_open");
     }
   }, [open]);
+
+  React.useEffect(() => {
+    return subscribeToOtherChatOpen("aria-sales", () => setOpen(false));
+  }, []);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -106,7 +127,7 @@ export function VisitorChatWidget() {
   return (
     <>
       {/* ── Floating bubble ── */}
-      <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+      <div className={CHAT_DOCK.ariaSalesContainer}>
         <AnimatePresence>
           {open && (
             <motion.div
@@ -115,21 +136,21 @@ export function VisitorChatWidget() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.96 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="w-[340px] sm:w-[380px] rounded-2xl border border-terracotta/20 bg-white shadow-2xl flex flex-col overflow-hidden"
+              className="flex w-[340px] flex-col overflow-hidden rounded-2xl border border-terracotta/15 bg-white shadow-2xl shadow-terracotta/5 ring-1 ring-black/5 sm:w-[380px]"
               style={{ maxHeight: "min(520px, 80vh)" }}
             >
               {/* Header */}
-              <div className="flex items-center gap-2.5 border-b border-terracotta/10 bg-gradient-to-r from-terracotta/10 to-iris/10 px-4 py-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/15 text-terracotta">
+              <div className="flex items-center gap-2.5 border-b border-terracotta/10 bg-gradient-to-r from-terracotta/8 to-iris/8 px-4 py-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/12 text-terracotta ring-1 ring-terracotta/10">
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-ink leading-none">Aria — Pre-sales Advisor</p>
-                  <p className="text-xs text-ink-stone mt-0.5">Questions before you sign up? Ask away</p>
+                  <p className="text-sm font-semibold leading-none text-ink">Aria — Pre-sales Advisor</p>
+                  <p className="mt-0.5 text-xs text-ink-stone/90">Questions before you sign up? Ask away</p>
                 </div>
                 <button
                   onClick={() => setOpen(false)}
-                  className="rounded-lg p-1.5 text-ink-mist hover:text-ink hover:bg-black/5 transition-colors"
+                  className="rounded-lg p-1.5 text-ink-mist transition-colors hover:bg-black/5 hover:text-ink"
                   aria-label="Close chat"
                 >
                   <X className="h-4 w-4" />
@@ -137,14 +158,14 @@ export function VisitorChatWidget() {
               </div>
 
               {/* Message list */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scroll-smooth">
+              <div className="scroll-smooth flex-1 space-y-3 overflow-y-auto px-4 py-3">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div
                       className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                         msg.role === "user"
-                          ? "bg-terracotta text-white rounded-br-sm"
-                          : "bg-obsidian text-ink rounded-bl-sm border border-terracotta/10"
+                          ? "rounded-br-sm bg-terracotta text-white shadow-sm"
+                          : "rounded-bl-sm border border-terracotta/10 bg-obsidian text-ink"
                       }`}
                     >
                       {msg.content}
@@ -195,7 +216,7 @@ export function VisitorChatWidget() {
               {/* Input */}
               <form
                 onSubmit={handleSubmit}
-                className="border-t border-terracotta/10 flex items-center gap-2 px-3 py-2.5"
+                className="flex items-center gap-2 border-t border-terracotta/10 px-3 py-2.5"
               >
                 <input
                   ref={inputRef}
@@ -204,12 +225,12 @@ export function VisitorChatWidget() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask anything about Renovaara…"
                   maxLength={500}
-                  className="flex-1 bg-transparent text-sm text-ink placeholder:text-ink-mist outline-none"
+                  className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-mist"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-terracotta text-white disabled:opacity-40 hover:bg-terracotta/90 transition-colors shrink-0"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-terracotta text-white transition-colors hover:bg-terracotta/90 disabled:opacity-40"
                   aria-label="Send"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -224,7 +245,7 @@ export function VisitorChatWidget() {
           onClick={() => setOpen((o) => !o)}
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-terracotta text-white shadow-lg hover:bg-terracotta/90 transition-colors"
+          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-terracotta text-white shadow-lg shadow-terracotta/20 ring-1 ring-white/10 transition-colors hover:bg-terracotta/90"
           aria-label={open ? "Close chat" : "Chat with Aria"}
         >
           <AnimatePresence mode="wait" initial={false}>

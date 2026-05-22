@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
+const MAX_WEBHOOK_BYTES = 256 * 1024;
 
 /**
  * POST /api/webhooks/razorpay
@@ -22,8 +23,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
 
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
   const signature = req.headers.get("x-razorpay-signature") ?? "";
+  if (!/^[a-f0-9]{64}$/i.test(signature)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
   const raw = await req.text();
+  if (raw.length > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
   if (!verifyWebhookSignature(raw, signature)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
@@ -36,22 +49,6 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createSupabaseAdminClient();
-
-  // ── Subscription events ─────────────────────────────────────────────────────
-  const subEventTypes = [
-    "subscription.activated",
-    "subscription.charged",
-    "subscription.halted",
-    "subscription.cancelled",
-    "subscription.completed",
-  ];
-  if (event.event && subEventTypes.includes(event.event)) {
-    return handleSubscriptionEvent(event.event, event.payload?.subscription?.entity, admin);
-  }
-
-  const payment = event.payload?.payment?.entity;
-  const orderId = payment?.order_id as string | undefined;
-  if (!orderId) return NextResponse.json({ ok: true }, { status: 202 }); // ignore non-payment events
 
   // Idempotency guard: skip duplicate event deliveries using provider_event_id.
   // record_webhook_event returns true on first insert, false on duplicate.
@@ -73,6 +70,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, duplicate: true }, { status: 202 });
     }
   }
+
+  // ── Subscription events ─────────────────────────────────────────────────────
+  const subEventTypes = [
+    "subscription.activated",
+    "subscription.charged",
+    "subscription.halted",
+    "subscription.cancelled",
+    "subscription.completed",
+  ];
+  if (event.event && subEventTypes.includes(event.event)) {
+    return handleSubscriptionEvent(event.event, event.payload?.subscription?.entity, admin);
+  }
+
+  const payment = event.payload?.payment?.entity;
+  const orderId = payment?.order_id as string | undefined;
+  if (!orderId) return NextResponse.json({ ok: true }, { status: 202 }); // ignore non-payment events
   const { data: row, error: rowErr } = await admin
     .from("payments")
     .select("id,user_id,report_id,status")

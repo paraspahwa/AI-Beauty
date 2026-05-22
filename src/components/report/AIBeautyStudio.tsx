@@ -419,6 +419,13 @@ export function AIBeautyStudio({
   const [fullBodyFile, setFullBodyFile]     = React.useState<File | null>(null);
   const [fullBodyPreview, setFullBodyPreview] = React.useState<string | null>(null);
 
+  // ── Makeup inspo-transfer state ──
+  type MakeupSubMode = "custom" | "inspo";
+  const [mkSubMode, setMkSubMode] = React.useState<MakeupSubMode>("custom");
+  const [inspoFile, setInspoFile] = React.useState<File | null>(null);
+  const [inspoPreview, setInspoPreview] = React.useState<string | null>(null);
+  const [inspoDetectedLook, setInspoDetectedLook] = React.useState<string | null>(null);
+
   // ── Makeup state (granular controls) ──
   const [mkLip, setMkLip]               = React.useState<LipColorValue>("nude_beige");
   const [mkEye, setMkEye]               = React.useState<EyeshadowValue>("neutral");
@@ -594,7 +601,8 @@ export function AIBeautyStudio({
   React.useEffect(() => () => {
     if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview);
     if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
-  }, [clothPreview, fullBodyPreview]);
+      if (inspoPreview?.startsWith("blob:")) URL.revokeObjectURL(inspoPreview);
+    }, [clothPreview, fullBodyPreview, inspoPreview]);
 
   const loadVault = React.useCallback(async () => {
     setVaultLoading(true);
@@ -782,6 +790,25 @@ export function AIBeautyStudio({
     } catch {
       updateBatchResult("makeup", idx, { status: "error" });
     }
+  }
+
+  async function generateMakeupTransfer() {
+    if (!inspoFile) return;
+    const idx = pushPendingResult("makeup", { mode: "inspo", sourceAssetId });
+    try {
+      const form = new FormData();
+      form.append("referenceImage", inspoFile);
+      if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
+      const res = await fetch(`/api/reports/${resolvedContextId}/makeup-transfer`, { method: "POST", body: form });
+      const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; detectedLook?: string; asset?: { id: string; createdAt: string } };
+      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Transfer failed");
+      updateBatchResult("makeup", idx, { hdUrl: json.hdUrl, lowResUrl: json.lowResUrl, assetId: json.asset?.id ?? null, status: json.hdUrl ? "done" : "loading" });
+      setInspoDetectedLook(json.detectedLook ?? null);
+      setHistory((h) => [{ url: json.hdUrl ?? json.lowResUrl!, assetId: json.asset?.id ?? null, createdAt: json.asset?.createdAt ?? null }, ...h].slice(0, 10));
+      if (json.asset?.id) { setSourceAssetId(json.asset.id); setSourcePreviewUrl(json.hdUrl ?? json.lowResUrl ?? null); }
+      void loadVault();
+      if (!json.hdUrl && json.asset?.id) void pollForHd("makeup", json.asset.id, idx);
+    } catch { updateBatchResult("makeup", idx, { status: "error" }); }
   }
 
   async function generateHair() {
@@ -1027,7 +1054,7 @@ export function AIBeautyStudio({
           </div>
           <div>
             <h2 className="text-base font-semibold" style={{ color: "#3D2B1F" }}>AI Beauty Studio</h2>
-            <p className="text-xs" style={{ color: "#9C7D5B" }}>Try on clothing, makeup, hair &amp; outfits — generate &amp; download instantly</p>
+            <p className="text-xs" style={{ color: "#9C7D5B" }}>Try on clothing, makeup, hair &amp; outfits - generate &amp; download instantly</p>
           </div>
         </div>
 
@@ -1219,7 +1246,76 @@ export function AIBeautyStudio({
             <div className="flex flex-col gap-5 p-5 sm:overflow-y-auto sm:max-h-[640px]"
               style={{ borderRight: "1px solid #F0E8DF" }}>
 
-              {/* Lip Colour */}
+                {/* Sub-mode toggle */}
+                <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: "#E8DDD0" }}>
+                  <button
+                    onClick={() => setMkSubMode("custom")}
+                    className="flex-1 py-2 text-xs font-semibold transition-all"
+                    style={{ background: mkSubMode === "custom" ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0", color: mkSubMode === "custom" ? "#fff" : "#9C7D5B" }}>
+                    ✦ Custom Controls
+                  </button>
+                  <button
+                    onClick={() => setMkSubMode("inspo")}
+                    className="flex-1 py-2 text-xs font-semibold transition-all"
+                    style={{ background: mkSubMode === "inspo" ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0", color: mkSubMode === "inspo" ? "#fff" : "#9C7D5B" }}>
+                    ✨ Inspo Transfer
+                  </button>
+                </div>
+
+                {/* Inspo transfer panel */}
+                {mkSubMode === "inspo" && (
+                  <div className="flex flex-col gap-4">
+                    <div className="rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: "#E8DDD0", background: "#FDF6F0" }}>
+                      <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Upload a photo of makeup you love</p>
+                      <p className="text-[11px]" style={{ color: "#9C7D5B" }}>We&apos;ll analyse the look and apply it to your photo</p>
+                      {inspoPreview ? (
+                        <div className="relative">
+                          <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={inspoPreview} alt="Inspo preview" className="w-full h-full object-cover" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setInspoFile(null); setInspoPreview(null); setInspoDetectedLook(null); }}
+                            className="absolute top-2 right-2 rounded-full p-1 shadow"
+                            style={{ background: "rgba(61,43,31,0.7)" }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed cursor-pointer py-6 transition-colors hover:bg-pink-50"
+                          style={{ borderColor: "#E8DDD0" }}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" style={{ color: "#EC4899" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M7 10l5-5 5 5M12 5v10"/></svg>
+                          <span className="text-xs font-semibold" style={{ color: "#9C7D5B" }}>Tap to upload inspo photo</span>
+                          <input type="file" accept="image/*" className="sr-only" onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            setInspoFile(f);
+                            const url = URL.createObjectURL(f);
+                            setInspoPreview(url);
+                            setInspoDetectedLook(null);
+                          }} />
+                        </label>
+                      )}
+                      {inspoDetectedLook && (
+                        <div className="rounded-xl px-3 py-2 text-xs" style={{ background: "rgba(139,92,246,0.08)", color: "#6B5344", border: "1px solid rgba(139,92,246,0.18)" }}>
+                          ✨ Detected look: <strong>{inspoDetectedLook}</strong>
+                        </div>
+                      )}
+                    </div>
+                    <button onClick={() => void generateMakeupTransfer()} disabled={!inspoFile || status === "loading"}
+                      className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                      {status === "loading"
+                        ? <><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Transferring…</>
+                        : <>✨ Transfer Makeup</>}
+                    </button>
+                  </div>
+                )}
+
+                {/* Custom controls */}
+                {mkSubMode === "custom" && <>
+                {/* Lip Colour */}
               <section className="flex flex-col gap-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Lip Colour</p>
                 <div className="flex flex-wrap gap-2.5">
@@ -1384,6 +1480,7 @@ export function AIBeautyStudio({
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Apply Makeup</>}
               </button>
+              </>}
             </div>
 
             {/* ── Right: sticky photo + season hint ── */}

@@ -9,10 +9,10 @@ export const maxDuration = 30;
 
 const Body = z.object({
   reportId: z.string().uuid(),
-  razorpay_order_id: z.string(),
-  razorpay_payment_id: z.string(),
-  razorpay_signature: z.string(),
-});
+  razorpay_order_id: z.string().min(8).max(64),
+  razorpay_payment_id: z.string().min(8).max(64),
+  razorpay_signature: z.string().regex(/^[a-f0-9]{64}$/i),
+}).strict();
 
 /**
  * POST /api/payments/verify
