@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
 import { getStudioEntitlement } from "@/lib/entitlement";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, ShoppingBag, MessageCircle, Images, Crown, Wand2 } from "lucide-react";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Link2, Dna, Sparkles, TrendingUp, MessageCircle, Images, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -53,6 +53,7 @@ export default async function DashboardPage() {
   const rows = (reports ?? []) as ReportRow[];
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
   const tier = entitlement.tier;
+  const latestReadyReport = rows.find((report) => report.status === "ready") ?? null;
 
   return (
     <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
@@ -87,37 +88,68 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Feature quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <Link
-          href="/dashboard/progress"
-          data-tour="style-chat"
-          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+      {/* Core next actions */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <div
+          className="rounded-2xl p-5"
           style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
-            <TrendingUp className="h-5 w-5" style={{ color: "#EC4899" }} />
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#EC4899" }}>Next best action</p>
+          <p className="mt-2 text-base font-semibold text-ink">
+            {latestReadyReport ? "Continue your latest report" : "Start your first analysis"}
+          </p>
+          <p className="mt-1 text-xs text-ink-stone">
+            {latestReadyReport
+              ? "Jump back into your latest result and continue with chat or try-ons."
+              : "Upload one selfie and get your personalized Renovaara report."}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button asChild variant="accent" size="sm">
+              <Link href={latestReadyReport ? `/report/${latestReadyReport.id}` : "/upload"}>
+                <Camera className="h-4 w-4" />
+                {latestReadyReport ? "Continue report" : "Start analysis"}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/studio-vault">
+                <Images className="h-4 w-4" />
+                My Looks
+              </Link>
+            </Button>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">Progress Tracker</p>
-            <p className="text-xs text-ink-stone">See how your style profile has evolved</p>
-          </div>
-        </Link>
-        <Link
-          href="/dashboard/wardrobe-capsule"
-          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
+        </div>
+
+        <div
+          className="rounded-2xl p-5"
           style={{ background: "rgba(123,110,158,0.08)", border: "1px solid rgba(123,110,158,0.18)" }}
+          data-tour="style-chat"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(123,110,158,0.18)" }}>
-            <ShoppingBag className="h-5 w-5" style={{ color: "#A69CC4" }} />
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#A69CC4" }}>Style profile</p>
+          <p className="mt-2 text-base font-semibold text-ink">Understand your style trends</p>
+          <p className="mt-1 text-xs text-ink-stone">
+            View your Style DNA and progress timeline in one place.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/style-dna">
+                <Dna className="h-4 w-4" />
+                Style DNA
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/progress">
+                <TrendingUp className="h-4 w-4" />
+                Progress
+              </Link>
+            </Button>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">Wardrobe Capsule</p>
-            <p className="text-xs text-ink-stone">Your 10-piece seasonal wardrobe edit</p>
-          </div>
-        </Link>
+        </div>
+      </div>
+
+      {/* Secondary quick links */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Link
-          href="/dashboard/vault"
+          href="/dashboard/studio-vault"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
           style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
         >
@@ -125,34 +157,10 @@ export default async function DashboardPage() {
             <Images className="h-5 w-5" style={{ color: "#EC4899" }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-ink">Image Vault</p>
-            <p className="text-xs text-ink-stone">All generated looks with date and time</p>
+            <p className="text-sm font-semibold text-ink">My Looks</p>
+            <p className="text-xs text-ink-stone">All report + studio creations in one place</p>
           </div>
         </Link>
-        <div
-          className="flex items-center gap-4 rounded-2xl px-5 py-4"
-          style={{ background: "rgba(16,185,129,0.08)", border: "1px dashed rgba(16,185,129,0.28)" }}
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(16,185,129,0.16)" }}>
-            <Clock className="h-5 w-5" style={{ color: "#10B981" }} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">Routine Tracker</p>
-            <p className="text-xs text-ink-stone">Daily AM/PM check-ins and streaks (coming soon)</p>
-          </div>
-        </div>
-        <div
-          className="flex items-center gap-4 rounded-2xl px-5 py-4"
-          style={{ background: "rgba(59,130,246,0.08)", border: "1px dashed rgba(59,130,246,0.28)" }}
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(59,130,246,0.16)" }}>
-            <Images className="h-5 w-5" style={{ color: "#3B82F6" }} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">Community Gallery</p>
-            <p className="text-xs text-ink-stone">Inspiration looks and public style boards (coming soon)</p>
-          </div>
-        </div>
         <Link
           href="/studio"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
@@ -166,35 +174,24 @@ export default async function DashboardPage() {
             <p className="text-xs text-ink-stone">Quick scan, makeup, hair, outfits</p>
           </div>
         </Link>
-        <Link
-          href="/dashboard/studio-vault"
-          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-          style={{ background: "rgba(201,149,107,0.08)", border: "1px solid rgba(201,149,107,0.18)" }}
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(201,149,107,0.16)" }}>
-            <Images className="h-5 w-5" style={{ color: "#C8A96E" }} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">Studio Vault</p>
-            <p className="text-xs text-ink-stone">All try-on creations in one gallery</p>
-          </div>
-        </Link>
-        {tier !== "studio_pro" && (
-          <Link
-            href="/upload?intent=studio"
-            className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-            style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.10),rgba(109,40,217,0.06))", border: "1px solid rgba(139,92,246,0.22)" }}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(139,92,246,0.18)" }}>
-              <Wand2 className="h-5 w-5" style={{ color: "#8B5CF6" }} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-ink">Upgrade to Studio Pro</p>
-              <p className="text-xs text-ink-stone">150 AI gens/mo · Unlimited reports</p>
-            </div>
-          </Link>
-        )}
       </div>
+
+      {tier !== "studio_pro" && (
+        <div
+          className="mb-6 rounded-2xl px-5 py-4"
+          style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.10),rgba(109,40,217,0.06))", border: "1px solid rgba(139,92,246,0.22)" }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">Need more generations?</p>
+              <p className="text-xs text-ink-stone">Upgrade only when you need higher monthly limits.</p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/upload?intent=studio">Upgrade to Studio Pro</Link>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Style DNA teaser — shown when prefs exist */}
       {prefs?.color_season && (

@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Dna, TrendingUp, ShoppingBag, ChevronDown, Moon, Sun } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Images, ChevronDown, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -155,16 +155,10 @@ export function Navbar() {
                 {dashOpen && (
                   <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-terracotta/20 bg-white shadow-lg py-1 z-50">
                     <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
-                      <LayoutDashboard className="h-3.5 w-3.5" /> My Reports
+                      <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
                     </Link>
-                    <Link href="/dashboard/style-dna" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
-                      <Dna className="h-3.5 w-3.5" /> Style DNA
-                    </Link>
-                    <Link href="/dashboard/progress" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
-                      <TrendingUp className="h-3.5 w-3.5" /> Progress
-                    </Link>
-                    <Link href="/dashboard/wardrobe-capsule" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
-                      <ShoppingBag className="h-3.5 w-3.5" /> Capsule
+                    <Link href="/dashboard/studio-vault" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                      <Images className="h-3.5 w-3.5" /> My Looks
                     </Link>
                     <div className="border-t border-terracotta/15 mt-1 pt-1">
                       <button className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={handleSignOut}>
@@ -249,22 +243,12 @@ export function Navbar() {
                   <>
                     <Button asChild variant="outline" className="w-full">
                       <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-                        <LayoutDashboard className="h-4 w-4" /> My Reports
+                        <LayoutDashboard className="h-4 w-4" /> Dashboard
                       </Link>
                     </Button>
                     <Button asChild variant="outline" className="w-full">
-                      <Link href="/dashboard/style-dna" onClick={() => setMenuOpen(false)}>
-                        <Dna className="h-4 w-4" /> Style DNA
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                      <Link href="/dashboard/progress" onClick={() => setMenuOpen(false)}>
-                        <TrendingUp className="h-4 w-4" /> Progress
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                      <Link href="/dashboard/wardrobe-capsule" onClick={() => setMenuOpen(false)}>
-                        <ShoppingBag className="h-4 w-4" /> Capsule
+                      <Link href="/dashboard/studio-vault" onClick={() => setMenuOpen(false)}>
+                        <Images className="h-4 w-4" /> My Looks
                       </Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">

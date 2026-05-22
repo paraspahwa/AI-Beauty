@@ -31,8 +31,8 @@ const STEPS: TourStep[] = [
   },
   {
     target: "style-chat",
-    title: "Ask your AI stylist",
-    body: "Have style questions? Chat with your AI consultant about colours, outfits, and more.",
+    title: "Track your style profile",
+    body: "Open Style DNA and Progress to understand your personal trends before your next analysis.",
   },
 ];
 
