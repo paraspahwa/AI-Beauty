@@ -77,7 +77,7 @@ export default async function DashboardPage({
       <div className="mb-10 flex items-center justify-between">
         <div>
           <span className="section-label mb-3 inline-flex">Dashboard</span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-2">My Reports</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-2">Dashboard</h1>
           <div className="flex items-center gap-3 mt-1">
             <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
             {tier === "studio_pro" ? (
@@ -271,9 +271,10 @@ export default async function DashboardPage({
                 background: activeView === "continue" ? "rgba(236,72,153,0.14)" : "rgba(255,255,255,0.7)",
                 border: activeView === "continue" ? "1px solid rgba(236,72,153,0.35)" : "1px solid rgba(131,24,67,0.14)",
                 color: activeView === "continue" ? "#EC4899" : "#3D2B1F",
+                boxShadow: activeView === "continue" ? "0 0 0 2px rgba(236,72,153,0.12)" : "none",
               }}
             >
-              Continue
+              Continue ({continueReports.length})
             </Link>
             <Link
               href="/dashboard?view=history"
@@ -282,9 +283,10 @@ export default async function DashboardPage({
                 background: activeView === "history" ? "rgba(123,110,158,0.14)" : "rgba(255,255,255,0.7)",
                 border: activeView === "history" ? "1px solid rgba(123,110,158,0.35)" : "1px solid rgba(131,24,67,0.14)",
                 color: activeView === "history" ? "#7B6E9E" : "#3D2B1F",
+                boxShadow: activeView === "history" ? "0 0 0 2px rgba(123,110,158,0.12)" : "none",
               }}
             >
-              History
+              History ({historyReports.length})
             </Link>
           </div>
 
