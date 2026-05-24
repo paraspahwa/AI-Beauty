@@ -15,6 +15,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -160,9 +161,12 @@ export async function POST(
 
 
     // ── Download result and persist both low-res and HD ─────────────────────
-    const resultRes = await fetch(resultUrl);
-    if (!resultRes.ok) return NextResponse.json({ error: "Download failed" }, { status: 500 });
-    const resultBuf = Buffer.from(await resultRes.arrayBuffer());
+    let resultBuf: Buffer;
+    try {
+      resultBuf = await fetchRemoteImageBuffer(resultUrl, { timeoutMs: 30_000, maxBytes: 20 * 1024 * 1024 });
+    } catch {
+      return NextResponse.json({ error: "Download failed" }, { status: 502 });
+    }
 
     const { default: sharp } = await import("sharp");
     const lowRes = await sharp(resultBuf)

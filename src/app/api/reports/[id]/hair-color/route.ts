@@ -4,6 +4,7 @@ import { env } from "@/lib/env";
 import Replicate from "replicate";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
+import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -273,17 +274,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (!url) return NextResponse.json({ error: "Generation failed" }, { status: 502 });
 
-    // Download result from Replicate — 30 s timeout to avoid indefinite hangs
-    const dlController = new AbortController();
-    const dlTimeout = setTimeout(() => dlController.abort(), 30_000);
-    let resultRes: Response;
+    // Download provider output with URL safety checks, timeout, and size cap.
+    let resultBuf: Buffer;
     try {
-      resultRes = await fetch(url, { signal: dlController.signal });
-    } finally {
-      clearTimeout(dlTimeout);
+      resultBuf = await fetchRemoteImageBuffer(url, { timeoutMs: 30_000, maxBytes: 20 * 1024 * 1024 });
+    } catch {
+      return NextResponse.json({ error: "Failed to download generated image" }, { status: 502 });
     }
-    if (!resultRes.ok) return NextResponse.json({ error: "Failed to download generated image" }, { status: 502 });
-    const resultBuf = Buffer.from(await resultRes.arrayBuffer());
 
     // Save both low-res (400px) and HD (1024px) versions
     const lowRes = await sharp(resultBuf)

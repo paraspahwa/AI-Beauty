@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+const MAX_LIMIT = 100;
 
 /**
  * GET /api/studio/vault?limit=50&offset=0&filter=all|canvas|report
@@ -40,9 +41,13 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") ?? "50", 10);
-    const offset = parseInt(searchParams.get("offset") ?? "0", 10);
-    const filter = (searchParams.get("filter") ?? "all") as "all" | "canvas" | "report";
+    const rawLimit = Number(searchParams.get("limit") ?? "50");
+    const rawOffset = Number(searchParams.get("offset") ?? "0");
+    const rawFilter = searchParams.get("filter") ?? "all";
+
+    const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(MAX_LIMIT, Math.floor(rawLimit))) : 50;
+    const offset = Number.isFinite(rawOffset) ? Math.max(0, Math.floor(rawOffset)) : 0;
+    const filter = rawFilter === "canvas" || rawFilter === "report" ? rawFilter : "all";
 
     // Build query
     let query = supabase

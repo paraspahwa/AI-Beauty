@@ -27,6 +27,7 @@ import {
   type EyelinerStyleValue,
 } from "@/lib/makeup-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -34,7 +35,6 @@ export const maxDuration = 120;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_REFERENCE_IMAGE_BYTES = 8 * 1024 * 1024;
-const MAX_RESULT_IMAGE_BYTES = 20 * 1024 * 1024;
 
 function validateMagicBytes(buffer: Buffer): boolean {
   if (buffer.length < 12) return false;
@@ -66,25 +66,6 @@ function validateMagicBytes(buffer: Buffer): boolean {
     buffer[11] === 0x50;
 
   return isWebp;
-}
-
-function isSafeRemoteImageUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== "https:") return false;
-
-    const host = parsed.hostname.toLowerCase();
-    if (host === "localhost" || host === "::1") return false;
-    if (/^127\./.test(host)) return false;
-    if (/^10\./.test(host)) return false;
-    if (/^192\.168\./.test(host)) return false;
-    if (/^169\.254\./.test(host)) return false;
-    if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(host)) return false;
-
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 // ── Valid option sets for coercion ────────────────────────────────────────────
@@ -316,24 +297,11 @@ export async function POST(
     if (!resultUrl) return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
 
     // ── Download result and persist ───────────────────────────────────────────
-    if (!isSafeRemoteImageUrl(resultUrl)) {
-      return NextResponse.json({ error: "Invalid output URL from generation provider" }, { status: 502 });
-    }
-
-    const dlRes = await fetch(resultUrl);
-    if (!dlRes.ok) return NextResponse.json({ error: "Download failed" }, { status: 500 });
-    const contentType = (dlRes.headers.get("content-type") ?? "").toLowerCase();
-    if (!contentType.startsWith("image/")) {
-      return NextResponse.json({ error: "Generation provider returned non-image content" }, { status: 502 });
-    }
-    const contentLength = Number(dlRes.headers.get("content-length") ?? "0");
-    if (Number.isFinite(contentLength) && contentLength > MAX_RESULT_IMAGE_BYTES) {
-      return NextResponse.json({ error: "Generated image too large" }, { status: 502 });
-    }
-
-    const resultBuf = Buffer.from(await dlRes.arrayBuffer());
-    if (resultBuf.length > MAX_RESULT_IMAGE_BYTES) {
-      return NextResponse.json({ error: "Generated image too large" }, { status: 502 });
+    let resultBuf: Buffer;
+    try {
+      resultBuf = await fetchRemoteImageBuffer(resultUrl, { timeoutMs: 30_000, maxBytes: 20 * 1024 * 1024 });
+    } catch {
+      return NextResponse.json({ error: "Download failed" }, { status: 502 });
     }
 
     const { default: sharp } = await import("sharp");

@@ -19,6 +19,7 @@ import {
   makeupCacheKey,
 } from "@/lib/makeup-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -160,11 +161,12 @@ export async function POST(
   }
 
   // ── Download result and persist to storage ──────────────────────────────────
-  const dlRes = await fetch(resultUrl);
-  if (!dlRes.ok) {
-    return NextResponse.json({ error: "Download failed" }, { status: 500 });
+  let resultBuf: Buffer;
+  try {
+    resultBuf = await fetchRemoteImageBuffer(resultUrl, { timeoutMs: 30_000, maxBytes: 20 * 1024 * 1024 });
+  } catch {
+    return NextResponse.json({ error: "Download failed" }, { status: 502 });
   }
-  const resultBuf = Buffer.from(await dlRes.arrayBuffer());
 
 
   // Save both low-res (400px) and HD (1024px) versions

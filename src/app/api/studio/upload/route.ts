@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+const ALLOWED_UPLOAD_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 /**
  * POST /api/studio/upload
@@ -41,10 +42,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith("image/")) {
+    if (!ALLOWED_UPLOAD_MIME.has(file.type)) {
       return NextResponse.json(
-        { error: "File must be an image" },
-        { status: 400 }
+        { error: "Unsupported image type. Use JPEG, PNG, or WebP." },
+        { status: 415 }
       );
     }
 
@@ -105,6 +106,8 @@ export async function POST(request: NextRequest) {
 
     if (dbErr) {
       console.error("[studio/upload] DB insert failed:", dbErr.message);
+      // Best-effort rollback so storage does not accumulate orphaned files.
+      await admin.storage.from(env.supabase.bucket).remove([filename]);
       return NextResponse.json(
         { error: "Failed to create canvas session" },
         { status: 500 }

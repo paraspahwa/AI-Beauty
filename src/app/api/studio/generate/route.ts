@@ -13,6 +13,7 @@ import {
 } from "@/lib/makeup-options";
 import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
+import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
 import type { StudioOutfitResult } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -341,8 +342,12 @@ export async function POST(request: NextRequest) {
       const resultUrl = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? "";
       if (!resultUrl) return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
 
-      const dl = await fetch(resultUrl);
-      if (!dl.ok) return NextResponse.json({ error: "Download failed" }, { status: 500 });
+      let resultBuffer: Buffer;
+      try {
+        resultBuffer = await fetchRemoteImageBuffer(resultUrl, { timeoutMs: 30_000, maxBytes: 20 * 1024 * 1024 });
+      } catch {
+        return NextResponse.json({ error: "Download failed" }, { status: 502 });
+      }
 
       const persisted = await persistImageResult({
         admin,
@@ -352,7 +357,7 @@ export async function POST(request: NextRequest) {
         variant: `${makeupStyle}-${makeupIntensity}`.replace(/\s+/g, "-").toLowerCase(),
         sourceAssetId: sourceResolved.sourceAssetId,
         sourceImagePath: sourceResolved.sourceImagePath,
-        resultBuffer: Buffer.from(await dl.arrayBuffer()),
+        resultBuffer,
       });
 
       return NextResponse.json(persisted);
@@ -401,8 +406,12 @@ export async function POST(request: NextRequest) {
     const resultUrl = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? "";
     if (!resultUrl) return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
 
-    const dl = await fetch(resultUrl);
-    if (!dl.ok) return NextResponse.json({ error: "Download failed" }, { status: 500 });
+    let resultBuffer: Buffer;
+    try {
+      resultBuffer = await fetchRemoteImageBuffer(resultUrl, { timeoutMs: 30_000, maxBytes: 20 * 1024 * 1024 });
+    } catch {
+      return NextResponse.json({ error: "Download failed" }, { status: 502 });
+    }
 
     const persisted = await persistImageResult({
       admin,
@@ -412,7 +421,7 @@ export async function POST(request: NextRequest) {
       variant: `${hairStyle}-${hairColor}`.replace(/\s+/g, "-").toLowerCase(),
       sourceAssetId: sourceResolved.sourceAssetId,
       sourceImagePath: sourceResolved.sourceImagePath,
-      resultBuffer: Buffer.from(await dl.arrayBuffer()),
+      resultBuffer,
     });
 
     return NextResponse.json(persisted);

@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Persist to DB
-    await admin.from("subscriptions").insert({
+    const { error: insertErr } = await admin.from("subscriptions").insert({
       user_id:                  user.id,
       plan_id:                  planId,
       provider:                 "razorpay",
@@ -132,6 +132,10 @@ export async function POST(req: NextRequest) {
       status:                   "created",
       raw:                      sub as object,
     });
+    if (insertErr) {
+      console.error("[subscriptions/create] failed to persist subscription", insertErr);
+      return NextResponse.json({ error: "Failed to save subscription" }, { status: 500 });
+    }
 
     return NextResponse.json({
       subscriptionId: sub.id,
