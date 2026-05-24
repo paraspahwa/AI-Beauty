@@ -392,30 +392,6 @@ export default function HomePage() {
 
       <SampleShowcase items={showcaseItems} tuning={HOME_CONTENT.showcase.tuning} />
 
-      {/* Product demo video — report flatlay */}
-      <section className="container max-w-5xl py-16">
-        <RevealSection>
-          <div className="text-center mb-8">
-            <span className="section-label">Your report, beautifully delivered</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl text-ink">
-              Everything you need,{" "}
-              <span className="gradient-text">in one place</span>
-            </h2>
-          </div>
-          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-olive/20">
-            <video
-              src="/replicate-prediction-40w1zw6ctnrmt0cy6r8a9ny7bm.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="none"
-              className="w-full h-auto block"
-            />
-          </div>
-        </RevealSection>
-      </section>
-
       {/* AI Makeup Studio spotlight — full-bleed with makeup flat lay background */}
       <section className="relative isolate overflow-hidden py-24 sm:py-32">
         {/* Background image */}
@@ -457,23 +433,6 @@ export default function HomePage() {
             </div>
           </RevealSection>
         </div>
-      </section>
-
-      {/* Cinematic ad video — pre-pricing conversion moment */}
-      <section className="container max-w-5xl py-8">
-        <RevealSection>
-          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-iris/20">
-            <video
-              src="/tmp2jo1gddn.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="none"
-              className="w-full h-auto block"
-            />
-          </div>
-        </RevealSection>
       </section>
 
       <section id="pricing" className="container max-w-6xl py-16 scroll-mt-20">
