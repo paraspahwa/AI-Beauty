@@ -96,6 +96,22 @@ type MakeupPreset = {
   controls: Partial<MakeupGranularControls>;
 };
 
+type HairPreset = {
+  id: string;
+  label: string;
+  caption: string;
+  style: string;
+  color: string;
+};
+
+type OutfitPreset = {
+  id: string;
+  label: string;
+  caption: string;
+  occasion: OutfitOccasion;
+  vibe: OutfitVibe;
+};
+
 const MAKEUP_PRESETS: MakeupPreset[] = [
   {
     id: "everyday-glow",
@@ -151,6 +167,68 @@ const MAKEUP_PRESETS: MakeupPreset[] = [
   },
 ];
 
+const HAIR_PRESETS: HairPreset[] = [
+  {
+    id: "polished-refresh",
+    label: "Polished Refresh",
+    caption: "Clean shape with a natural salon-fresh finish",
+    style: "medium_long_hair",
+    color: "natural",
+  },
+  {
+    id: "soft-volume",
+    label: "Soft Volume",
+    caption: "Gentle lift and movement for everyday styling",
+    style: "wavy_hair",
+    color: "light_brown",
+  },
+  {
+    id: "sharp-bob",
+    label: "Sharp Bob",
+    caption: "Structured cut with a more editorial edge",
+    style: "bob_cut",
+    color: "dark_brown",
+  },
+  {
+    id: "warm-glow",
+    label: "Warm Glow",
+    caption: "Soft length with a brighter color refresh",
+    style: "long_hair",
+    color: "balayage",
+  },
+];
+
+const OUTFIT_PRESETS: OutfitPreset[] = [
+  {
+    id: "work-polish",
+    label: "Work Polish",
+    caption: "Structured, clean, confident outfit ideas",
+    occasion: "work",
+    vibe: "classic",
+  },
+  {
+    id: "soft-date",
+    label: "Soft Date",
+    caption: "Romantic combinations with flattering color accents",
+    occasion: "date",
+    vibe: "romantic",
+  },
+  {
+    id: "travel-light",
+    label: "Travel Light",
+    caption: "Comfort-first looks that still feel put together",
+    occasion: "travel",
+    vibe: "minimal",
+  },
+  {
+    id: "weekend-bold",
+    label: "Weekend Bold",
+    caption: "More expressive looks for outings and events",
+    occasion: "casual",
+    vibe: "bold",
+  },
+];
+
 type VaultItem = {
   id: string;
   reportId?: string;
@@ -190,9 +268,10 @@ function UploadZone({ onFile, preview, disabled, label, hint }: {
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={(e) => {
-        e.preventDefault(); setDragging(false);
+        e.preventDefault();
+        setDragging(false);
         const file = e.dataTransfer.files?.[0];
-        if (file && file.type.startsWith("image/")) onFile(file);
+        if (file) onFile(file);
       }}
       className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all cursor-pointer overflow-hidden"
       style={{
@@ -200,7 +279,6 @@ function UploadZone({ onFile, preview, disabled, label, hint }: {
         background: dragging ? "rgba(200,169,110,0.10)" : "#FAF6F0",
         borderColor: dragging ? "#C8A96E" : "#E8DDD0",
         opacity: disabled ? 0.5 : 1,
-        pointerEvents: disabled ? "none" : "auto",
       }}
     >
       {preview ? (
@@ -503,6 +581,7 @@ export function AIBeautyStudio({
   // ── Hair state ──
   const [hairStyle, setHairStyle]   = React.useState<HairStyleValue>("No change");
   const [hairColor, setHairColor]   = React.useState<HairColorValue>("natural");
+  const [showAdvancedHair, setShowAdvancedHair] = React.useState(false);
   const hairStyleOptions = React.useMemo(
     () => getHairStyleOptionsForGender(detectedGender),
     [detectedGender],
@@ -518,6 +597,7 @@ export function AIBeautyStudio({
   // ── Outfit Generator state ──
   const [outfitOccasion, setOutfitOccasion] = React.useState<OutfitOccasion>("casual");
   const [outfitVibe, setOutfitVibe] = React.useState<OutfitVibe>("minimal");
+  const [showAdvancedOutfit, setShowAdvancedOutfit] = React.useState(false);
   const [outfitLoading, setOutfitLoading] = React.useState(false);
   const [outfitError, setOutfitError] = React.useState<string | null>(null);
   const [outfitLooks, setOutfitLooks] = React.useState<OutfitLook[]>([]);
@@ -1070,6 +1150,12 @@ export function AIBeautyStudio({
     }
   }
 
+  const currentHairColor = HAIR_COLORS.find((c) => c.value === hairColor);
+  const availableHairPresets = React.useMemo(
+    () => HAIR_PRESETS.filter((preset) => hairStyleOptions.some((option) => option.value === preset.style)),
+    [hairStyleOptions],
+  );
+
   // ── Paywall ──
   if (!isPaid) {
     return (
@@ -1106,8 +1192,6 @@ export function AIBeautyStudio({
     eyeliner: mkEyeliner,
   };
 
-  const currentHairColor = HAIR_COLORS.find((c) => c.value === hairColor);
-
   function isMakeupPresetActive(preset: MakeupPreset) {
     return Object.entries(preset.controls).every(([key, value]) => currentMakeupControls[key as keyof MakeupGranularControls] === value);
   }
@@ -1122,6 +1206,29 @@ export function AIBeautyStudio({
     resetMakeupResult();
     setMkSubMode("custom");
     setShowAdvancedMakeup(false);
+  }
+
+  function isHairPresetActive(preset: HairPreset) {
+    return hairStyle === preset.style && hairColor === preset.color;
+  }
+
+  function applyHairPreset(preset: HairPreset) {
+    setHairStyle(preset.style as HairStyleValue);
+    setHairColor(preset.color as HairColorValue);
+    setModeResult("hair", null, null);
+    setModeStatus("hair", "idle");
+    setShowAdvancedHair(false);
+  }
+
+  function isOutfitPresetActive(preset: OutfitPreset) {
+    return outfitOccasion === preset.occasion && outfitVibe === preset.vibe;
+  }
+
+  function applyOutfitPreset(preset: OutfitPreset) {
+    setOutfitOccasion(preset.occasion);
+    setOutfitVibe(preset.vibe);
+    setOutfitError(null);
+    setShowAdvancedOutfit(false);
   }
 
   return (
@@ -1653,6 +1760,55 @@ export function AIBeautyStudio({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5">
             {/* Left: controls */}
             <div className="flex flex-col gap-4">
+              <section className="rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: "#E8DDD0", background: "#FFFBF8" }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Start with a hair preset</p>
+                    <p className="text-[11px]" style={{ color: "#9C7D5B" }}>
+                      Pick a direction first, then fine-tune the cut or color only if you need to.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedHair((value) => !value)}
+                    className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-80"
+                    style={{ background: "rgba(123,110,158,0.10)", border: "1px solid rgba(123,110,158,0.18)", color: "#7B6E9E" }}
+                  >
+                    {showAdvancedHair ? "Hide fine-tune" : "Fine-tune manually"}
+                  </button>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {availableHairPresets.map((preset) => {
+                    const active = isHairPresetActive(preset);
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyHairPreset(preset)}
+                        disabled={status === "loading"}
+                        className="rounded-2xl px-4 py-3 text-left transition-all disabled:opacity-40"
+                        style={{
+                          background: active ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0",
+                          color: active ? "#fff" : "#3D2B1F",
+                          border: active ? "1px solid transparent" : "1px solid #E8DDD0",
+                          boxShadow: active ? "0 4px 16px rgba(139,92,246,0.18)" : "none",
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold">{preset.label}</span>
+                          {active && <span className="text-[10px] font-bold uppercase tracking-[0.16em]">Active</span>}
+                        </div>
+                        <p className="mt-1 text-[11px] leading-snug" style={{ color: active ? "rgba(255,255,255,0.9)" : "#9C7D5B" }}>
+                          {preset.caption}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {showAdvancedHair && <>
               <StyledDropdown
                 label="Target Hairstyle" value={hairStyle}
                 options={hairStyleOptions.map((s) => ({ value: s.value, label: s.label }))}
@@ -1661,7 +1817,6 @@ export function AIBeautyStudio({
               />
               <div className="flex flex-col gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Hair Color</p>
-                {/* Swatch grid */}
                 <div className="flex flex-wrap gap-2">
                   {HAIR_COLORS.map((c) => (
                     <button key={c.value} type="button" title={c.label}
@@ -1681,13 +1836,14 @@ export function AIBeautyStudio({
                     </button>
                   ))}
                 </div>
-                {currentHairColor && (
-                  <p className="text-xs" style={{ color: "#9C7D5B" }}>
-                    Selected: <strong>{currentHairColor.label}</strong>
-                    {hairStyle !== "No change" ? ` + ${HAIR_STYLE_OPTIONS.find((s) => s.value === hairStyle)?.label}` : ""}
-                  </p>
-                )}
               </div>
+              </>}
+              {currentHairColor && (
+                <p className="text-xs" style={{ color: "#9C7D5B" }}>
+                  Selected: <strong>{currentHairColor.label}</strong>
+                  {hairStyle !== "No change" ? ` + ${HAIR_STYLE_OPTIONS.find((s) => s.value === hairStyle)?.label}` : ""}
+                </p>
+              )}
               <button onClick={generateHair} disabled={status === "loading"}
                 className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
@@ -1729,49 +1885,105 @@ export function AIBeautyStudio({
           </div>
         )}
 
-        {/* ── Outfit Generator mode (scaffold) ── */}
+        {/* ── Outfit Generator mode ── */}
         {mode === "outfit" && (
           <div className="p-5">
             <div className="rounded-3xl border p-5" style={{ borderColor: "#E8DDD0", background: "#FFFBF8" }}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <StyledDropdown
-                  label="Occasion"
-                  value={outfitOccasion}
-                  options={[
-                    { value: "casual", label: "Casual" },
-                    { value: "work", label: "Work" },
-                    { value: "date", label: "Date" },
-                    { value: "wedding", label: "Wedding" },
-                    { value: "travel", label: "Travel" },
-                  ]}
-                  onChange={(v) => setOutfitOccasion(v as OutfitOccasion)}
-                  disabled={outfitLoading}
-                />
-                <StyledDropdown
-                  label="Vibe"
-                  value={outfitVibe}
-                  options={[
-                    { value: "minimal", label: "Minimal" },
-                    { value: "classic", label: "Classic" },
-                    { value: "bold", label: "Bold" },
-                    { value: "romantic", label: "Romantic" },
-                    { value: "street", label: "Street" },
-                  ]}
-                  onChange={(v) => setOutfitVibe(v as OutfitVibe)}
-                  disabled={outfitLoading}
-                />
-                <div className="flex items-end">
+              <section className="rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: "#E8DDD0", background: "#FFFDFA" }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Start with an outfit preset</p>
+                    <p className="text-[11px]" style={{ color: "#9C7D5B" }}>
+                      Choose the moment first. Use fine-tune only when you want to control the mix yourself.
+                    </p>
+                  </div>
                   <button
-                    onClick={() => { void generateOutfits(); }}
-                    disabled={outfitLoading}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-                    style={{ background: "linear-gradient(135deg,#F97316,#EC4899)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+                    type="button"
+                    onClick={() => setShowAdvancedOutfit((value) => !value)}
+                    className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-80"
+                    style={{ background: "rgba(123,110,158,0.10)", border: "1px solid rgba(123,110,158,0.18)", color: "#7B6E9E" }}
                   >
-                    {outfitLoading
-                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
-                      : <><Sparkles className="h-4 w-4" /> Generate Outfits</>}
+                    {showAdvancedOutfit ? "Hide fine-tune" : "Fine-tune manually"}
                   </button>
                 </div>
+
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {OUTFIT_PRESETS.map((preset) => {
+                    const active = isOutfitPresetActive(preset);
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyOutfitPreset(preset)}
+                        disabled={outfitLoading}
+                        className="rounded-2xl px-4 py-3 text-left transition-all disabled:opacity-40"
+                        style={{
+                          background: active ? "linear-gradient(135deg,#F97316,#EC4899)" : "#FDF6F0",
+                          color: active ? "#fff" : "#3D2B1F",
+                          border: active ? "1px solid transparent" : "1px solid #E8DDD0",
+                          boxShadow: active ? "0 4px 16px rgba(249,115,22,0.18)" : "none",
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold">{preset.label}</span>
+                          {active && <span className="text-[10px] font-bold uppercase tracking-[0.16em]">Active</span>}
+                        </div>
+                        <p className="mt-1 text-[11px] leading-snug" style={{ color: active ? "rgba(255,255,255,0.9)" : "#9C7D5B" }}>
+                          {preset.caption}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {showAdvancedOutfit && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <StyledDropdown
+                    label="Occasion"
+                    value={outfitOccasion}
+                    options={[
+                      { value: "casual", label: "Casual" },
+                      { value: "work", label: "Work" },
+                      { value: "date", label: "Date" },
+                      { value: "wedding", label: "Wedding" },
+                      { value: "travel", label: "Travel" },
+                    ]}
+                    onChange={(v) => setOutfitOccasion(v as OutfitOccasion)}
+                    disabled={outfitLoading}
+                  />
+                  <StyledDropdown
+                    label="Vibe"
+                    value={outfitVibe}
+                    options={[
+                      { value: "minimal", label: "Minimal" },
+                      { value: "classic", label: "Classic" },
+                      { value: "bold", label: "Bold" },
+                      { value: "romantic", label: "Romantic" },
+                      { value: "street", label: "Street" },
+                    ]}
+                    onChange={(v) => setOutfitVibe(v as OutfitVibe)}
+                    disabled={outfitLoading}
+                  />
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl px-4 py-3" style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.14)" }}>
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Current direction</p>
+                  <p className="text-[11px]" style={{ color: "#9C7D5B" }}>
+                    {outfitOccasion} occasion · {outfitVibe} vibe
+                  </p>
+                </div>
+                <button
+                  onClick={() => { void generateOutfits(); }}
+                  disabled={outfitLoading}
+                  className="shrink-0 flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
+                  style={{ background: "linear-gradient(135deg,#F97316,#EC4899)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                  {outfitLoading
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
+                    : <><Sparkles className="h-4 w-4" /> Generate Outfits</>}
+                </button>
               </div>
 
               {outfitError && (
