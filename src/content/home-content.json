@@ -50,6 +50,22 @@
         "afterFile": "sample-1-after.jpg"
       },
       {
+        "id": "pair-2",
+        "title": "Hair color switch",
+        "tag": "Color experimentation",
+        "baseName": "sample-2",
+        "beforeFile": "sample-2-before.jpg",
+        "afterFile": "sample-2-after.jpg"
+      },
+      {
+        "id": "pair-3",
+        "title": "Shape and balance update",
+        "tag": "Facial harmony",
+        "baseName": "sample-3",
+        "beforeFile": "sample-3-before.jpg",
+        "afterFile": "sample-3-after.jpg"
+      },
+      {
         "id": "pair-4",
         "title": "Skin finish and glow",
         "tag": "Skin finish comparison",

@@ -142,39 +142,9 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
   );
 }
 
-function ShowcaseRow({
-  items,
-  direction = "left",
-  tuning,
-}: {
-  items: BeforeAfterItem[];
-  direction?: "left" | "right";
-  tuning: ShowcaseTuning;
-}) {
-  const duplicated = [...items, ...items];
-  const animationClass = direction === "left" ? "animate-marquee-left" : "animate-marquee-right";
-  const duration = direction === "left" ? tuning.marqueeLeftSeconds : tuning.marqueeRightSeconds;
-
-  return (
-    <div className="marquee-mask relative overflow-hidden">
-      <div
-        className={`group flex w-max ${tuning.rowGapClass} ${animationClass} hover:[animation-play-state:paused]`}
-        style={{ ["--marquee-duration" as string]: `${duration}s` }}
-      >
-        {duplicated.map((item, index) => (
-          <div key={`${item.id}-${index}`} aria-hidden={index >= items.length}>
-            <BeforeAfterCard item={item} tuning={tuning} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function SampleShowcase({ items, tuning }: SampleShowcaseProps) {
   const mergedTuning: ShowcaseTuning = { ...DEFAULT_TUNING, ...(tuning ?? {}) };
-  const rowA = [items[0], items[1], items[2], items[3]].filter(Boolean) as BeforeAfterItem[];
-  const rowB = [items[2], items[3], items[0], items[1]].filter(Boolean) as BeforeAfterItem[];
+  const visibleItems = items.slice(0, 8);
 
   return (
     <motion.section
@@ -192,11 +162,10 @@ export function SampleShowcase({ items, tuning }: SampleShowcaseProps) {
         </p>
       </div>
 
-      <div className="mt-8 space-y-4">
-        <ShowcaseRow items={rowA} direction="left" tuning={mergedTuning} />
-        <div className="hidden sm:block">
-          <ShowcaseRow items={rowB} direction="right" tuning={mergedTuning} />
-        </div>
+      <div className={`mt-8 grid grid-cols-1 justify-items-center sm:grid-cols-2 lg:grid-cols-4 ${mergedTuning.rowGapClass}`}>
+        {visibleItems.map((item) => (
+          <BeforeAfterCard key={item.id} item={item} tuning={mergedTuning} />
+        ))}
       </div>
     </motion.section>
   );
