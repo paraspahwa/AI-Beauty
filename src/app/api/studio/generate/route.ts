@@ -279,8 +279,8 @@ export async function POST(request: NextRequest) {
       const outfitSummary = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1356" viewBox="0 0 1024 1356">
         <defs>
           <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#FFF7FB"/>
-            <stop offset="100%" stop-color="#FEFBF8"/>
+            <stop offset="0%" stop-color="#fffafc"/>
+            <stop offset="100%" stop-color="#fffafc"/>
           </linearGradient>
         </defs>
         <rect width="1024" height="1356" fill="url(#bg)"/>

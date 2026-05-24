@@ -4,22 +4,22 @@ import { Sparkles, Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6" style={{ background: "linear-gradient(145deg, #FDF2F8 0%, #FCE7F3 50%, #F9A8D4 100%)" }}>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6" style={{ background: "linear-gradient(145deg, #fffafc 0%, #fffafc 50%, #fffafc 100%)" }}>
       <div className="max-w-md w-full text-center space-y-8">
         {/* Decorative number */}
         <div className="relative">
-          <p className="font-serif text-[120px] leading-none select-none font-bold" style={{ color: "rgba(240,232,216,0.05)" }}>
+          <p className="font-sans text-[120px] leading-none select-none font-bold" style={{ color: "rgba(240,232,216,0.05)" }}>
             404
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full text-obsidian shadow-glow" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full text-obsidian shadow-glow" style={{ background: "#111827" }}>
               <Sparkles className="h-10 w-10" />
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h1 className="font-serif text-3xl text-ink">Page not found</h1>
+          <h1 className="font-sans text-3xl text-ink">Page not found</h1>
           <p className="text-ink-stone leading-relaxed">
             Looks like this page has gone off-trend. Let&apos;s get you back to discovering your
             perfect style.

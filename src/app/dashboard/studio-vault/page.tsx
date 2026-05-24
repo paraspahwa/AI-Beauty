@@ -50,7 +50,7 @@ export default async function StudioVaultPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="font-serif text-3xl sm:text-4xl text-ink">Studio Vault</h1>
+          <h1 className="font-sans text-3xl sm:text-4xl text-ink">Studio Vault</h1>
           <p className="text-ink-stone text-sm mt-1">{allAssets.length} generated creations</p>
         </div>
       </div>
@@ -67,7 +67,7 @@ export default async function StudioVaultPage() {
             className="px-4 py-2 rounded-full text-sm font-medium transition-all"
             style={{
               background: "rgba(251,231,242,0.5)",
-              border: "1px solid rgba(131,24,67,0.14)",
+              border: "1px solid rgba(17,24,39,0.14)",
               color: "#3D2B1F",
             }}
           >
@@ -79,7 +79,7 @@ export default async function StudioVaultPage() {
 
       {/* Gallery */}
       {allAssets.length === 0 ? (
-        <div className="rounded-3xl p-12 text-center" style={{ background: "rgba(251,231,242,0.5)", border: "1px dashed rgba(131,24,67,0.14)" }}>
+        <div className="rounded-3xl p-12 text-center" style={{ background: "rgba(251,231,242,0.5)", border: "1px dashed rgba(17,24,39,0.14)" }}>
           <p className="text-ink-stone mb-4">No generated assets yet.</p>
           <div className="space-y-2">
             <p className="text-sm text-ink-stone">
@@ -127,8 +127,8 @@ export default async function StudioVaultPage() {
                   <span
                     className="text-xs px-2 py-1 rounded-full"
                     style={{
-                      background: asset.studio_canvas_id ? "rgba(236,72,153,0.08)" : "rgba(123,110,158,0.08)",
-                      color: asset.studio_canvas_id ? "#EC4899" : "#8B5CF6",
+                      background: asset.studio_canvas_id ? "rgba(17,24,39,0.08)" : "rgba(17,24,39,0.08)",
+                      color: asset.studio_canvas_id ? "#111827" : "#111827",
                     }}
                   >
                     {asset.studio_canvas_id ? "Canvas" : "Report"}
@@ -140,7 +140,7 @@ export default async function StudioVaultPage() {
                   size="sm"
                   variant="ghost"
                   className="w-full"
-                  style={{ color: "#EC4899" }}
+                  style={{ color: "#111827" }}
                 >
                   <a href={asset.imageUrl ?? "#"} download={!!asset.imageUrl}>
                     <Download className="h-3 w-3 mr-2" />
@@ -154,8 +154,8 @@ export default async function StudioVaultPage() {
       )}
 
       {/* CTA */}
-      <div className="mt-12 rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.1), rgba(123,110,158,0.1))", border: "1px solid rgba(131,24,67,0.12)" }}>
-        <h2 className="font-serif text-2xl text-ink mb-3">Want More Try-Ons?</h2>
+      <div className="mt-12 rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.1), rgba(17,24,39,0.1))", border: "1px solid rgba(17,24,39,0.12)" }}>
+        <h2 className="font-sans text-2xl text-ink mb-3">Want More Try-Ons?</h2>
         <p className="text-ink-stone mb-6">
           Studio Pro subscribers get 150 AI generations per month. All other users get 3 free per month.
         </p>

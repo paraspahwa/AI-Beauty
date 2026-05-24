@@ -57,6 +57,8 @@ export interface PaywallProps {
   reportId: string;
   onUnlocked?: () => void;
   onSubscribed?: () => void;
+  appReturnToUrl?: string;
+  initialPlan?: "report" | "studio_pro";
   /** When true, forces the dialog open (e.g. from a sticky upgrade bar). */
   externalOpen?: boolean;
   onExternalOpenChange?: (v: boolean) => void;
@@ -95,9 +97,9 @@ function fmtINR(n: number) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onExternalOpenChange }: PaywallProps) {
+export function Paywall({ reportId, onUnlocked, onSubscribed, appReturnToUrl, initialPlan = "report", externalOpen, onExternalOpenChange }: PaywallProps) {
   const [open, setOpen]       = React.useState(false);
-  const [plan, setPlan]       = React.useState<"report" | "studio_pro">("report");
+  const [plan, setPlan]       = React.useState<"report" | "studio_pro">(initialPlan);
   const [loading, setLoading] = React.useState(false);
   const [error, setError]     = React.useState<string | null>(null);
   const [currency, setCurrency] = React.useState<SupportedCurrency>("INR");
@@ -106,6 +108,10 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
   React.useEffect(() => {
     if (externalOpen !== undefined) setOpen(externalOpen);
   }, [externalOpen]);
+
+  React.useEffect(() => {
+    setPlan(initialPlan);
+  }, [initialPlan]);
 
   const handleOpenChange = (v: boolean) => {
     setOpen(v);
@@ -191,7 +197,11 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
               razorpay_signature:  response.razorpay_signature,
             }),
           });
-          if (verify.ok) { setOpen(false); onUnlocked?.(); }
+          if (verify.ok) {
+            setOpen(false);
+            onUnlocked?.();
+            if (appReturnToUrl) window.location.href = appReturnToUrl;
+          }
           else setError("Verification failed — contact support if amount was deducted.");
         },
       }).open();
@@ -241,7 +251,11 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
               razorpay_signature:       response.razorpay_signature,
             }),
           });
-          if (verify.ok) { setOpen(false); onSubscribed?.(); }
+          if (verify.ok) {
+            setOpen(false);
+            if (appReturnToUrl) window.location.href = appReturnToUrl;
+            else onSubscribed?.();
+          }
           else setError("Subscription verification failed — contact support if payment was deducted.");
         },
       }).open();
@@ -258,7 +272,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
   }
 
   // ── Accent colour per selected plan ──────────────────────────────────────
-  const accent = plan === "studio_pro" ? "#9B7CB6" : "#EC4899";
+  const accent = plan === "studio_pro" ? "#111827" : "#111827";
 
   return (
     <>
@@ -289,9 +303,9 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
             <DialogContent
               className="max-w-2xl"
               style={{
-                background: "linear-gradient(145deg,#FFF7FB,#FCE7F3)",
-                border: "1px solid rgba(131,24,67,0.18)",
-                boxShadow: "0 20px 50px rgba(131,24,67,0.14)",
+                background: "linear-gradient(145deg,#fffafc,#fffafc)",
+                border: "1px solid rgba(17,24,39,0.18)",
+                boxShadow: "0 20px 50px rgba(17,24,39,0.14)",
               }}
             >
               <motion.div variants={staggerContainer} initial="hidden" animate="visible">
@@ -302,11 +316,11 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                       animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                       className="absolute inset-0 rounded-full blur-xl"
-                      style={{ background: "rgba(236,72,153,0.2)" }}
+                      style={{ background: "rgba(17,24,39,0.2)" }}
                     />
                     <div
                       className="relative flex h-14 w-14 items-center justify-center rounded-full text-obsidian shadow-glow"
-                      style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}
+                      style={{ background: "#111827" }}
                     >
                       <Lock className="h-7 w-7" />
                     </div>
@@ -332,16 +346,16 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("report"); } }}
                     className="relative rounded-2xl p-4 text-left transition-all focus:outline-none cursor-pointer"
                     style={{
-                      background: plan === "report" ? "rgba(236,72,153,0.12)" : "rgba(131,24,67,0.08)",
-                      border:     plan === "report" ? "2px solid rgba(236,72,153,0.45)" : "2px solid rgba(131,24,67,0.16)",
+                      background: plan === "report" ? "rgba(17,24,39,0.12)" : "rgba(17,24,39,0.08)",
+                      border:     plan === "report" ? "2px solid rgba(17,24,39,0.45)" : "2px solid rgba(17,24,39,0.16)",
                     }}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                          style={{ color: "#EC4899" }}>One-Time Report</p>
+                          style={{ color: "#111827" }}>One-Time Report</p>
                         <div className="flex items-baseline gap-2">
-                          <span className="font-serif text-3xl leading-none" style={{ color: "#831843" }}>
+                          <span className="font-sans text-3xl leading-none" style={{ color: "#111827" }}>
                             {reportLabel}
                           </span>
                           <span className="text-xs line-through" style={{ color: "#4A3A2A" }}>
@@ -353,8 +367,8 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                       <div
                         className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all"
                         style={{
-                          background: plan === "report" ? "#EC4899" : "rgba(131,24,67,0.16)",
-                          border: "2px solid " + (plan === "report" ? "#EC4899" : "rgba(131,24,67,0.2)"),
+                          background: plan === "report" ? "#111827" : "rgba(17,24,39,0.16)",
+                          border: "2px solid " + (plan === "report" ? "#111827" : "rgba(17,24,39,0.2)"),
                         }}
                       >
                         {plan === "report" && <Check className="h-3 w-3 text-obsidian" />}
@@ -363,7 +377,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                     <ul className="space-y-1.5">
                       {REPORT_PERKS.map((p, i) => (
                         <li key={i} className="flex items-center gap-2 text-[11px]" style={{ color: "#8A7A6A" }}>
-                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} />
+                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
                           {p.text}
                         </li>
                       ))}
@@ -374,7 +388,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                       onClick={(e) => { e.stopPropagation(); setPlan("report"); startReportCheckout(); }}
                       disabled={loading}
                       className="mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                      style={{ background: "linear-gradient(135deg,#EC4899,#be185d)" }}
+                      style={{ background: "#111827" }}
                     >
                       {loading && plan === "report" ? "Starting checkout…" : `Unlock This Report — ${reportLabel}`}
                     </button>
@@ -388,15 +402,15 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPlan("studio_pro"); } }}
                     className="relative rounded-2xl p-4 text-left transition-all focus:outline-none cursor-pointer"
                     style={{
-                      background: plan === "studio_pro" ? "rgba(123,110,158,0.14)" : "rgba(131,24,67,0.08)",
-                      border:     plan === "studio_pro" ? "2px solid rgba(139,92,246,0.5)" : "2px solid rgba(131,24,67,0.16)",
+                      background: plan === "studio_pro" ? "rgba(17,24,39,0.14)" : "rgba(17,24,39,0.08)",
+                      border:     plan === "studio_pro" ? "2px solid rgba(17,24,39,0.5)" : "2px solid rgba(17,24,39,0.16)",
                     }}
                   >
                     {/* Badge */}
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
-                        style={{ background: "linear-gradient(135deg,#7B6E9E,#9B7CB6)" }}
+                        style={{ background: "linear-gradient(135deg,#7B6E9E,#111827)" }}
                       >
                         <Crown className="h-2.5 w-2.5" /> Most Popular
                       </span>
@@ -405,9 +419,9 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                     <div className="flex items-start justify-between mb-3 mt-1">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                          style={{ color: "#9B7CB6" }}>Studio Pro</p>
+                          style={{ color: "#111827" }}>Studio Pro</p>
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-serif text-3xl leading-none" style={{ color: "#831843" }}>
+                          <span className="font-sans text-3xl leading-none" style={{ color: "#111827" }}>
                             {proLabel}
                           </span>
                           <span className="text-xs" style={{ color: "#6A5A7C" }}>/mo</span>
@@ -417,8 +431,8 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                       <div
                         className="flex h-5 w-5 items-center justify-center rounded-full shrink-0 transition-all"
                         style={{
-                          background: plan === "studio_pro" ? "#9B7CB6" : "rgba(131,24,67,0.16)",
-                          border: "2px solid " + (plan === "studio_pro" ? "#9B7CB6" : "rgba(131,24,67,0.2)"),
+                          background: plan === "studio_pro" ? "#111827" : "rgba(17,24,39,0.16)",
+                          border: "2px solid " + (plan === "studio_pro" ? "#111827" : "rgba(17,24,39,0.2)"),
                         }}
                       >
                         {plan === "studio_pro" && <Check className="h-3 w-3 text-white" />}
@@ -427,7 +441,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                     <ul className="space-y-1.5">
                       {PRO_PERKS.map((p, i) => (
                         <li key={i} className="flex items-center gap-2 text-[11px]" style={{ color: "#8A7A6A" }}>
-                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#9B7CB6" }} />
+                          <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
                           {p.text}
                         </li>
                       ))}
@@ -438,7 +452,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                       onClick={(e) => { e.stopPropagation(); setPlan("studio_pro"); startProCheckout(); }}
                       disabled={loading}
                       className="mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                      style={{ background: "linear-gradient(135deg,#7B6E9E,#9B7CB6)" }}
+                      style={{ background: "linear-gradient(135deg,#7B6E9E,#111827)" }}
                     >
                       {loading && plan === "studio_pro" ? "Starting checkout…" : `Start Studio Pro — ${proLabel}/mo`}
                     </button>
@@ -480,7 +494,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, externalOpen, onEx
                     <div
                       key={i}
                       className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
-                      style={{ color: "#5A4A3A", background: "rgba(131,24,67,0.10)", border: "1px solid rgba(131,24,67,0.14)" }}
+                      style={{ color: "#5A4A3A", background: "rgba(17,24,39,0.10)", border: "1px solid rgba(17,24,39,0.14)" }}
                     >
                       <Shield className="h-3 w-3" />
                       {badge}

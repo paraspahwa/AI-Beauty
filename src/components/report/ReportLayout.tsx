@@ -40,6 +40,9 @@ interface Props {
   isReadOnly?: boolean;
   initialTab?: string;
   initialStudioSourceAssetId?: string | null;
+  appReturnToUrl?: string | null;
+  initialPaywallOpen?: boolean;
+  initialPaywallPlan?: "report" | "studio_pro";
 }
 
 export function ReportLayout({
@@ -47,6 +50,9 @@ export function ReportLayout({
   isReadOnly = false,
   initialTab = "face",
   initialStudioSourceAssetId = null,
+  appReturnToUrl = null,
+  initialPaywallOpen = false,
+  initialPaywallPlan = "report",
 }: Props) {
   const [report, setReport] = React.useState(initial);
   const [activeTab, setActiveTab] = React.useState<string>(initialTab);
@@ -61,7 +67,7 @@ export function ReportLayout({
   const [visualsFailed, setVisualsFailed] = React.useState(false);
   const [hairstyleBestLoading, setHairstyleBestLoading] = React.useState(false);
   const [paymentInitiated, setPaymentInitiated] = React.useState(false);
-  const [paywallOpen, setPaywallOpen] = React.useState(false);
+  const [paywallOpen, setPaywallOpen] = React.useState(initialPaywallOpen);
   const [activeMode, setActiveMode] = React.useState<"report" | "studio">(initialTab === "studio" ? "studio" : "report");
   const hairstyleBestRequested = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
@@ -232,7 +238,7 @@ export function ReportLayout({
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#F5EFE7", borderTop: "4px solid transparent", borderImage: "linear-gradient(90deg,#EC4899,#8B5CF6) 1" }}>
+    <div className="min-h-screen" style={{ background: "#F5EFE7", borderTop: "4px solid transparent", borderImage: "#111827 1" }}>
     <div className="container max-w-5xl py-10 sm:py-14">
       <motion.header
         variants={staggerContainer}
@@ -249,7 +255,7 @@ export function ReportLayout({
         </motion.p>
         <motion.h1
           variants={fadeUp}
-          className="mt-3 font-serif text-4xl sm:text-5xl"
+          className="mt-3 font-sans text-4xl sm:text-5xl"
           style={{ color: "#3D2B1F" }}
         >
           {headerTitle}
@@ -335,13 +341,15 @@ export function ReportLayout({
               download={`Renovaara-report-${report.id}.html`}
               rel="noopener"
               className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+              style={{ background: "#111827", color: "#fff", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}
             >
               <Download className="h-4 w-4" /> Download PDF
             </a>
           ) : !isReadOnly && (
             <Paywall
               reportId={report.id}
+              appReturnToUrl={appReturnToUrl ?? undefined}
+              initialPlan={initialPaywallPlan}
               externalOpen={paywallOpen}
               onExternalOpenChange={setPaywallOpen}
               onUnlocked={() => { setPaymentInitiated(true); setPaywallOpen(false); refresh(); }}
@@ -358,9 +366,9 @@ export function ReportLayout({
       >
         {/* Payment-initiated bridge state — shown between Razorpay success and webhook confirmation */}
         {paymentInitiated && !isPaid && (
-          <div className="mb-8 flex flex-col items-center justify-center gap-3 rounded-2xl p-6 text-center" style={{ background: "rgba(236,72,153,0.06)", border: "1px solid rgba(236,72,153,0.2)" }}>
-            <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#EC4899" }} />
-            <p className="text-base font-semibold" style={{ color: "#EC4899" }}>Payment received — unlocking your report…</p>
+          <div className="mb-8 flex flex-col items-center justify-center gap-3 rounded-2xl p-6 text-center" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.2)" }}>
+            <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#111827" }} />
+            <p className="text-base font-semibold" style={{ color: "#111827" }}>Payment received — unlocking your report…</p>
             <p className="text-sm" style={{ color: "rgba(0,0,0,0.5)" }}>This takes 5–15 seconds. Hang tight!</p>
           </div>
         )}
@@ -375,22 +383,22 @@ export function ReportLayout({
               }}
               className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
               style={activeMode === "studio"
-                ? { background: "linear-gradient(135deg,#8B5CF6,#6D28D9)", color: "#fff", boxShadow: "0 2px 8px rgba(109,40,217,0.25)" }
+                ? { background: "#111827", color: "#fff", boxShadow: "0 2px 8px rgba(17,24,39,0.25)" }
                 : { color: "#5C4232" }}
             >
               <Wand2 className="h-4 w-4" />
               AI Studio
               {isStudioPro ? (
-                <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.25)" : "rgba(139,92,246,0.15)", color: activeMode === "studio" ? "#fff" : "#8B5CF6" }}>PRO</span>
+                <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.25)" : "rgba(17,24,39,0.15)", color: activeMode === "studio" ? "#fff" : "#111827" }}>PRO</span>
               ) : (
-                <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.18)" : "rgba(201,149,107,0.15)", color: activeMode === "studio" ? "rgba(255,255,255,0.85)" : "#C8A96E" }}>↑ Try</span>
+                <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: activeMode === "studio" ? "rgba(255,255,255,0.18)" : "rgba(17,24,39,0.15)", color: activeMode === "studio" ? "rgba(255,255,255,0.85)" : "#C8A96E" }}>↑ Try</span>
               )}
             </button>
             <button
               onClick={() => setModeAndSyncUrl("report")}
               className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
               style={activeMode === "report"
-                ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff", boxShadow: "0 2px 8px rgba(139,92,246,0.25)" }
+                ? { background: "#111827", color: "#fff", boxShadow: "0 2px 8px rgba(17,24,39,0.25)" }
                 : { color: "#5C4232" }}
             >
               <BarChart2 className="h-4 w-4" />
@@ -419,7 +427,7 @@ export function ReportLayout({
                     value={t.value}
                     className="relative rounded-xl text-[13px] font-medium px-3 py-2 sm:px-4 transition-all data-[state=active]:shadow-sm whitespace-nowrap"
                     style={activeTab === t.value
-                      ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff" }
+                      ? { background: "#111827", color: "#fff" }
                       : { color: "#5C4232" }}
                   >
                     {isLocked && (
@@ -476,6 +484,7 @@ export function ReportLayout({
                     <Locked
                       reportId={report.id}
                       onUnlocked={refresh}
+                      initialPaywallPlan={initialPaywallPlan}
                       title="Skin Analysis"
                     />
                   ) : report.skinAnalysis ? (
@@ -517,6 +526,7 @@ export function ReportLayout({
                     <Locked
                       reportId={report.id}
                       onUnlocked={refresh}
+                      initialPaywallPlan={initialPaywallPlan}
                       title="Spectacles Guide"
                     />
                   ) : report.glasses ? (
@@ -549,6 +559,7 @@ export function ReportLayout({
                     <Locked
                       reportId={report.id}
                       onUnlocked={refresh}
+                      initialPaywallPlan={initialPaywallPlan}
                       title="Hairstyle Guide"
                     />
                   ) : report.hairstyle ? (
@@ -594,6 +605,7 @@ export function ReportLayout({
                     <Locked
                       reportId={report.id}
                       onUnlocked={refresh}
+                      initialPaywallPlan={initialPaywallPlan}
                       title="Shop Your Look"
                     />
                   )}
@@ -679,8 +691,8 @@ export function ReportLayout({
         <div
           className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-4 px-4 py-3 sm:px-6"
           style={{
-            background: "linear-gradient(90deg,#EC4899,#8B5CF6)",
-            boxShadow: "0 -4px 24px rgba(139,92,246,0.25)",
+            background: "#111827",
+            boxShadow: "0 -4px 24px rgba(17,24,39,0.25)",
           }}
         >
           <p className="text-sm font-medium text-white">
@@ -690,7 +702,7 @@ export function ReportLayout({
           <button
             onClick={() => setPaywallOpen(true)}
             className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-bold transition-opacity hover:opacity-90"
-            style={{ color: "#EC4899" }}
+            style={{ color: "#111827" }}
           >
             Unlock now →
           </button>
@@ -728,22 +740,26 @@ function Locked({
   title,
   reportId,
   onUnlocked,
+  appReturnToUrl,
+  initialPaywallPlan,
 }: {
   title: string;
   reportId: string;
   onUnlocked: () => void;
+  appReturnToUrl?: string | null;
+  initialPaywallPlan?: "report" | "studio_pro";
 }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="rounded-4xl p-12 sm:p-16 text-center relative overflow-hidden"
-      style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(201,149,107,0.18)" }}
+      style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.18)" }}
     >
       {/* Decorative background elements */}
       <motion.div
         className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl"
-        style={{ background: "rgba(201,149,107,0.08)" }}
+        style={{ background: "rgba(17,24,39,0.08)" }}
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -756,7 +772,7 @@ function Locked({
       />
       <motion.div
         className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl"
-        style={{ background: "rgba(123,110,158,0.08)" }}
+        style={{ background: "rgba(17,24,39,0.08)" }}
         animate={{
           scale: [1, 1.3, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -791,20 +807,20 @@ function Locked({
               ease: "easeInOut",
             }}
             className="absolute inset-0 rounded-full blur-xl"
-            style={{ background: "rgba(201,149,107,0.25)" }}
+            style={{ background: "rgba(17,24,39,0.25)" }}
           />
-          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-white shadow-glow" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
+          <div className="relative flex h-16 w-16 items-center justify-center mx-auto rounded-full text-white shadow-glow" style={{ background: "#111827" }}>
             <Lock className="h-8 w-8" />
           </div>
         </motion.div>
 
-        <h3 className="font-serif text-2xl sm:text-3xl text-ink mb-3">{title} is locked</h3>
+        <h3 className="font-sans text-2xl sm:text-3xl text-ink mb-3">{title} is locked</h3>
         <p className="mx-auto max-w-md text-sm text-ink-stone leading-relaxed mb-8">
           Unlock the full report to see this section plus skin analysis, hairstyles, spectacles
           guide, and a downloadable PDF.
         </p>
         <div className="flex justify-center">
-          <Paywall reportId={reportId} onUnlocked={onUnlocked} />
+          <Paywall reportId={reportId} onUnlocked={onUnlocked} appReturnToUrl={appReturnToUrl ?? undefined} initialPlan={initialPaywallPlan} />
         </div>
       </div>
     </motion.div>

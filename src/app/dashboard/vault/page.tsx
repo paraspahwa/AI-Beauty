@@ -54,21 +54,21 @@ export default async function VaultPage() {
     <main className="container max-w-6xl py-12 min-h-screen">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] font-medium mb-2" style={{ color: "#EC4899" }}>Dashboard</p>
-          <h1 className="font-serif text-3xl text-ink">My Image Vault</h1>
+          <p className="text-xs uppercase tracking-[0.3em] font-medium mb-2" style={{ color: "#111827" }}>Dashboard</p>
+          <h1 className="font-sans text-3xl text-ink">My Image Vault</h1>
           <p className="text-sm text-ink-stone mt-1">All generated images with date and time.</p>
         </div>
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
-          style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(131,24,67,0.14)", color: "#7C5A3A" }}
+          style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(17,24,39,0.14)", color: "#7C5A3A" }}
         >
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-3xl p-12 text-center" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(131,24,67,0.20)" }}>
+        <div className="rounded-3xl p-12 text-center" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(17,24,39,0.20)" }}>
           <Wand2 className="h-10 w-10 mx-auto mb-3" style={{ color: "#C8A96E" }} />
           <p className="text-ink">No generated images yet.</p>
           <p className="text-ink-stone text-sm mt-1">Create looks from any report to build your vault.</p>
@@ -79,7 +79,7 @@ export default async function VaultPage() {
             <article
               key={item.id}
               className="rounded-2xl overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(131,24,67,0.14)", boxShadow: "0 8px 26px rgba(0,0,0,0.18)" }}
+              style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(17,24,39,0.14)", boxShadow: "0 8px 26px rgba(0,0,0,0.18)" }}
             >
               <Link href={`/report/${item.report_id}?tab=studio&sourceAssetId=${item.id}`} className="block">
                 <div className="relative aspect-[3/4]">
@@ -91,7 +91,7 @@ export default async function VaultPage() {
                 </div>
               </Link>
               <div className="px-3 py-2.5">
-                <p className="text-xs font-semibold" style={{ color: "#EC4899" }}>{toolLabel(item.tool)}</p>
+                <p className="text-xs font-semibold" style={{ color: "#111827" }}>{toolLabel(item.tool)}</p>
                 <p className="text-[11px] text-ink-stone truncate">{item.variant ?? "Generated look"}</p>
                 <p className="mt-1 inline-flex items-center gap-1 text-[11px]" style={{ color: "#9C7D5B" }}>
                   <Clock3 className="h-3 w-3" />

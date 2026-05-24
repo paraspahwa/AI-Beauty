@@ -416,7 +416,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
         aria-label="Chat with your Style Consultant"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className={`${CHAT_DOCK.styleConsultantFab} flex items-center gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(244,114,182,0.96),rgba(139,92,246,0.96))] px-4 py-3 text-left shadow-[0_14px_40px_rgba(236,72,153,0.35)] backdrop-blur`}
+        className={`${CHAT_DOCK.styleConsultantFab} flex items-center gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(244,114,182,0.96),rgba(17,24,39,0.96))] px-4 py-3 text-left shadow-[0_14px_40px_rgba(17,24,39,0.35)] backdrop-blur`}
       >
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/16 ring-1 ring-white/10">
           <MessageCircle className="h-5 w-5 text-white" />
@@ -453,30 +453,30 @@ export function StyleChatDrawer({ reportId, report }: Props) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-md flex-col border-l border-[rgba(131,24,67,0.16)] bg-[linear-gradient(160deg,#0E0E18_0%,#12121E_100%)] shadow-[-8px_0_40px_rgba(0,0,0,0.5)]"
+              className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-md flex-col border-l border-[rgba(17,24,39,0.16)] bg-[linear-gradient(160deg,#0E0E18_0%,#12121E_100%)] shadow-[-8px_0_40px_rgba(0,0,0,0.5)]"
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-[rgba(131,24,67,0.16)] px-5 py-4">
+              <div className="flex items-center justify-between border-b border-[rgba(17,24,39,0.16)] px-5 py-4">
                 {drawerView === "tips" ? (
                   <button
                     onClick={() => setDrawerView("chat")}
-                    className="flex items-center gap-2 text-sm font-semibold text-[#F0E8D8]"
+                    className="flex items-center gap-2 text-sm font-semibold text-[#fffafc]"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     My Saved Tips
                     {bookmarks.length > 0 && (
-                      <span className="ml-1 rounded-full bg-[rgba(201,149,107,0.2)] px-1.5 py-0.5 text-xs font-medium text-[#EC4899]">
+                      <span className="ml-1 rounded-full bg-[rgba(17,24,39,0.2)] px-1.5 py-0.5 text-xs font-medium text-[#111827]">
                         {bookmarks.length}
                       </span>
                     )}
                   </button>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(201,149,107,0.15)]">
-                      <Sparkles className="h-4 w-4 text-[#EC4899]" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(17,24,39,0.15)]">
+                      <Sparkles className="h-4 w-4 text-[#111827]" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-[#F0E8D8]">
+                      <p className="text-sm font-semibold text-[#fffafc]">
                         Your Style Consultant
                       </p>
                       <p className="text-xs text-[rgba(240,232,216,0.45)]">
@@ -490,13 +490,13 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                   {drawerView === "chat" && (
                     <button
                       onClick={() => setDrawerView("tips")}
-                      className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[rgba(131,24,67,0.62)] transition-colors hover:opacity-80"
+                      className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[rgba(17,24,39,0.62)] transition-colors hover:opacity-80"
                       aria-label="View saved tips"
                       title="My Saved Tips"
                     >
                       <Bookmark className="h-4 w-4" />
                       {bookmarks.length > 0 && (
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#EC4899] text-[9px] font-bold text-[#1A1009]">
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#111827] text-[9px] font-bold text-[#1A1009]">
                           {bookmarks.length > 9 ? "9+" : bookmarks.length}
                         </span>
                       )}
@@ -504,7 +504,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                   )}
                   <button
                     onClick={() => setOpen(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[rgba(131,24,67,0.62)] transition-colors hover:opacity-80"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[rgba(17,24,39,0.62)] transition-colors hover:opacity-80"
                     aria-label="Close chat"
                   >
                     <X className="h-4 w-4" />
@@ -517,8 +517,8 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                   {bookmarks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-3 py-16">
-                      <Bookmark className="h-10 w-10 text-[#EC4899] opacity-20" />
-                      <p className="text-sm text-center text-[rgba(131,24,67,0.5)]">
+                      <Bookmark className="h-10 w-10 text-[#111827] opacity-20" />
+                      <p className="text-sm text-center text-[rgba(17,24,39,0.5)]">
                         No saved tips yet.
                         <br />Pin any assistant reply with the 📌 button.
                       </p>
@@ -529,14 +529,14 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                         key={bk.id}
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="group relative rounded-2xl border border-[rgba(201,149,107,0.2)] bg-[rgba(201,149,107,0.08)] px-4 py-3 text-sm leading-relaxed text-[rgba(131,24,67,0.9)]"
+                        className="group relative rounded-2xl border border-[rgba(17,24,39,0.2)] bg-[rgba(17,24,39,0.08)] px-4 py-3 text-sm leading-relaxed text-[rgba(17,24,39,0.9)]"
                       >
                         {bk.content}
                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => shareMessage(bk.content, "bk")}
                             disabled={sharing === "bk"}
-                            className="flex h-6 w-6 items-center justify-center rounded-lg text-[#EC4899]"
+                            className="flex h-6 w-6 items-center justify-center rounded-lg text-[#111827]"
                             aria-label="Share tip"
                             title="Share"
                           >
@@ -571,8 +571,8 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     <div
                       className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                         msg.role === "user"
-                          ? "rounded-br-[4px] bg-[linear-gradient(135deg,#EC4899,#8B5CF6)] text-[#1A1009]"
-                          : "rounded-bl-[4px] border border-[rgba(131,24,67,0.16)] bg-[rgba(131,24,67,0.14)] text-[rgba(240,232,216,0.9)]"
+                          ? "rounded-br-[4px] bg-[#111827] text-[#1A1009]"
+                          : "rounded-bl-[4px] border border-[rgba(17,24,39,0.16)] bg-[rgba(17,24,39,0.14)] text-[rgba(240,232,216,0.9)]"
                       }`}
                     >
                       {msg.content}
@@ -583,7 +583,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                         <button
                           onClick={() => bookmarkMessage(msg.content, i)}
                           disabled={bookmarking === i}
-                          className="flex items-center gap-1 text-xs text-[#EC4899] opacity-30 transition-opacity hover:opacity-100"
+                          className="flex items-center gap-1 text-xs text-[#111827] opacity-30 transition-opacity hover:opacity-100"
                           title="Save this tip"
                         >
                           {bookmarking === i
@@ -595,7 +595,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                         <button
                           onClick={() => shareMessage(msg.content, i)}
                           disabled={sharing === i}
-                          className="flex items-center gap-1 text-xs text-[#EC4899] opacity-30 transition-opacity hover:opacity-100"
+                          className="flex items-center gap-1 text-xs text-[#111827] opacity-30 transition-opacity hover:opacity-100"
                           title="Share this tip"
                         >
                           {sharing === i
@@ -617,14 +617,14 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     transition={{ delay: 0.15 }}
                     className="space-y-2 pt-1"
                   >
-                    <p className="px-1 text-xs text-[rgba(131,24,67,0.45)]">
+                    <p className="px-1 text-xs text-[rgba(17,24,39,0.45)]">
                       Insights from your report
                     </p>
                     {proactiveInsights.map((insight, i) => (
                       <button
                         key={i}
                         onClick={() => send(insight.replace(/\*\*/g, ""))}
-                        className="w-full rounded-2xl rounded-bl-[4px] border border-[rgba(201,149,107,0.2)] bg-[rgba(201,149,107,0.08)] px-4 py-3 text-left text-xs leading-relaxed text-[rgba(131,24,67,0.9)] transition-opacity hover:opacity-80"
+                        className="w-full rounded-2xl rounded-bl-[4px] border border-[rgba(17,24,39,0.2)] bg-[rgba(17,24,39,0.08)] px-4 py-3 text-left text-xs leading-relaxed text-[rgba(17,24,39,0.9)] transition-opacity hover:opacity-80"
                       >
                         {insight}
                       </button>
@@ -645,8 +645,8 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                         onClick={() => setActiveCategory("suggested")}
                         className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                           activeCategory === "suggested"
-                            ? "border-[rgba(201,149,107,0.4)] bg-[rgba(201,149,107,0.25)] text-[#EC4899]"
-                            : "border-[rgba(131,24,67,0.18)] bg-[rgba(131,24,67,0.10)] text-[rgba(131,24,67,0.55)]"
+                            ? "border-[rgba(17,24,39,0.4)] bg-[rgba(17,24,39,0.25)] text-[#111827]"
+                            : "border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.10)] text-[rgba(17,24,39,0.55)]"
                         }`}
                       >
                         ✨ For You
@@ -657,8 +657,8 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                           onClick={() => setActiveCategory(cat.id)}
                           className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                             activeCategory === cat.id
-                              ? "border-[rgba(201,149,107,0.4)] bg-[rgba(201,149,107,0.25)] text-[#EC4899]"
-                              : "border-[rgba(131,24,67,0.18)] bg-[rgba(131,24,67,0.10)] text-[rgba(131,24,67,0.55)]"
+                              ? "border-[rgba(17,24,39,0.4)] bg-[rgba(17,24,39,0.25)] text-[#111827]"
+                              : "border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.10)] text-[rgba(17,24,39,0.55)]"
                           }`}
                         >
                           {cat.label}
@@ -672,7 +672,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                         occasionStep ? (
                           // Step 2: Indoor or outdoor?
                           <div className="w-full space-y-2">
-                            <p className="px-1 text-xs text-[rgba(131,24,67,0.5)]">
+                            <p className="px-1 text-xs text-[rgba(17,24,39,0.5)]">
                               {occasionStep.occasion} — indoor or outdoor?
                             </p>
                             <div className="flex gap-2 flex-wrap">
@@ -680,14 +680,14 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                                 <button
                                   key={venue}
                                   onClick={() => sendOccasionPrompt(venue)}
-                                  className="rounded-full border border-[rgba(201,149,107,0.35)] bg-[rgba(201,149,107,0.2)] px-4 py-1.5 text-xs font-medium capitalize text-[#EC4899] transition-opacity hover:opacity-80"
+                                  className="rounded-full border border-[rgba(17,24,39,0.35)] bg-[rgba(17,24,39,0.2)] px-4 py-1.5 text-xs font-medium capitalize text-[#111827] transition-opacity hover:opacity-80"
                                 >
                                   {venue === "indoor" ? "🏛️ Indoor" : "🌿 Outdoor"}
                                 </button>
                               ))}
                               <button
                                 onClick={() => setOccasionStep(null)}
-                                className="rounded-full border border-[rgba(131,24,67,0.18)] px-3 py-1.5 text-xs text-[rgba(131,24,67,0.5)] transition-opacity hover:opacity-80"
+                                className="rounded-full border border-[rgba(17,24,39,0.18)] px-3 py-1.5 text-xs text-[rgba(17,24,39,0.5)] transition-opacity hover:opacity-80"
                               >
                                 ← Back
                               </button>
@@ -699,7 +699,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                             <button
                               key={occ.value}
                               onClick={() => setOccasionStep({ occasion: occ.value })}
-                              className="rounded-full border border-[rgba(201,149,107,0.25)] bg-[rgba(201,149,107,0.12)] px-3 py-1.5 text-left text-xs text-[#EC4899] transition-opacity hover:opacity-80"
+                              className="rounded-full border border-[rgba(17,24,39,0.25)] bg-[rgba(17,24,39,0.12)] px-3 py-1.5 text-left text-xs text-[#111827] transition-opacity hover:opacity-80"
                             >
                               {occ.label}
                             </button>
@@ -710,7 +710,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                           <button
                             key={q}
                             onClick={() => send(q)}
-                            className="rounded-full border border-[rgba(201,149,107,0.25)] bg-[rgba(201,149,107,0.12)] px-3 py-1.5 text-left text-xs text-[#EC4899] transition-opacity hover:opacity-80"
+                            className="rounded-full border border-[rgba(17,24,39,0.25)] bg-[rgba(17,24,39,0.12)] px-3 py-1.5 text-left text-xs text-[#111827] transition-opacity hover:opacity-80"
                           >
                             {q}
                           </button>
@@ -723,11 +723,11 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                 {/* Typing indicator */}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="flex items-center gap-1.5 rounded-2xl border border-[rgba(131,24,67,0.16)] bg-[rgba(131,24,67,0.14)] px-4 py-2.5">
+                    <div className="flex items-center gap-1.5 rounded-2xl border border-[rgba(17,24,39,0.16)] bg-[rgba(17,24,39,0.14)] px-4 py-2.5">
                       {[0, 1, 2].map((i) => (
                         <motion.span
                           key={i}
-                          className="block h-1.5 w-1.5 rounded-full bg-[#EC4899]"
+                          className="block h-1.5 w-1.5 rounded-full bg-[#111827]"
                           animate={{ opacity: [0.3, 1, 0.3] }}
                           transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
                         />
@@ -741,7 +741,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
 
               {/* Input — only shown in chat view */}
               {drawerView === "chat" && (
-              <div className="border-t border-[rgba(131,24,67,0.16)] px-4 py-4">
+              <div className="border-t border-[rgba(17,24,39,0.16)] px-4 py-4">
                 {/* Share / copy toast */}
                 <AnimatePresence>
                   {shareToast && (
@@ -750,21 +750,21 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -4 }}
-                      className="mb-2 rounded-xl bg-[rgba(201,149,107,0.2)] py-1 text-center text-xs font-medium text-[#F9A8D4]"
+                      className="mb-2 rounded-xl bg-[rgba(17,24,39,0.2)] py-1 text-center text-xs font-medium text-[#fffafc]"
                     >
                       {shareToast}
                     </motion.p>
                   )}
                 </AnimatePresence>
-                <div className="flex items-end gap-2 rounded-2xl border border-[rgba(131,24,67,0.18)] bg-[rgba(131,24,67,0.12)] px-4 py-3">
+                <div className="flex items-end gap-2 rounded-2xl border border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.12)] px-4 py-3">
                   {/* Mic button */}
                   {voiceSupported && (
                     <button
                       onClick={toggleVoice}
                       className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
                         isListening
-                          ? "bg-[rgba(201,149,107,0.3)] text-[#F9A8D4]"
-                          : "bg-transparent text-[rgba(131,24,67,0.5)]"
+                          ? "bg-[rgba(17,24,39,0.3)] text-[#fffafc]"
+                          : "bg-transparent text-[rgba(17,24,39,0.5)]"
                       }`}
                       title={isListening ? "Stop recording" : "Voice input"}
                       aria-label={isListening ? "Stop voice input" : "Start voice input"}
@@ -780,7 +780,7 @@ export function StyleChatDrawer({ reportId, report }: Props) {
                     onKeyDown={handleKey}
                     placeholder={isListening ? "Listening…" : "Ask about your style…"}
                     disabled={loading}
-                    className="max-h-24 flex-1 resize-none bg-transparent text-sm text-[#F0E8D8] outline-none placeholder:opacity-40"
+                    className="max-h-24 flex-1 resize-none bg-transparent text-sm text-[#fffafc] outline-none placeholder:opacity-40"
                   />
                   <Button
                     size="sm"

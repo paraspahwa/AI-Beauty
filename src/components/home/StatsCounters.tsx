@@ -66,7 +66,7 @@ export function StatsCounters({ items, durationMs = 1200 }: StatsCountersProps) 
       >
         {items.map((item) => (
           <div key={item.id} className="stat-badge">
-            <p className="text-3xl font-serif text-ink">
+            <p className="text-3xl font-sans text-ink">
               {item.prefix}
               <AnimatedNumber value={item.value} durationMs={durationMs} />
               {item.suffix}

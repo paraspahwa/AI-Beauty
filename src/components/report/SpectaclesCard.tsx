@@ -24,13 +24,13 @@ const FRAME_ANIMATION_CSS = `
 
 // ── Face-shape accent colours ─────────────────────────────────────────────
 const SHAPE_ACCENT: Record<string, { bg: string; text: string; border: string }> = {
-  oval:      { bg: "#FEF3C7", text: "#B45309", border: "#F59E0B" },
-  round:     { bg: "#FEF3C7", text: "#B45309", border: "#F59E0B" },
-  circle:    { bg: "#FEF3C7", text: "#B45309", border: "#F59E0B" },
+  oval:      { bg: "#fffafc", text: "#B45309", border: "#F59E0B" },
+  round:     { bg: "#fffafc", text: "#B45309", border: "#F59E0B" },
+  circle:    { bg: "#fffafc", text: "#B45309", border: "#F59E0B" },
   square:    { bg: "#DBEAFE", text: "#1D4ED8", border: "#60A5FA" },
   rectangle: { bg: "#DBEAFE", text: "#1D4ED8", border: "#60A5FA" },
-  heart:     { bg: "#FCE7F3", text: "#BE185D", border: "#F472B6" },
-  diamond:   { bg: "#F3E8FF", text: "#7C3AED", border: "#C084FC" },
+  heart:     { bg: "#fffafc", text: "#111827", border: "#111827" },
+  diamond:   { bg: "#F3E8FF", text: "#111827", border: "#C084FC" },
   oblong:    { bg: "#D1FAE5", text: "#065F46", border: "#34D399" },
 };
 function shapeAccent(shape?: string) {
@@ -299,7 +299,7 @@ export function SpectaclesCard({
       <div className="text-center pt-8 pb-4 px-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
         <div className="flex items-center justify-center gap-3 mb-1">
           <span style={{ color: "#C8A96E", fontSize: 16 }}>✦</span>
-          <h2 className="text-3xl font-serif" style={{ color: "#3D2B1F" }}>Spectacles Guide</h2>
+          <h2 className="text-3xl font-sans" style={{ color: "#3D2B1F" }}>Spectacles Guide</h2>
           <span style={{ color: "#C8A96E", fontSize: 16 }}>✦</span>
         </div>
         <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: "#9C7D5B" }}>
@@ -323,7 +323,7 @@ export function SpectaclesCard({
             >
               <IconFaceOutline shape={faceShape} />
             </div>
-            <p className="font-serif text-lg text-center mt-1 mb-3 font-semibold" style={{ color: accent.text }}>
+            <p className="font-sans text-lg text-center mt-1 mb-3 font-semibold" style={{ color: accent.text }}>
               {faceShape ?? "Oval"}
             </p>
             <ul className="space-y-1.5">

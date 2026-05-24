@@ -16,8 +16,7 @@ const LEGAL_LINKS = [
 export function Footer() {
   return (
     <footer
-      className="mt-24 border-t"
-      style={{ borderColor: "rgba(190,24,93,0.18)", background: "rgba(255,247,251,0.9)" }}
+      className="mt-24 border-t border-[#e5e7eb] bg-white"
     >
       <div className="container max-w-6xl py-10 flex flex-col gap-8">
         {/* Top row — brand + nav */}
@@ -34,7 +33,7 @@ export function Footer() {
 
           <nav className="flex items-center gap-6 text-sm text-ink-stone">
             {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-terracotta transition-colors">
+              <Link key={l.href} href={l.href} className="hover:text-ink transition-colors">
                 {l.label}
               </Link>
             ))}
@@ -42,10 +41,10 @@ export function Footer() {
         </div>
 
         {/* Bottom row — legal links + copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-terracotta/20 pt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e5e7eb] pt-6">
           <nav className="flex items-center gap-5 text-xs text-ink-mist">
             {LEGAL_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-terracotta transition-colors">
+              <Link key={l.href} href={l.href} className="hover:text-ink transition-colors">
                 {l.label}
               </Link>
             ))}

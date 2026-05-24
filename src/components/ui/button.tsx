@@ -6,22 +6,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian disabled:opacity-40 disabled:pointer-events-none cursor-pointer active:scale-[0.985]",
+  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
   {
     variants: {
       variant: {
-        default: [
-          "text-white shadow-chrome",
-          "bg-[linear-gradient(135deg,#DB2777_0%,#EC4899_55%,#F97316_100%)]",
-          "hover:opacity-95 hover:-translate-y-px",
-        ].join(" "),
-        accent: [
-          "text-white shadow-glow-iris",
-          "bg-[linear-gradient(135deg,#0EA5A4_0%,#14B8A6_55%,#22D3EE_100%)]",
-          "hover:opacity-95 hover:-translate-y-px",
-        ].join(" "),
-        outline: "border border-terracotta/35 text-terracotta bg-white/75 hover:bg-terracotta/10 hover:border-terracotta/55",
-        ghost: "text-ink hover:bg-terracotta/10 hover:text-terracotta-dark",
+        default: "bg-ink text-white hover:bg-[#1f2937]",
+        accent: "bg-ink text-white hover:bg-[#1f2937]",
+        outline: "border border-[#d1d5db] bg-white text-ink hover:bg-[#f9fafb]",
+        ghost: "text-ink hover:bg-[#f3f4f6]",
       },
       size: {
         sm: "h-9  px-4 text-sm",

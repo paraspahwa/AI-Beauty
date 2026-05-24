@@ -30,7 +30,7 @@ export default function UploadPage() {
               <motion.div
                 variants={fadeUp}
                 className="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
-                style={{ background: "rgba(236,72,153,0.12)", border: "1px solid rgba(236,72,153,0.3)", color: "#EC4899" }}
+                style={{ background: "rgba(17,24,39,0.12)", border: "1px solid rgba(17,24,39,0.3)", color: "#111827" }}
               >
                 <Lock className="h-3.5 w-3.5" />
                 You’re purchasing the Complete Analysis — upload your selfie to continue
@@ -40,7 +40,7 @@ export default function UploadPage() {
               <motion.div
                 variants={fadeUp}
                 className="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
-                style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.3)", color: "#8B5CF6" }}
+                style={{ background: "rgba(17,24,39,0.12)", border: "1px solid rgba(17,24,39,0.3)", color: "#111827" }}
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Starting Studio Pro — upload your selfie to begin
@@ -50,7 +50,7 @@ export default function UploadPage() {
             <motion.span
               variants={springPop}
               className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs uppercase tracking-[0.25em] font-semibold mb-5 chrome-border"
-              style={{ background: "rgba(201,149,107,0.08)", color: "#BE185D" }}
+              style={{ background: "rgba(17,24,39,0.08)", color: "#111827" }}
             >
               <Sparkles className="h-3 w-3" />
               Start your beauty analysis
@@ -78,18 +78,18 @@ export default function UploadPage() {
                 onClick={() => router.replace("?intent=purchase", { scroll: false })}
                 className="group text-left rounded-2xl p-5 transition-all focus:outline-none"
                 style={{
-                  background: intent === "purchase" ? "rgba(236,72,153,0.08)" : "rgba(255,255,255,0.03)",
-                  border: intent === "purchase" ? "2px solid rgba(236,72,153,0.45)" : "2px solid rgba(255,255,255,0.07)",
-                  boxShadow: intent === "purchase" ? "0 0 0 4px rgba(236,72,153,0.08)" : undefined,
+                  background: intent === "purchase" ? "rgba(17,24,39,0.08)" : "rgba(255,255,255,0.03)",
+                  border: intent === "purchase" ? "2px solid rgba(17,24,39,0.45)" : "2px solid rgba(255,255,255,0.07)",
+                  boxShadow: intent === "purchase" ? "0 0 0 4px rgba(17,24,39,0.08)" : undefined,
                 }}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-3" style={{ background: "rgba(236,72,153,0.12)" }}>
-                  <FileText className="h-5 w-5" style={{ color: "#EC4899" }} />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-3" style={{ background: "rgba(17,24,39,0.12)" }}>
+                  <FileText className="h-5 w-5" style={{ color: "#111827" }} />
                 </div>
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-bold text-ink text-base">Master Blueprint Report</h3>
                   {intent === "purchase" && (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#EC4899" }} />
+                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#111827" }} />
                   )}
                 </div>
                 <p className="text-xs text-ink-stone leading-relaxed mb-3">
@@ -98,14 +98,14 @@ export default function UploadPage() {
                 <ul className="space-y-1.5 mb-4">
                   {["Skin routine (AM + PM)", "Color season palette", "Hairstyle guide", "Spectacles recommendations", "PDF download + style chat"].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-[11px]" style={{ color: "#9C7D5B" }}>
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} />
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
                       {item}
                     </li>
                   ))}
                 </ul>
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(236,72,153,0.12)" }}>
-                  <span className="text-sm font-bold" style={{ color: "#EC4899" }}>One-time · ₹299</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#EC4899" }} />
+                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(17,24,39,0.12)" }}>
+                  <span className="text-sm font-bold" style={{ color: "#111827" }}>One-time · ₹299</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#111827" }} />
                 </div>
               </button>
 
@@ -114,24 +114,24 @@ export default function UploadPage() {
                 onClick={() => router.replace("?intent=studio", { scroll: false })}
                 className="group text-left rounded-2xl p-5 transition-all focus:outline-none relative"
                 style={{
-                  background: intent === "studio" ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)",
-                  border: intent === "studio" ? "2px solid rgba(139,92,246,0.5)" : "2px solid rgba(255,255,255,0.07)",
-                  boxShadow: intent === "studio" ? "0 0 0 4px rgba(139,92,246,0.08)" : undefined,
+                  background: intent === "studio" ? "rgba(17,24,39,0.1)" : "rgba(255,255,255,0.03)",
+                  border: intent === "studio" ? "2px solid rgba(17,24,39,0.5)" : "2px solid rgba(255,255,255,0.07)",
+                  boxShadow: intent === "studio" ? "0 0 0 4px rgba(17,24,39,0.08)" : undefined,
                 }}
               >
                 {/* Badge */}
                 <div className="absolute -top-3 right-4">
-                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: "linear-gradient(135deg,#8B5CF6,#6D28D9)" }}>
+                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: "#111827" }}>
                     <Sparkles className="h-2.5 w-2.5" /> Best Value
                   </span>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-3" style={{ background: "rgba(139,92,246,0.12)" }}>
-                  <Zap className="h-5 w-5" style={{ color: "#8B5CF6" }} />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-3" style={{ background: "rgba(17,24,39,0.12)" }}>
+                  <Zap className="h-5 w-5" style={{ color: "#111827" }} />
                 </div>
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-bold text-ink text-base">Full Interactive AI Studio</h3>
                   {intent === "studio" && (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#8B5CF6" }} />
+                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#111827" }} />
                   )}
                 </div>
                 <p className="text-xs text-ink-stone leading-relaxed mb-3">
@@ -140,14 +140,14 @@ export default function UploadPage() {
                 <ul className="space-y-1.5 mb-4">
                   {["Everything in Blueprint Report", "AI hair & makeup try-ons", "Wardrobe & clothing swatches", "150 AI generations / month", "Cancel anytime"].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-[11px]" style={{ color: "#9C7D5B" }}>
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#8B5CF6" }} />
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
                       {item}
                     </li>
                   ))}
                 </ul>
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(139,92,246,0.12)" }}>
-                  <span className="text-sm font-bold" style={{ color: "#8B5CF6" }}>Monthly · ₹999/mo</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#8B5CF6" }} />
+                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(17,24,39,0.12)" }}>
+                  <span className="text-sm font-bold" style={{ color: "#111827" }}>Monthly · ₹999/mo</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#111827" }} />
                 </div>
               </button>
 
@@ -183,7 +183,7 @@ export default function UploadPage() {
                 >
                   <CheckCircle2
                     className="h-5 w-5 shrink-0 mt-0.5 animate-glow-pulse"
-                    style={{ color: "#EC4899" }}
+                    style={{ color: "#111827" }}
                   />
                   <span>{tip}</span>
                 </motion.li>

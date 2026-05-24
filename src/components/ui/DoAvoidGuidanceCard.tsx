@@ -84,7 +84,7 @@ export function DoAvoidGuidanceCard({ block, location = "homepage" }: DoAvoidGui
           <button
             onClick={handleExpand}
             className="rounded-full px-5 py-2 text-sm font-semibold shadow-sm transition-opacity hover:opacity-80"
-            style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#fff" }}
+            style={{ background: "#111827", color: "#fff" }}
           >
             {expanded ? "Show less" : block.cta}
           </button>

@@ -106,14 +106,14 @@ export default async function AdminPage() {
     <main className="container max-w-5xl py-12 min-h-screen">
       <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] font-medium mb-2" style={{ color: "#EC4899" }}>Admin</p>
-          <h1 className="font-serif text-3xl text-ink">System Dashboard</h1>
+          <p className="text-xs uppercase tracking-[0.3em] font-medium mb-2" style={{ color: "#111827" }}>Admin</p>
+          <h1 className="font-sans text-3xl text-ink">System Dashboard</h1>
         </div>
         <AdminCleanupButton />
         <a
           href="/admin/pipeline-debug"
           className="text-sm px-4 py-2 rounded-xl font-medium"
-          style={{ background: "linear-gradient(135deg, rgba(123,110,158,0.1), rgba(201,149,107,0.08))", color: "#7B6E9E", border: "1px solid rgba(123,110,158,0.25)" }}
+          style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.1), rgba(17,24,39,0.08))", color: "#7B6E9E", border: "1px solid rgba(17,24,39,0.25)" }}
         >
           Pipeline debug →
         </a>
@@ -130,9 +130,9 @@ export default async function AdminPage() {
           <div
             key={label}
             className="rounded-2xl p-5 text-center"
-            style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
+            style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}
           >
-            <p className="text-3xl font-serif text-ink">{value}</p>
+            <p className="text-3xl font-sans text-ink">{value}</p>
             <p className="text-xs text-ink-stone mt-1">{label}</p>
           </div>
         ))}
@@ -142,15 +142,15 @@ export default async function AdminPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         {[
           { label: "Paid conversions", value: summary.paidReports, color: "#63A282", note: "reports unlocked" },
-          { label: "Conversion rate", value: `${summary.conversionRate}%`, color: "#EC4899", note: "of total analyses" },
-          { label: "Est. Revenue", value: `₹${summary.estRevenueInr.toLocaleString("en-IN")}`, color: "#F9A8D4", note: "at ₹399 base plan" },
+          { label: "Conversion rate", value: `${summary.conversionRate}%`, color: "#111827", note: "of total analyses" },
+          { label: "Est. Revenue", value: `₹${summary.estRevenueInr.toLocaleString("en-IN")}`, color: "#fffafc", note: "at ₹399 base plan" },
         ].map(({ label, value, color, note }) => (
           <div
             key={label}
             className="rounded-2xl p-5 text-center"
             style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: `1px solid ${color}30` }}
           >
-            <p className="text-3xl font-serif" style={{ color }}>{value}</p>
+            <p className="text-3xl font-sans" style={{ color }}>{value}</p>
             <p className="text-xs font-medium mt-1" style={{ color }}>{label}</p>
             <p className="text-xs text-ink-stone mt-0.5">{note}</p>
           </div>
@@ -161,9 +161,9 @@ export default async function AdminPage() {
       {daily.length > 0 && (
         <div
           className="rounded-3xl overflow-hidden mb-8"
-          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
+          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}
         >
-          <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(131,24,67,0.14)" }}>
+          <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(17,24,39,0.14)" }}>
             <h2 className="text-ink font-medium">Daily activity — last 30 days</h2>
             <p className="text-xs text-ink-stone mt-1">Total analyses (light) and paid (dark) per day</p>
           </div>
@@ -173,11 +173,11 @@ export default async function AdminPage() {
                 const maxTotal = Math.max(...daily.map((d) => d.total), 1);
                 return daily.map((d) => (
                   <div key={d.date} className="flex flex-col items-center gap-0.5 min-w-[20px] flex-1" title={`${d.date}: ${d.total} total, ${d.paid} paid`}>
-                    <div className="w-full rounded-t flex flex-col justify-end overflow-hidden" style={{ height: `${Math.max((d.total / maxTotal) * 96, 4)}px`, background: "rgba(201,149,107,0.25)" }}>
+                    <div className="w-full rounded-t flex flex-col justify-end overflow-hidden" style={{ height: `${Math.max((d.total / maxTotal) * 96, 4)}px`, background: "rgba(17,24,39,0.25)" }}>
                       {d.paid > 0 && (
                         <div
                           className="w-full rounded-t"
-                          style={{ height: `${(d.paid / d.total) * 100}%`, background: "#EC4899", minHeight: "3px" }}
+                          style={{ height: `${(d.paid / d.total) * 100}%`, background: "#111827", minHeight: "3px" }}
                         />
                       )}
                     </div>
@@ -187,11 +187,11 @@ export default async function AdminPage() {
             </div>
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-1.5">
-                <div className="h-2 w-3 rounded" style={{ background: "rgba(201,149,107,0.25)" }} />
+                <div className="h-2 w-3 rounded" style={{ background: "rgba(17,24,39,0.25)" }} />
                 <span className="text-xs text-ink-stone">Total</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-2 w-3 rounded" style={{ background: "#EC4899" }} />
+                <div className="h-2 w-3 rounded" style={{ background: "#111827" }} />
                 <span className="text-xs text-ink-stone">Paid</span>
               </div>
             </div>
@@ -202,9 +202,9 @@ export default async function AdminPage() {
       {/* Canary stats table */}
       <div
         className="rounded-3xl overflow-hidden"
-        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
+        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}
       >
-        <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(131,24,67,0.14)" }}>
+        <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(17,24,39,0.14)" }}>
           <h2 className="text-ink font-medium">Prompt canary metrics</h2>
           <p className="text-xs text-ink-stone mt-1">Per-stage per-variant aggregates from completed reports</p>
         </div>
@@ -217,7 +217,7 @@ export default async function AdminPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid rgba(131,24,67,0.12)" }}>
+                <tr style={{ borderBottom: "1px solid rgba(17,24,39,0.12)" }}>
                   {["Stage", "Variant", "Runs", "Degraded", "Degraded %", "Avg ms"].map((h) => (
                     <th key={h} className="px-5 py-3 text-left text-xs font-medium text-ink-stone uppercase tracking-wider">{h}</th>
                   ))}
@@ -229,7 +229,7 @@ export default async function AdminPage() {
                   return rows.map((row, i) => (
                     <tr
                       key={`${row.stage}-${row.variantId}`}
-                      style={{ borderBottom: i < rows.length - 1 ? "1px solid rgba(131,24,67,0.08)" : "1px solid rgba(131,24,67,0.12)" }}
+                      style={{ borderBottom: i < rows.length - 1 ? "1px solid rgba(17,24,39,0.08)" : "1px solid rgba(17,24,39,0.12)" }}
                     >
                       <td className="px-5 py-3 text-ink font-mono text-xs">{i === 0 ? stage : ""}</td>
                       <td className="px-5 py-3 text-ink font-mono text-xs">{row.variantId}</td>
@@ -239,8 +239,8 @@ export default async function AdminPage() {
                         <span
                           className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
                           style={{
-                            background: row.degradationPct > 20 ? "rgba(248,113,113,0.15)" : row.degradationPct > 5 ? "rgba(201,149,107,0.15)" : "rgba(123,110,158,0.15)",
-                            color: row.degradationPct > 20 ? "#F87171" : row.degradationPct > 5 ? "#EC4899" : "#A69CC4",
+                            background: row.degradationPct > 20 ? "rgba(248,113,113,0.15)" : row.degradationPct > 5 ? "rgba(17,24,39,0.15)" : "rgba(17,24,39,0.15)",
+                            color: row.degradationPct > 20 ? "#F87171" : row.degradationPct > 5 ? "#111827" : "#A69CC4",
                           }}
                         >
                           {row.degradationPct}%

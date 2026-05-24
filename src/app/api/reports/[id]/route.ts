@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
+import { getStudioEntitlement } from "@/lib/entitlement";
 import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
@@ -157,6 +158,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     .createSignedUrl(row.image_path, 60 * 30);
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
+  const studioEntitlement = await getStudioEntitlement(user.id);
+  const effectivePremium = hasPremium || studioEntitlement.tier === "studio_pro";
   const visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
 
   // Resolve pipeline_meta: prefer direct column, fall back to recommendations row
@@ -180,17 +183,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     userId: row.user_id,
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
-    isPaid: hasPremium,
+    isPaid: effectivePremium,
     detectedGender: normalizeRekognitionGender(row.rekognition),
+    studioEntitlement,
     faceShape: row.face_shape ?? undefined,
     colorAnalysis: row.color_analysis ?? undefined,
     // Free preview shows ONLY face shape + color analysis
-    skinAnalysis: hasPremium ? row.skin_analysis ?? undefined : undefined,
-    features:     hasPremium ? row.features      ?? undefined : undefined,
-    glasses:      hasPremium ? row.glasses       ?? undefined : undefined,
-    hairstyle:    hasPremium ? row.hairstyle     ?? undefined : undefined,
+    skinAnalysis: effectivePremium ? row.skin_analysis ?? undefined : undefined,
+    features:     effectivePremium ? row.features      ?? undefined : undefined,
+    glasses:      effectivePremium ? row.glasses       ?? undefined : undefined,
+    hairstyle:    effectivePremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
-    summary:      hasPremium ? row.summary       ?? undefined : undefined,
+    summary:      effectivePremium ? row.summary       ?? undefined : undefined,
     pipelineMeta,
     faceLandmarks: extractFaceLandmarks(row.rekognition) ?? undefined,
     createdAt:    row.created_at,

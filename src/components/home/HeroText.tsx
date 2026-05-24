@@ -42,7 +42,7 @@ export function HeroText() {
         className="mt-4 text-4xl sm:text-5xl lg:text-7xl text-ink leading-[1.05] tracking-tight"
       >
         {HOME_CONTENT.hero.title}{" "}
-        <span className="gradient-text font-bold" style={{ filter: "drop-shadow(0 0 28px rgba(236,72,153,0.50))" }}>{HOME_CONTENT.hero.titleAccent}</span>
+        <span className="gradient-text font-bold" style={{ filter: "drop-shadow(0 0 28px rgba(17,24,39,0.50))" }}>{HOME_CONTENT.hero.titleAccent}</span>
       </motion.h1>
 
       <motion.p
@@ -72,7 +72,7 @@ export function HeroText() {
         className="mt-8 flex flex-wrap items-center gap-4 text-sm text-ink-stone"
       >
         <div className="flex -space-x-2">
-          {["#EC4899", "#8B5CF6", "#F9A8D4", "#C4B5FD", "#FBCFE8"].map((c, i) => (
+          {["#111827", "#111827", "#fffafc", "#fffafc", "#fffafc"].map((c, i) => (
             <div
               key={i}
               className="h-8 w-8 rounded-full border-2 border-white ring-1 ring-terracotta/20"

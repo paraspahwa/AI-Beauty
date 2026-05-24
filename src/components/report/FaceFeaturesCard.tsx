@@ -6,9 +6,9 @@ import type { FaceShapeResult, FeatureBreakdown } from "@/types/report";
 // ── Confidence badge ──────────────────────────────────────────────────────────
 function ConfidenceBadge({ confidence }: { confidence: number }) {
   const pct    = Math.round(confidence * 100);
-  const bg     = pct >= 80 ? "rgba(123,210,158,0.12)" : pct >= 65 ? "rgba(201,149,107,0.12)" : "rgba(248,113,113,0.10)";
-  const color  = pct >= 80 ? "#5AB882"                 : pct >= 65 ? "#EC4899"                : "#F87171";
-  const border = pct >= 80 ? "rgba(90,184,130,0.30)"   : pct >= 65 ? "rgba(201,149,107,0.30)" : "rgba(248,113,113,0.30)";
+  const bg     = pct >= 80 ? "rgba(123,210,158,0.12)" : pct >= 65 ? "rgba(17,24,39,0.12)" : "rgba(248,113,113,0.10)";
+  const color  = pct >= 80 ? "#5AB882"                 : pct >= 65 ? "#111827"                : "#F87171";
+  const border = pct >= 80 ? "rgba(90,184,130,0.30)"   : pct >= 65 ? "rgba(17,24,39,0.30)" : "rgba(248,113,113,0.30)";
   const label  = pct >= 80 ? "High confidence"         : pct >= 65 ? "Good confidence"        : "Low confidence";
   return (
     <span

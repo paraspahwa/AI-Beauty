@@ -60,7 +60,7 @@ export function TestimonialsSection({ items }: TestimonialsSectionProps) {
             transition={{ duration: 0.35, delay: index * 0.08 }}
           >
             <div className="mb-4 flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-terracotta/35 bg-[linear-gradient(135deg,rgba(236,72,153,0.16),rgba(139,92,246,0.22))] text-xs font-semibold text-ink">
+              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-terracotta/35 bg-[linear-gradient(135deg,rgba(17,24,39,0.16),rgba(17,24,39,0.22))] text-xs font-semibold text-ink">
                 {initials(item.name)}
               </div>
               <div>

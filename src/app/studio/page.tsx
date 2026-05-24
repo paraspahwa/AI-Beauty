@@ -115,7 +115,7 @@ export default function StudioPage() {
             <Sparkles className="h-3.5 w-3.5 mr-2" />
             AI Studio Canvas
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-4">
+          <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-4">
             Virtual Try-Ons Await
           </h1>
           <p className="text-ink-stone text-lg mb-8">
@@ -123,9 +123,9 @@ export default function StudioPage() {
           </p>
         </div>
 
-        <div className="rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(236,72,153,0.08), rgba(123,110,158,0.08))", border: "1px solid rgba(131,24,67,0.12)" }}>
-          <Sparkles className="h-12 w-12 mx-auto mb-4" style={{ color: "#EC4899" }} />
-          <h2 className="font-serif text-2xl text-ink mb-3">Sign In to Get Started</h2>
+        <div className="rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.08), rgba(17,24,39,0.08))", border: "1px solid rgba(17,24,39,0.12)" }}>
+          <Sparkles className="h-12 w-12 mx-auto mb-4" style={{ color: "#111827" }} />
+          <h2 className="font-sans text-2xl text-ink mb-3">Sign In to Get Started</h2>
           <p className="text-ink-stone mb-6">
             Log in to upload your photo and explore try-on possibilities. <strong>3 free generations per month.</strong>
           </p>
@@ -148,7 +148,7 @@ export default function StudioPage() {
             { icon: "💇", title: "Hair Styles", desc: "Experiment with cuts & colors" },
             { icon: "👗", title: "Outfits", desc: "Build your capsule wardrobe" },
           ].map((item) => (
-            <div key={item.title} className="rounded-2xl p-6 text-center" style={{ background: "rgba(251,231,242,0.5)", border: "1px solid rgba(131,24,67,0.12)" }}>
+            <div key={item.title} className="rounded-2xl p-6 text-center" style={{ background: "rgba(251,231,242,0.5)", border: "1px solid rgba(17,24,39,0.12)" }}>
               <p className="text-3xl mb-2">{item.icon}</p>
               <p className="font-semibold text-ink mb-1">{item.title}</p>
               <p className="text-xs text-ink-stone">{item.desc}</p>
@@ -167,14 +167,14 @@ export default function StudioPage() {
           <Sparkles className="h-3.5 w-3.5 mr-2" />
           AI Studio Canvas
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-4">
+        <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-4">
           Virtual Try-On Studio
         </h1>
         <p className="text-ink-stone text-lg mb-2">
           Upload your photo, explore looks, and download your favorites instantly.
         </p>
         <p className="text-sm" style={{ color: "#9C7D5B" }}>
-          3 free generations per month · <Link href="/auth?plan=studio_pro" className="underline hover:no-underline" style={{ color: "#EC4899" }}>Upgrade to Studio Pro for unlimited</Link>
+          3 free generations per month · <Link href="/auth?plan=studio_pro" className="underline hover:no-underline" style={{ color: "#111827" }}>Upgrade to Studio Pro for unlimited</Link>
         </p>
       </div>
 
@@ -230,7 +230,7 @@ export default function StudioPage() {
               onClick={handleUpload}
               disabled={uploading}
               size="lg"
-              style={{ background: "linear-gradient(135deg, #F97316, #EC4899)" }}
+              style={{ background: "#111827" }}
             >
               {uploading ? "Processing..." : "Start Try-On"}
             </Button>
@@ -254,8 +254,8 @@ export default function StudioPage() {
       </div>
 
       {/* CTA: Get Full Analysis */}
-      <div className="mt-12 rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(201,149,107,0.1), rgba(123,110,158,0.1))", border: "1px solid rgba(131,24,67,0.12)" }}>
-        <h2 className="font-serif text-2xl text-ink mb-3">Ready for Full Beauty Analysis?</h2>
+      <div className="mt-12 rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.1), rgba(17,24,39,0.1))", border: "1px solid rgba(17,24,39,0.12)" }}>
+        <h2 className="font-sans text-2xl text-ink mb-3">Ready for Full Beauty Analysis?</h2>
         <p className="text-ink-stone mb-6">
           Get a complete report with face shape, color palette, skin routine, and personalized recommendations.
         </p>

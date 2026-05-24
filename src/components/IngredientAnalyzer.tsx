@@ -13,10 +13,10 @@ const VERDICT_CONFIG: Record<
 > = {
   beneficial: {
     label: "Beneficial",
-    bg: "rgba(236,72,153,0.08)",
-    text: "#BE185D",
-    border: "rgba(236,72,153,0.25)",
-    dot: "#EC4899",
+    bg: "rgba(17,24,39,0.08)",
+    text: "#111827",
+    border: "rgba(17,24,39,0.25)",
+    dot: "#111827",
   },
   neutral: {
     label: "Neutral",
@@ -49,7 +49,7 @@ function ScoreRing({ score }: { score: number }) {
   const dash = circ * pct;
 
   const color =
-    score >= 8 ? "#EC4899" : score >= 6 ? "#D97706" : score >= 4 ? "#F59E0B" : "#E11D48";
+    score >= 8 ? "#111827" : score >= 6 ? "#D97706" : score >= 4 ? "#F59E0B" : "#E11D48";
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: 88, height: 88 }}>
@@ -186,9 +186,9 @@ export function IngredientAnalyzer({ skinContext }: Props) {
       <div className="flex items-start gap-3">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
-          style={{ background: "linear-gradient(135deg, rgba(236,72,153,0.15) 0%, rgba(139,92,246,0.15) 100%)" }}
+          style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.15) 0%, rgba(17,24,39,0.15) 100%)" }}
         >
-          <Sparkles className="h-5 w-5" style={{ color: "#EC4899" }} />
+          <Sparkles className="h-5 w-5" style={{ color: "#111827" }} />
         </div>
         <div>
           <h3 className="font-semibold text-ink text-base leading-snug">
@@ -233,7 +233,7 @@ export function IngredientAnalyzer({ skinContext }: Props) {
         disabled={!ingredients.trim() || loading || tooLong}
         className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-2xl font-semibold text-sm text-white transition-opacity disabled:opacity-40 active:scale-[0.98]"
         style={{
-          background: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)",
+          background: "#111827",
           transition: "opacity 0.15s, transform 0.1s",
         }}
         aria-busy={loading}
@@ -288,7 +288,7 @@ export function IngredientAnalyzer({ skinContext }: Props) {
                       <span
                         key={i}
                         className="text-[11px] font-medium px-2.5 py-1 rounded-full"
-                        style={{ background: "rgba(236,72,153,0.1)", color: "#BE185D" }}
+                        style={{ background: "rgba(17,24,39,0.1)", color: "#111827" }}
                       >
                         {h}
                       </span>

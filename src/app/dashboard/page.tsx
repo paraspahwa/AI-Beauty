@@ -20,10 +20,10 @@ type ReportRow = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === "ready") return <Badge style={{ background: "rgba(123,110,158,0.15)", color: "#A69CC4", border: "1px solid rgba(123,110,158,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
-  if (status === "processing") return <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#EC4899", border: "1px solid rgba(201,149,107,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
+  if (status === "ready") return <Badge style={{ background: "rgba(17,24,39,0.15)", color: "#A69CC4", border: "1px solid rgba(17,24,39,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
+  if (status === "processing") return <Badge style={{ background: "rgba(17,24,39,0.12)", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
   if (status === "failed" || status === "error") return <Badge style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}><AlertCircle className="h-3 w-3 mr-1" />Failed</Badge>;
-  return <Badge style={{ background: "rgba(131,24,67,0.14)", color: "rgba(131,24,67,0.62)", border: "1px solid rgba(131,24,67,0.18)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
+  return <Badge style={{ background: "rgba(17,24,39,0.14)", color: "rgba(17,24,39,0.62)", border: "1px solid rgba(17,24,39,0.18)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
 }
 
 export default async function DashboardPage({
@@ -77,19 +77,19 @@ export default async function DashboardPage({
       <div className="mb-10 flex items-center justify-between">
         <div>
           <span className="section-label mb-3 inline-flex">Dashboard</span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-ink mb-2">Dashboard</h1>
+          <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-2">Dashboard</h1>
           <div className="flex items-center gap-3 mt-1">
             <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
             {tier === "studio_pro" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(139,92,246,0.15)", color: "#8B5CF6", border: "1px solid rgba(139,92,246,0.3)" }}>
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.15)", color: "#111827", border: "1px solid rgba(17,24,39,0.3)" }}>
                 <Crown className="h-3 w-3" /> Studio Pro
               </span>
             ) : tier === "report" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(236,72,153,0.12)", color: "#EC4899", border: "1px solid rgba(236,72,153,0.25)" }}>
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.12)", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}>
                 <FileText className="h-3 w-3" /> Report
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(131,24,67,0.10)", color: "rgba(131,24,67,0.55)", border: "1px solid rgba(131,24,67,0.18)" }}>
+              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.10)", color: "rgba(17,24,39,0.55)", border: "1px solid rgba(17,24,39,0.18)" }}>
                 Free
               </span>
             )}
@@ -109,9 +109,9 @@ export default async function DashboardPage({
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <div
           className="rounded-2xl p-5"
-          style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
+          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
         >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#EC4899" }}>Primary workspace</p>
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#111827" }}>Primary workspace</p>
           <p className="mt-2 text-base font-semibold text-ink">
             {latestReadyReport ? "Continue in AI Studio" : "Start in AI Studio"}
           </p>
@@ -138,7 +138,7 @@ export default async function DashboardPage({
 
         <div
           className="rounded-2xl p-5"
-          style={{ background: "rgba(123,110,158,0.08)", border: "1px solid rgba(123,110,158,0.18)" }}
+          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
           data-tour="style-chat"
         >
           <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#A69CC4" }}>Guided help</p>
@@ -168,10 +168,10 @@ export default async function DashboardPage({
         <Link
           href="/dashboard/studio-vault"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-          style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.18)" }}
+          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
-            <Images className="h-5 w-5" style={{ color: "#EC4899" }} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(17,24,39,0.16)" }}>
+            <Images className="h-5 w-5" style={{ color: "#111827" }} />
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">My Looks</p>
@@ -181,10 +181,10 @@ export default async function DashboardPage({
         <Link
           href="/upload"
           className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-          style={{ background: "linear-gradient(135deg,rgba(236,72,153,0.10),rgba(201,149,107,0.08))", border: "1px solid rgba(236,72,153,0.18)" }}
+          style={{ background: "linear-gradient(135deg,rgba(17,24,39,0.10),rgba(17,24,39,0.08))", border: "1px solid rgba(17,24,39,0.18)" }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(236,72,153,0.16)" }}>
-            <FileText className="h-5 w-5" style={{ color: "#EC4899" }} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(17,24,39,0.16)" }}>
+            <FileText className="h-5 w-5" style={{ color: "#111827" }} />
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">Create Full Report</p>
@@ -196,7 +196,7 @@ export default async function DashboardPage({
       {tier !== "studio_pro" && (
         <div
           className="mb-6 rounded-2xl px-5 py-4"
-          style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.10),rgba(109,40,217,0.06))", border: "1px solid rgba(139,92,246,0.22)" }}
+          style={{ background: "linear-gradient(135deg,rgba(17,24,39,0.10),rgba(17,24,39,0.06))", border: "1px solid rgba(17,24,39,0.22)" }}
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -216,17 +216,17 @@ export default async function DashboardPage({
           href="/dashboard/style-dna"
           className="mb-6 flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
           style={{
-            background: "linear-gradient(135deg, rgba(201,149,107,0.14) 0%, rgba(123,110,158,0.08) 100%)",
-            border: "1px solid rgba(201,149,107,0.2)",
+            background: "linear-gradient(135deg, rgba(17,24,39,0.14) 0%, rgba(17,24,39,0.08) 100%)",
+            border: "1px solid rgba(17,24,39,0.2)",
             boxShadow: "0 2px 16px rgba(0,0,0,0.2)",
           }}
         >
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-full shrink-0"
-              style={{ background: "rgba(201,149,107,0.2)" }}
+              style={{ background: "rgba(17,24,39,0.2)" }}
             >
-              <Dna className="h-5 w-5" style={{ color: "#EC4899" }} />
+              <Dna className="h-5 w-5" style={{ color: "#111827" }} />
             </div>
             <div>
               <p className="text-sm font-semibold text-ink">
@@ -253,9 +253,9 @@ export default async function DashboardPage({
 
       <div data-tour="reports-list">
       {rows.length === 0 ? (
-        <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(131,24,67,0.20)" }}>
-          <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(131,24,67,0.3)" }} />
-          <h2 className="font-serif text-2xl text-ink mb-2">No reports yet</h2>
+        <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(17,24,39,0.20)" }}>
+          <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(17,24,39,0.3)" }} />
+          <h2 className="font-sans text-2xl text-ink mb-2">No reports yet</h2>
           <p className="text-ink-stone mb-6">Upload a selfie to get your personalized beauty analysis.</p>
           <Button asChild variant="accent">
             <Link href="/upload">Get started</Link>
@@ -268,10 +268,10 @@ export default async function DashboardPage({
               href="/dashboard?view=continue"
               className="rounded-full px-4 py-2 text-sm font-medium transition-all"
               style={{
-                background: activeView === "continue" ? "rgba(236,72,153,0.14)" : "rgba(255,255,255,0.7)",
-                border: activeView === "continue" ? "1px solid rgba(236,72,153,0.35)" : "1px solid rgba(131,24,67,0.14)",
-                color: activeView === "continue" ? "#EC4899" : "#3D2B1F",
-                boxShadow: activeView === "continue" ? "0 0 0 2px rgba(236,72,153,0.12)" : "none",
+                background: activeView === "continue" ? "rgba(17,24,39,0.14)" : "rgba(255,255,255,0.7)",
+                border: activeView === "continue" ? "1px solid rgba(17,24,39,0.35)" : "1px solid rgba(17,24,39,0.14)",
+                color: activeView === "continue" ? "#111827" : "#3D2B1F",
+                boxShadow: activeView === "continue" ? "0 0 0 2px rgba(17,24,39,0.12)" : "none",
               }}
             >
               Continue ({continueReports.length})
@@ -280,10 +280,10 @@ export default async function DashboardPage({
               href="/dashboard?view=history"
               className="rounded-full px-4 py-2 text-sm font-medium transition-all"
               style={{
-                background: activeView === "history" ? "rgba(123,110,158,0.14)" : "rgba(255,255,255,0.7)",
-                border: activeView === "history" ? "1px solid rgba(123,110,158,0.35)" : "1px solid rgba(131,24,67,0.14)",
+                background: activeView === "history" ? "rgba(17,24,39,0.14)" : "rgba(255,255,255,0.7)",
+                border: activeView === "history" ? "1px solid rgba(17,24,39,0.35)" : "1px solid rgba(17,24,39,0.14)",
                 color: activeView === "history" ? "#7B6E9E" : "#3D2B1F",
-                boxShadow: activeView === "history" ? "0 0 0 2px rgba(123,110,158,0.12)" : "none",
+                boxShadow: activeView === "history" ? "0 0 0 2px rgba(17,24,39,0.12)" : "none",
               }}
             >
               History ({historyReports.length})
@@ -291,7 +291,7 @@ export default async function DashboardPage({
           </div>
 
           {activeReports.length === 0 ? (
-            <div className="rounded-2xl p-6" style={{ background: "rgba(255,247,251,0.92)", border: "1px solid rgba(131,24,67,0.14)" }}>
+            <div className="rounded-2xl p-6" style={{ background: "rgba(255,247,251,0.92)", border: "1px solid rgba(17,24,39,0.14)" }}>
               <p className="text-sm text-ink font-medium">
                 {activeView === "continue"
                   ? "You are all caught up."
@@ -314,11 +314,11 @@ export default async function DashboardPage({
               <div
                 key={report.id}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5"
-                style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
+                style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
               >
                 <div className="flex items-start gap-4 min-w-0">
-                  <div className="shrink-0 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(131,24,67,0.14)" }}>
-                    <FileText className="h-5 w-5" style={{ color: "rgba(131,24,67,0.5)" }} />
+                  <div className="shrink-0 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(17,24,39,0.14)" }}>
+                    <FileText className="h-5 w-5" style={{ color: "rgba(17,24,39,0.5)" }} />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -329,7 +329,7 @@ export default async function DashboardPage({
                         </Badge>
                       )}
                       {!report.is_paid && !isAdminPremium && (
-                        <Badge style={{ background: "rgba(201,149,107,0.12)", color: "#EC4899", border: "1px solid rgba(201,149,107,0.25)" }}>
+                        <Badge style={{ background: "rgba(17,24,39,0.12)", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}>
                           <Lock className="h-3 w-3 mr-1" />Free preview
                         </Badge>
                       )}

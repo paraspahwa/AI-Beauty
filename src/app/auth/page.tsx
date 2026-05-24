@@ -27,9 +27,9 @@ export default function AuthPage() {
 /** Shared input style */
 const inputStyle: React.CSSProperties = {
   background: "rgba(251,231,242,0.92)",
-  border: "1px solid rgba(131,24,67,0.18)",
-  color: "#831843",
-  boxShadow: "inset 0 1px 0 rgba(131,24,67,0.10)",
+  border: "1px solid rgba(17,24,39,0.18)",
+  color: "#111827",
+  boxShadow: "inset 0 1px 0 rgba(17,24,39,0.10)",
 };
 
 const OTP_LENGTH = 6;
@@ -150,7 +150,7 @@ function OtpBoxes({
           style={{
             ...inputStyle,
             height: "3.25rem",
-            borderColor: value[i] ? "rgba(201,149,107,0.6)" : "rgba(131,24,67,0.18)",
+            borderColor: value[i] ? "rgba(17,24,39,0.6)" : "rgba(17,24,39,0.18)",
           }}
         />
       ))}
@@ -349,35 +349,35 @@ function AuthContent() {
       animate="visible"
       variants={staggerContainer}
       className="hidden lg:flex flex-col justify-between p-12 text-ink relative overflow-hidden"
-      style={{ background: "linear-gradient(145deg, #FDF2F8 0%, #FCE7F3 45%, #F9A8D4 100%)" }}
+      style={{ background: "linear-gradient(145deg, #fffafc 0%, #fffafc 45%, #fffafc 100%)" }}
     >
-      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-2xl pointer-events-none" style={{ background: "rgba(201,149,107,0.12)" }} />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(123,110,158,0.10)" }} />
+      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-2xl pointer-events-none" style={{ background: "rgba(17,24,39,0.12)" }} />
+      <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(17,24,39,0.10)" }} />
       <motion.div variants={fadeUp}>
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "rgba(201,149,107,0.2)", backdropFilter: "blur(8px)" }}>
-            <Sparkles className="h-4 w-4" style={{ color: "#EC4899" }} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.2)", backdropFilter: "blur(8px)" }}>
+            <Sparkles className="h-4 w-4" style={{ color: "#111827" }} />
           </div>
-          <span className="font-serif text-xl" style={{ color: "#831843" }}>Renovaara</span>
+          <span className="font-sans text-xl" style={{ color: "#111827" }}>Renovaara</span>
         </div>
       </motion.div>
       <div className="space-y-8">
         <motion.div variants={fadeUp}>
-          <h2 className="text-3xl font-serif leading-snug mb-4">Discover the colors and styles made for you</h2>
-          <p className="leading-relaxed" style={{ color: "rgba(131,24,67,0.8)" }}>One selfie is all it takes. Get your personalized color season, face shape analysis, and style guide in minutes.</p>
+          <h2 className="text-3xl font-sans leading-snug mb-4">Discover the colors and styles made for you</h2>
+          <p className="leading-relaxed" style={{ color: "rgba(17,24,39,0.8)" }}>One selfie is all it takes. Get your personalized color season, face shape analysis, and style guide in minutes.</p>
         </motion.div>
         <motion.ul variants={staggerContainer} className="space-y-4">
           {FEATURES.map((f) => (
             <motion.li key={f.text} variants={fadeUp} className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(201,149,107,0.15)" }}>
-                <f.icon className="h-4 w-4" style={{ color: "#EC4899" }} />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.15)" }}>
+                <f.icon className="h-4 w-4" style={{ color: "#111827" }} />
               </div>
-              <span className="text-sm" style={{ color: "rgba(131,24,67,0.9)" }}>{f.text}</span>
+              <span className="text-sm" style={{ color: "rgba(17,24,39,0.9)" }}>{f.text}</span>
             </motion.li>
           ))}
         </motion.ul>
       </div>
-      <motion.div variants={fadeUp} className="text-sm" style={{ color: "rgba(131,24,67,0.85)" }}>
+      <motion.div variants={fadeUp} className="text-sm" style={{ color: "rgba(17,24,39,0.85)" }}>
         Trusted by 50,000+ style enthusiasts
       </motion.div>
     </motion.div>
@@ -393,15 +393,15 @@ function AuthContent() {
         animate="visible"
         variants={staggerContainer}
         className="flex items-center justify-center p-6 sm:p-12"
-        style={{ background: "#FDF2F8" }}
+        style={{ background: "#fffafc" }}
       >
         <div className="w-full max-w-md space-y-8">
           {/* Mobile logo */}
           <motion.div variants={fadeUp} className="flex items-center gap-2 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full text-obsidian" style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full text-obsidian" style={{ background: "#111827" }}>
               <Sparkles className="h-4 w-4" />
             </div>
-            <span className="font-serif text-xl text-ink">Renovaara</span>
+            <span className="font-sans text-xl text-ink">Renovaara</span>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -409,10 +409,10 @@ function AuthContent() {
             {/* ── MAGIC LINK SENT ───────────────────────────────────────── */}
             {tab === "email" && emailSent ? (
               <motion.div key="email-sent" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.15)" }}>
                   <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
                 </div>
-                <h1 className="font-serif text-2xl text-ink">Check your inbox</h1>
+                <h1 className="font-sans text-2xl text-ink">Check your inbox</h1>
                 <p className="text-ink-stone leading-relaxed">
                   We sent a magic link to <span className="font-medium text-ink">{email}</span>. Click it to sign in.
                 </p>
@@ -430,10 +430,10 @@ function AuthContent() {
 
             ) : tab === "email" && signupDone ? (
               <motion.div key="signup-done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(123,110,158,0.15)" }}>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.15)" }}>
                   <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
                 </div>
-                <h1 className="font-serif text-2xl text-ink">Confirm your email</h1>
+                <h1 className="font-sans text-2xl text-ink">Confirm your email</h1>
                 <p className="text-ink-stone leading-relaxed">
                   We sent a confirmation link to <span className="font-medium text-ink">{email}</span>. Click it to activate your account, then come back and sign in.
                 </p>
@@ -453,7 +453,7 @@ function AuthContent() {
                   <button onClick={() => { setOtpSent(false); setOtp(""); setError(null); }} className="flex items-center gap-1 text-sm text-ink-mist hover:text-ink transition-colors mb-6">
                     <ChevronLeft className="h-4 w-4" /> Back
                   </button>
-                  <h1 className="font-serif text-3xl text-ink mb-2">Enter the code</h1>
+                  <h1 className="font-sans text-3xl text-ink mb-2">Enter the code</h1>
                   <p className="text-ink-stone text-sm">
                     We sent a {OTP_LENGTH}-digit code to <span className="font-medium text-ink">{sentE164 || phone}</span>
                   </p>
@@ -498,22 +498,22 @@ function AuthContent() {
               /* ── MAIN FORM ────────────────────────────────────────────────── */
               <motion.div key="main-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                 <div>
-                  <h1 className="font-serif text-3xl text-ink mb-2">Sign in to Renovaara</h1>
+                  <h1 className="font-sans text-3xl text-ink mb-2">Sign in to Renovaara</h1>
                   <p className="text-ink-stone text-sm">No password needed — choose how you want to sign in.</p>
                 </div>
 
                 {/* Tab switcher */}
-                <div className="flex rounded-xl p-1 gap-1" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(131,24,67,0.14)" }}>
+                <div className="flex rounded-xl p-1 gap-1" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(17,24,39,0.14)" }}>
                   {(["email", "phone"] as const).map((t) => (
                     <button
                       key={t}
                       onClick={() => switchTab(t)}
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all"
                       style={tab === t ? {
-                        background: "linear-gradient(135deg, rgba(201,149,107,0.25), rgba(232,201,144,0.15))",
-                        color: "#831843",
-                        boxShadow: "0 1px 0 rgba(131,24,67,0.10)",
-                      } : { color: "rgba(131,24,67,0.75)" }}
+                        background: "linear-gradient(135deg, rgba(17,24,39,0.25), rgba(232,201,144,0.15))",
+                        color: "#111827",
+                        boxShadow: "0 1px 0 rgba(17,24,39,0.10)",
+                      } : { color: "rgba(17,24,39,0.75)" }}
                     >
                       {t === "email" ? <Mail className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
                       {t === "email" ? "Email" : "Phone"}
@@ -523,13 +523,13 @@ function AuthContent() {
 
                 {/* Sign in / Sign up toggle (email tab only) */}
                 {tab === "email" && (
-                  <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid rgba(131,24,67,0.14)" }}>
+                  <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid rgba(17,24,39,0.14)" }}>
                     {(["signin", "signup"] as const).map((m) => (
                       <button
                         key={m}
                         onClick={() => { setEmailMode(m); setError(null); }}
                         className="flex-1 py-2 text-xs font-medium transition-all"
-                        style={emailMode === m ? { background: "rgba(201,149,107,0.15)", color: "#831843" } : { color: "rgba(131,24,67,0.75)" }}
+                        style={emailMode === m ? { background: "rgba(17,24,39,0.15)", color: "#111827" } : { color: "rgba(17,24,39,0.75)" }}
                       >
                         {m === "signin" ? "Sign in" : "Create account"}
                       </button>

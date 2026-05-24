@@ -230,8 +230,8 @@ export default function HomePage() {
         />
         {/* Ambient orbs — kept at reduced opacity to blend with video */}
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-          <div className="glow-orb absolute -top-40 -left-40 h-[650px] w-[650px] opacity-40" style={{ background: "rgba(236,72,153,0.36)" }} />
-          <div className="glow-orb absolute -top-20 right-[-10%] h-[520px] w-[520px] opacity-35" style={{ background: "rgba(139,92,246,0.30)" }} />
+          <div className="glow-orb absolute -top-40 -left-40 h-[650px] w-[650px] opacity-40" style={{ background: "rgba(17,24,39,0.36)" }} />
+          <div className="glow-orb absolute -top-20 right-[-10%] h-[520px] w-[520px] opacity-35" style={{ background: "rgba(17,24,39,0.30)" }} />
           <div className="glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-96 w-[700px] opacity-30" style={{ background: "rgba(249,168,212,0.50)" }} />
         </div>
       <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">

@@ -87,12 +87,12 @@ function StatPill({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="flex flex-col gap-0.5 rounded-2xl px-4 py-3"
-      style={{ background: "rgba(131,24,67,0.10)", border: "1px solid rgba(131,24,67,0.16)" }}
+      style={{ background: "rgba(17,24,39,0.10)", border: "1px solid rgba(17,24,39,0.16)" }}
     >
-      <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.60)" }}>
+      <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(17,24,39,0.60)" }}>
         {label}
       </span>
-      <span className="text-sm font-semibold" style={{ color: "#831843" }}>
+      <span className="text-sm font-semibold" style={{ color: "#111827" }}>
         {value}
       </span>
     </div>
@@ -167,14 +167,14 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
         className="relative overflow-hidden rounded-3xl p-6 sm:p-8"
         style={{
           background: "linear-gradient(135deg, rgba(249,168,212,0.22) 0%, rgba(196,181,253,0.2) 60%, rgba(255,247,251,0.98) 100%)",
-          border: "1px solid rgba(236,72,153,0.3)",
-          boxShadow: "0 10px 26px rgba(131,24,67,0.14)",
+          border: "1px solid rgba(17,24,39,0.3)",
+          boxShadow: "0 10px 26px rgba(17,24,39,0.14)",
         }}
       >
         {/* Decorative glow */}
         <div
           className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl opacity-20"
-          style={{ background: "radial-gradient(circle, #EC4899, transparent)" }}
+          style={{ background: "radial-gradient(circle, #111827, transparent)" }}
         />
 
         <div className="relative z-10">
@@ -183,11 +183,11 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
               <p className="text-[10px] uppercase tracking-[0.35em] font-semibold mb-1" style={{ color: "#C8A96E" }}>
                 ✦ Style Identity
               </p>
-              <h2 className="font-serif text-2xl sm:text-3xl" style={{ color: "#831843" }}>
+              <h2 className="font-sans text-2xl sm:text-3xl" style={{ color: "#111827" }}>
                 {season ?? "Your Season"}
               </h2>
               {seasonTraits && (
-                <p className="mt-1 text-sm italic" style={{ color: "rgba(131,24,67,0.68)" }}>
+                <p className="mt-1 text-sm italic" style={{ color: "rgba(17,24,39,0.68)" }}>
                   {seasonTraits.vibe}
                 </p>
               )}
@@ -195,7 +195,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             <button
               onClick={copyStyleId}
               className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium transition-all hover:opacity-80 shrink-0"
-              style={{ background: "rgba(236,72,153,0.14)", color: "#9D174D", border: "1px solid rgba(236,72,153,0.25)" }}
+              style={{ background: "rgba(17,24,39,0.14)", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}
               title="Copy your style ID"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -214,7 +214,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
           {/* Colour palette swatches */}
           {richPalette.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.65)" }}>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(17,24,39,0.65)" }}>
                 Your colour palette
               </p>
               <div className="flex flex-wrap gap-2">
@@ -225,7 +225,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
                       style={{ background: c.hex, border: "2px solid rgba(255,255,255,0.12)" }}
                       title={c.name}
                     />
-                    <span className="text-[11px] hidden sm:block" style={{ color: "rgba(131,24,67,0.70)" }}>
+                    <span className="text-[11px] hidden sm:block" style={{ color: "rgba(17,24,39,0.70)" }}>
                       {c.name}
                     </span>
                   </div>
@@ -246,23 +246,23 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="rounded-2xl p-5 space-y-3"
-            style={{ background: "rgba(201,149,107,0.07)", border: "1px solid rgba(201,149,107,0.15)" }}
+            style={{ background: "rgba(17,24,39,0.07)", border: "1px solid rgba(17,24,39,0.15)" }}
           >
             <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4" style={{ color: "#EC4899" }} />
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#EC4899" }}>Colour Profile</p>
+              <Palette className="h-4 w-4" style={{ color: "#111827" }} />
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#111827" }}>Colour Profile</p>
             </div>
             {season && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Season</p>
-                <p className="text-sm font-medium" style={{ color: "#831843" }}>{season}</p>
+                <p className="text-[11px]" style={{ color: "rgba(17,24,39,0.65)" }}>Season</p>
+                <p className="text-sm font-medium" style={{ color: "#111827" }}>{season}</p>
                 {seasonTraits && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {seasonTraits.keywords.map((kw) => (
                       <span
                         key={kw}
                         className="text-[10px] rounded-full px-2 py-0.5"
-                        style={{ background: "rgba(201,149,107,0.15)", color: "#EC4899" }}
+                        style={{ background: "rgba(17,24,39,0.15)", color: "#111827" }}
                       >
                         {kw}
                       </span>
@@ -273,22 +273,22 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             )}
             {undertone && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Undertone</p>
-                <p className="text-sm font-medium" style={{ color: "#831843" }}>{undertone}</p>
-                <p className="text-xs mt-0.5" style={{ color: "rgba(131,24,67,0.68)" }}>
+                <p className="text-[11px]" style={{ color: "rgba(17,24,39,0.65)" }}>Undertone</p>
+                <p className="text-sm font-medium" style={{ color: "#111827" }}>{undertone}</p>
+                <p className="text-xs mt-0.5" style={{ color: "rgba(17,24,39,0.68)" }}>
                   {UNDERTONE_DESC[undertone] ?? ""}
                 </p>
               </div>
             )}
             {metals.length > 0 && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Best metals</p>
-                <p className="text-sm" style={{ color: "#831843" }}>{metals.join(" · ")}</p>
+                <p className="text-[11px]" style={{ color: "rgba(17,24,39,0.65)" }}>Best metals</p>
+                <p className="text-sm" style={{ color: "#111827" }}>{metals.join(" · ")}</p>
               </div>
             )}
             {avoidColors.length > 0 && (
               <div>
-                <p className="text-[11px]" style={{ color: "rgba(131,24,67,0.65)" }}>Colours to avoid</p>
+                <p className="text-[11px]" style={{ color: "rgba(17,24,39,0.65)" }}>Colours to avoid</p>
                 <div className="flex gap-1.5 mt-1 flex-wrap">
                   {avoidColors.map((c) => (
                     <div key={c.hex} className="flex items-center gap-1">
@@ -296,7 +296,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
                         className="h-4 w-4 rounded-full"
                         style={{ background: c.hex, border: "1px solid rgba(255,255,255,0.15)" }}
                       />
-                      <span className="text-[11px]" style={{ color: "rgba(131,24,67,0.72)" }}>{c.name}</span>
+                      <span className="text-[11px]" style={{ color: "rgba(17,24,39,0.72)" }}>{c.name}</span>
                     </div>
                   ))}
                 </div>
@@ -312,15 +312,15 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             className="rounded-2xl p-5 space-y-3"
-            style={{ background: "rgba(123,110,158,0.07)", border: "1px solid rgba(123,110,158,0.15)" }}
+            style={{ background: "rgba(17,24,39,0.07)", border: "1px solid rgba(17,24,39,0.15)" }}
           >
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" style={{ color: "#A69CC4" }} />
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#A69CC4" }}>Face Shape</p>
             </div>
             <div>
-              <p className="font-serif text-xl" style={{ color: "#4a1428" }}>{faceShape}</p>
-              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(131,24,67,0.72)" }}>
+              <p className="font-sans text-xl" style={{ color: "#111827" }}>{faceShape}</p>
+              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(17,24,39,0.72)" }}>
                 {FACE_SHAPE_DESC[faceShape] ?? "Unique and striking features."}
               </p>
             </div>
@@ -330,7 +330,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
                   <span
                     key={t}
                     className="text-[10px] rounded-full px-2 py-0.5"
-                    style={{ background: "rgba(123,110,158,0.15)", color: "#A69CC4" }}
+                    style={{ background: "rgba(17,24,39,0.15)", color: "#A69CC4" }}
                   >
                     {t}
                   </span>
@@ -354,14 +354,14 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#63A282" }}>Skin Profile</p>
             </div>
             <div>
-              <p className="font-serif text-xl" style={{ color: "#4a1428" }}>{skinType}</p>
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(131,24,67,0.72)" }}>
+              <p className="font-sans text-xl" style={{ color: "#111827" }}>{skinType}</p>
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(17,24,39,0.72)" }}>
                 {SKIN_TYPE_DESC[skinType] ?? ""}
               </p>
             </div>
             {skinConcerns.length > 0 && (
               <div>
-                  <p className="text-[11px] mb-1" style={{ color: "rgba(131,24,67,0.65)" }}>Active concerns</p>
+                  <p className="text-[11px] mb-1" style={{ color: "rgba(17,24,39,0.65)" }}>Active concerns</p>
                 <div className="flex flex-wrap gap-1">
                   {skinConcerns.map((c, idx) => {
                     const label = getConcernLabel(c);
@@ -396,15 +396,15 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
             </div>
             <div>
               {latest?.hairstyle?.hairType && (
-                <p className="text-xs mb-2" style={{ color: "rgba(131,24,67,0.72)" }}>
-                  Hair type: <span style={{ color: "#4a1428" }}>{latest.hairstyle.hairType}</span>
+                <p className="text-xs mb-2" style={{ color: "rgba(17,24,39,0.72)" }}>
+                  Hair type: <span style={{ color: "#111827" }}>{latest.hairstyle.hairType}</span>
                 </p>
               )}
               <div className="space-y-1">
                 {hairstyleNames.map((name) => (
                   <div key={name} className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#638FB3" }} />
-                    <span className="text-sm" style={{ color: "#4a1428" }}>{name}</span>
+                    <span className="text-sm" style={{ color: "#111827" }}>{name}</span>
                   </div>
                 ))}
               </div>
@@ -420,33 +420,33 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="rounded-2xl p-5"
-          style={{ background: "rgba(131,24,67,0.08)", border: "1px solid rgba(131,24,67,0.18)" }}
+          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <Eye className="h-4 w-4" style={{ color: "rgba(131,24,67,0.65)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(131,24,67,0.65)" }}>
+            <Eye className="h-4 w-4" style={{ color: "rgba(17,24,39,0.65)" }} />
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(17,24,39,0.65)" }}>
               Quick Style Rules
             </p>
           </div>
           <div className="grid sm:grid-cols-3 gap-3">
             {season && (
               <div>
-                <p className="text-[10px] mb-1" style={{ color: "rgba(131,24,67,0.55)" }}>Wear more of</p>
-                <p className="text-xs font-medium" style={{ color: "#831843" }}>
+                <p className="text-[10px] mb-1" style={{ color: "rgba(17,24,39,0.55)" }}>Wear more of</p>
+                <p className="text-xs font-medium" style={{ color: "#111827" }}>
                   {seasonTraits?.keywords.slice(0, 2).join(", ") ?? "earthy, warm tones"}
                 </p>
               </div>
             )}
             {metals.length > 0 && (
               <div>
-                <p className="text-[10px] mb-1" style={{ color: "rgba(131,24,67,0.55)" }}>Jewellery</p>
-                <p className="text-xs font-medium" style={{ color: "#831843" }}>{metals.join(", ")}</p>
+                <p className="text-[10px] mb-1" style={{ color: "rgba(17,24,39,0.55)" }}>Jewellery</p>
+                <p className="text-xs font-medium" style={{ color: "#111827" }}>{metals.join(", ")}</p>
               </div>
             )}
             {skinConcerns.length > 0 && (
               <div>
-                <p className="text-[10px] mb-1" style={{ color: "rgba(131,24,67,0.55)" }}>Focus on</p>
-                <p className="text-xs font-medium" style={{ color: "#831843" }}>
+                <p className="text-[10px] mb-1" style={{ color: "rgba(17,24,39,0.55)" }}>Focus on</p>
+                <p className="text-xs font-medium" style={{ color: "#111827" }}>
                   {getConcernLabel(skinConcerns[0])} care
                 </p>
               </div>
@@ -466,7 +466,7 @@ export function StyleDnaCard({ prefs, latest, userEmail }: Props) {
           <a
             href={`/report/${latest.id}`}
             className="text-sm transition-opacity hover:opacity-70"
-            style={{ color: "rgba(131,24,67,0.45)" }}
+            style={{ color: "rgba(17,24,39,0.45)" }}
           >
             View full analysis →
           </a>

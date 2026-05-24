@@ -301,16 +301,16 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           )}
           style={{
             background: isDragActive
-              ? "rgba(201,149,107,0.05)"
+              ? "rgba(17,24,39,0.05)"
               : "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))",
             borderColor: isDragActive
-              ? "#EC4899"
+              ? "#111827"
               : file
-              ? "rgba(123,110,158,0.6)"
-              : "rgba(131,24,67,0.18)",
+              ? "rgba(17,24,39,0.6)"
+              : "rgba(17,24,39,0.18)",
             boxShadow: isDragActive
-              ? "0 0 40px rgba(201,149,107,0.15), inset 0 1px 0 rgba(131,24,67,0.12)"
-              : "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(131,24,67,0.10)",
+              ? "0 0 40px rgba(17,24,39,0.15), inset 0 1px 0 rgba(17,24,39,0.12)"
+              : "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(17,24,39,0.10)",
           }}
         >
           <input {...getInputProps()} />
@@ -329,14 +329,14 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                   src={preview}
                   alt="Preview"
                   className="h-56 w-56 rounded-3xl object-cover"
-                  style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)", border: "3px solid rgba(201,149,107,0.3)" }}
+                  style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)", border: "3px solid rgba(17,24,39,0.3)" }}
                 />
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
                   className="absolute -top-2 -right-2 rounded-full p-2"
-                  style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#831843", boxShadow: "0 4px 12px rgba(201,149,107,0.4)" }}
+                  style={{ background: "#111827", color: "#111827", boxShadow: "0 4px 12px rgba(17,24,39,0.4)" }}
                 >
                   <CheckCircle2 className="h-5 w-5" />
                 </motion.div>
@@ -361,10 +361,10 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                   )}
                   style={{
                     background: isDragActive
-                      ? "linear-gradient(135deg,#EC4899,#8B5CF6)"
-                      : "rgba(201,149,107,0.12)",
-                    color: isDragActive ? "#831843" : "#EC4899",
-                    boxShadow: isDragActive ? "0 0 30px rgba(201,149,107,0.3)" : "none",
+                      ? "#111827"
+                      : "rgba(17,24,39,0.12)",
+                    color: isDragActive ? "#111827" : "#111827",
+                    boxShadow: isDragActive ? "0 0 30px rgba(17,24,39,0.3)" : "none",
                   }}
                 >
                   <ImageIcon className="h-10 w-10" />
@@ -381,7 +381,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                         repeat: Infinity,
                         ease: "easeOut",
                       }}
-                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#EC4899" }}
+                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#111827" }}
                     />
                     <motion.div
                       initial={{ scale: 1, opacity: 0.6 }}
@@ -392,7 +392,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
                         ease: "easeOut",
                         delay: 0.3,
                       }}
-                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#EC4899" }}
+                      className="absolute inset-0 rounded-full border-2" style={{ borderColor: "#111827" }}
                     />
                   </>
                 )}
@@ -403,7 +403,7 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           <div className="space-y-2">
             <motion.p
               animate={{ opacity: isDragActive ? 1 : 0.9 }}
-              className="font-serif text-2xl text-ink"
+              className="font-sans text-2xl text-ink"
             >
               {isDragActive
                 ? "Drop your photo here"

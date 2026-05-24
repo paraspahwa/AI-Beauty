@@ -273,10 +273,10 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
     return (
       <div
         className="rounded-3xl p-10 text-center"
-        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(201,149,107,0.18)" }}
+        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.18)" }}
       >
         <Lock className="h-10 w-10 mx-auto mb-4" style={{ color: "#C8A96E" }} />
-        <p className="text-base font-semibold mb-2" style={{ color: "#F9A8D4" }}>
+        <p className="text-base font-semibold mb-2" style={{ color: "#fffafc" }}>
           Virtual Try-On is a premium feature
         </p>
         <p className="text-sm" style={{ color: "#9C7D5B" }}>
@@ -301,7 +301,7 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
           <div className="flex items-center gap-3">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl"
-              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}
+              style={{ background: "#111827" }}
             >
               <Sparkles className="h-4.5 w-4.5" style={{ color: "#3D2B1F" }} />
             </div>
@@ -445,7 +445,7 @@ export function VirtualTryOnCard({ reportId, photoUrl, isPaid }: Props) {
               onClick={generate}
               disabled={!clothFile || status === "loading" || (photoMode === "full" && !fullBodyFile)}
               className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}
+              style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}
             >
               {status === "loading" ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>

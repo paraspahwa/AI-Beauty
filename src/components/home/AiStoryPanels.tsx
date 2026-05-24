@@ -30,7 +30,7 @@ const PANELS: StoryPanel[] = [
     subtitle: "Match shades to your undertone and facial harmony instantly.",
     imageSrc: "/samples/sample-1-after.jpg",
     imageAlt: "AI makeup try-on result preview",
-    tintClass: "from-[#ec4899]/35 via-transparent to-black/55",
+    tintClass: "from-[#111827]/35 via-transparent to-black/55",
     chips: [
       {
         label: "Peach Glow",
@@ -86,7 +86,7 @@ const PANELS: StoryPanel[] = [
     subtitle: "Frames and tones chosen for your features and undertone.",
     imageSrc: "/samples/sample-3-after.jpg",
     imageAlt: "AI spectacles recommendation preview",
-    tintClass: "from-[#0ea5a4]/28 via-transparent to-black/55",
+    tintClass: "from-[#111827]/28 via-transparent to-black/55",
     chips: [
       {
         label: "Geometric Frames",

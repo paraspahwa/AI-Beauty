@@ -12,7 +12,7 @@ const STEPS = [
     icon: Sparkles,
     title: "Welcome to Renovaara ✨",
     body: "Your personal AI stylist — upload one selfie and get an instant face shape overview, completely free.",
-    accent: "#EC4899",
+    accent: "#111827",
   },
   {
     icon: Lock,
@@ -30,7 +30,7 @@ const STEPS = [
     icon: Shield,
     title: "Your photo is private",
     body: "Photos are encrypted at rest. Only you can access your report. We never sell your data.",
-    accent: "#EC4899",
+    accent: "#111827",
   },
 ];
 
@@ -68,7 +68,7 @@ export function OnboardingModal({ onDone }: Props) {
           className="relative w-full max-w-sm rounded-3xl p-8 text-center"
           style={{
             background: "linear-gradient(160deg, #0E0E18 0%, #16162A 100%)",
-            border: "1px solid rgba(131,24,67,0.18)",
+            border: "1px solid rgba(17,24,39,0.18)",
             boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
           }}
         >
@@ -77,7 +77,7 @@ export function OnboardingModal({ onDone }: Props) {
             onClick={onDone}
             aria-label="Skip onboarding"
             className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-            style={{ background: "rgba(131,24,67,0.14)", color: "rgba(131,24,67,0.5)" }}
+            style={{ background: "rgba(17,24,39,0.14)", color: "rgba(17,24,39,0.5)" }}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -90,7 +90,7 @@ export function OnboardingModal({ onDone }: Props) {
             <Icon className="h-8 w-8" style={{ color: current.accent }} />
           </div>
 
-          <h2 className="mb-3 font-serif text-2xl" style={{ color: "#F0E8D8" }}>
+          <h2 className="mb-3 font-sans text-2xl" style={{ color: "#fffafc" }}>
             {current.title}
           </h2>
 
@@ -106,11 +106,11 @@ export function OnboardingModal({ onDone }: Props) {
                   </div>
                 ))}
               </div>
-              <div className="rounded-xl p-3" style={{ background: "rgba(236,72,153,0.06)", border: "1px solid rgba(236,72,153,0.18)" }}>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#EC4899" }}>Unlock — ₹299</p>
+              <div className="rounded-xl p-3" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.18)" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#111827" }}>Unlock — ₹299</p>
                 {["Skin routine", "Spectacles guide", "Hairstyle guide", "AI try-ons", "PDF + chat"].map((item) => (
                   <div key={item} className="flex items-center gap-1.5 mb-1">
-                    <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: "#EC4899" }} />
+                    <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: "#111827" }} />
                     <span className="text-[11px]" style={{ color: "rgba(240,232,216,0.65)" }}>{item}</span>
                   </div>
                 ))}

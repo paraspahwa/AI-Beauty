@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       <article className="container max-w-3xl mx-auto prose-legal">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h1 className="font-serif text-4xl text-ink mb-3">Privacy Policy</h1>
+          <h1 className="font-sans text-4xl text-ink mb-3">Privacy Policy</h1>
           <p className="text-sm text-ink-stone">Last updated: {LAST_UPDATED}</p>
         </div>
 
@@ -236,7 +236,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-10">
-      <h2 className="font-serif text-2xl text-ink mb-4">{title}</h2>
+      <h2 className="font-sans text-2xl text-ink mb-4">{title}</h2>
       <div className="space-y-3 text-ink-stone leading-relaxed text-[15px]">{children}</div>
     </section>
   );

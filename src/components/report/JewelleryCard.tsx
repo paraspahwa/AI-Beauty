@@ -269,7 +269,7 @@ export function JewelleryCard({ faceShape, colorAnalysis, isPaid }: Props) {
       <motion.div variants={fadeUp} className="flex items-start gap-3">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: "rgba(236,72,153,0.10)", border: "1px solid rgba(236,72,153,0.20)" }}
+          style={{ background: "rgba(17,24,39,0.10)", border: "1px solid rgba(17,24,39,0.20)" }}
         >
           <Gem className="h-5 w-5 text-pink-500" />
         </div>

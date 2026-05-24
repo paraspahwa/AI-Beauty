@@ -178,20 +178,20 @@ export function CanvasStudio({
   };
 
   return (
-    <div className="space-y-6 rounded-3xl p-6 sm:p-8" style={{ background: "linear-gradient(180deg, rgba(255,247,251,0.96), rgba(254,251,248,0.96))", border: "1px solid rgba(131,24,67,0.12)" }}>
+    <div className="space-y-6 rounded-3xl p-6 sm:p-8" style={{ background: "linear-gradient(180deg, rgba(255,247,251,0.96), rgba(254,251,248,0.96))", border: "1px solid rgba(17,24,39,0.12)" }}>
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="section-label inline-flex">Canvas Studio</span>
             {selectedPalette?.season && (
-              <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: "rgba(236,72,153,0.10)", color: "#EC4899" }}>{selectedPalette.season}</span>
+              <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: "rgba(17,24,39,0.10)", color: "#111827" }}>{selectedPalette.season}</span>
             )}
           </div>
-          <h2 className="font-serif text-3xl text-ink">Quick scan, try-on, wardrobe ideas.</h2>
+          <h2 className="font-sans text-3xl text-ink">Quick scan, try-on, wardrobe ideas.</h2>
           <p className="max-w-2xl text-sm text-ink-stone">Use the quick scan to lock in palette guidance, then try makeup, hair, or outfit concepts. Reuse any previous look from your vault as the source image.</p>
         </div>
 
-        <div className="rounded-2xl p-4" style={{ background: "rgba(131,24,67,0.04)", border: "1px solid rgba(131,24,67,0.10)" }}>
+        <div className="rounded-2xl p-4" style={{ background: "rgba(17,24,39,0.04)", border: "1px solid rgba(17,24,39,0.10)" }}>
           <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Quota</p>
           <p className="text-sm text-ink-stone mt-1">{studioEntitlement?.tier === "studio_pro" ? "Unlimited with Studio Pro" : `${studioEntitlement?.remainingGens ?? 0} generations left this month`}</p>
         </div>
@@ -214,11 +214,11 @@ export function CanvasStudio({
                   onClick={() => setMode(tab.key as typeof mode)}
                   className="rounded-2xl p-4 text-left transition-all"
                   style={{
-                    background: active ? "rgba(236,72,153,0.10)" : "rgba(255,255,255,0.70)",
-                    border: active ? "1px solid rgba(236,72,153,0.24)" : "1px solid rgba(131,24,67,0.12)",
+                    background: active ? "rgba(17,24,39,0.10)" : "rgba(255,255,255,0.70)",
+                    border: active ? "1px solid rgba(17,24,39,0.24)" : "1px solid rgba(17,24,39,0.12)",
                   }}
                 >
-                  <Icon className="h-5 w-5 mb-2" style={{ color: active ? "#EC4899" : "#9C7D5B" }} />
+                  <Icon className="h-5 w-5 mb-2" style={{ color: active ? "#111827" : "#9C7D5B" }} />
                   <p className="text-sm font-semibold text-ink">{tab.label}</p>
                 </button>
               );
@@ -226,9 +226,9 @@ export function CanvasStudio({
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(131,24,67,0.12)" }}>
+            <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
               <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#9C7D5B" }}>Source Image</p>
-              <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "rgba(131,24,67,0.10)" }}>
+              <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "rgba(17,24,39,0.10)" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={sourcePreviewUrl || photoUrl} alt="Source" className="w-full h-auto" />
               </div>
@@ -240,7 +240,7 @@ export function CanvasStudio({
               </div>
             </div>
 
-            <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(131,24,67,0.12)" }}>
+            <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
               <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#9C7D5B" }}>Quick Scan</p>
               {scanResult?.palette?.length ? (
                 <div className="space-y-3">
@@ -262,7 +262,7 @@ export function CanvasStudio({
             </div>
           </div>
 
-          <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(131,24,67,0.12)" }}>
+          <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
             <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#9C7D5B" }}>Generation Controls</p>
 
             {mode === "makeup" && (
@@ -324,10 +324,10 @@ export function CanvasStudio({
           </div>
 
           {result && (
-            <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(131,24,67,0.12)" }}>
+            <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
               <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#9C7D5B" }}>Latest Result</p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={result.hdUrl || result.lowResUrl} alt="Result" className="w-full rounded-2xl border" style={{ borderColor: "rgba(131,24,67,0.10)" }} />
+              <img src={result.hdUrl || result.lowResUrl} alt="Result" className="w-full rounded-2xl border" style={{ borderColor: "rgba(17,24,39,0.10)" }} />
               {result.outfit && (
                 <div className="mt-4 space-y-3">
                   <p className="text-sm font-semibold text-ink">{result.outfit.summary}</p>
@@ -346,7 +346,7 @@ export function CanvasStudio({
         </div>
 
         <aside className="space-y-4">
-          <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(131,24,67,0.12)" }}>
+          <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Vault Sources</p>
               {vaultLoading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -355,7 +355,7 @@ export function CanvasStudio({
               <button
                 onClick={() => { setSourceAssetId(null); setSourcePreviewUrl(photoUrl); }}
                 className="overflow-hidden rounded-2xl border text-left"
-                style={{ borderColor: sourceAssetId ? "rgba(131,24,67,0.12)" : "rgba(236,72,153,0.36)" }}
+                style={{ borderColor: sourceAssetId ? "rgba(17,24,39,0.12)" : "rgba(17,24,39,0.36)" }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoUrl} alt="Original selfie" className="aspect-square w-full object-cover" />
@@ -366,7 +366,7 @@ export function CanvasStudio({
                   key={item.id}
                   onClick={() => selectSource(item)}
                   className="overflow-hidden rounded-2xl border text-left"
-                  style={{ borderColor: sourceAssetId === item.id ? "rgba(236,72,153,0.36)" : "rgba(131,24,67,0.12)" }}
+                  style={{ borderColor: sourceAssetId === item.id ? "rgba(17,24,39,0.36)" : "rgba(17,24,39,0.12)" }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.imageUrl ?? ""} alt={item.tool} className="aspect-square w-full object-cover" />
@@ -379,7 +379,7 @@ export function CanvasStudio({
             </div>
           </div>
 
-          <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(131,24,67,0.12)" }}>
+          <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
             <div className="flex items-center gap-2 mb-3">
               <History className="h-4 w-4" style={{ color: "#9C7D5B" }} />
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Scan Notes</p>

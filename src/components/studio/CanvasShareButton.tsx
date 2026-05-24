@@ -48,7 +48,7 @@ export function CanvasShareButton({ canvasId, initialShareUrl }: { canvasId: str
   };
 
   return (
-    <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(131,24,67,0.12)" }}>
+    <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(17,24,39,0.12)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Share</p>
@@ -61,7 +61,7 @@ export function CanvasShareButton({ canvasId, initialShareUrl }: { canvasId: str
       </div>
 
       {shareUrl && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl px-3 py-2 text-sm" style={{ background: "rgba(236,72,153,0.08)" }}>
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl px-3 py-2 text-sm" style={{ background: "rgba(17,24,39,0.08)" }}>
           <span className="truncate text-ink-stone">{shareUrl}</span>
           <button onClick={() => void navigator.clipboard.writeText(shareUrl)} className="inline-flex items-center gap-1 text-xs font-semibold text-pink-600">
             <Copy className="h-3.5 w-3.5" /> Copy

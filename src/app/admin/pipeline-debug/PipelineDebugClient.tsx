@@ -47,7 +47,7 @@ function eventColor(type: string): string {
   if (type === "stage_completed") return "#63A282";
   if (type === "stage_started") return "#7B6E9E";
   if (type.includes("fail") || type === "error") return "#F87171";
-  if (type === "pipeline_completed") return "#EC4899";
+  if (type === "pipeline_completed") return "#111827";
   return "#C9956B";
 }
 
@@ -91,7 +91,7 @@ function TimingBar({ timings, totalMs }: { timings: StageTiming[]; totalMs: numb
                 className="h-full rounded transition-all duration-300"
                 style={{
                   width: t.endWallMs ? `${Math.min(w, 100)}%` : "100%",
-                  background: t.degraded ? "rgba(248,113,113,0.7)" : t.endWallMs ? "#EC4899" : "rgba(123,110,158,0.4)",
+                  background: t.degraded ? "rgba(248,113,113,0.7)" : t.endWallMs ? "#111827" : "rgba(17,24,39,0.4)",
                   animation: t.endWallMs ? undefined : "pulse 1s ease-in-out infinite",
                 }}
               />
@@ -109,9 +109,9 @@ function TimingBar({ timings, totalMs }: { timings: StageTiming[]; totalMs: numb
 
 function EtaStatsPanel({ stats }: { stats: EtaStats }) {
   return (
-    <div className="rounded-2xl p-5 space-y-4" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}>
+    <div className="rounded-2xl p-5 space-y-4" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}>
       <div className="flex items-baseline gap-2">
-        <h2 className="font-serif text-ink text-lg">Historical ETA stats</h2>
+        <h2 className="font-sans text-ink text-lg">Historical ETA stats</h2>
         <span className="text-xs text-ink-stone">({stats.sampleSize} runs, last 24h)</span>
       </div>
       <div className="grid grid-cols-4 gap-3">
@@ -121,9 +121,9 @@ function EtaStatsPanel({ stats }: { stats: EtaStats }) {
           { label: "p75", v: stats.total.p75 },
           { label: "p90", v: stats.total.p90 },
         ].map(({ label, v }) => (
-          <div key={label} className="text-center rounded-xl p-3" style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(131,24,67,0.1)" }}>
+          <div key={label} className="text-center rounded-xl p-3" style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(17,24,39,0.1)" }}>
             <p className="text-xs text-ink-stone">{label}</p>
-            <p className="font-serif text-ink mt-1">{ms(v)}</p>
+            <p className="font-sans text-ink mt-1">{ms(v)}</p>
           </div>
         ))}
       </div>
@@ -131,7 +131,7 @@ function EtaStatsPanel({ stats }: { stats: EtaStats }) {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b" style={{ borderColor: "rgba(131,24,67,0.12)" }}>
+              <tr className="border-b" style={{ borderColor: "rgba(17,24,39,0.12)" }}>
                 {["Stage", "Avg", "p50", "p75", "p90", "Degraded%", "n"].map((h) => (
                   <th key={h} className="pb-2 pt-1 pr-3 text-left font-medium text-ink-stone uppercase tracking-wider">{h}</th>
                 ))}
@@ -141,14 +141,14 @@ function EtaStatsPanel({ stats }: { stats: EtaStats }) {
               {STAGE_ORDER.filter((s) => stats.stageStats[s]).map((stage) => {
                 const s = stats.stageStats[stage];
                 return (
-                  <tr key={stage} className="border-b" style={{ borderColor: "rgba(131,24,67,0.07)" }}>
+                  <tr key={stage} className="border-b" style={{ borderColor: "rgba(17,24,39,0.07)" }}>
                     <td className="py-1.5 pr-3 font-mono text-ink">{stage}</td>
                     <td className="py-1.5 pr-3 text-ink-stone">{ms(s.avgMs)}</td>
                     <td className="py-1.5 pr-3 text-ink-stone">{ms(s.p50)}</td>
                     <td className="py-1.5 pr-3 text-ink-stone">{ms(s.p75)}</td>
                     <td className="py-1.5 pr-3 text-ink-stone">{ms(s.p90)}</td>
                     <td className="py-1.5 pr-3">
-                      <span className="rounded-full px-1.5 py-0.5" style={{ background: s.degradationPct > 20 ? "rgba(248,113,113,0.15)" : "rgba(201,149,107,0.12)", color: s.degradationPct > 20 ? "#F87171" : "#C9956B" }}>
+                      <span className="rounded-full px-1.5 py-0.5" style={{ background: s.degradationPct > 20 ? "rgba(248,113,113,0.15)" : "rgba(17,24,39,0.12)", color: s.degradationPct > 20 ? "#F87171" : "#C9956B" }}>
                         {s.degradationPct}%
                       </span>
                     </td>
@@ -259,8 +259,8 @@ export function PipelineDebugClient({ userEmail }: { userEmail: string }) {
     <main className="container max-w-5xl py-12 min-h-screen space-y-8">
       {/* Header */}
       <div>
-        <p className="text-xs uppercase tracking-[0.3em] font-medium mb-2" style={{ color: "#EC4899" }}>Admin · Debug</p>
-        <h1 className="font-serif text-3xl text-ink">Pipeline Debug Console</h1>
+        <p className="text-xs uppercase tracking-[0.3em] font-medium mb-2" style={{ color: "#111827" }}>Admin · Debug</p>
+        <h1 className="font-sans text-3xl text-ink">Pipeline Debug Console</h1>
         <p className="text-xs text-ink-stone mt-1">Signed in as <span className="font-mono">{userEmail}</span></p>
       </div>
 
@@ -270,7 +270,7 @@ export function PipelineDebugClient({ userEmail }: { userEmail: string }) {
           onClick={loadEtaStats}
           disabled={etaLoading}
           className="text-sm px-4 py-2 rounded-xl font-medium transition-opacity disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, rgba(236,72,153,0.1), rgba(201,149,107,0.1))", color: "#EC4899", border: "1px solid rgba(236,72,153,0.25)" }}
+          style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.1), rgba(17,24,39,0.1))", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}
         >
           {etaLoading ? "Loading…" : etaStats ? "Refresh ETA stats" : "Load historical ETA stats"}
         </button>
@@ -280,9 +280,9 @@ export function PipelineDebugClient({ userEmail }: { userEmail: string }) {
       {/* Upload & Run */}
       <div
         className="rounded-2xl p-6 space-y-4"
-        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
+        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}
       >
-        <h2 className="font-serif text-ink text-lg">Run live analysis</h2>
+        <h2 className="font-sans text-ink text-lg">Run live analysis</h2>
         <p className="text-xs text-ink-stone">Upload any selfie — pipeline runs in full, no report is saved.</p>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <input
@@ -291,13 +291,13 @@ export function PipelineDebugClient({ userEmail }: { userEmail: string }) {
             disabled={running}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             className="text-sm text-ink-stone file:mr-3 file:rounded-xl file:border-0 file:px-3 file:py-1.5 file:text-xs file:font-medium file:cursor-pointer disabled:opacity-50"
-            style={{ "--file-bg": "rgba(236,72,153,0.1)", "--file-color": "#EC4899" } as React.CSSProperties}
+            style={{ "--file-bg": "rgba(17,24,39,0.1)", "--file-color": "#111827" } as React.CSSProperties}
           />
           <button
             onClick={runDebug}
             disabled={!file || running}
             className="shrink-0 px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #EC4899, #C9956B)", color: "white" }}
+            style={{ background: "linear-gradient(135deg, #111827, #C9956B)", color: "white" }}
           >
             {running ? "Running…" : "▶ Run pipeline"}
           </button>
@@ -316,12 +316,12 @@ export function PipelineDebugClient({ userEmail }: { userEmail: string }) {
       {timings.length > 0 && (
         <div
           className="rounded-2xl p-6"
-          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
+          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}
         >
           <div className="flex items-baseline gap-3 mb-5">
-            <h2 className="font-serif text-ink text-lg">Stage timings</h2>
+            <h2 className="font-sans text-ink text-lg">Stage timings</h2>
             {totalMs > 0 && <span className="text-xs text-ink-stone">total {fmtMs(totalMs)}</span>}
-            {running && <span className="text-xs font-medium animate-pulse" style={{ color: "#EC4899" }}>● live</span>}
+            {running && <span className="text-xs font-medium animate-pulse" style={{ color: "#111827" }}>● live</span>}
           </div>
           <TimingBar timings={timings} totalMs={totalMs || timings.reduce((s, t) => s + (t.durationMs ?? 0), 0)} />
         </div>
@@ -331,11 +331,11 @@ export function PipelineDebugClient({ userEmail }: { userEmail: string }) {
       {events.length > 0 && (
         <div
           className="rounded-2xl overflow-hidden"
-          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(131,24,67,0.14)" }}
+          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)" }}
         >
-          <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "rgba(131,24,67,0.14)" }}>
-            <h2 className="font-serif text-ink text-base">Event log</h2>
-            {running && <span className="text-xs font-medium animate-pulse" style={{ color: "#EC4899" }}>● streaming</span>}
+          <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "rgba(17,24,39,0.14)" }}>
+            <h2 className="font-sans text-ink text-base">Event log</h2>
+            {running && <span className="text-xs font-medium animate-pulse" style={{ color: "#111827" }}>● streaming</span>}
           </div>
           <div
             ref={logRef}

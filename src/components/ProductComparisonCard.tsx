@@ -23,10 +23,10 @@ const VERDICT_CFG: Record<
 > = {
   beneficial: {
     label: "Beneficial",
-    bg: "rgba(236,72,153,0.08)",
-    text: "#BE185D",
-    border: "rgba(236,72,153,0.25)",
-    dot: "#EC4899",
+    bg: "rgba(17,24,39,0.08)",
+    text: "#111827",
+    border: "rgba(17,24,39,0.25)",
+    dot: "#111827",
   },
   neutral: {
     label: "Neutral",
@@ -54,15 +54,15 @@ const VERDICT_CFG: Record<
 // ── Score badge ───────────────────────────────────────────────────────────────
 function ScoreBadge({ score, isWinner }: { score: number; isWinner: boolean }) {
   const color =
-    score >= 8 ? "#EC4899" : score >= 6 ? "#D97706" : score >= 4 ? "#F59E0B" : "#E11D48";
+    score >= 8 ? "#111827" : score >= 6 ? "#D97706" : score >= 4 ? "#F59E0B" : "#E11D48";
   return (
     <div
       className="flex flex-col items-center justify-center rounded-2xl px-4 py-2.5"
       style={{
         background: isWinner
-          ? "linear-gradient(135deg, rgba(236,72,153,0.12) 0%, rgba(139,92,246,0.12) 100%)"
+          ? "linear-gradient(135deg, rgba(17,24,39,0.12) 0%, rgba(17,24,39,0.12) 100%)"
           : "rgba(61,12,30,0.04)",
-        border: isWinner ? "1.5px solid rgba(236,72,153,0.3)" : "1px solid rgba(61,12,30,0.08)",
+        border: isWinner ? "1.5px solid rgba(17,24,39,0.3)" : "1px solid rgba(61,12,30,0.08)",
       }}
     >
       <span className="text-2xl font-bold leading-none" style={{ color }}>
@@ -137,10 +137,10 @@ function ProductColumn({
       className="flex flex-col gap-3 rounded-2xl p-4"
       style={{
         background: isWinner
-          ? "linear-gradient(160deg, rgba(236,72,153,0.06) 0%, rgba(139,92,246,0.06) 100%)"
+          ? "linear-gradient(160deg, rgba(17,24,39,0.06) 0%, rgba(17,24,39,0.06) 100%)"
           : "rgba(61,12,30,0.02)",
         border: isWinner
-          ? "1.5px solid rgba(236,72,153,0.2)"
+          ? "1.5px solid rgba(17,24,39,0.2)"
           : "1px solid rgba(61,12,30,0.07)",
       }}
     >
@@ -150,7 +150,7 @@ function ProductColumn({
           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
           style={{
             background: isWinner
-              ? "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)"
+              ? "#111827"
               : "rgba(61,12,30,0.1)",
             color: isWinner ? "#fff" : "rgba(61,12,30,0.5)",
           }}
@@ -159,7 +159,7 @@ function ProductColumn({
         </span>
         <p className="flex-1 text-sm font-semibold text-ink leading-snug line-clamp-2">{name}</p>
         {isWinner && (
-          <Trophy className="h-4 w-4 shrink-0" style={{ color: "#EC4899" }} />
+          <Trophy className="h-4 w-4 shrink-0" style={{ color: "#111827" }} />
         )}
       </div>
 
@@ -171,7 +171,7 @@ function ProductColumn({
             <p
               key={i}
               className="text-[11px] leading-snug"
-              style={{ color: "#BE185D" }}
+              style={{ color: "#111827" }}
             >
               + {h}
             </p>
@@ -253,7 +253,7 @@ function ProductInput({
       <div className="flex items-center gap-2">
         <span
           className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)" }}
+          style={{ background: "#111827" }}
         >
           {label}
         </span>
@@ -346,10 +346,10 @@ export function ProductComparisonCard({ skinContext }: Props) {
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
           style={{
             background:
-              "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(236,72,153,0.15) 100%)",
+              "linear-gradient(135deg, rgba(17,24,39,0.15) 0%, rgba(17,24,39,0.15) 100%)",
           }}
         >
-          <GitCompare className="h-5 w-5" style={{ color: "#8B5CF6" }} />
+          <GitCompare className="h-5 w-5" style={{ color: "#111827" }} />
         </div>
         <div>
           <h3 className="font-semibold text-ink text-base leading-snug">
@@ -394,7 +394,7 @@ export function ProductComparisonCard({ skinContext }: Props) {
         disabled={!canCompare || loading}
         className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-2xl font-semibold text-sm text-white disabled:opacity-40 active:scale-[0.98]"
         style={{
-          background: "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
+          background: "#111827",
           transition: "opacity 0.15s, transform 0.1s",
         }}
         aria-busy={loading}
@@ -452,12 +452,12 @@ export function ProductComparisonCard({ skinContext }: Props) {
                 className="rounded-2xl px-5 py-4"
                 style={{
                   background:
-                    "linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(139,92,246,0.1) 100%)",
-                  border: "1px solid rgba(236,72,153,0.2)",
+                    "linear-gradient(135deg, rgba(17,24,39,0.1) 0%, rgba(17,24,39,0.1) 100%)",
+                  border: "1px solid rgba(17,24,39,0.2)",
                 }}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <Trophy className="h-4 w-4" style={{ color: "#EC4899" }} />
+                  <Trophy className="h-4 w-4" style={{ color: "#111827" }} />
                   <span className="text-sm font-bold text-ink">
                     {result.winner === "tie"
                       ? "It's a tie!"
@@ -467,7 +467,7 @@ export function ProductComparisonCard({ skinContext }: Props) {
                 <p className="text-xs text-ink leading-relaxed">{result.winnerReason}</p>
                 {result.recommendation && (
                   <p className="text-xs text-ink-stone leading-relaxed mt-2 pt-2"
-                    style={{ borderTop: "1px solid rgba(236,72,153,0.15)" }}>
+                    style={{ borderTop: "1px solid rgba(17,24,39,0.15)" }}>
                     {result.recommendation}
                   </p>
                 )}

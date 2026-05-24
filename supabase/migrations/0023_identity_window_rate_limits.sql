@@ -28,6 +28,7 @@ create or replace function public.try_consume_window(
 ) returns boolean
 language plpgsql
 security definer
+set search_path = public, pg_temp
 as $$
 declare
   v_bucket_start timestamptz;
@@ -89,10 +90,15 @@ create or replace function public.cleanup_identity_window_counters(
 ) returns integer
 language plpgsql
 security definer
+set search_path = public, pg_temp
 as $$
 declare
   v_deleted int := 0;
 begin
+  if p_older_than <= interval '0 seconds' then
+    return 0;
+  end if;
+
   delete from public.identity_window_counters
    where bucket_start < now() - p_older_than;
 

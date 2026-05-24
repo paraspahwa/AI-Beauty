@@ -43,19 +43,19 @@ export default async function ProgressPage() {
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-1.5 text-sm mb-6 transition-opacity hover:opacity-70"
-          style={{ color: "rgba(131,24,67,0.62)" }}
+          style={{ color: "rgba(17,24,39,0.62)" }}
         >
           <ChevronLeft className="h-4 w-4" />
           My Reports
         </Link>
         <div className="flex items-center gap-3 mb-1">
-          <TrendingUp className="h-5 w-5" style={{ color: "#EC4899" }} />
+          <TrendingUp className="h-5 w-5" style={{ color: "#111827" }} />
           <span className="text-[10px] uppercase tracking-[0.35em] font-semibold" style={{ color: "#C8A96E" }}>
             ✦ Your Journey
           </span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-ink">Progress Tracker</h1>
-        <p className="mt-1 text-sm" style={{ color: "rgba(131,24,67,0.55)" }}>
+        <h1 className="font-sans text-3xl sm:text-4xl text-ink">Progress Tracker</h1>
+        <p className="mt-1 text-sm" style={{ color: "rgba(17,24,39,0.55)" }}>
           How your style profile has evolved across {reports.length} completed {reports.length === 1 ? "analysis" : "analyses"}.
         </p>
       </div>

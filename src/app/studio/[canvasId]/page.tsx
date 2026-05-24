@@ -78,12 +78,12 @@ export default async function StudioSessionPage({
   };
 
   return (
-    <main className="min-h-screen" style={{ background: "linear-gradient(to bottom, #FDF2F8, #FEFBF8)" }}>
+    <main className="min-h-screen" style={{ background: "linear-gradient(to bottom, #fffafc, #fffafc)" }}>
       <div className="container max-w-4xl py-8 sm:py-12">
         {/* Header */}
         <div className="mb-8">
           <span className="section-label mb-2 inline-flex text-xs">Studio Canvas</span>
-          <h1 className="font-serif text-2xl sm:text-3xl text-ink">Virtual Try-On Studio</h1>
+          <h1 className="font-sans text-2xl sm:text-3xl text-ink">Virtual Try-On Studio</h1>
           <p className="text-ink-stone text-sm mt-2">
             Canvas created {new Date(canvas.created_at).toLocaleDateString("en-IN", {
               year: "numeric",

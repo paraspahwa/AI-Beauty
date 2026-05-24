@@ -19,7 +19,7 @@ export const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2",
-        "rounded-3xl bg-cream-50 p-6 shadow-soft border border-cream-200 animate-slide-up",
+        "rounded-2xl bg-white p-6 shadow-xl border border-[#e5e7eb] animate-slide-up",
         className,
       )}
       {...props}
@@ -37,7 +37,7 @@ export const DialogHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivEl
   <div className={cn("space-y-1.5 text-center sm:text-left", className)} {...p} />
 );
 export const DialogTitle = ({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) => (
-  <h2 className={cn("font-serif text-2xl text-ink", className)} {...p} />
+  <h2 className={cn("text-xl font-semibold text-ink", className)} {...p} />
 );
 export const DialogDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => (
   <p className={cn("text-sm text-ink-mist", className)} {...p} />

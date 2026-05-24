@@ -345,8 +345,8 @@ function textureFromStyle(name: string): { label: string; color: string; bg: str
     return { label: "Straight", color: "#1D4ED8", bg: "#DBEAFE" };
   if (s.includes("curl") || s.includes("coil") || s.includes("afro") ||
       s.includes("wave") || s.includes("wavy"))
-    return { label: "Curly/Wavy", color: "#7C3AED", bg: "#F3E8FF" };
-  return { label: "Wavy", color: "#B45309", bg: "#FEF3C7" };
+    return { label: "Curly/Wavy", color: "#111827", bg: "#F3E8FF" };
+  return { label: "Wavy", color: "#B45309", bg: "#fffafc" };
 }
 
 // ── Maintenance level inference ───────────────────────────────────────────────
@@ -362,7 +362,7 @@ function maintenanceFromStyle(name: string): { level: 1 | 2 | 3; label: string }
 
 const MAINTENANCE_COLORS: Record<1 | 2 | 3, { filled: string; empty: string }> = {
   1: { filled: "#7BA05B", empty: "#D1FAE5" },
-  2: { filled: "#F59E0B", empty: "#FEF3C7" },
+  2: { filled: "#F59E0B", empty: "#fffafc" },
   3: { filled: "#C06B3E", empty: "#FDE8DC" },
 };
 
@@ -444,7 +444,7 @@ export function HairstyleCard({
         <div className="text-center pt-8 pb-4 px-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
           <div className="flex items-center justify-center gap-3 mb-1">
             <span style={{ color: "#C8A96E", fontSize: 18 }}>&#10022;</span>
-            <h2 className="text-3xl font-serif" style={{ color: "#3D2B1F" }}>Hairstyle Analysis</h2>
+            <h2 className="text-3xl font-sans" style={{ color: "#3D2B1F" }}>Hairstyle Analysis</h2>
             <span style={{ color: "#C8A96E", fontSize: 18 }}>&#10022;</span>
           </div>
           <p className="text-sm" style={{ color: "#9C7D5B" }}>Find Styles That Flatter You</p>
@@ -458,7 +458,7 @@ export function HairstyleCard({
             {/* Face shape */}
             <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
               <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "#9C7D5B" }}>Face Shape</p>
-              <p className="font-serif text-base mb-3" style={{ color: "#3D2B1F" }}>{resolvedFaceShape}</p>
+              <p className="font-sans text-base mb-3" style={{ color: "#3D2B1F" }}>{resolvedFaceShape}</p>
               {/* Face outline with hair — matches reference illustration */}
               <svg viewBox="0 0 48 60" fill="none" className="h-14 w-10 mx-auto mb-3">
                 {/* hair top */}
@@ -677,7 +677,7 @@ export function HairstyleCard({
                       >
                         {index + 1}
                       </span>
-                      <h4 className="font-serif text-sm truncate" style={{ color: "#3D2B1F" }}>
+                      <h4 className="font-sans text-sm truncate" style={{ color: "#3D2B1F" }}>
                         {style.name}
                       </h4>
                     </div>

@@ -40,9 +40,9 @@ type OutfitSession = {
 function pickColors(palette: PaletteColor[], start: number): PaletteColor[] {
   if (palette.length === 0) {
     return [
-      { name: "Soft Rose", hex: "#EC4899" },
-      { name: "Powder Blush", hex: "#F9A8D4" },
-      { name: "Plum", hex: "#8B5CF6" },
+      { name: "Soft Rose", hex: "#111827" },
+      { name: "Powder Blush", hex: "#fffafc" },
+      { name: "Plum", hex: "#111827" },
     ];
   }
   const out: PaletteColor[] = [];

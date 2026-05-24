@@ -21,8 +21,8 @@ const ZONE_ANIMATION_CSS = `
 const ZC = {
   forehead:   { stroke: "#F59E0B", fill: "rgba(245,158,11,0.10)",  delay: "0s"    },
   noseStrip:  { stroke: "#F59E0B", fill: "rgba(245,158,11,0.07)",  delay: "0.12s" },
-  leftCheek:  { stroke: "#F472B6", fill: "rgba(244,114,182,0.10)", delay: "0.28s" },
-  rightCheek: { stroke: "#F472B6", fill: "rgba(244,114,182,0.10)", delay: "0.44s" },
+  leftCheek:  { stroke: "#111827", fill: "rgba(244,114,182,0.10)", delay: "0.28s" },
+  rightCheek: { stroke: "#111827", fill: "rgba(244,114,182,0.10)", delay: "0.44s" },
   chin:       { stroke: "#FB923C", fill: "rgba(251,146,60,0.10)",  delay: "0.60s" },
 } as const;
 
@@ -113,7 +113,7 @@ const BEST_MATCH_BENEFITS: Record<string, { icon: React.ReactNode; label: string
 
 const ZONE_ROWS = [
   { key: "T-Zone",  label: "T-ZONE",  icon: <IconDrop filled />,        thumbPosition: "50% 18%", zoneColor: "#F59E0B" },
-  { key: "Cheeks",  label: "CHEEKS",  icon: <IconDrop filled={false} />, thumbPosition: "50% 50%", zoneColor: "#F472B6" },
+  { key: "Cheeks",  label: "CHEEKS",  icon: <IconDrop filled={false} />, thumbPosition: "50% 50%", zoneColor: "#111827" },
   { key: "Pores",   label: "PORES",   icon: <IconPores />,               thumbPosition: "50% 42%", zoneColor: "#9C7D5B" },
   { key: "Texture", label: "TEXTURE", icon: <IconWave />,                thumbPosition: "50% 35%", zoneColor: "#FB923C" },
 ] as const;

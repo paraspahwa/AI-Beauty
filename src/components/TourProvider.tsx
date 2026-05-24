@@ -88,7 +88,7 @@ function computePositions(el: HTMLElement, tooltipHeight: number): { spot: SpotR
 // ─── Spotlight styles ──────────────────────────────────────────────────────────
 
 const SPOTLIGHT_BOX_SHADOW =
-  "0 0 0 9999px rgba(0,0,0,0.45), 0 0 0 4px #EC4899";
+  "0 0 0 9999px rgba(0,0,0,0.45), 0 0 0 4px #111827";
 
 function applySpotlight(el: HTMLElement): () => void {
   const saved = {
@@ -285,11 +285,11 @@ export function DashboardTour() {
           top: tooltipPos.top,
           bottom: tooltipPos.bottom,
           left: tooltipPos.left,
-          background: "linear-gradient(145deg, #FFFFFF 0%, #FDF2F8 100%)",
-          border: "1px solid rgba(236,72,153,0.2)",
+          background: "linear-gradient(145deg, #FFFFFF 0%, #fffafc 100%)",
+          border: "1px solid rgba(17,24,39,0.2)",
           borderRadius: "1rem",
           boxShadow:
-            "0 12px 48px rgba(0,0,0,0.18), 0 2px 8px rgba(236,72,153,0.08)",
+            "0 12px 48px rgba(0,0,0,0.18), 0 2px 8px rgba(17,24,39,0.08)",
           overflow: "visible",
         }}
         className="p-5"
@@ -308,7 +308,7 @@ export function DashboardTour() {
               borderLeft: "7px solid transparent",
               borderRight: "7px solid transparent",
               borderBottom: "7px solid #FFFFFF",
-              filter: "drop-shadow(0 -1px 1px rgba(236,72,153,0.12))",
+              filter: "drop-shadow(0 -1px 1px rgba(17,24,39,0.12))",
             }}
           />
         )}
@@ -324,8 +324,8 @@ export function DashboardTour() {
               height: 0,
               borderLeft: "7px solid transparent",
               borderRight: "7px solid transparent",
-              borderTop: "7px solid #FDF2F8",
-              filter: "drop-shadow(0 1px 1px rgba(236,72,153,0.12))",
+              borderTop: "7px solid #fffafc",
+              filter: "drop-shadow(0 1px 1px rgba(17,24,39,0.12))",
             }}
           />
         )}
@@ -334,7 +334,7 @@ export function DashboardTour() {
         <div className="flex items-center justify-between mb-3">
           <span
             className="text-xs font-semibold px-2.5 py-1 rounded-full"
-            style={{ background: "rgba(236,72,153,0.1)", color: "#EC4899" }}
+            style={{ background: "rgba(17,24,39,0.1)", color: "#111827" }}
           >
             {stepIndex + 1} of {STEPS.length}
           </span>
@@ -372,7 +372,7 @@ export function DashboardTour() {
             onClick={handleNext}
             className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl text-white transition-opacity hover:opacity-90 active:scale-95"
             style={{
-              background: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)",
+              background: "#111827",
               transition: "opacity 0.15s, transform 0.1s",
             }}
           >

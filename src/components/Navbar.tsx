@@ -94,10 +94,7 @@ export function Navbar() {
           "absolute bottom-0 left-0 right-0 h-px transition-opacity duration-500",
           scrolled || !isHome ? "opacity-100" : "opacity-0",
         )}
-        style={{
-          background:
-            "linear-gradient(90deg, transparent 0%, rgba(236,72,153,0.35) 30%, rgba(139,92,246,0.35) 50%, rgba(236,72,153,0.35) 70%, transparent 100%)",
-        }}
+        style={{ background: "#e5e7eb" }}
       />
       <div className="container max-w-6xl flex h-16 items-center justify-between gap-6">
         {/* Logo */}
@@ -106,12 +103,11 @@ export function Navbar() {
             whileHover={{ rotate: 20, scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex h-8 w-8 items-center justify-center rounded-full shadow-glow"
-            style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-ink"
           >
             <Sparkles className="h-4 w-4 text-white" />
           </motion.div>
-          <span className="font-serif text-xl text-ink group-hover:text-terracotta transition-colors duration-200">
+          <span className="font-semibold text-lg text-ink group-hover:opacity-80 transition-opacity duration-200">
             Renovaara
           </span>
         </Link>
@@ -123,7 +119,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="relative px-4 py-2 text-sm text-ink-stone hover:text-ink transition-colors rounded-full hover:bg-terracotta/10 group"
+                className="relative px-4 py-2 text-sm text-ink-stone hover:text-ink transition-colors rounded-full hover:bg-[#f3f4f6] group"
               >
                 {link.label}
               </Link>
@@ -153,15 +149,15 @@ export function Navbar() {
                   <ChevronDown className={`h-3 w-3 ml-1 transition-transform duration-200 ${dashOpen ? "rotate-180" : ""}`} />
                 </Button>
                 {dashOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-terracotta/20 bg-white shadow-lg py-1 z-50">
-                    <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                  <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-[#e5e7eb] bg-white shadow-lg py-1 z-50">
+                    <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
                       <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
                     </Link>
-                    <Link href="/dashboard/studio-vault" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                    <Link href="/dashboard/studio-vault" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
                       <Images className="h-3.5 w-3.5" /> My Looks
                     </Link>
-                    <div className="border-t border-terracotta/15 mt-1 pt-1">
-                      <button className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-terracotta/10 hover:text-ink transition-colors" onClick={handleSignOut}>
+                    <div className="border-t border-[#e5e7eb] mt-1 pt-1">
+                      <button className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={handleSignOut}>
                         <LogOut className="h-3.5 w-3.5" /> Sign out
                       </button>
                     </div>
@@ -192,7 +188,7 @@ export function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden ml-auto p-2.5 rounded-full text-ink-stone hover:text-ink hover:bg-terracotta/10 transition-colors"
+          className="md:hidden ml-auto p-2.5 rounded-full text-ink-stone hover:text-ink hover:bg-[#f3f4f6] transition-colors"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle navigation menu"
           aria-expanded={menuOpen}
@@ -220,7 +216,7 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="md:hidden overflow-hidden border-t border-terracotta/20 backdrop-blur-xl surface-deep"
+            className="md:hidden overflow-hidden border-t border-[#e5e7eb] bg-white"
             id="mobile-nav"
           >
             <div className="container py-4 space-y-1">
@@ -230,12 +226,12 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 text-sm text-ink-stone hover:text-ink hover:bg-terracotta/10 rounded-xl transition-colors"
+                    className="block px-4 py-3 text-sm text-ink-stone hover:text-ink hover:bg-[#f3f4f6] rounded-xl transition-colors"
                   >
                     {link.label}
                   </Link>
                 ))}
-              <div className="pt-3 flex flex-col gap-2 border-t border-terracotta/20">
+              <div className="pt-3 flex flex-col gap-2 border-t border-[#e5e7eb]">
                 <Button variant="outline" className="w-full" onClick={toggleTheme}>
                   {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {theme === "dark" ? "Light mode" : "Dark mode"}
                 </Button>

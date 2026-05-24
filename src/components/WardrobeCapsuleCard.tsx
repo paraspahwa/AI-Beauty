@@ -40,11 +40,11 @@ function amazonUrl(q: string): string {
 
 // ── Category badge styles ──────────────────────────────────────────────────────
 const CATEGORY_STYLES: Record<string, { bg: string; color: string }> = {
-  Base:     { bg: "rgba(131,24,67,0.18)",   color: "rgba(131,24,67,0.72)" },
-  Colour:   { bg: "rgba(201,149,107,0.15)",   color: "#EC4899" },
-  Neutral:  { bg: "rgba(123,110,158,0.15)",   color: "#A69CC4" },
+  Base:     { bg: "rgba(17,24,39,0.18)",   color: "rgba(17,24,39,0.72)" },
+  Colour:   { bg: "rgba(17,24,39,0.15)",   color: "#111827" },
+  Neutral:  { bg: "rgba(17,24,39,0.15)",   color: "#A69CC4" },
   Pattern:  { bg: "rgba(99,162,130,0.15)",    color: "#63A282" },
-  Evening:  { bg: "rgba(232,200,144,0.15)",   color: "#F9A8D4" },
+  Evening:  { bg: "rgba(17,24,39,0.15)",   color: "#fffafc" },
   Occasion: { bg: "rgba(220,160,200,0.15)",   color: "#D8A0C8" },
 };
 
@@ -53,12 +53,12 @@ function CapsuleSkeleton() {
   return (
     <div className="space-y-3 animate-pulse">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-4 rounded-2xl p-4" style={{ background: "rgba(131,24,67,0.08)", border: "1px solid rgba(131,24,67,0.14)" }}>
-          <div className="h-10 w-10 rounded-xl shrink-0" style={{ background: "rgba(131,24,67,0.18)" }} />
+        <div key={i} className="flex gap-4 rounded-2xl p-4" style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.14)" }}>
+          <div className="h-10 w-10 rounded-xl shrink-0" style={{ background: "rgba(17,24,39,0.18)" }} />
           <div className="flex-1 space-y-2">
-            <div className="h-3 rounded-full w-1/3" style={{ background: "rgba(131,24,67,0.18)" }} />
-            <div className="h-2.5 rounded-full w-3/4" style={{ background: "rgba(131,24,67,0.12)" }} />
-            <div className="h-2.5 rounded-full w-1/2" style={{ background: "rgba(131,24,67,0.12)" }} />
+            <div className="h-3 rounded-full w-1/3" style={{ background: "rgba(17,24,39,0.18)" }} />
+            <div className="h-2.5 rounded-full w-3/4" style={{ background: "rgba(17,24,39,0.12)" }} />
+            <div className="h-2.5 rounded-full w-1/2" style={{ background: "rgba(17,24,39,0.12)" }} />
           </div>
         </div>
       ))}
@@ -78,7 +78,7 @@ function ItemCard({ item, index }: { item: CapsuleItem; index: number }) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.03 * index, duration: 0.3 }}
       className="flex items-start gap-4 rounded-2xl p-4"
-      style={{ background: "rgba(131,24,67,0.08)", border: "1px solid rgba(131,24,67,0.14)" }}
+      style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.14)" }}
     >
       {/* Colour swatch + number */}
       <div className="flex flex-col items-center gap-1.5 shrink-0">
@@ -87,7 +87,7 @@ function ItemCard({ item, index }: { item: CapsuleItem; index: number }) {
           style={{ background: item.hex, border: "2px solid rgba(255,255,255,0.12)" }}
           title={item.hex}
         />
-        <span className="text-[10px] font-bold tabular-nums" style={{ color: "rgba(131,24,67,0.35)" }}>
+        <span className="text-[10px] font-bold tabular-nums" style={{ color: "rgba(17,24,39,0.35)" }}>
           {String(item.number).padStart(2, "0")}
         </span>
       </div>
@@ -95,13 +95,13 @@ function ItemCard({ item, index }: { item: CapsuleItem; index: number }) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1">
-          <p className="text-sm font-semibold" style={{ color: "#831843" }}>{item.name}</p>
+          <p className="text-sm font-semibold" style={{ color: "#111827" }}>{item.name}</p>
           <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={catStyle}>
             {item.category}
           </span>
         </div>
 
-        <p className="text-xs leading-relaxed mb-1" style={{ color: "rgba(131,24,67,0.62)" }}>
+        <p className="text-xs leading-relaxed mb-1" style={{ color: "rgba(17,24,39,0.62)" }}>
           {item.why}
         </p>
 
@@ -203,17 +203,17 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
         animate={{ opacity: 1, y: 0 }}
         className="rounded-3xl p-6"
         style={{
-          background: "linear-gradient(135deg, rgba(201,149,107,0.15) 0%, rgba(123,110,158,0.08) 100%)",
-          border: "1px solid rgba(201,149,107,0.22)",
+          background: "linear-gradient(135deg, rgba(17,24,39,0.15) 0%, rgba(17,24,39,0.08) 100%)",
+          border: "1px solid rgba(17,24,39,0.22)",
         }}
       >
         <p className="text-[10px] uppercase tracking-[0.35em] font-semibold mb-1" style={{ color: "#C8A96E" }}>
           Your Bespoke Capsule
         </p>
-        <h2 className="font-serif text-2xl mb-1" style={{ color: "#831843" }}>
+        <h2 className="font-sans text-2xl mb-1" style={{ color: "#111827" }}>
           {season} · {undertone} Undertone
         </h2>
-        <p className="text-sm mb-4" style={{ color: "rgba(131,24,67,0.55)" }}>
+        <p className="text-sm mb-4" style={{ color: "rgba(17,24,39,0.55)" }}>
           AI-curated for your exact colour season
           {skinType ? `, ${skinType.toLowerCase()} skin` : ""}
           {metals.length > 0 ? `, ${metals.slice(0, 2).join(" & ")} metals` : ""}.
@@ -222,7 +222,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
 
         {/* Hero image — paid users only */}
         {capsule?.heroImageUrl && (
-          <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(201,149,107,0.2)" }}>
+          <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(17,24,39,0.2)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={capsule.heroImageUrl}
@@ -236,7 +236,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
         {/* Live palette swatches */}
         {paletteSwatches.length > 0 && (
           <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <span className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(131,24,67,0.55)" }}>
+            <span className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(17,24,39,0.55)" }}>
               Your palette
             </span>
             {paletteSwatches.map((c) => (
@@ -257,7 +257,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
               onClick={() => generate(false)}
               disabled={loading || !hasData}
               className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F" }}
+              style={{ background: "#111827", color: "#3D2B1F" }}
             >
               {loading
                 ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Generating...</>
@@ -269,7 +269,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
               onClick={() => generate(true)}
               disabled={loading}
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all hover:opacity-80 disabled:opacity-40"
-              style={{ background: "rgba(131,24,67,0.16)", color: "rgba(131,24,67,0.68)", border: "1px solid rgba(131,24,67,0.20)" }}
+              style={{ background: "rgba(17,24,39,0.16)", color: "rgba(17,24,39,0.68)", border: "1px solid rgba(17,24,39,0.20)" }}
             >
               <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
               {loading ? "Regenerating..." : "Regenerate"}
@@ -284,7 +284,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
         )}
 
         {capsule && (
-          <p className="mt-2 text-[10px]" style={{ color: "rgba(131,24,67,0.45)" }}>
+          <p className="mt-2 text-[10px]" style={{ color: "rgba(17,24,39,0.45)" }}>
             Generated {new Date(capsule.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
             {" · "}cached for 30 days
           </p>
@@ -295,10 +295,10 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
       {!hasData && !capsule && !loading && (
         <div
           className="flex flex-col items-center justify-center gap-3 py-16 rounded-3xl text-center"
-          style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(131,24,67,0.18)" }}
+          style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(17,24,39,0.18)" }}
         >
-          <ShoppingBag className="h-10 w-10 opacity-20" style={{ color: "#EC4899" }} />
-          <p className="text-sm" style={{ color: "rgba(131,24,67,0.5)" }}>
+          <ShoppingBag className="h-10 w-10 opacity-20" style={{ color: "#111827" }} />
+          <p className="text-sm" style={{ color: "rgba(17,24,39,0.5)" }}>
             Complete a beauty analysis first to unlock your personalized capsule.
           </p>
         </div>
@@ -321,8 +321,8 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
                   className="rounded-full px-4 py-1.5 text-xs font-medium transition-all"
                   style={
                     active
-                      ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F" }
-                      : { background: "rgba(131,24,67,0.12)", color: "rgba(131,24,67,0.62)", border: "1px solid rgba(131,24,67,0.18)" }
+                      ? { background: "#111827", color: "#3D2B1F" }
+                      : { background: "rgba(17,24,39,0.12)", color: "rgba(17,24,39,0.62)", border: "1px solid rgba(17,24,39,0.18)" }
                   }
                 >
                   {cat}
@@ -344,7 +344,7 @@ export function WardrobeCapsuleCard({ prefs, latest, initialCapsule }: Props) {
           </AnimatePresence>
 
           {/* Affiliate disclosure */}
-          <p className="text-center text-[10px]" style={{ color: "rgba(131,24,67,0.40)" }}>
+          <p className="text-center text-[10px]" style={{ color: "rgba(17,24,39,0.40)" }}>
             Shopping links may include affiliate tracking · Renovaara earns a small commission at no extra cost to you
           </p>
         </>

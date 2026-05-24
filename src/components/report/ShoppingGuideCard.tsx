@@ -268,7 +268,7 @@ export function ShoppingGuideCard({ report }: Props) {
               Shop Your Look
             </span>
           </div>
-          <h2 className="font-serif text-2xl" style={{ color: "#3D2B1F" }}>
+          <h2 className="font-sans text-2xl" style={{ color: "#3D2B1F" }}>
             Curated For You
           </h2>
           <p className="mt-1 text-sm" style={{ color: "#7A6A5A" }}>
@@ -277,7 +277,7 @@ export function ShoppingGuideCard({ report }: Props) {
         </div>
         <div
           className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium"
-          style={{ background: "rgba(201,149,107,0.12)", color: "#C17A5F", border: "1px solid rgba(201,149,107,0.25)" }}
+          style={{ background: "rgba(17,24,39,0.12)", color: "#C17A5F", border: "1px solid rgba(17,24,39,0.25)" }}
         >
           <Sparkles className="h-3 w-3" />
           AI-curated

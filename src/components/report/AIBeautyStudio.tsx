@@ -327,7 +327,7 @@ function ResultPanel({ url, hdUrl, lowResUrl, status, onRetry, onDownload, isDow
         <div className="relative h-14 w-20">
           <div
             className="absolute inset-0 rounded-full"
-            style={{ background: "linear-gradient(135deg, rgba(236,72,153,0.2), rgba(14,165,164,0.2))" }}
+            style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.2), rgba(14,165,164,0.2))" }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <X className="h-8 w-8" style={{ color: "#C06B3E" }} />
@@ -426,7 +426,7 @@ const HAIR_COLORS = [
   { value: "balayage",        label: "Balayage",         hex: "#C49A6C", group: "Style" },
   { value: "blue",            label: "Blue",             hex: "#2E5FA3", group: "Fashion" },
   { value: "green",           label: "Green",            hex: "#2A8C8C", group: "Fashion" },
-  { value: "purple",          label: "Purple",           hex: "#9B7CB6", group: "Fashion" },
+  { value: "purple",          label: "Purple",           hex: "#111827", group: "Fashion" },
   { value: "pink",            label: "Pink",             hex: "#D4748A", group: "Fashion" },
   { value: "rainbow",         label: "Rainbow",          hex: "#E8A040", group: "Fashion" },
 ] as const;
@@ -470,7 +470,7 @@ function HistoryStrip({ history, currentUrl, onSelect, onClear, onDownload, onUs
             style={{
               width: 124,
               background: "#FFFBF8",
-              border: item.url === currentUrl ? "1px solid #8B5CF6" : "1px solid #E8DDD0",
+              border: item.url === currentUrl ? "1px solid #111827" : "1px solid #E8DDD0",
             }}
           >
             <button
@@ -489,7 +489,7 @@ function HistoryStrip({ history, currentUrl, onSelect, onClear, onDownload, onUs
                 type="button"
                 onClick={() => onSelect(item)}
                 className="rounded-full px-2 py-1 text-[9px] font-semibold"
-                style={{ background: "rgba(139,92,246,0.12)", color: "#8B5CF6" }}
+                style={{ background: "rgba(17,24,39,0.12)", color: "#111827" }}
               >
                 View
               </button>
@@ -508,7 +508,7 @@ function HistoryStrip({ history, currentUrl, onSelect, onClear, onDownload, onUs
                   type="button"
                   onClick={() => onDownload(item)}
                   className="rounded-full px-2 py-1 text-[9px] font-semibold"
-                  style={{ background: "rgba(236,72,153,0.12)", color: "#EC4899" }}
+                  style={{ background: "rgba(17,24,39,0.12)", color: "#111827" }}
                 >
                   Save
                 </button>
@@ -527,7 +527,7 @@ function ModeTab({ label, active, onClick }: { label: string; active: boolean; o
     <button onClick={onClick}
       className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all"
       style={active
-        ? { background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 1px 8px rgba(201,149,107,0.30)" }
+        ? { background: "#111827", color: "#3D2B1F", boxShadow: "0 1px 8px rgba(17,24,39,0.30)" }
         : { background: "transparent", color: "#9C7D5B" }}>
       {label}
     </button>
@@ -1160,9 +1160,9 @@ export function AIBeautyStudio({
   if (!isPaid) {
     return (
       <div className="rounded-3xl p-10 text-center"
-        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(201,149,107,0.18)" }}>
+        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.18)" }}>
         <Lock className="h-10 w-10 mx-auto mb-4" style={{ color: "#C8A96E" }} />
-        <p className="text-base font-semibold mb-2" style={{ color: "#F9A8D4" }}>AI Beauty Studio is a premium feature</p>
+        <p className="text-base font-semibold mb-2" style={{ color: "#fffafc" }}>AI Beauty Studio is a premium feature</p>
         <p className="text-sm" style={{ color: "#9C7D5B" }}>
           Unlock to try on outfits, apply makeup looks, and change your hair — all powered by AI.
         </p>
@@ -1241,7 +1241,7 @@ export function AIBeautyStudio({
         <div className="px-6 py-5 flex items-center gap-3"
           style={{ borderBottom: "1px solid #E8DDD0", background: "linear-gradient(135deg,rgba(200,169,110,0.08),rgba(232,221,208,0.12))" }}>
           <div className="flex h-9 w-9 items-center justify-center rounded-xl"
-            style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)" }}>
+            style={{ background: "#111827" }}>
             <Sparkles className="h-4 w-4" style={{ color: "#3D2B1F" }} />
           </div>
           <div>
@@ -1269,8 +1269,8 @@ export function AIBeautyStudio({
                 ? "rgba(239,68,68,0.08)"
                 : isNearLimit
                   ? "rgba(245,158,11,0.08)"
-                  : "rgba(201,149,107,0.07)",
-              border: `1px solid ${isAtLimit ? "rgba(239,68,68,0.25)" : isNearLimit ? "rgba(245,158,11,0.25)" : "rgba(201,149,107,0.2)"}`,
+                  : "rgba(17,24,39,0.07)",
+              border: `1px solid ${isAtLimit ? "rgba(239,68,68,0.25)" : isNearLimit ? "rgba(245,158,11,0.25)" : "rgba(17,24,39,0.2)"}`,
             }}>
             <div className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 shrink-0" style={{ color: isAtLimit ? "#EF4444" : isNearLimit ? "#F59E0B" : "#C8A96E" }} />
@@ -1297,7 +1297,7 @@ export function AIBeautyStudio({
         )}
 
         {/* ── Reusable source selector ── */}
-        <div className="mx-5 mt-3 rounded-2xl px-4 py-3" style={{ background: "rgba(123,110,158,0.06)", border: "1px solid rgba(123,110,158,0.18)" }}>
+        <div className="mx-5 mt-3 rounded-2xl px-4 py-3" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.18)" }}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Source for next generation</p>
@@ -1310,7 +1310,7 @@ export function AIBeautyStudio({
             <button
               onClick={() => { setSourceAssetId(null); setSourcePreviewUrl(null); }}
               className="rounded-full px-3 py-1.5 text-[11px] font-medium"
-              style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(201,149,107,0.3)", color: "#7C5A3A" }}
+              style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(17,24,39,0.3)", color: "#7C5A3A" }}
             >
               Use original
             </button>
@@ -1330,7 +1330,7 @@ export function AIBeautyStudio({
                     setSourcePreviewUrl(item.imageUrl);
                   }}
                   className="shrink-0 rounded-xl overflow-hidden"
-                  style={{ border: sourceAssetId === item.id ? "2px solid #8B5CF6" : "2px solid #E8DDD0", width: 56, height: 56 }}
+                  style={{ border: sourceAssetId === item.id ? "2px solid #111827" : "2px solid #E8DDD0", width: 56, height: 56 }}
                   title={`${item.tool} • ${new Date(item.createdAt).toLocaleString("en-IN")}`}
                 >
                   {item.imageUrl ? (
@@ -1416,7 +1416,7 @@ export function AIBeautyStudio({
               <button onClick={generateClothing}
                 disabled={!clothFile || status === "loading" || (photoMode === "full" && !fullBodyFile)}
                 className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
                 {status === "loading"
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Try It On</>}
@@ -1443,13 +1443,13 @@ export function AIBeautyStudio({
                   <button
                     onClick={() => setMkSubMode("custom")}
                     className="flex-1 py-2 text-xs font-semibold transition-all"
-                    style={{ background: mkSubMode === "custom" ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0", color: mkSubMode === "custom" ? "#fff" : "#9C7D5B" }}>
+                    style={{ background: mkSubMode === "custom" ? "#111827" : "#FDF6F0", color: mkSubMode === "custom" ? "#fff" : "#9C7D5B" }}>
                     ✦ Custom Controls
                   </button>
                   <button
                     onClick={() => setMkSubMode("inspo")}
                     className="flex-1 py-2 text-xs font-semibold transition-all"
-                    style={{ background: mkSubMode === "inspo" ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0", color: mkSubMode === "inspo" ? "#fff" : "#9C7D5B" }}>
+                    style={{ background: mkSubMode === "inspo" ? "#111827" : "#FDF6F0", color: mkSubMode === "inspo" ? "#fff" : "#9C7D5B" }}>
                     ✨ Inspo Transfer
                   </button>
                 </div>
@@ -1477,7 +1477,7 @@ export function AIBeautyStudio({
                       ) : (
                         <label className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed cursor-pointer py-6 transition-colors hover:bg-pink-50"
                           style={{ borderColor: "#E8DDD0" }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" style={{ color: "#EC4899" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M7 10l5-5 5 5M12 5v10"/></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" style={{ color: "#111827" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M7 10l5-5 5 5M12 5v10"/></svg>
                           <span className="text-xs font-semibold" style={{ color: "#9C7D5B" }}>Tap to upload inspo photo</span>
                           <input type="file" accept="image/*" className="sr-only" onChange={(e) => {
                             const f = e.target.files?.[0];
@@ -1490,14 +1490,14 @@ export function AIBeautyStudio({
                         </label>
                       )}
                       {inspoDetectedLook && (
-                        <div className="rounded-xl px-3 py-2 text-xs" style={{ background: "rgba(139,92,246,0.08)", color: "#6B5344", border: "1px solid rgba(139,92,246,0.18)" }}>
+                        <div className="rounded-xl px-3 py-2 text-xs" style={{ background: "rgba(17,24,39,0.08)", color: "#6B5344", border: "1px solid rgba(17,24,39,0.18)" }}>
                           ✨ Detected look: <strong>{inspoDetectedLook}</strong>
                         </div>
                       )}
                     </div>
                     <button onClick={() => void generateMakeupTransfer()} disabled={!inspoFile || status === "loading"}
                       className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                      style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
                       {status === "loading"
                         ? <><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Transferring…</>
                         : <>✨ Transfer Makeup</>}
@@ -1519,7 +1519,7 @@ export function AIBeautyStudio({
                       type="button"
                       onClick={() => setShowAdvancedMakeup((value) => !value)}
                       className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: "rgba(123,110,158,0.10)", border: "1px solid rgba(123,110,158,0.18)", color: "#7B6E9E" }}
+                      style={{ background: "rgba(17,24,39,0.10)", border: "1px solid rgba(17,24,39,0.18)", color: "#7B6E9E" }}
                     >
                       {showAdvancedMakeup ? "Hide fine-tune" : "Fine-tune manually"}
                     </button>
@@ -1536,10 +1536,10 @@ export function AIBeautyStudio({
                           disabled={status === "loading"}
                           className="rounded-2xl px-4 py-3 text-left transition-all disabled:opacity-40"
                           style={{
-                            background: active ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0",
+                            background: active ? "#111827" : "#FDF6F0",
                             color: active ? "#fff" : "#3D2B1F",
                             border: active ? "1px solid transparent" : "1px solid #E8DDD0",
-                            boxShadow: active ? "0 4px 16px rgba(139,92,246,0.18)" : "none",
+                            boxShadow: active ? "0 4px 16px rgba(17,24,39,0.18)" : "none",
                           }}
                         >
                           <div className="flex items-center justify-between gap-2">
@@ -1573,12 +1573,12 @@ export function AIBeautyStudio({
                       className="h-8 w-8 rounded-full transition-transform hover:scale-110 focus:outline-none disabled:opacity-40 shrink-0"
                       style={{
                         background: c.hex,
-                        border: mkLip === c.value ? "3px solid #EC4899" : "2px solid rgba(0,0,0,0.12)",
-                        boxShadow: mkLip === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #EC4899" : "0 1px 3px rgba(0,0,0,0.18)",
+                        border: mkLip === c.value ? "3px solid #111827" : "2px solid rgba(0,0,0,0.12)",
+                        boxShadow: mkLip === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #111827" : "0 1px 3px rgba(0,0,0,0.18)",
                       }} />
                   ))}
                 </div>
-                <p className="text-[11px] font-medium" style={{ color: "#EC4899" }}>
+                <p className="text-[11px] font-medium" style={{ color: "#111827" }}>
                   {LIP_COLORS.find((c) => c.value === mkLip)?.label ?? "—"}
                 </p>
               </section>
@@ -1593,7 +1593,7 @@ export function AIBeautyStudio({
                       disabled={status === "loading"}
                       className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-medium transition-all hover:opacity-80 disabled:opacity-40 w-full"
                       style={{
-                        background: mkEye === e.value ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#F5EDE4",
+                        background: mkEye === e.value ? "#111827" : "#F5EDE4",
                         color: mkEye === e.value ? "#3D2B1F" : "#6B5344",
                         border: mkEye === e.value ? "1.5px solid transparent" : "1.5px solid #E0CEBC",
                       }}>
@@ -1622,13 +1622,13 @@ export function AIBeautyStudio({
                       <div className="h-8 w-8 rounded-full flex items-center justify-center"
                         style={{
                           background: b.hex || "#E8DDD0",
-                          border: mkBlush === b.value ? "3px solid #EC4899" : "2px solid rgba(0,0,0,0.08)",
-                          boxShadow: mkBlush === b.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #EC4899" : "0 1px 3px rgba(0,0,0,0.12)",
+                          border: mkBlush === b.value ? "3px solid #111827" : "2px solid rgba(0,0,0,0.08)",
+                          boxShadow: mkBlush === b.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #111827" : "0 1px 3px rgba(0,0,0,0.12)",
                         }}>
                         {!b.hex && <span className="text-[8px]" style={{ color: "#9C7D5B" }}>✕</span>}
                       </div>
                       <span className="text-[9px] text-center w-10 leading-tight"
-                        style={{ color: mkBlush === b.value ? "#EC4899" : "#9C7D5B" }}>
+                        style={{ color: mkBlush === b.value ? "#111827" : "#9C7D5B" }}>
                         {b.label}
                       </span>
                     </button>
@@ -1642,7 +1642,7 @@ export function AIBeautyStudio({
                         disabled={status === "loading"}
                         className="rounded-lg py-1.5 text-[10px] font-semibold transition-all disabled:opacity-40"
                         style={{
-                          background: mkBlushInt === b.value ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#F5EDE4",
+                          background: mkBlushInt === b.value ? "#111827" : "#F5EDE4",
                           color: mkBlushInt === b.value ? "#3D2B1F" : "#9C7D5B",
                           border: mkBlushInt === b.value ? "none" : "1px solid #E0CEBC",
                         }}>
@@ -1665,11 +1665,11 @@ export function AIBeautyStudio({
                       <div className="h-8 w-8 rounded-full"
                         style={{
                           background: f.hex,
-                          border: mkFoundation === f.value ? "3px solid #EC4899" : "2px solid rgba(0,0,0,0.08)",
-                          boxShadow: mkFoundation === f.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #EC4899" : "0 1px 3px rgba(0,0,0,0.12)",
+                          border: mkFoundation === f.value ? "3px solid #111827" : "2px solid rgba(0,0,0,0.08)",
+                          boxShadow: mkFoundation === f.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #111827" : "0 1px 3px rgba(0,0,0,0.12)",
                         }} />
                       <span className="text-[9px] text-center w-10 leading-tight"
-                        style={{ color: mkFoundation === f.value ? "#EC4899" : "#9C7D5B" }}>
+                        style={{ color: mkFoundation === f.value ? "#111827" : "#9C7D5B" }}>
                         {f.label}
                       </span>
                     </button>
@@ -1690,7 +1690,7 @@ export function AIBeautyStudio({
                     disabled={status === "loading"}
                     type="button"
                     className="relative ml-auto h-6 w-11 flex-none appearance-none overflow-hidden rounded-full border-0 p-0 transition-colors disabled:opacity-40"
-                    style={{ background: mkContour ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#D8CEC4" }}
+                    style={{ background: mkContour ? "#111827" : "#D8CEC4" }}
                   >
                     <span
                       className="absolute inset-y-0 my-auto h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
@@ -1710,7 +1710,7 @@ export function AIBeautyStudio({
                       disabled={status === "loading"}
                       className="rounded-xl py-2.5 px-2 text-[11px] font-semibold text-center transition-all disabled:opacity-40"
                       style={{
-                        background: mkEyeliner === l.value ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#F5EDE4",
+                        background: mkEyeliner === l.value ? "#111827" : "#F5EDE4",
                         color: mkEyeliner === l.value ? "#3D2B1F" : "#6B5344",
                         border: mkEyeliner === l.value ? "1.5px solid transparent" : "1.5px solid #E0CEBC",
                       }}>
@@ -1724,7 +1724,7 @@ export function AIBeautyStudio({
               {/* Generate button */}
               <button onClick={generateMakeup} disabled={status === "loading"}
                 className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
                 {status === "loading"
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Apply Makeup</>}
@@ -1772,7 +1772,7 @@ export function AIBeautyStudio({
                     type="button"
                     onClick={() => setShowAdvancedHair((value) => !value)}
                     className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-80"
-                    style={{ background: "rgba(123,110,158,0.10)", border: "1px solid rgba(123,110,158,0.18)", color: "#7B6E9E" }}
+                    style={{ background: "rgba(17,24,39,0.10)", border: "1px solid rgba(17,24,39,0.18)", color: "#7B6E9E" }}
                   >
                     {showAdvancedHair ? "Hide fine-tune" : "Fine-tune manually"}
                   </button>
@@ -1789,10 +1789,10 @@ export function AIBeautyStudio({
                         disabled={status === "loading"}
                         className="rounded-2xl px-4 py-3 text-left transition-all disabled:opacity-40"
                         style={{
-                          background: active ? "linear-gradient(135deg,#EC4899,#8B5CF6)" : "#FDF6F0",
+                          background: active ? "#111827" : "#FDF6F0",
                           color: active ? "#fff" : "#3D2B1F",
                           border: active ? "1px solid transparent" : "1px solid #E8DDD0",
-                          boxShadow: active ? "0 4px 16px rgba(139,92,246,0.18)" : "none",
+                          boxShadow: active ? "0 4px 16px rgba(17,24,39,0.18)" : "none",
                         }}
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -1826,11 +1826,11 @@ export function AIBeautyStudio({
                       <div className="h-8 w-8 rounded-full transition-all"
                         style={{
                           backgroundColor: c.hex,
-                          border: hairColor === c.value ? "3px solid #EC4899" : "2px solid rgba(0,0,0,0.12)",
-                          boxShadow: hairColor === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #EC4899" : "0 1px 3px rgba(0,0,0,0.15)",
+                          border: hairColor === c.value ? "3px solid #111827" : "2px solid rgba(0,0,0,0.12)",
+                          boxShadow: hairColor === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #111827" : "0 1px 3px rgba(0,0,0,0.15)",
                         }} />
                       <span className="text-[7px] leading-tight max-w-[32px] text-center"
-                        style={{ color: hairColor === c.value ? "#EC4899" : "#B8A898" }}>
+                        style={{ color: hairColor === c.value ? "#111827" : "#B8A898" }}>
                         {c.label.split(" ")[0]}
                       </span>
                     </button>
@@ -1846,7 +1846,7 @@ export function AIBeautyStudio({
               )}
               <button onClick={generateHair} disabled={status === "loading"}
                 className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: "linear-gradient(135deg,#EC4899,#8B5CF6)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
                 {status === "loading"
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Try Hair Look</>}
@@ -1867,7 +1867,7 @@ export function AIBeautyStudio({
           <div className="p-5">
             <div
               className="rounded-3xl border p-8 text-center"
-              style={{ background: "linear-gradient(145deg, rgba(236,72,153,0.06), rgba(34,211,238,0.08))", borderColor: "#E8DDD0" }}
+              style={{ background: "linear-gradient(145deg, rgba(17,24,39,0.06), rgba(34,211,238,0.08))", borderColor: "#E8DDD0" }}
             >
               <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>
                 AR Try-On Preview
@@ -1878,7 +1878,7 @@ export function AIBeautyStudio({
               <p className="mt-2 text-sm" style={{ color: "#9C7D5B" }}>
                 We are preparing live camera overlays for glasses, makeup, and hair experiments.
               </p>
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold" style={{ background: "rgba(139,92,246,0.12)", color: "#8B5CF6" }}>
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.12)", color: "#111827" }}>
                 Beta waitlist opens in a future update
               </div>
             </div>
@@ -1901,7 +1901,7 @@ export function AIBeautyStudio({
                     type="button"
                     onClick={() => setShowAdvancedOutfit((value) => !value)}
                     className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-80"
-                    style={{ background: "rgba(123,110,158,0.10)", border: "1px solid rgba(123,110,158,0.18)", color: "#7B6E9E" }}
+                    style={{ background: "rgba(17,24,39,0.10)", border: "1px solid rgba(17,24,39,0.18)", color: "#7B6E9E" }}
                   >
                     {showAdvancedOutfit ? "Hide fine-tune" : "Fine-tune manually"}
                   </button>
@@ -1918,7 +1918,7 @@ export function AIBeautyStudio({
                         disabled={outfitLoading}
                         className="rounded-2xl px-4 py-3 text-left transition-all disabled:opacity-40"
                         style={{
-                          background: active ? "linear-gradient(135deg,#F97316,#EC4899)" : "#FDF6F0",
+                          background: active ? "#111827" : "#FDF6F0",
                           color: active ? "#fff" : "#3D2B1F",
                           border: active ? "1px solid transparent" : "1px solid #E8DDD0",
                           boxShadow: active ? "0 4px 16px rgba(249,115,22,0.18)" : "none",
@@ -1979,7 +1979,7 @@ export function AIBeautyStudio({
                   onClick={() => { void generateOutfits(); }}
                   disabled={outfitLoading}
                   className="shrink-0 flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ background: "linear-gradient(135deg,#F97316,#EC4899)", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(201,149,107,0.35)" }}>
+                  style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
                   {outfitLoading
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                     : <><Sparkles className="h-4 w-4" /> Generate Outfits</>}
@@ -2030,7 +2030,7 @@ export function AIBeautyStudio({
                         <p className="text-[10px]" style={{ color: "#9C7D5B" }}>
                           {new Date(session.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                         </p>
-                        <p className="text-[10px] mt-1" style={{ color: "#8B5CF6" }}>
+                        <p className="text-[10px] mt-1" style={{ color: "#111827" }}>
                           {session.season} · {session.undertone}
                         </p>
                         <div className="mt-2 flex items-center gap-1.5">
@@ -2039,8 +2039,8 @@ export function AIBeautyStudio({
                             onClick={(e) => { e.stopPropagation(); void setOutfitFeedback(session.id, "liked"); }}
                             className="rounded-full px-2 py-1 text-[9px] font-semibold"
                             style={{
-                              background: (session.feedback?.liked ?? false) ? "rgba(236,72,153,0.18)" : "rgba(236,72,153,0.08)",
-                              color: "#EC4899",
+                              background: (session.feedback?.liked ?? false) ? "rgba(17,24,39,0.18)" : "rgba(17,24,39,0.08)",
+                              color: "#111827",
                             }}
                           >
                             {(session.feedback?.liked ?? false) ? "Liked" : "Like"}
@@ -2050,8 +2050,8 @@ export function AIBeautyStudio({
                             onClick={(e) => { e.stopPropagation(); void setOutfitFeedback(session.id, "saved"); }}
                             className="rounded-full px-2 py-1 text-[9px] font-semibold"
                             style={{
-                              background: (session.feedback?.saved ?? false) ? "rgba(139,92,246,0.18)" : "rgba(139,92,246,0.08)",
-                              color: "#8B5CF6",
+                              background: (session.feedback?.saved ?? false) ? "rgba(17,24,39,0.18)" : "rgba(17,24,39,0.08)",
+                              color: "#111827",
                             }}
                           >
                             {(session.feedback?.saved ?? false) ? "Saved" : "Save"}
@@ -2095,7 +2095,7 @@ export function AIBeautyStudio({
                         ))}
                       </div>
                       <p className="mt-2 text-[11px]" style={{ color: "#9C7D5B" }}>{look.whyItWorks}</p>
-                      <p className="mt-1 text-[11px] font-medium" style={{ color: "#8B5CF6" }}>Metal: {look.metal}</p>
+                      <p className="mt-1 text-[11px] font-medium" style={{ color: "#111827" }}>Metal: {look.metal}</p>
                     </div>
                   ))}
                 </div>
@@ -2131,7 +2131,7 @@ export function AIBeautyStudio({
               {currentBatch.length > 1 && (
                 <button
                   className="text-xs font-medium px-3 py-1 rounded-full transition-all hover:opacity-80"
-                  style={{ background: "#F5EFE7", color: "#8B5CF6" }}
+                  style={{ background: "#F5EFE7", color: "#111827" }}
                   onClick={() => setSelectedIndexes(mode, currentBatch.map((_, i) => i))}
                 >
                   Select All
@@ -2147,7 +2147,7 @@ export function AIBeautyStudio({
                 style={{
                   minWidth: 120,
                   borderColor: normalizedActiveIndex === idx
-                    ? "#8B5CF6"
+                    ? "#111827"
                     : selectedBatchIndexes[mode].includes(idx)
                       ? "#C8A96E"
                       : "#E8DDD0",
@@ -2160,7 +2160,7 @@ export function AIBeautyStudio({
                     : [...selected, idx]);
                 }}
                   className="absolute top-2 left-2 z-10 w-5 h-5 rounded-full border-2 border-iris bg-white flex items-center justify-center cursor-pointer"
-                  style={{ boxShadow: "0 1px 4px rgba(139,92,246,0.10)" }}
+                  style={{ boxShadow: "0 1px 4px rgba(17,24,39,0.10)" }}
                 >
                   {selectedBatchIndexes[mode].includes(idx) && <span className="block w-3 h-3 rounded-full bg-iris" />}
                 </div>

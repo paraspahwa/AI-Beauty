@@ -14,6 +14,27 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
 const REPORT_TABS: readonly ReportTab[] = ["face", "skin", "glasses", "hair", "studio", "shop"] as const;
 
+function parsePaywallPlan(value: string | string[] | undefined): "report" | "studio_pro" {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return candidate === "studio_pro" ? "studio_pro" : "report";
+}
+
+function parseAppReturnUrl(value: string | string[] | undefined): string | null {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  if (!candidate) return null;
+
+  try {
+    const parsed = new URL(candidate);
+    if (["renovaara:", "exp:", "exps:"].includes(parsed.protocol)) {
+      return candidate;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   return { title: "Beauty Report — Renovaara" };
 }
@@ -139,12 +160,15 @@ export default async function ReportPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string | string[]; sourceAssetId?: string | string[] }>;
+  searchParams: Promise<{ tab?: string | string[]; sourceAssetId?: string | string[]; appReturnTo?: string | string[]; paywall?: string | string[]; plan?: string | string[] }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
   const tabParam = Array.isArray(query.tab) ? query.tab[0] : query.tab;
   const sourceParam = Array.isArray(query.sourceAssetId) ? query.sourceAssetId[0] : query.sourceAssetId;
+  const appReturnToUrl = parseAppReturnUrl(query.appReturnTo);
+  const initialPaywallOpen = (Array.isArray(query.paywall) ? query.paywall[0] : query.paywall) === "open";
+  const initialPaywallPlan = parsePaywallPlan(query.plan);
   const initialTab: ReportTab = tabParam && REPORT_TABS.includes(tabParam as ReportTab)
     ? (tabParam as ReportTab)
     : "face";
@@ -231,6 +255,9 @@ export default async function ReportPage({
       report={report}
       initialTab={initialTab}
       initialStudioSourceAssetId={initialSourceAssetId}
+      appReturnToUrl={appReturnToUrl}
+      initialPaywallOpen={initialPaywallOpen}
+      initialPaywallPlan={initialPaywallPlan}
     />
   );
 }

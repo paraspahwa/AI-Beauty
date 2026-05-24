@@ -118,16 +118,16 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
                   }`}
                   style={{
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(236,72,153,0.18), rgba(139,92,246,0.14))"
+                      ? "linear-gradient(145deg, rgba(17,24,39,0.18), rgba(17,24,39,0.14))"
                       : isComplete
-                      ? "rgba(139,92,246,0.15)"
+                      ? "rgba(17,24,39,0.15)"
                       : "rgba(255,255,255,0.06)",
                     border: isActive
-                      ? "1px solid rgba(236,72,153,0.3)"
+                      ? "1px solid rgba(17,24,39,0.3)"
                       : isComplete
-                      ? "1px solid rgba(139,92,246,0.20)"
+                      ? "1px solid rgba(17,24,39,0.20)"
                       : "1px solid rgba(255,255,255,0.08)",
-                    boxShadow: isActive ? "0 10px 24px rgba(131,24,67,0.16)" : "none",
+                    boxShadow: isActive ? "0 10px 24px rgba(17,24,39,0.16)" : "none",
                   }}
                 >
                   {/* Icon */}
@@ -137,12 +137,12 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
                     }`}
                     style={{
                       background: isComplete
-                        ? "rgba(123,110,158,0.8)"
+                        ? "rgba(17,24,39,0.8)"
                         : isActive
-                        ? "linear-gradient(135deg,#EC4899,#8B5CF6)"
-                        : "rgba(131,24,67,0.12)",
-                      color: isComplete || isActive ? "#FFFFFF" : "rgba(131,24,67,0.45)",
-                      boxShadow: isActive ? "0 0 20px rgba(236,72,153,0.3)" : "none",
+                        ? "#111827"
+                        : "rgba(17,24,39,0.12)",
+                      color: isComplete || isActive ? "#FFFFFF" : "rgba(17,24,39,0.45)",
+                      boxShadow: isActive ? "0 0 20px rgba(17,24,39,0.3)" : "none",
                     }}
                   >
                     {isComplete ? (
@@ -187,7 +187,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
             className="rounded-2xl p-6 backdrop-blur-sm"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
           >
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#EC4899" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#111827" }}>
               Did you know?
             </p>
             <motion.p

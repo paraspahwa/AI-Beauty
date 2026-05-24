@@ -48,8 +48,8 @@ const CHIP_BASE: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   cursor: "pointer",
-  border: "1px solid rgba(201,149,107,0.25)",
-  background: "rgba(201,149,107,0.06)",
+  border: "1px solid rgba(17,24,39,0.25)",
+  background: "rgba(17,24,39,0.06)",
   color: "rgba(255,255,255,0.7)",
   transition: "all 0.15s",
   userSelect: "none",
@@ -57,9 +57,9 @@ const CHIP_BASE: React.CSSProperties = {
 
 const CHIP_ACTIVE: React.CSSProperties = {
   ...CHIP_BASE,
-  background: "rgba(201,149,107,0.18)",
-  border: "1px solid rgba(201,149,107,0.7)",
-  color: "#F9A8D4",
+  background: "rgba(17,24,39,0.18)",
+  border: "1px solid rgba(17,24,39,0.7)",
+  color: "#fffafc",
 };
 
 function Chip({
@@ -93,7 +93,7 @@ function Question({
     <div className="mb-5">
       <p
         className="text-[10px] uppercase tracking-[0.2em] mb-1"
-        style={{ color: "#EC4899" }}
+        style={{ color: "#111827" }}
       >
         {number} of {total}
       </p>
@@ -139,17 +139,17 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
             className="relative w-full max-w-sm rounded-3xl p-6"
             style={{
               background: "linear-gradient(145deg,#13131e,#1b1b2a)",
-              border: "1px solid rgba(201,149,107,0.2)",
+              border: "1px solid rgba(17,24,39,0.2)",
               boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
             }}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" style={{ color: "#EC4899" }} />
+                <Sparkles className="h-4 w-4" style={{ color: "#111827" }} />
                 <p
                   className="text-xs font-bold uppercase tracking-[0.2em]"
-                  style={{ color: "#EC4899" }}
+                  style={{ color: "#111827" }}
                 >
                   Personalize Your Analysis
                 </p>
@@ -213,8 +213,8 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
                 onClick={handleDone}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg,#EC4899,#8B5CF6)",
-                  color: "#831843",
+                  background: "#111827",
+                  color: "#111827",
                 }}
               >
                 Continue
