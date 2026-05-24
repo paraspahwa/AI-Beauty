@@ -3,6 +3,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { getOpenAI } from "@/lib/ai/openai";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
+import { consumeIdentityWindow } from "@/lib/rate-limit";
 import type { CompiledReport } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -19,6 +20,15 @@ Use the report context below to give specific, actionable advice.
 const MAX_MESSAGE_CONTENT_CHARS = 2000;
 const MAX_MESSAGES_IN_BODY     = 100; // sanity cap on payload size
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CHAT_BURST_POLICY = {
+  action: "chat_burst_60s",
+  windowSeconds: 60,
+  caps: {
+    free: 20,
+    report: 40,
+    studio_pro: 100,
+  },
+} as const;
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -177,6 +187,33 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const admin = createSupabaseAdminClient();
+    const isAdmin = env.auth.adminEmailAllowlist.includes((user.email ?? "").toLowerCase());
+    if (!isAdmin) {
+      const chatDecision = await consumeIdentityWindow(admin, user.id, CHAT_BURST_POLICY);
+      if (!chatDecision.allowed) {
+        return NextResponse.json(
+          {
+            error: "Chat rate limit reached. Please slow down and try again shortly.",
+            code: "RATE_LIMITED",
+            action: chatDecision.action,
+            tier: chatDecision.tier,
+            limit: chatDecision.cap,
+            windowSeconds: chatDecision.windowSeconds,
+            retryAfterSeconds: chatDecision.retryAfterSeconds,
+          },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": String(chatDecision.retryAfterSeconds),
+              "X-RateLimit-Limit": String(chatDecision.cap),
+              "X-RateLimit-Window": `${chatDecision.windowSeconds}s`,
+            },
+          },
+        );
+      }
+    }
+
     let body: { reportId?: string; messages?: Message[] };
     try {
       body = (await req.json()) as { reportId?: string; messages?: Message[] };
@@ -201,7 +238,6 @@ export async function POST(req: NextRequest) {
     }));
 
     // Fetch report to inject context — must belong to this user
-    const admin = createSupabaseAdminClient();
     const { data: row } = await admin
       .from("reports")
       .select("face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary, is_paid")

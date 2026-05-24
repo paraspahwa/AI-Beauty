@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { chatJSON } from "@/lib/ai/openai";
 import { env } from "@/lib/env";
+import { consumeIdentityWindow } from "@/lib/rate-limit";
 import { buildProductComparisonPrompt, SYSTEM_BASE } from "@/prompts/index";
 import type { IngredientFlag } from "@/app/api/ingredients/analyze/route";
 
@@ -9,6 +10,15 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const MAX_INGREDIENT_CHARS = 4000;
+const INGREDIENT_COMPARE_POLICY = {
+  action: "ingredients_compare_60s",
+  windowSeconds: 60,
+  caps: {
+    free: 6,
+    report: 12,
+    studio_pro: 30,
+  },
+} as const;
 
 export interface ProductComparisonSide {
   score: number;
@@ -61,6 +71,7 @@ function sanitiseSkinContext(raw: unknown) {
 
 export async function POST(req: NextRequest) {
   // Auth check
+  env.assertServer();
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -68,6 +79,33 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
+  const isAdmin = env.auth.adminEmailAllowlist.includes((user.email ?? "").toLowerCase());
+  if (!isAdmin) {
+    const admin = createSupabaseAdminClient();
+    const decision = await consumeIdentityWindow(admin, user.id, INGREDIENT_COMPARE_POLICY);
+    if (!decision.allowed) {
+      return NextResponse.json(
+        {
+          error: "Product comparison rate limit reached. Please try again shortly.",
+          code: "RATE_LIMITED",
+          action: decision.action,
+          tier: decision.tier,
+          limit: decision.cap,
+          windowSeconds: decision.windowSeconds,
+          retryAfterSeconds: decision.retryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(decision.retryAfterSeconds),
+            "X-RateLimit-Limit": String(decision.cap),
+            "X-RateLimit-Window": `${decision.windowSeconds}s`,
+          },
+        },
+      );
+    }
   }
 
   let body: RequestBody;

@@ -5,6 +5,7 @@ import type { PipelineStageEvent } from "@/lib/ai/pipeline";
 import { persistStylePrefs } from "@/lib/ai/memory";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
+import { consumeIdentityWindow } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -35,6 +36,26 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MIN_IMAGE_DIMENSION = 256;
 const MAX_IMAGE_DIMENSION = 4096;
 const DAILY_ANALYSIS_QUOTA = 10;
+const ANALYZE_BURST_WINDOW_SECONDS = 10 * 60;
+const ANALYZE_DAILY_WINDOW_SECONDS = 24 * 60 * 60;
+const ANALYZE_BURST_POLICY = {
+  action: "analyze_burst_10m",
+  windowSeconds: ANALYZE_BURST_WINDOW_SECONDS,
+  caps: {
+    free: 2,
+    report: 4,
+    studio_pro: 8,
+  },
+} as const;
+const ANALYZE_DAILY_POLICY = {
+  action: "analyze_daily_24h",
+  windowSeconds: ANALYZE_DAILY_WINDOW_SECONDS,
+  caps: {
+    free: DAILY_ANALYSIS_QUOTA,
+    report: DAILY_ANALYSIS_QUOTA,
+    studio_pro: 60,
+  },
+} as const;
 const ETA_FALLBACK_MS = 45000;
 const ETA_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const ETA_SAMPLE_SIZE = 100;
@@ -158,6 +179,15 @@ const getCachedEta = unstable_cache(
 
 function toStreamLine(event: AnalyzeStreamEvent): string {
   return `${JSON.stringify(event)}\n`;
+}
+
+function buildAnalyzeRateLimitErrorMessage(kind: "burst" | "daily", retryAfterSeconds: number): string {
+  if (kind === "daily") {
+    const retryHours = Math.max(1, Math.ceil(retryAfterSeconds / 3600));
+    return `Daily analysis limit reached. Please try again in about ${retryHours} hour${retryHours === 1 ? "" : "s"}.`;
+  }
+  const retryMinutes = Math.max(1, Math.ceil(retryAfterSeconds / 60));
+  return `Too many requests. Please wait about ${retryMinutes} minute${retryMinutes === 1 ? "" : "s"} before trying again.`;
 }
 
 export async function GET() {
@@ -322,29 +352,24 @@ export async function POST(req: NextRequest) {
             const isAdmin = env.auth.adminEmailAllowlist.includes((user.email ?? "").toLowerCase());
 
             if (!isAdmin) {
-              const burstSince = new Date(Date.now() - 60 * 1000).toISOString();
-              const { count: burstCount } = await admin
-                .from("reports")
-                .select("id", { count: "exact", head: true })
-                .eq("user_id", user.id)
-                .gte("created_at", burstSince);
-              if ((burstCount ?? 0) >= 2) {
-                emit({ type: "failed", message: "Too many requests. Please wait a moment before trying again." });
+              const burstDecision = await consumeIdentityWindow(admin, user.id, ANALYZE_BURST_POLICY);
+              if (!burstDecision.allowed) {
+                emit({
+                  type: "failed",
+                  message: buildAnalyzeRateLimitErrorMessage("burst", burstDecision.retryAfterSeconds),
+                });
                 controller.close();
                 return;
               }
             }
 
             if (!isAdmin) {
-              const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-              const { count: dailyCount, error: dailyCountErr } = await admin
-                .from("reports")
-                .select("id", { count: "exact", head: true })
-                .eq("user_id", user.id)
-                .gte("created_at", since);
-              if (dailyCountErr) throw dailyCountErr;
-              if ((dailyCount ?? 0) >= DAILY_ANALYSIS_QUOTA) {
-                emit({ type: "failed", message: "Daily analysis limit reached. Please try again later." });
+              const dailyDecision = await consumeIdentityWindow(admin, user.id, ANALYZE_DAILY_POLICY);
+              if (!dailyDecision.allowed) {
+                emit({
+                  type: "failed",
+                  message: buildAnalyzeRateLimitErrorMessage("daily", dailyDecision.retryAfterSeconds),
+                });
                 controller.close();
                 return;
               }
@@ -597,36 +622,54 @@ export async function POST(req: NextRequest) {
       (user.email ?? "").toLowerCase(),
     );
 
-    // ── Per-minute burst guard (max 2 submissions per 60 s per user) ────────
+    // ── Identity burst guard (tier-aware rolling 10 minute window) ───────────
     if (!isAdmin) {
-      const burstSince = new Date(Date.now() - 60 * 1000).toISOString();
-      const { count: burstCount } = await admin
-        .from("reports")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", burstSince);
-      if ((burstCount ?? 0) >= 2) {
+      const burstDecision = await consumeIdentityWindow(admin, user.id, ANALYZE_BURST_POLICY);
+      if (!burstDecision.allowed) {
         return NextResponse.json(
-          { error: "Too many requests. Please wait a moment before trying again." },
-          { status: 429 },
+          {
+            error: buildAnalyzeRateLimitErrorMessage("burst", burstDecision.retryAfterSeconds),
+            code: "RATE_LIMITED",
+            action: burstDecision.action,
+            tier: burstDecision.tier,
+            limit: burstDecision.cap,
+            windowSeconds: burstDecision.windowSeconds,
+            retryAfterSeconds: burstDecision.retryAfterSeconds,
+          },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": String(burstDecision.retryAfterSeconds),
+              "X-RateLimit-Limit": String(burstDecision.cap),
+              "X-RateLimit-Window": `${burstDecision.windowSeconds}s`,
+            },
+          },
         );
       }
     }
 
-    // ── Daily quota (max 10 per 24 h per user) ────────────────────────────────
-    // Basic per-user quota to reduce abuse and runaway costs.
+    // ── Identity daily quota (tier-aware rolling 24 hour window) ─────────────
     if (!isAdmin) {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count: dailyCount, error: dailyCountErr } = await admin
-        .from("reports")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", since);
-      if (dailyCountErr) throw dailyCountErr;
-      if ((dailyCount ?? 0) >= DAILY_ANALYSIS_QUOTA) {
+      const dailyDecision = await consumeIdentityWindow(admin, user.id, ANALYZE_DAILY_POLICY);
+      if (!dailyDecision.allowed) {
         return NextResponse.json(
-          { error: "Daily analysis limit reached. Please try again later." },
-          { status: 429 },
+          {
+            error: buildAnalyzeRateLimitErrorMessage("daily", dailyDecision.retryAfterSeconds),
+            code: "RATE_LIMITED",
+            action: dailyDecision.action,
+            tier: dailyDecision.tier,
+            limit: dailyDecision.cap,
+            windowSeconds: dailyDecision.windowSeconds,
+            retryAfterSeconds: dailyDecision.retryAfterSeconds,
+          },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": String(dailyDecision.retryAfterSeconds),
+              "X-RateLimit-Limit": String(dailyDecision.cap),
+              "X-RateLimit-Window": `${dailyDecision.windowSeconds}s`,
+            },
+          },
         );
       }
     }

@@ -15,6 +15,9 @@ export const maxDuration = 20;
 
 const MAX_MESSAGE_CHARS = 500;
 const MAX_HISTORY       = 8; // pairs kept in context
+const VISITOR_CHAT_WINDOW_MS = 60_000;
+const VISITOR_CHAT_MAX = 15;
+const VISITOR_LIMIT_MAP_MAX = 4096;
 
 const SYSTEM_PROMPT = `You are Aria, Renovaara's friendly pre-sales assistant. Your job is to answer visitor questions about Renovaara and guide them toward getting their free beauty analysis.
 
@@ -51,9 +54,68 @@ CONVERSION GUIDANCE:
 
 type Message = { role: "user" | "assistant"; content: string };
 
+type VisitorWindow = { count: number; resetAt: number };
+const visitorWindows = new Map<string, VisitorWindow>();
+
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown-ip"
+  );
+}
+
+function getVisitorIdentityKey(req: NextRequest): string {
+  const visitorId = req.cookies.get("rv_visitor_id")?.value
+    ?? req.headers.get("x-visitor-id")
+    ?? req.headers.get("x-session-id")
+    ?? "anon";
+  const ua = req.headers.get("user-agent") ?? "unknown-ua";
+  return `visitor:${visitorId.slice(0, 128)}:${getClientIp(req)}:${ua.slice(0, 80)}`;
+}
+
+function isVisitorRateLimited(req: NextRequest): boolean {
+  const now = Date.now();
+  const key = getVisitorIdentityKey(req);
+  let entry = visitorWindows.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    if (!entry && visitorWindows.size >= VISITOR_LIMIT_MAP_MAX) {
+      const firstKey = visitorWindows.keys().next().value;
+      if (firstKey !== undefined) visitorWindows.delete(firstKey);
+    }
+    entry = { count: 1, resetAt: now + VISITOR_CHAT_WINDOW_MS };
+    visitorWindows.set(key, entry);
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > VISITOR_CHAT_MAX;
+}
+
 export async function POST(req: NextRequest) {
   try {
     env.assertServer();
+
+    if (isVisitorRateLimited(req)) {
+      return NextResponse.json(
+        {
+          error: "Too many visitor chat requests. Please wait a moment before trying again.",
+          code: "RATE_LIMITED",
+          limit: VISITOR_CHAT_MAX,
+          windowSeconds: 60,
+          retryAfterSeconds: 60,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Limit": String(VISITOR_CHAT_MAX),
+            "X-RateLimit-Window": "60s",
+          },
+        },
+      );
+    }
 
     let body: { messages?: Message[] };
     try {
