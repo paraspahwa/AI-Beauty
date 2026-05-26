@@ -56,15 +56,15 @@ export default function StyleDnaScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.topActions}>
-          <PillButton label="Back" variant="subtle" onPress={() => router.back()} />
+          <PillButton label="My reports" variant="subtle" onPress={() => router.back()} />
           <PillButton label="Refresh" variant="subtle" onPress={() => void refresh()} />
         </View>
 
         <Text style={styles.eyebrow}>✦ Style Profile</Text>
-        <Text style={styles.title}>Style DNA</Text>
+        <Text style={styles.title}>Your Style DNA</Text>
         <Text style={styles.subtitle}>
           {summary?.totalReports
-            ? `Derived from ${summary.totalReports} analysis${summary.totalReports === 1 ? "" : "es"}.${formatDate(summary?.prefs?.updatedAt) ? ` Last updated ${formatDate(summary?.prefs?.updatedAt)}.` : ""}`
+            ? `Derived from ${summary.totalReports} analysis${summary.totalReports === 1 ? "" : "es"}${formatDate(summary?.prefs?.updatedAt) ? ` · Last updated ${formatDate(summary?.prefs?.updatedAt)}` : ""}.`
             : "Complete your first report to unlock your Style DNA profile."}
         </Text>
 

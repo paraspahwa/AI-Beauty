@@ -81,7 +81,7 @@ export default function ProgressScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.topActions}>
-          <PillButton label="Back" variant="subtle" onPress={() => router.back()} />
+          <PillButton label="My reports" variant="subtle" onPress={() => router.back()} />
           <PillButton label="Refresh" variant="subtle" onPress={() => void refresh()} />
         </View>
 
