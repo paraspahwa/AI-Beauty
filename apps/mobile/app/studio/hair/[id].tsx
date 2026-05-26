@@ -4,6 +4,7 @@ import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { generateHairColorPreview } from "@/lib/api";
 import { clearStudioHistory, type StudioHistoryItem, loadStudioHistory, pushStudioHistoryItem, saveVisualForReport } from "@/lib/studio-history";
+import { mobileTheme as t } from "@/lib/theme";
 
 type HairColorOption = {
   label: string;
@@ -199,7 +200,7 @@ export default function MobileHairStudioScreen() {
           <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate hair color preview"}</Text>
         </Pressable>
 
-        {loading ? <ActivityIndicator size="small" color="#111827" /> : null}
+        {loading ? <ActivityIndicator size="small" color=t.color.text /> : null}
 
         {resultUrl ? (
           <View style={styles.previewSection}>
@@ -265,7 +266,7 @@ export default function MobileHairStudioScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -274,21 +275,21 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   backButtonLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "600",
   },
   heading: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   helperText: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
   },
   section: {
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   optionGrid: {
     flexDirection: "row",
@@ -309,22 +310,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderRadius: 999,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   optionChipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
   },
   optionChipLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   optionChipLabelActive: {
-    color: "#ffffff",
+    color: t.color.surface,
   },
   colorDot: {
     width: 14,
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   },
   generateButton: {
     borderRadius: 16,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 14,
     alignItems: "center",
   },
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   generateButtonLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   previewSection: {
@@ -353,13 +354,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 420,
     borderRadius: 24,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   notice: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "#111827",
-    color: "#ffffff",
+    backgroundColor: t.color.text,
+    color: t.color.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     fontSize: 12,
@@ -376,13 +377,13 @@ const styles = StyleSheet.create({
   },
   clearHistoryButton: {
     borderRadius: 999,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   clearHistoryLabel: {
     fontSize: 12,
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
   },
   historyCard: {
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   historyCardActive: {
-    borderColor: "#111827",
+    borderColor: t.color.text,
   },
   historyImageWrap: {
     position: "relative",
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
     width: 132,
     height: 168,
     borderRadius: 14,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   historyTimePill: {
     position: "absolute",
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   historyTimeText: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontSize: 10,
     fontWeight: "700",
   },
@@ -429,47 +430,48 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   currentBadgeText: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontSize: 10,
     fontWeight: "700",
   },
   historyLabel: {
     fontSize: 12,
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   timestampText: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
     fontWeight: "500",
   },
   secondaryButton: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingVertical: 10,
     alignItems: "center",
   },
   secondaryButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   emptyStateCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 4,
   },
   emptyStateTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 14,
     fontWeight: "700",
   },
   emptyStateBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 13,
     lineHeight: 19,
   },
 });
+

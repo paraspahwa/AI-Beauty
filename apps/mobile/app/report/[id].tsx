@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Animated, AppState, Image, Linking, Modal, Pa
 import { createPaymentOrder, createReportShareLink, fetchReport, revokeReportShareLink, type MobileReport, type MobileVisualAsset, verifyTestPayment } from "@/lib/api";
 import { mobileEnv } from "@/lib/env";
 import { loadSavedVisuals, removeSavedVisual, type SavedVisual } from "@/lib/studio-history";
+import { mobileTheme as t } from "@/lib/theme";
 
 type CheckoutFlow = "report" | "studio_pro";
 
@@ -448,7 +449,7 @@ export default function ReportScreen() {
   if (!report) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color=t.color.text />
       </SafeAreaView>
     );
   }
@@ -515,7 +516,7 @@ export default function ReportScreen() {
         {checkoutStatus && !report.isPaid ? (
           <Card title={checkoutFlow === "studio_pro" ? "Studio Pro status" : "Payment status"}>
             <Text style={styles.mutedText}>{checkoutStatus}</Text>
-            {awaitingBrowserCheckout ? <ActivityIndicator size="small" color="#111827" /> : null}
+            {awaitingBrowserCheckout ? <ActivityIndicator size="small" color=t.color.text /> : null}
           </Card>
         ) : null}
 
@@ -1040,7 +1041,7 @@ function LockedSection({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -1071,36 +1072,36 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   heroSubheading: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 20,
   },
   headerActionButton: {
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
   headerActionLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   headerSecondaryAction: {
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
   },
   headerSecondaryActionLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
   },
   heroImage: {
     width: "100%",
     height: 340,
     borderRadius: 24,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   metricRow: {
     flexDirection: "row",
@@ -1109,7 +1110,7 @@ const styles = StyleSheet.create({
   },
   metricPill: {
     borderRadius: 999,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
@@ -1122,7 +1123,7 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
   },
   metricValue: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   tabRow: {
@@ -1131,25 +1132,25 @@ const styles = StyleSheet.create({
   },
   tabChip: {
     borderRadius: 999,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   tabChipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
   },
   tabChipLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
   },
   tabChipLabelActive: {
-    color: "#ffffff",
+    color: t.color.surface,
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderRadius: 20,
     padding: 18,
     gap: 8,
@@ -1157,34 +1158,34 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   bodyText: {
     fontSize: 16,
-    color: "#111827",
+    color: t.color.text,
   },
   inlineSection: {
     gap: 2,
   },
   mutedText: {
     fontSize: 15,
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 22,
   },
   errorTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   errorBody: {
     marginTop: 8,
     textAlign: "center",
-    color: "#6b7280",
+    color: t.color.textMuted,
   },
   unlockButton: {
     marginTop: 8,
     borderRadius: 14,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
   },
@@ -1192,7 +1193,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   unlockButtonLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   helperText: {
@@ -1202,20 +1203,20 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     borderRadius: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: t.color.divider,
     padding: 18,
   },
   emptyCardText: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
   },
   featuredVisual: {
     width: "100%",
     height: 320,
     borderRadius: 18,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   galleryRow: {
     gap: 10,
@@ -1229,34 +1230,34 @@ const styles = StyleSheet.create({
     width: 170,
     height: 220,
     borderRadius: 16,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   galleryLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 12,
     fontWeight: "700",
   },
   chatLaunchButton: {
     marginTop: 4,
     borderRadius: 14,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
   },
   chatLaunchButtonLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   secondaryButton: {
     marginTop: 4,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingVertical: 10,
     alignItems: "center",
   },
   secondaryButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   swatchRow: {
@@ -1278,7 +1279,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(17,24,39,0.08)",
   },
   swatchLabel: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 11,
     textAlign: "center",
   },
@@ -1289,12 +1290,12 @@ const styles = StyleSheet.create({
   },
   tag: {
     borderRadius: 999,
-    backgroundColor: "#fdf2f8",
+    backgroundColor: t.color.brandRoseSurface,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   tagLabel: {
-    color: "#9d174d",
+    color: t.color.brandRose,
     fontWeight: "700",
     fontSize: 12,
   },
@@ -1310,27 +1311,27 @@ const styles = StyleSheet.create({
     width: 148,
     height: 188,
     borderRadius: 14,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   savedVisualLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 12,
     fontWeight: "700",
   },
   savedVisualTime: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 11,
     fontWeight: "500",
   },
   savedVisualRemoveButton: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     paddingVertical: 6,
     alignItems: "center",
   },
   savedVisualRemoveButtonLabel: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -1345,7 +1346,7 @@ const styles = StyleSheet.create({
   },
   previewSheet: {
     borderRadius: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     padding: 12,
     gap: 10,
   },
@@ -1354,28 +1355,30 @@ const styles = StyleSheet.create({
     width: 42,
     height: 4,
     borderRadius: 999,
-    backgroundColor: "#d1d5db",
+    backgroundColor: t.color.borderStrong,
   },
   previewCloseButton: {
     alignSelf: "flex-end",
     borderRadius: 999,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   previewCloseButtonLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   previewFullscreenImage: {
     width: "100%",
     height: 500,
     borderRadius: 16,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   previewCaption: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 13,
     fontWeight: "600",
   },
 });
+
+

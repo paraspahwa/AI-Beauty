@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { pollReportUntilReady } from "@/lib/analyze-polling";
+import { mobileTheme as t } from "@/lib/theme";
 
 const ANALYSIS_STEPS = [
   "Checking image quality",
@@ -62,7 +63,7 @@ export default function AnalysisScreen() {
     <SafeAreaView style={styles.container}>
       {params.imageUri ? <Image source={{ uri: params.imageUri }} style={styles.image} /> : null}
       <View style={styles.card}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color=t.color.text />
         <Text style={styles.title}>Creating your Renovaara report</Text>
         <Text style={styles.body}>{error ?? status}</Text>
         {!error ? (
@@ -84,7 +85,7 @@ export default function AnalysisScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff7fb",
+    backgroundColor: t.color.bg,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
@@ -94,13 +95,13 @@ const styles = StyleSheet.create({
     width: 180,
     height: 220,
     borderRadius: 20,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   card: {
     width: "100%",
     borderRadius: 20,
     padding: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     alignItems: "center",
     gap: 12,
   },
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   },
   body: {
     textAlign: "center",
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 22,
   },
   steps: {
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 999,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: t.color.border,
   },
   stepDotActive: {
     backgroundColor: "#ec4899",
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
   },
   stepTextActive: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "600",
   },
   footnote: {
@@ -146,3 +147,5 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
   },
 });
+
+

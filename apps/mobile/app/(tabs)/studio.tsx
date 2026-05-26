@@ -899,7 +899,7 @@ export default function StudioVaultTabScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color=t.color.text />
       </SafeAreaView>
     );
   }
@@ -1044,6 +1044,7 @@ export default function StudioVaultTabScreen() {
                         <View
                           style={[
                             styles.perfBadge,
+                      import { mobileTheme as t } from "@/lib/theme";
                             level === "fast"
                               ? styles.perfBadgeFast
                               : level === "medium"
@@ -1318,13 +1319,13 @@ export default function StudioVaultTabScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -1338,10 +1339,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   subtitle: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
   },
   perfPanelWrap: {
@@ -1356,20 +1357,20 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   perfToggleLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 12,
     fontWeight: "700",
   },
   perfClearButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: t.color.dangerBorder,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: "#fff1f2",
@@ -1395,28 +1396,28 @@ const styles = StyleSheet.create({
   perfSlowToggleButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   perfSlowToggleButtonActive: {
     borderColor: "#fca5a5",
-    backgroundColor: "#fef2f2",
+    backgroundColor: t.color.dangerSurface,
   },
   perfSlowToggleLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 12,
     fontWeight: "700",
   },
   perfSlowToggleLabelActive: {
-    color: "#b91c1c",
+    color: t.color.danger,
   },
   perfPanel: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
     padding: 10,
     gap: 6,
   },
@@ -1426,20 +1427,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   perfThresholdHeaderLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
     fontSize: 12,
   },
   perfThresholdResetButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     backgroundColor: "#f9fafb",
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   perfThresholdResetLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 11,
   },
@@ -1450,13 +1451,13 @@ const styles = StyleSheet.create({
   perfPresetButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   perfPresetLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "700",
     textTransform: "capitalize",
@@ -1464,12 +1465,12 @@ const styles = StyleSheet.create({
   perfThresholdRow: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     padding: 8,
     gap: 6,
   },
   perfThresholdOpLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 11,
     textTransform: "uppercase",
@@ -1484,25 +1485,25 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   perfThresholdButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 12,
   },
   perfThresholdValueLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "600",
     fontSize: 11,
     minWidth: 48,
   },
   perfDivider: {
     borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
+    borderTopColor: t.color.border,
     marginVertical: 2,
   },
   perfFilterRow: {
@@ -1513,29 +1514,29 @@ const styles = StyleSheet.create({
   perfFilterChip: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   perfFilterChipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
   },
   perfFilterChipLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "700",
     textTransform: "capitalize",
   },
   perfFilterChipLabelActive: {
-    color: "#ffffff",
+    color: t.color.surface,
   },
   perfStatsCard: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#fafafa",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surfaceMuted,
     padding: 8,
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1562,18 +1563,18 @@ const styles = StyleSheet.create({
   perfBaselineClearButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   perfBaselineClearLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "700",
   },
   perfStatsLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "600",
   },
@@ -1593,7 +1594,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   perfRegressionLabel: {
-    color: "#991b1b",
+    color: t.color.dangerStrong,
     fontSize: 11,
     fontWeight: "700",
   },
@@ -1607,7 +1608,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   perfEntryLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -1627,25 +1628,25 @@ const styles = StyleSheet.create({
     borderColor: "#fcd34d",
   },
   perfBadgeSlow: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: t.color.dangerSurface,
     borderWidth: 1,
     borderColor: "#fca5a5",
   },
   perfBadgeLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 10,
     fontWeight: "700",
     textTransform: "uppercase",
   },
   perfEntryMeta: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 11,
   },
   bulkBar: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 10,
     flexDirection: "row",
     alignItems: "center",
@@ -1653,7 +1654,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   bulkLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   bulkActions: {
@@ -1664,7 +1665,7 @@ const styles = StyleSheet.create({
   bulkDeleteButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: t.color.dangerBorder,
     backgroundColor: "#fff1f2",
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -1677,24 +1678,24 @@ const styles = StyleSheet.create({
   bulkSelectVisibleButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   bulkSelectVisibleButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 12,
   },
   bulkModeButton: {
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   bulkModeButtonLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
     fontSize: 12,
   },
@@ -1704,19 +1705,19 @@ const styles = StyleSheet.create({
   bulkProgressCard: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   bulkProgressText: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
     fontSize: 12,
   },
   bulkProgressMeta: {
     marginTop: 4,
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 11,
   },
   bulkRetryCard: {
@@ -1741,7 +1742,7 @@ const styles = StyleSheet.create({
     borderColor: "#fdba74",
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   bulkRetryButtonLabel: {
     color: "#9a3412",
@@ -1751,9 +1752,9 @@ const styles = StyleSheet.create({
   searchInput: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
-    color: "#111827",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
+    color: t.color.text,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
@@ -1769,90 +1770,90 @@ const styles = StyleSheet.create({
   filterChip: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   filterChipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
   },
   filterChipLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
     textTransform: "capitalize",
   },
   filterChipLabelActive: {
-    color: "#ffffff",
+    color: t.color.surface,
   },
   sortChip: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   sortChipActive: {
-    backgroundColor: "#374151",
-    borderColor: "#374151",
+    backgroundColor: t.color.textSoft,
+    borderColor: t.color.textSoft,
   },
   sortChipLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
     textTransform: "capitalize",
   },
   sortChipLabelActive: {
-    color: "#ffffff",
+    color: t.color.surface,
   },
   errorCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#fecaca",
-    backgroundColor: "#fef2f2",
+    borderColor: t.color.dangerBorder,
+    backgroundColor: t.color.dangerSurface,
     padding: 14,
     gap: 6,
   },
   errorTitle: {
-    color: "#991b1b",
+    color: t.color.dangerStrong,
     fontWeight: "700",
   },
   errorBody: {
-    color: "#b91c1c",
+    color: t.color.danger,
   },
   retryButton: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   retryButtonLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   emptyCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 4,
   },
   emptyTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   emptyBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
   },
   groupSection: {
     width: "100%",
     gap: 8,
   },
   groupTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -1860,7 +1861,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
     paddingTop: 6,
     paddingBottom: 8,
     borderBottomWidth: 1,
@@ -1870,12 +1871,12 @@ const styles = StyleSheet.create({
   groupSelectButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   groupSelectButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -1893,7 +1894,7 @@ const styles = StyleSheet.create({
     width: "48%",
     gap: 5,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     padding: 8,
   },
   assetCardSpacer: {
@@ -1903,74 +1904,74 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 3 / 4,
     borderRadius: 10,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   assetMeta: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 12,
     fontWeight: "700",
   },
   assetDate: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 11,
   },
   sourceButton: {
     borderRadius: 9,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     alignItems: "center",
     paddingVertical: 6,
   },
   sourceButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "600",
   },
   selectionButton: {
     borderRadius: 9,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     alignItems: "center",
     paddingVertical: 6,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   selectionButtonActive: {
-    borderColor: "#111827",
-    backgroundColor: "#111827",
+    borderColor: t.color.text,
+    backgroundColor: t.color.text,
   },
   selectionButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "600",
   },
   selectionButtonLabelActive: {
-    color: "#ffffff",
+    color: t.color.surface,
   },
   actionSheet: {
     borderRadius: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     padding: 12,
     gap: 8,
   },
   actionSheetTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
     marginBottom: 4,
   },
   actionButton: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     alignItems: "center",
     paddingVertical: 10,
   },
   actionButtonLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "600",
   },
   actionButtonDanger: {
-    borderColor: "#fecaca",
+    borderColor: t.color.dangerBorder,
     backgroundColor: "#fff1f2",
   },
   actionButtonDangerLabel: {
@@ -1982,18 +1983,18 @@ const styles = StyleSheet.create({
   },
   actionButtonSecondary: {
     borderRadius: 10,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     alignItems: "center",
     paddingVertical: 10,
   },
   actionButtonSecondaryLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   loadMoreButton: {
     marginTop: 8,
     borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
   },
@@ -2001,7 +2002,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   loadMoreButtonLabel: {
-    color: "#ffffff",
+    color: t.color.surface,
     fontWeight: "700",
   },
   previewBackdrop: {
@@ -2012,29 +2013,29 @@ const styles = StyleSheet.create({
   },
   previewSheet: {
     borderRadius: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     padding: 12,
     gap: 8,
   },
   closeButton: {
     alignSelf: "flex-end",
     borderRadius: 999,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   closeButtonLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   previewImage: {
     width: "100%",
     height: 520,
     borderRadius: 12,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   previewMeta: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
 });
