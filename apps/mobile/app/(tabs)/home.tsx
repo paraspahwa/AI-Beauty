@@ -2,14 +2,26 @@ import { useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { analyzeSelfie, listReports } from "@/lib/api";
+import { analyzeSelfie, listReports, type AnalyzeIntent } from "@/lib/api";
 import { assertMobileEnv } from "@/lib/env";
+
+const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string }> = {
+  report: {
+    title: "Complete Analysis",
+    subtitle: "Best if you want the full report first: face shape, skin, hair, glasses, and chat guidance.",
+  },
+  studio_pro: {
+    title: "Studio Pro",
+    subtitle: "Best if you mainly want ongoing try-ons, higher generation limits, and premium access.",
+  },
+};
 
 export default function HomeTabScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("Ready");
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [selectedIntent, setSelectedIntent] = useState<AnalyzeIntent>("report");
 
   const envOk = useMemo(() => {
     try {
@@ -60,9 +72,12 @@ export default function HomeTabScreen() {
       setSelectedImageUri(asset.uri);
       setStatus("Uploading selfie...");
 
-      const response = await analyzeSelfie(asset.uri);
+      const response = await analyzeSelfie(asset.uri, selectedIntent);
       setStatus("Analysis started");
-      router.push({ pathname: "/analysis/[id]", params: { id: response.reportId, imageUri: asset.uri } });
+      router.push({
+        pathname: "/analysis/[id]",
+        params: { id: response.reportId, imageUri: asset.uri, intent: selectedIntent },
+      });
     } catch (err) {
       Alert.alert("Analyze failed", String(err));
       setStatus("Analyze failed");
@@ -95,9 +110,12 @@ export default function HomeTabScreen() {
       setSelectedImageUri(asset.uri);
       setStatus("Uploading selfie...");
 
-      const response = await analyzeSelfie(asset.uri);
+      const response = await analyzeSelfie(asset.uri, selectedIntent);
       setStatus("Analysis started");
-      router.push({ pathname: "/analysis/[id]", params: { id: response.reportId, imageUri: asset.uri } });
+      router.push({
+        pathname: "/analysis/[id]",
+        params: { id: response.reportId, imageUri: asset.uri, intent: selectedIntent },
+      });
     } catch (err) {
       Alert.alert("Analyze failed", String(err));
       setStatus("Analyze failed");
@@ -110,15 +128,54 @@ export default function HomeTabScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Renovaara Mobile</Text>
-        <Text style={styles.subtitle}>Upload a selfie to generate your personalized beauty report.</Text>
+        <Text style={styles.subtitle}>Choose your path, then upload a selfie to start your beauty analysis.</Text>
+
+        <View style={styles.intentSection}>
+          <Text style={styles.intentEyebrow}>Choose your path</Text>
+          <View style={styles.intentGrid}>
+            {(["report", "studio_pro"] as AnalyzeIntent[]).map((intent) => {
+              const active = selectedIntent === intent;
+              return (
+                <Pressable
+                  key={intent}
+                  onPress={() => setSelectedIntent(intent)}
+                  style={[styles.intentCard, active ? styles.intentCardActive : null]}
+                >
+                  <Text style={[styles.intentTitle, active ? styles.intentTitleActive : null]}>{INTENT_COPY[intent].title}</Text>
+                  <Text style={[styles.intentBody, active ? styles.intentBodyActive : null]}>{INTENT_COPY[intent].subtitle}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <View style={styles.tipsCard}>
+            <Text style={styles.tipsTitle}>Photo tips</Text>
+            <Text style={styles.tipsBody}>Look straight at the camera, use balanced light, and keep your forehead visible for the strongest analysis.</Text>
+          </View>
+        </View>
 
         {!envOk ? (
           <Text style={styles.error}>Set EXPO_PUBLIC_API_BASE_URL, EXPO_PUBLIC_SUPABASE_URL, and EXPO_PUBLIC_SUPABASE_ANON_KEY.</Text>
         ) : null}
 
-        <ActionButton label="Capture selfie and analyze" disabled={loading || !envOk} onPress={captureAndAnalyze} />
-        <ActionButton label="Pick selfie and analyze" disabled={loading || !envOk} onPress={pickAndAnalyze} />
+        <ActionButton
+          label={`Capture selfie for ${selectedIntent === "studio_pro" ? "Studio Pro" : "Complete Analysis"}`}
+          disabled={loading || !envOk}
+          onPress={captureAndAnalyze}
+        />
+        <ActionButton
+          label={`Pick selfie for ${selectedIntent === "studio_pro" ? "Studio Pro" : "Complete Analysis"}`}
+          disabled={loading || !envOk}
+          onPress={pickAndAnalyze}
+        />
         <ActionButton label="Open latest report" disabled={loading || !envOk} onPress={openLatestReport} variant="secondary" />
+        <View style={styles.quickLinksRow}>
+          <View style={styles.quickLinkItem}>
+            <ActionButton label="Open Style DNA" disabled={loading || !envOk} onPress={() => router.push("/style-dna")} variant="secondary" />
+          </View>
+          <View style={styles.quickLinkItem}>
+            <ActionButton label="Open Progress" disabled={loading || !envOk} onPress={() => router.push("/progress")} variant="secondary" />
+          </View>
+        </View>
 
         {selectedImageUri ? (
           <View style={styles.previewBlock}>
@@ -168,6 +225,61 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 10,
   },
+  intentSection: {
+    gap: 10,
+    marginBottom: 6,
+  },
+  intentEyebrow: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    color: "#9d174d",
+  },
+  intentGrid: {
+    gap: 10,
+  },
+  intentCard: {
+    borderRadius: 18,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    padding: 16,
+    gap: 6,
+  },
+  intentCardActive: {
+    backgroundColor: "#111827",
+    borderColor: "#111827",
+  },
+  intentTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  intentTitleActive: {
+    color: "#ffffff",
+  },
+  intentBody: {
+    color: "#6b7280",
+    lineHeight: 20,
+  },
+  intentBodyActive: {
+    color: "rgba(255,255,255,0.8)",
+  },
+  tipsCard: {
+    borderRadius: 16,
+    backgroundColor: "#fff1f6",
+    padding: 14,
+    gap: 4,
+  },
+  tipsTitle: {
+    color: "#111827",
+    fontWeight: "700",
+  },
+  tipsBody: {
+    color: "#6b7280",
+    lineHeight: 20,
+  },
   title: {
     fontSize: 30,
     fontWeight: "700",
@@ -187,6 +299,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#111827",
     paddingVertical: 13,
+    paddingHorizontal: 12,
     alignItems: "center",
   },
   buttonSecondary: {
@@ -203,6 +316,13 @@ const styles = StyleSheet.create({
   },
   buttonLabelSecondary: {
     color: "#374151",
+  },
+  quickLinksRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  quickLinkItem: {
+    flex: 1,
   },
   status: {
     marginTop: 8,
