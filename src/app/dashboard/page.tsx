@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
 import { DashboardTour } from "@/components/TourProvider";
+import styles from "./dashboard.module.css";
 
 type ReportRow = {
   id: string;
@@ -20,10 +21,10 @@ type ReportRow = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === "ready") return <Badge style={{ background: "rgba(17,24,39,0.15)", color: "#A69CC4", border: "1px solid rgba(17,24,39,0.25)" }}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
-  if (status === "processing") return <Badge style={{ background: "rgba(17,24,39,0.12)", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
+  if (status === "ready") return <Badge className={styles.badgePro}><CheckCircle2 className="h-3 w-3 mr-1" />Complete</Badge>;
+  if (status === "processing") return <Badge className={styles.badgeReport}><Clock className="h-3 w-3 mr-1" />Processing</Badge>;
   if (status === "failed" || status === "error") return <Badge style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.25)" }}><AlertCircle className="h-3 w-3 mr-1" />Failed</Badge>;
-  return <Badge style={{ background: "rgba(17,24,39,0.14)", color: "rgba(17,24,39,0.62)", border: "1px solid rgba(17,24,39,0.18)" }}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
+  return <Badge className={styles.badgeFree}><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
 }
 
 export default async function DashboardPage({
@@ -73,45 +74,55 @@ export default async function DashboardPage({
   const activeReports = activeView === "continue" ? continueReports : historyReports;
 
   return (
-    <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
-      <div className="mb-10 flex items-center justify-between">
-        <div>
-          <span className="section-label mb-3 inline-flex">Dashboard</span>
-          <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-2">Dashboard</h1>
-          <div className="flex items-center gap-3 mt-1">
-            <p className="text-ink-stone">{rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history</p>
-            {tier === "studio_pro" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.15)", color: "#111827", border: "1px solid rgba(17,24,39,0.3)" }}>
-                <Crown className="h-3 w-3" /> Studio Pro
-              </span>
-            ) : tier === "report" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.12)", color: "#111827", border: "1px solid rgba(17,24,39,0.25)" }}>
-                <FileText className="h-3 w-3" /> Report
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.10)", color: "rgba(17,24,39,0.55)", border: "1px solid rgba(17,24,39,0.18)" }}>
-                Free
-              </span>
-            )}
+    <main className={`min-h-screen ${styles.pageBase}`}>
+      <div className="container max-w-5xl py-10 sm:py-16">
+        <div className={`mb-10 rounded-[2rem] border p-5 sm:p-6 ${styles.heroCard}`}>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl">
+              <span className="section-label mb-3 inline-flex">Dashboard</span>
+              <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-2">Your style workspace</h1>
+              <p className="text-ink-stone max-w-2xl">
+                {rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history, plus studio tools, saved looks, and the next best action.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {tier === "studio_pro" ? (
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${styles.tierPillPro}`}>
+                    <Crown className="h-3 w-3" /> Studio Pro
+                  </span>
+                ) : tier === "report" ? (
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${styles.tierPillReport}`}>
+                    <FileText className="h-3 w-3" /> Report
+                  </span>
+                ) : (
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${styles.tierPillFree}`}>
+                    Free
+                  </span>
+                )}
+              </div>
+            </div>
+            <div data-tour="upload-cta" className="flex flex-wrap gap-3">
+              <Button asChild variant="accent" size="sm">
+                <Link href="/studio">
+                  <Sparkles className="h-4 w-4" />
+                  Open AI Studio
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/upload">
+                  <FileText className="h-4 w-4" />
+                  Create report
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
-        <div data-tour="upload-cta">
-          <Button asChild variant="accent" size="sm">
-            <Link href="/studio">
-              <Sparkles className="h-4 w-4" />
-              Open AI Studio
-            </Link>
-          </Button>
-        </div>
-      </div>
 
       {/* Core next actions */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div
-          className="rounded-2xl p-5"
-          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
+          className={`rounded-2xl p-5 ${styles.tileSurface}`}
         >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#111827" }}>Primary workspace</p>
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink">Primary workspace</p>
           <p className="mt-2 text-base font-semibold text-ink">
             {latestReadyReport ? "Continue in AI Studio" : "Start in AI Studio"}
           </p>
@@ -137,11 +148,10 @@ export default async function DashboardPage({
         </div>
 
         <div
-          className="rounded-2xl p-5"
-          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
+          className={`rounded-2xl p-5 ${styles.tileSurfaceAlt}`}
           data-tour="style-chat"
         >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#A69CC4" }}>Guided help</p>
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#7B6E9E" }}>Guided help</p>
           <p className="mt-2 text-base font-semibold text-ink">Get deeper advice when you need it</p>
           <p className="mt-1 text-xs text-ink-stone">
             Use your full report for detailed reasoning, saved tips, and longer-term style guidance.
@@ -167,11 +177,10 @@ export default async function DashboardPage({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Link
           href="/dashboard/studio-vault"
-          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-          style={{ background: "rgba(17,24,39,0.08)", border: "1px solid rgba(17,24,39,0.18)" }}
+          className={`flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group ${styles.surfaceCard}`}
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(17,24,39,0.16)" }}>
-            <Images className="h-5 w-5" style={{ color: "#111827" }} />
+            <Images className="h-5 w-5 text-[#111827]" />
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">My Looks</p>
@@ -180,11 +189,10 @@ export default async function DashboardPage({
         </Link>
         <Link
           href="/upload"
-          className="flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-          style={{ background: "linear-gradient(135deg,rgba(17,24,39,0.10),rgba(17,24,39,0.08))", border: "1px solid rgba(17,24,39,0.18)" }}
+          className={`flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group ${styles.secondaryCard}`}
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(17,24,39,0.16)" }}>
-            <FileText className="h-5 w-5" style={{ color: "#111827" }} />
+            <FileText className="h-5 w-5 text-[#111827]" />
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">Create Full Report</p>
@@ -195,8 +203,7 @@ export default async function DashboardPage({
 
       {tier !== "studio_pro" && (
         <div
-          className="mb-6 rounded-2xl px-5 py-4"
-          style={{ background: "linear-gradient(135deg,rgba(17,24,39,0.10),rgba(17,24,39,0.06))", border: "1px solid rgba(17,24,39,0.22)" }}
+          className={`mb-6 rounded-2xl px-5 py-4 ${styles.softSurfaceAlt}`}
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -253,8 +260,8 @@ export default async function DashboardPage({
 
       <div data-tour="reports-list">
       {rows.length === 0 ? (
-        <div className="text-center py-24 rounded-3xl" style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(17,24,39,0.20)" }}>
-          <Camera className="h-12 w-12 mx-auto mb-4" style={{ color: "rgba(17,24,39,0.3)" }} />
+        <div className={`text-center py-24 rounded-3xl ${styles.emptyState}`}>
+          <Camera className="h-12 w-12 mx-auto mb-4 text-[rgba(17,24,39,0.3)]" />
           <h2 className="font-sans text-2xl text-ink mb-2">No reports yet</h2>
           <p className="text-ink-stone mb-6">Upload a selfie to get your personalized beauty analysis.</p>
           <Button asChild variant="accent">
@@ -313,12 +320,11 @@ export default async function DashboardPage({
             return (
               <div
                 key={report.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5"
-                style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.14)", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5 ${styles.reportCard}`}
               >
                 <div className="flex items-start gap-4 min-w-0">
-                  <div className="shrink-0 flex h-11 w-11 items-center justify-center rounded-full" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(17,24,39,0.14)" }}>
-                    <FileText className="h-5 w-5" style={{ color: "rgba(17,24,39,0.5)" }} />
+                  <div className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-full ${styles.iconBubble}`}>
+                    <FileText className="h-5 w-5 text-[rgba(17,24,39,0.5)]" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">

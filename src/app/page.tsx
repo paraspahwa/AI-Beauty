@@ -23,6 +23,7 @@ import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
 import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
 import { AiStoryPanels } from "@/components/home/AiStoryPanels";
+import styles from "./home.module.css";
 
 const FEATURES = [
   {
@@ -221,26 +222,30 @@ export default function HomePage() {
         />
         {/* Gradient overlay — keeps text readable over the video */}
         <div
-          className="pointer-events-none absolute inset-0 -z-10"
+          className={`pointer-events-none absolute inset-0 -z-10 ${styles.heroOverlay}`}
           aria-hidden
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(253,242,248,0.55) 0%, rgba(245,235,255,0.45) 50%, rgba(253,242,248,0.60) 100%)",
-          }}
         />
         {/* Ambient orbs — kept at reduced opacity to blend with video */}
         <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
-          <div className="glow-orb absolute -top-40 -left-40 h-[650px] w-[650px] opacity-40" style={{ background: "rgba(17,24,39,0.36)" }} />
-          <div className="glow-orb absolute -top-20 right-[-10%] h-[520px] w-[520px] opacity-35" style={{ background: "rgba(17,24,39,0.30)" }} />
-          <div className="glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-96 w-[700px] opacity-30" style={{ background: "rgba(249,168,212,0.50)" }} />
+          <div className={`glow-orb absolute -top-40 -left-40 h-[650px] w-[650px] opacity-40 ${styles.orbDark}`} />
+          <div className={`glow-orb absolute -top-20 right-[-10%] h-[520px] w-[520px] opacity-35 ${styles.orbDarkSoft}`} />
+          <div className={`glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-96 w-[700px] opacity-30 ${styles.orbRose}`} />
         </div>
-      <section className="container max-w-6xl pt-12 pb-14 sm:pt-16 sm:pb-20">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <HeroText />
-
-          <HeroReportCard />
+        <div className="container max-w-7xl px-4 pb-8 pt-10 sm:px-6 sm:pb-10 sm:pt-14 lg:px-8 lg:pb-12">
+          <div className={`relative ${styles.heroShell}`}>
+            <section className={`${styles.heroInner} px-6 py-10 sm:px-10 sm:py-12 lg:px-12 lg:py-14`}>
+              <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+                <HeroText />
+                <HeroReportCard />
+              </div>
+              <div className={styles.heroMeta}>
+                <span className={styles.heroMetaItem}>Private uploads</span>
+                <span className={styles.heroMetaItem}>Fast AI guidance</span>
+                <span className={styles.heroMetaItem}>Studio and report in one flow</span>
+              </div>
+            </section>
+          </div>
         </div>
-      </section>
       </div>{/* end hero glow wrapper */}
 
       <RevealSection>
@@ -324,7 +329,7 @@ export default function HomePage() {
       </section>
 
       <section className="container max-w-6xl py-8 sm:py-12">
-        <div className="rounded-3xl border border-iris/20 bg-[linear-gradient(135deg,rgba(249,168,212,0.25),rgba(196,181,253,0.25))] overflow-hidden shadow-card">
+        <div className={`rounded-3xl border border-iris/20 overflow-hidden shadow-card ${styles.ctaBand}`}>
           <div className="grid md:grid-cols-2 items-center">
             {/* Text side */}
             <div className="px-8 py-10 sm:px-12 sm:py-12 text-left">
@@ -405,9 +410,8 @@ export default function HomePage() {
         />
         {/* Dark overlay */}
         <div
-          className="pointer-events-none absolute inset-0 -z-10"
+          className={`pointer-events-none absolute inset-0 -z-10 ${styles.darkOverlay}`}
           aria-hidden
-          style={{ background: "linear-gradient(135deg, rgba(15,10,20,0.82) 0%, rgba(30,15,35,0.75) 100%)" }}
         />
         <div className="container max-w-6xl text-center">
           <RevealSection>

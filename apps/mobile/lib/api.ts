@@ -288,6 +288,21 @@ export type MobileIngredientAnalysis = {
   flags: MobileIngredientFlag[];
 };
 
+export type MobileProductComparisonSide = {
+  score: number;
+  highlights: string[];
+  concerns: string[];
+  flags: MobileIngredientFlag[];
+};
+
+export type MobileProductComparisonResult = {
+  winner: "A" | "B" | "tie";
+  winnerReason: string;
+  recommendation: string;
+  productA: MobileProductComparisonSide;
+  productB: MobileProductComparisonSide;
+};
+
 export type MobileStyleDnaPrefs = {
   colorSeason: string | null;
   undertone: string | null;
@@ -643,6 +658,17 @@ export async function analyzeIngredients(
   return fetchWithAuth<MobileIngredientAnalysis>("/api/ingredients/analyze", {
     method: "POST",
     body: JSON.stringify({ ingredients, skinContext }),
+  });
+}
+
+export async function compareIngredients(
+  productA: { name?: string; ingredients: string },
+  productB: { name?: string; ingredients: string },
+  skinContext?: { type: string; concerns: string[] },
+): Promise<MobileProductComparisonResult> {
+  return fetchWithAuth<MobileProductComparisonResult>("/api/ingredients/compare", {
+    method: "POST",
+    body: JSON.stringify({ productA, productB, skinContext }),
   });
 }
 

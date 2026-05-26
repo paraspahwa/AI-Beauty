@@ -7,6 +7,7 @@ import { normalizeRekognitionGender } from "@/lib/hair-options";
 import { AIBeautyStudio } from "@/components/report/AIBeautyStudio";
 import { CanvasShareButton } from "@/components/studio/CanvasShareButton";
 import type { StudioEntitlement } from "@/types/report";
+import styles from "../studio.module.css";
 
 /**
  * Studio Canvas Session Page
@@ -78,48 +79,38 @@ export default async function StudioSessionPage({
   };
 
   return (
-    <main className="min-h-screen" style={{ background: "linear-gradient(to bottom, #fffafc, #fffafc)" }}>
+    <main className={`min-h-screen ${styles.pageBaseCompact}`}>
       <div className="container max-w-4xl py-8 sm:py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <span className="section-label mb-2 inline-flex text-xs">Studio Canvas</span>
-          <h1 className="font-sans text-2xl sm:text-3xl text-ink">Virtual Try-On Studio</h1>
-          <p className="text-ink-stone text-sm mt-2">
-            Canvas created {new Date(canvas.created_at).toLocaleDateString("en-IN", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
-          </p>
-        </div>
+        <div className={`mb-8 rounded-[2rem] border px-5 py-5 sm:px-6 sm:py-6 ${styles.surfaceCard}`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <span className="section-label mb-2 inline-flex text-xs">Studio Canvas</span>
+              <h1 className="font-sans text-2xl sm:text-3xl text-ink">Virtual Try-On Studio</h1>
+              <p className="text-ink-stone text-sm mt-2">
+                Canvas created {new Date(canvas.created_at).toLocaleDateString("en-IN", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
 
-        <div className="mb-6">
-          <CanvasShareButton
-            canvasId={canvasId}
-            initialShareUrl={null}
-          />
+            <div className="w-full sm:w-auto">
+              <CanvasShareButton
+                canvasId={canvasId}
+                initialShareUrl={null}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Quota Banner */}
         {quota.remaining !== null && (
           <div
-            className="mb-6 rounded-2xl px-4 py-3 flex items-center justify-between"
-            style={{
-              background:
-                quota.remaining <= 1
-                  ? "rgba(239,68,68,0.08)"
-                  : "rgba(16,185,129,0.08)",
-              border:
-                quota.remaining <= 1
-                  ? "1px solid rgba(239,68,68,0.2)"
-                  : "1px solid rgba(16,185,129,0.2)",
-            }}
+            className={`mb-6 rounded-2xl px-4 py-3 flex items-center justify-between ${quota.remaining <= 1 ? styles.quotaWarn : styles.quotaGood}`}
           >
             <p
-              className="text-sm font-semibold"
-              style={{
-                color: quota.remaining <= 1 ? "#DC2626" : "#059669",
-              }}
+              className={`text-sm font-semibold ${quota.remaining <= 1 ? styles.quotaWarnText : styles.quotaGoodText}`}
             >
               {quota.tier === "studio_pro" ? (
                 <>✨ Studio Pro — Unlimited Generations</>

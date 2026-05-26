@@ -4,10 +4,11 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Upload, LogIn } from "lucide-react";
+import { ArrowRight, Camera, LogIn, Sparkles, ShieldCheck, Upload, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import styles from "./studio.module.css";
 
 /**
  * AI Beauty Studio Canvas
@@ -25,6 +26,24 @@ export default function StudioPage() {
   const [preview, setPreview] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  const featureCards = [
+    {
+      title: "Makeup",
+      icon: Wand2,
+      text: "Try polished looks built for your face and lighting.",
+    },
+    {
+      title: "Hair",
+      icon: Camera,
+      text: "Preview cuts and colors before you commit.",
+    },
+    {
+      title: "Outfits",
+      icon: Upload,
+      text: "Generate complete looks with a clear source photo.",
+    },
+  ];
 
   React.useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -98,9 +117,12 @@ export default function StudioPage() {
 
   if (authLoading) {
     return (
-      <main className="container max-w-2xl py-12 sm:py-20 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-ink-stone">Loading...</p>
+      <main className={`min-h-screen ${styles.pageBaseCompact}`}>
+        <div className="container max-w-2xl py-24 sm:py-28 min-h-screen flex items-center justify-center">
+          <div className={`rounded-3xl border px-6 py-5 text-center ${styles.loadingCard}`}>
+            <p className="text-sm font-medium text-ink">Loading Studio Canvas…</p>
+            <p className="mt-1 text-xs text-ink-stone">Preparing your workspace and checking session access.</p>
+          </div>
         </div>
       </main>
     );
@@ -109,51 +131,88 @@ export default function StudioPage() {
   // Not logged in
   if (!user) {
     return (
-      <main className="container max-w-2xl py-12 sm:py-20 min-h-screen">
-        <div className="mb-12">
-          <span className="section-label mb-3 inline-flex">
-            <Sparkles className="h-3.5 w-3.5 mr-2" />
-            AI Studio Canvas
-          </span>
-          <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-4">
-            Virtual Try-Ons Await
-          </h1>
-          <p className="text-ink-stone text-lg mb-8">
-            Try makeup, hair, and clothing looks instantly. No commitment, no analysis—just fun.
-          </p>
-        </div>
+      <main className={`min-h-screen ${styles.pageBase}`}>
+        <div className="container max-w-6xl py-10 sm:py-16">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-6">
+              <span className="section-label inline-flex">
+                <Sparkles className="mr-2 h-3.5 w-3.5" />
+                AI Studio Canvas
+              </span>
+              <div className="space-y-4">
+                <h1 className="max-w-xl font-sans text-4xl leading-tight text-ink sm:text-5xl">
+                  A focused try-on workspace for makeup, hair, and outfits.
+                </h1>
+                <p className="max-w-2xl text-lg leading-relaxed text-ink-stone">
+                  Upload a photo once, then test looks without opening a full report. It is built for quick play, clean previews, and faster decisions.
+                </p>
+              </div>
 
-        <div className="rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.08), rgba(17,24,39,0.08))", border: "1px solid rgba(17,24,39,0.12)" }}>
-          <Sparkles className="h-12 w-12 mx-auto mb-4" style={{ color: "#111827" }} />
-          <h2 className="font-sans text-2xl text-ink mb-3">Sign In to Get Started</h2>
-          <p className="text-ink-stone mb-6">
-            Log in to upload your photo and explore try-on possibilities. <strong>3 free generations per month.</strong>
-          </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="accent" size="lg">
+                  <Link href="/auth?redirect=/studio">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In to Start
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/upload">
+                    View Full Analysis
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
 
-          <Button asChild variant="accent" size="lg">
-            <Link href={`/auth?redirect=/studio`}>
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In
-            </Link>
-          </Button>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {featureCards.map((item) => (
+                  <div key={item.title} className={`rounded-2xl border p-4 ${styles.softCard}`}>
+                    <item.icon className="h-4 w-4 text-[#111827]" />
+                    <p className="mt-3 text-sm font-semibold text-ink">{item.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-stone">{item.text}</p>
+                  </div>
+                ))}
+              </div>
 
-          <p className="text-xs text-ink-stone mt-6">
-            Don&apos;t have an account? <Link href="/auth" className="underline hover:no-underline">Create one free</Link>
-          </p>
-        </div>
-
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {[
-            { icon: "💄", title: "Makeup Looks", desc: "Try 4 trending makeup styles" },
-            { icon: "💇", title: "Hair Styles", desc: "Experiment with cuts & colors" },
-            { icon: "👗", title: "Outfits", desc: "Build your capsule wardrobe" },
-          ].map((item) => (
-            <div key={item.title} className="rounded-2xl p-6 text-center" style={{ background: "rgba(251,231,242,0.5)", border: "1px solid rgba(17,24,39,0.12)" }}>
-              <p className="text-3xl mb-2">{item.icon}</p>
-              <p className="font-semibold text-ink mb-1">{item.title}</p>
-              <p className="text-xs text-ink-stone">{item.desc}</p>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-ink-stone">
+                <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Private uploads</span>
+                <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> 3 free generations / month</span>
+                <span className="flex items-center gap-1.5"><Wand2 className="h-3.5 w-3.5" /> Studio Pro unlocks unlimited</span>
+              </div>
             </div>
-          ))}
+
+            <div className={`rounded-[2rem] border p-5 sm:p-6 shadow-[0_24px_60px_rgba(17,24,39,0.10)] ${styles.surfaceCard}`}>
+              <div className={`rounded-3xl p-5 text-center ${styles.heroCard}`}>
+                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ${styles.inkDark}`}>
+                  <Upload className="h-6 w-6 text-white" />
+                </div>
+                <h2 className="mt-4 font-sans text-2xl text-ink">Sign in to upload your photo</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-stone">
+                  You will land directly in the Studio once you are authenticated.
+                </p>
+                <div className={`mt-5 rounded-2xl border px-4 py-3 text-left ${styles.softCard}`}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">Best for</p>
+                  <ul className="mt-3 space-y-2 text-sm text-ink-stone">
+                    <li>• Front-facing selfies for makeup and hair</li>
+                    <li>• Full-body photos for outfit try-ons</li>
+                    <li>• Clean, well-lit photos for sharper results</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {[
+              { title: "Fast", desc: "No report setup needed before you try looks." },
+              { title: "Reusable", desc: "Use one upload as the source for multiple generations." },
+              { title: "Premium-ready", desc: "Upgrade path stays visible without getting in the way." },
+            ].map((item) => (
+              <div key={item.title} className={`rounded-2xl border px-4 py-4 ${styles.softCard}`}>
+                <p className="text-sm font-semibold text-ink">{item.title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-stone">{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     );
@@ -161,109 +220,119 @@ export default function StudioPage() {
 
   // Logged in - show upload
   return (
-    <main className="container max-w-2xl py-12 sm:py-20 min-h-screen">
-      <div className="mb-12">
-        <span className="section-label mb-3 inline-flex">
-          <Sparkles className="h-3.5 w-3.5 mr-2" />
-          AI Studio Canvas
-        </span>
-        <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-4">
-          Virtual Try-On Studio
-        </h1>
-        <p className="text-ink-stone text-lg mb-2">
-          Upload your photo, explore looks, and download your favorites instantly.
-        </p>
-        <p className="text-sm" style={{ color: "#9C7D5B" }}>
-          3 free generations per month · <Link href="/auth?plan=studio_pro" className="underline hover:no-underline" style={{ color: "#111827" }}>Upgrade to Studio Pro for unlimited</Link>
-        </p>
-      </div>
-
-      {/* Upload Zone */}
-      <div className="rounded-3xl border-2 border-dashed p-8 sm:p-12 text-center mb-6" style={{ borderColor: "#E8DDD0", background: "rgba(255,247,251,0.5)" }}>
-        <Upload className="h-12 w-12 mx-auto mb-4 opacity-30" />
-
-        {preview ? (
-          <div className="mb-6">
-            <div className="relative inline-block rounded-2xl overflow-hidden" style={{ maxWidth: "300px" }}>
-              <Image
-                src={preview}
-                alt="Preview"
-                width={300}
-                height={400}
-                unoptimized
-                className="w-full h-auto"
-              />
-            </div>
-            <p className="text-sm text-ink-stone mt-4">{selectedFile?.name}</p>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-xl font-semibold text-ink mb-2">Upload Your Photo</h2>
-            <p className="text-ink-stone mb-6">
-              Front-facing selfie works best for makeup & hair.<br />
-              Full-body photo for outfit try-ons.
+    <main className={`min-h-screen ${styles.pageBaseCompact}`}>
+      <div className="container max-w-6xl py-8 sm:py-12">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="section-label mb-3 inline-flex">
+              <Sparkles className="mr-2 h-3.5 w-3.5" />
+              AI Studio Canvas
+            </span>
+            <h1 className="font-sans text-3xl sm:text-4xl text-ink">Virtual Try-On Studio</h1>
+            <p className="mt-2 max-w-2xl text-base sm:text-lg text-ink-stone">
+              Upload your photo once and reuse it across makeup, hair, and outfit modes.
             </p>
-          </>
-        )}
-
-        <div className="flex flex-col gap-3 items-center">
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              disabled={uploading}
-              className="hidden"
-            />
-            <Button
-              variant="accent"
-              size="lg"
-              asChild
-              disabled={uploading}
-            >
-              <span>{uploading ? "Uploading..." : preview ? "Change Photo" : "Select Photo"}</span>
-            </Button>
-          </label>
-
-          {preview && (
-            <Button
-              onClick={handleUpload}
-              disabled={uploading}
-              size="lg"
-              style={{ background: "#111827" }}
-            >
-              {uploading ? "Processing..." : "Start Try-On"}
-            </Button>
-          )}
+          </div>
+          <p className={`text-sm ${styles.textMuted}`}>
+            3 free generations per month · <Link href="/auth?plan=studio_pro" className="underline hover:no-underline text-[#111827]">Upgrade to Studio Pro for unlimited</Link>
+          </p>
         </div>
 
-        {error && (
-          <p className="mt-4 text-sm text-red-600">{error}</p>
-        )}
-      </div>
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className={`rounded-[2rem] border p-5 sm:p-6 ${styles.surfaceCard}`}>
+            <div className={`rounded-[1.5rem] border-2 border-dashed p-6 sm:p-8 text-center ${styles.uploadCard}`}>
+              <Upload className="mx-auto mb-4 h-12 w-12 opacity-30" />
 
-      {/* Tips */}
-      <div className="rounded-2xl p-6" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.12)" }}>
-        <p className="text-sm font-semibold text-ink mb-3">💡 Tips for Best Results</p>
-        <ul className="text-xs text-ink-stone space-y-2">
-          <li>✦ Good lighting shows facial features clearly for makeup</li>
-          <li>✦ Front-facing photos with visible hair work best for styling</li>
-          <li>✦ Full-body standing photos let outfits drape naturally</li>
-          <li>✦ Plain backgrounds reduce AI processing time</li>
-        </ul>
-      </div>
+              {preview ? (
+                <div className="mb-6">
+                  <div className={`relative mx-auto inline-block overflow-hidden rounded-2xl ${styles.previewFrame}`}>
+                    <Image
+                      src={preview}
+                      alt="Preview"
+                      width={320}
+                      height={420}
+                      unoptimized
+                      className="h-auto w-full"
+                    />
+                  </div>
+                  <p className="mt-4 text-sm text-ink-stone">{selectedFile?.name}</p>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-xl font-semibold text-ink mb-2">Upload your photo</h2>
+                  <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-ink-stone">
+                    Front-facing selfie works best for makeup and hair. Use a full-body photo for outfit try-ons.
+                  </p>
+                </>
+              )}
 
-      {/* CTA: Get Full Analysis */}
-      <div className="mt-12 rounded-3xl p-8 sm:p-12 text-center" style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.1), rgba(17,24,39,0.1))", border: "1px solid rgba(17,24,39,0.12)" }}>
-        <h2 className="font-sans text-2xl text-ink mb-3">Ready for Full Beauty Analysis?</h2>
-        <p className="text-ink-stone mb-6">
-          Get a complete report with face shape, color palette, skin routine, and personalized recommendations.
-        </p>
-        <Button asChild variant="accent" size="lg">
-          <Link href="/upload">
-            Unlock Full Analysis — ₹299
-          </Link>
-        </Button>
+              <div className="flex flex-col items-center gap-3">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <Button variant="accent" size="lg" asChild disabled={uploading}>
+                    <span>{uploading ? "Uploading..." : preview ? "Change Photo" : "Select Photo"}</span>
+                  </Button>
+                </label>
+
+                {preview && (
+                  <Button onClick={handleUpload} disabled={uploading} size="lg" className="bg-[#111827] text-white hover:bg-[#111827]/95">
+                    {uploading ? "Processing..." : "Start Try-On"}
+                  </Button>
+                )}
+              </div>
+
+              {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className={`rounded-[2rem] border p-5 sm:p-6 ${styles.surfaceCard}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink">How it works</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  "Upload once and reuse the same source photo.",
+                  "Try makeup, hair, and outfits from one workspace.",
+                  "Save clean generations back into your vault.",
+                ].map((step, index) => (
+                  <div key={step} className={`flex items-start gap-3 rounded-2xl border px-4 py-3 ${styles.inlinePanel}`}>
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${styles.stepBubble}`}>
+                      <span className="text-xs font-semibold">{index + 1}</span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-ink-stone">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={`rounded-[2rem] border p-5 sm:p-6 ${styles.surfaceCard}`}>
+              <p className="text-sm font-semibold text-ink mb-3">Best results</p>
+              <ul className="space-y-2 text-sm text-ink-stone">
+                <li>• Good lighting keeps facial details crisp.</li>
+                <li>• Visible hair helps styling look realistic.</li>
+                <li>• Plain backgrounds make editing cleaner.</li>
+                <li>• Full-body shots give better outfit drape.</li>
+              </ul>
+            </div>
+
+            <div className={`rounded-[2rem] border p-5 sm:p-6 ${styles.heroCard}`}>
+              <h2 className="font-sans text-2xl text-ink mb-2">Ready for full beauty analysis?</h2>
+              <p className="text-sm leading-relaxed text-ink-stone mb-5">
+                Get face shape, color palette, skin routine, and personalized recommendations in one report.
+              </p>
+              <Button asChild variant="accent" size="lg" className="w-full sm:w-auto">
+                <Link href="/upload">
+                  Unlock Full Analysis — ₹299
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );

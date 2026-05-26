@@ -127,6 +127,7 @@ export default function ReportScreen() {
   const [activeTab, setActiveTab] = useState<ReportTab>("face");
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
+  const [showExportSheet, setShowExportSheet] = useState(false);
   const previewTranslateY = useRef(new Animated.Value(0)).current;
   const preferredIntent = parseReportIntent(params.intent);
 
@@ -388,18 +389,27 @@ export default function ReportScreen() {
   async function handlePdfHandoff() {
     try {
       if (!report) throw new Error("Missing report");
-      const webUrl = `${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/report/${report.id}`;
-      Alert.alert(
-        "Open PDF in web report",
-        "Mobile cannot download the authenticated PDF directly in this app yet. We'll open the web report so you can use the existing PDF download there.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Open web report", onPress: () => { void Linking.openURL(webUrl); } },
-        ],
-      );
+      setShowExportSheet(true);
     } catch (err) {
       Alert.alert("Open PDF", String(err));
     }
+  }
+
+  async function handleOpenWebReportForPdf() {
+    if (!report) return;
+    setShowExportSheet(false);
+    const webUrl = `${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/report/${report.id}`;
+    await Linking.openURL(webUrl);
+  }
+
+  async function handleShareFromExportSheet() {
+    setShowExportSheet(false);
+    await handleShareReport();
+  }
+
+  async function handleRevokeFromExportSheet() {
+    setShowExportSheet(false);
+    await handleRevokeShare();
   }
 
   async function handleUnlock() {
@@ -920,6 +930,33 @@ export default function ReportScreen() {
           </Animated.View>
         </View>
       </Modal>
+
+      <Modal visible={showExportSheet} animationType="slide" transparent onRequestClose={() => setShowExportSheet(false)}>
+        <View style={styles.exportSheetRoot}>
+          <Pressable style={styles.exportSheetBackdrop} onPress={() => setShowExportSheet(false)} />
+          <View style={styles.exportSheetPanel}>
+            <View style={styles.previewGrabber} />
+            <Text style={styles.exportSheetTitle}>Export report</Text>
+            <Text style={styles.exportSheetBody}>
+              Mobile export is handled through the web report for now. You can open the report PDF there, or share a public link from the app.
+            </Text>
+            <Pressable onPress={() => void handleOpenWebReportForPdf()} style={styles.chatLaunchButton}>
+              <Text style={styles.chatLaunchButtonLabel}>Open web report for PDF</Text>
+            </Pressable>
+            <Pressable onPress={() => void handleShareFromExportSheet()} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonLabel}>{shareToken ? "Share public link" : "Create and share link"}</Text>
+            </Pressable>
+            {shareToken ? (
+              <Pressable onPress={() => void handleRevokeFromExportSheet()} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonLabel}>Revoke public link</Text>
+              </Pressable>
+            ) : null}
+            <Pressable onPress={() => setShowExportSheet(false)} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonLabel}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1407,6 +1444,30 @@ const styles = StyleSheet.create({
     color: t.color.textSoft,
     fontSize: 13,
     fontWeight: "600",
+  },
+  exportSheetRoot: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  exportSheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: t.color.overlayDark78,
+  },
+  exportSheetPanel: {
+    backgroundColor: t.color.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 18,
+    gap: 10,
+  },
+  exportSheetTitle: {
+    color: t.color.text,
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  exportSheetBody: {
+    color: t.color.textMuted,
+    lineHeight: 20,
   },
 });
 

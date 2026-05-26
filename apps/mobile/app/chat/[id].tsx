@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
-import { analyzeIngredients, deleteChatBookmark, fetchChatBookmarks, fetchChatHistory, fetchReport, saveChatBookmark, type MobileChatBookmark, type MobileChatMessage, type MobileIngredientAnalysis, type MobileReport, sendChatMessage } from "@/lib/api";
+import { analyzeIngredients, compareIngredients, deleteChatBookmark, fetchChatBookmarks, fetchChatHistory, fetchReport, saveChatBookmark, type MobileChatBookmark, type MobileChatMessage, type MobileIngredientAnalysis, type MobileProductComparisonResult, type MobileReport, sendChatMessage } from "@/lib/api";
 import { mobileTheme as t } from "@/lib/theme";
 
 function buildChatSuggestions(report: MobileReport | null): string[] {
@@ -42,6 +42,12 @@ export default function ChatScreen() {
   const [ingredientInput, setIngredientInput] = useState("");
   const [ingredientLoading, setIngredientLoading] = useState(false);
   const [ingredientResult, setIngredientResult] = useState<MobileIngredientAnalysis | null>(null);
+  const [compareNameA, setCompareNameA] = useState("Product A");
+  const [compareIngredientsA, setCompareIngredientsA] = useState("");
+  const [compareNameB, setCompareNameB] = useState("Product B");
+  const [compareIngredientsB, setCompareIngredientsB] = useState("");
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareResult, setCompareResult] = useState<MobileProductComparisonResult | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const suggestions = useMemo(() => buildChatSuggestions(report), [report]);
@@ -158,6 +164,35 @@ export default function ChatScreen() {
     }
   }
 
+  async function handleCompareProducts() {
+    try {
+      const payloadA = compareIngredientsA.trim();
+      const payloadB = compareIngredientsB.trim();
+      if (payloadA.length < 10 || payloadB.length < 10) {
+        Alert.alert("Product comparison", "Please paste ingredient lists for both products.");
+        return;
+      }
+
+      setCompareLoading(true);
+      setCompareResult(null);
+      const result = await compareIngredients(
+        { name: compareNameA.trim() || "Product A", ingredients: payloadA },
+        { name: compareNameB.trim() || "Product B", ingredients: payloadB },
+        report?.skinAnalysis?.type
+          ? {
+              type: report.skinAnalysis.type,
+              concerns: report.skinAnalysis.concerns?.map((item) => item.label) ?? [],
+            }
+          : undefined,
+      );
+      setCompareResult(result);
+    } catch (err) {
+      Alert.alert("Product comparison", String(err));
+    } finally {
+      setCompareLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
@@ -252,6 +287,59 @@ export default function ChatScreen() {
               <Text style={styles.helper}>{ingredientResult.summary}</Text>
               {ingredientResult.highlights?.length ? <Text style={styles.helper}>Highlights: {ingredientResult.highlights.join(" • ")}</Text> : null}
               {ingredientResult.concerns?.length ? <Text style={styles.helper}>Concerns: {ingredientResult.concerns.join(" • ")}</Text> : null}
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Product comparison</Text>
+          <Text style={styles.helper}>Compare two products side by side using your skin profile and ingredient lists.</Text>
+
+          <TextInput value={compareNameA} onChangeText={setCompareNameA} placeholder="Product A name" style={styles.compareNameInput} />
+          <TextInput
+            value={compareIngredientsA}
+            onChangeText={setCompareIngredientsA}
+            placeholder="Product A ingredients"
+            style={styles.ingredientInput}
+            multiline
+          />
+
+          <TextInput value={compareNameB} onChangeText={setCompareNameB} placeholder="Product B name" style={styles.compareNameInput} />
+          <TextInput
+            value={compareIngredientsB}
+            onChangeText={setCompareIngredientsB}
+            placeholder="Product B ingredients"
+            style={styles.ingredientInput}
+            multiline
+          />
+
+          <Pressable
+            onPress={() => void handleCompareProducts()}
+            disabled={compareLoading || compareIngredientsA.trim().length < 10 || compareIngredientsB.trim().length < 10}
+            style={[styles.secondarySendButton, compareLoading || compareIngredientsA.trim().length < 10 || compareIngredientsB.trim().length < 10 ? styles.disabledButton : null]}
+          >
+            <Text style={styles.sendButtonLabel}>{compareLoading ? "Comparing..." : "Compare products"}</Text>
+          </Pressable>
+
+          {compareResult ? (
+            <View style={styles.ingredientResultCard}>
+              <Text style={styles.ingredientScore}>
+                Winner: {compareResult.winner === "tie" ? "Tie" : compareResult.winner === "A" ? compareNameA || "Product A" : compareNameB || "Product B"}
+              </Text>
+              <Text style={styles.helper}>{compareResult.winnerReason}</Text>
+              <Text style={styles.helper}>{compareResult.recommendation}</Text>
+              <View style={styles.compareColumns}>
+                <View style={styles.compareColumn}>
+                  <Text style={styles.compareColumnTitle}>{compareNameA || "Product A"} · {compareResult.productA.score}/10</Text>
+                  {compareResult.productA.highlights?.length ? <Text style={styles.helper}>Highlights: {compareResult.productA.highlights.join(" • ")}</Text> : null}
+                  {compareResult.productA.concerns?.length ? <Text style={styles.helper}>Concerns: {compareResult.productA.concerns.join(" • ")}</Text> : null}
+                </View>
+                <View style={styles.compareColumn}>
+                  <Text style={styles.compareColumnTitle}>{compareNameB || "Product B"} · {compareResult.productB.score}/10</Text>
+                  {compareResult.productB.highlights?.length ? <Text style={styles.helper}>Highlights: {compareResult.productB.highlights.join(" • ")}</Text> : null}
+                  {compareResult.productB.concerns?.length ? <Text style={styles.helper}>Concerns: {compareResult.productB.concerns.join(" • ")}</Text> : null}
+                </View>
+              </View>
             </View>
           ) : null}
         </View>
@@ -465,6 +553,31 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   ingredientScore: {
+    color: t.color.text,
+    fontWeight: "700",
+  },
+  compareNameInput: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
+    color: t.color.text,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+  },
+  compareColumns: {
+    gap: 10,
+  },
+  compareColumn: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.bg,
+    padding: 12,
+    gap: 4,
+  },
+  compareColumnTitle: {
     color: t.color.text,
     fontWeight: "700",
   },

@@ -1,0 +1,108 @@
+.pageBase {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(17, 24, 39, 0.12), transparent 26%),
+    radial-gradient(circle at top right, rgba(200, 169, 110, 0.20), transparent 24%),
+    linear-gradient(180deg, #fffafc 0%, #fff7fb 100%);
+}
+
+.pageBaseCompact {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(17, 24, 39, 0.08), transparent 32%),
+    linear-gradient(180deg, #fffafc 0%, #fff7fb 100%);
+}
+
+.loadingCard {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.softCard {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+}
+
+.surfaceCard {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.heroCard {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.10), rgba(17, 24, 39, 0.06));
+  border: 1px solid rgba(17, 24, 39, 0.10);
+}
+
+.uploadCard {
+  background: rgba(255, 247, 251, 0.55);
+  border: 2px dashed #e8ddd0;
+}
+
+.inlinePanel {
+  background: rgba(17, 24, 39, 0.03);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.sidePanel {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.inkDark {
+  background: #111827;
+}
+
+.borderLight {
+  border-color: rgba(17, 24, 39, 0.12);
+}
+
+.borderSoft {
+  border-color: rgba(17, 24, 39, 0.10);
+}
+
+.borderWarm {
+  border-color: #e8ddd0;
+}
+
+.textMuted {
+  color: #9c7d5b;
+}
+
+.textMuted2 {
+  color: #7c5a3a;
+}
+
+.textInk {
+  color: #111827;
+}
+
+.textSoft {
+  color: #6b5344;
+}
+
+.quotaGood {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.quotaWarn {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.quotaGoodText {
+  color: #059669;
+}
+
+.quotaWarnText {
+  color: #dc2626;
+}
+
+.previewFrame {
+  max-width: 320px;
+}
+
+.stepBubble {
+  background: #111827;
+  color: #ffffff;
+}

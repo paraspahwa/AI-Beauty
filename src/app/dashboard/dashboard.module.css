@@ -1,0 +1,122 @@
+.pageBase {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(17, 24, 39, 0.10), transparent 26%),
+    radial-gradient(circle at top right, rgba(200, 169, 110, 0.14), transparent 22%),
+    linear-gradient(180deg, #fffafc 0%, #fff7fb 100%);
+}
+
+.heroCard {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.surfaceCard {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+}
+
+.surfaceCardStrong {
+  background: linear-gradient(145deg, rgba(255, 247, 251, 0.96), rgba(251, 231, 242, 0.88));
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+}
+
+.softSurface {
+  background: rgba(17, 24, 39, 0.06);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.softSurfaceAlt {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.10), rgba(17, 24, 39, 0.06));
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.badgePro {
+  background: rgba(17, 24, 39, 0.15);
+  color: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.3);
+}
+
+.badgeReport {
+  background: rgba(17, 24, 39, 0.12);
+  color: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.25);
+}
+
+.badgeFree {
+  background: rgba(17, 24, 39, 0.10);
+  color: rgba(17, 24, 39, 0.55);
+  border: 1px solid rgba(17, 24, 39, 0.18);
+}
+
+.tabActive {
+  background: rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(17, 24, 39, 0.35);
+  color: #111827;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.12);
+}
+
+.tabInactive {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  color: #3d2b1f;
+}
+
+.tierPill {
+  border: 1px solid rgba(17, 24, 39, 0.18);
+}
+
+.tierPillFree {
+  background: rgba(17, 24, 39, 0.10);
+  color: rgba(17, 24, 39, 0.55);
+  border: 1px solid rgba(17, 24, 39, 0.18);
+}
+
+.tierPillReport {
+  background: rgba(17, 24, 39, 0.12);
+  color: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.25);
+}
+
+.tierPillPro {
+  background: rgba(17, 24, 39, 0.15);
+  color: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.3);
+}
+
+.tileSurface {
+  background: rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.18);
+}
+
+.tileSurfaceAlt {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.10), rgba(17, 24, 39, 0.08));
+  border: 1px solid rgba(17, 24, 39, 0.18);
+}
+
+.secondaryCard {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+.emptyState {
+  background: linear-gradient(145deg, rgba(255, 247, 251, 0.92), rgba(251, 231, 242, 0.78));
+  border: 1px dashed rgba(17, 24, 39, 0.20);
+}
+
+.reportCard {
+  background: linear-gradient(145deg, rgba(255, 247, 251, 0.98), rgba(251, 231, 242, 0.92));
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+.reportCardActive {
+  background: linear-gradient(145deg, rgba(255, 250, 252, 0.98), rgba(251, 231, 242, 0.95));
+  border: 1px solid rgba(17, 24, 39, 0.18);
+}
+
+.iconBubble {
+  background: rgba(251, 231, 242, 0.92);
+  border: 1px solid rgba(17, 24, 39, 0.14);
+}

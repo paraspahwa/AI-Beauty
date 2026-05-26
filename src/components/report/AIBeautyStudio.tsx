@@ -275,24 +275,17 @@ function UploadZone({ onFile, preview, disabled, label, hint }: {
         const file = e.dataTransfer.files?.[0];
         if (file) onFile(file);
       }}
-      className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all cursor-pointer overflow-hidden"
-      style={{
-        minHeight: 180,
-        background: dragging ? "rgba(200,169,110,0.10)" : "#FAF6F0",
-        borderColor: dragging ? "#C8A96E" : "#E8DDD0",
-        opacity: disabled ? 0.5 : 1,
-      }}
+      className={`relative flex min-h-[180px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragging ? "border-[#C8A96E] bg-[rgba(200,169,110,0.10)]" : "border-[#E8DDD0] bg-[#FAF6F0]"} ${disabled ? "opacity-50" : "opacity-100"}`}
     >
       {preview ? (
         <Image src={preview} alt={label} fill className="object-contain p-3" unoptimized />
       ) : (
         <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full"
-            style={{ background: "rgba(200,169,110,0.15)" }}>
-            <Upload className="h-5 w-5" style={{ color: "#C8A96E" }} />
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[rgba(200,169,110,0.15)]">
+            <Upload className="h-5 w-5 text-[#C8A96E]" />
           </div>
-          <p className="text-sm font-medium" style={{ color: "#3D2B1F" }}>{label}</p>
-          <p className="text-xs leading-snug whitespace-pre-line" style={{ color: "#9C7D5B" }}>{hint}</p>
+          <p className="text-sm font-medium text-[#3D2B1F]">{label}</p>
+          <p className="text-xs leading-snug whitespace-pre-line text-[#9C7D5B]">{hint}</p>
         </div>
       )}
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only"
@@ -314,30 +307,27 @@ function ResultPanel({ url, hdUrl, lowResUrl, status, onRetry, onDownload, isDow
 }) {
   if (status === "loading") {
     return (
-      <div className="studio-shimmer flex flex-col items-center justify-center rounded-2xl gap-3"
-        style={{ minHeight: 260, border: "1px solid #E8DDD0" }}>
-        <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#C8A96E" }} />
-        <p className="text-sm font-medium" style={{ color: "#9C7D5B" }}>Generating your look…</p>
-        <p className="text-xs" style={{ color: "#B8A898" }}>This takes ~30–60 seconds</p>
+      <div className="studio-shimmer flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl border border-[#E8DDD0]">
+        <Loader2 className="h-7 w-7 animate-spin text-[#C8A96E]" />
+        <p className="text-sm font-medium text-[#9C7D5B]">Generating your look…</p>
+        <p className="text-xs text-[#B8A898]">This takes ~30–60 seconds</p>
       </div>
     );
   }
   if (status === "error") {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl p-8 text-center"
-        style={{ minHeight: 260, background: "rgba(192,107,62,0.06)", border: "1px dashed rgba(192,107,62,0.3)" }}>
+      <div className="flex min-h-[260px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-[rgba(192,107,62,0.3)] bg-[rgba(192,107,62,0.06)] p-8 text-center">
         <div className="relative h-14 w-20">
           <div
-            className="absolute inset-0 rounded-full"
-            style={{ background: "linear-gradient(135deg, rgba(17,24,39,0.2), rgba(14,165,164,0.2))" }}
+            className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(17,24,39,0.2),rgba(14,165,164,0.2))]"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <X className="h-8 w-8" style={{ color: "#C06B3E" }} />
+            <X className="h-8 w-8 text-[#C06B3E]" />
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium" style={{ color: "#3D2B1F" }}>Generation failed</p>
-          <p className="mt-1 text-xs" style={{ color: "#9C7D5B" }}>
+          <p className="text-sm font-medium text-[#3D2B1F]">Generation failed</p>
+          <p className="mt-1 text-xs text-[#9C7D5B]">
             Try a clearer photo or slightly different controls, then retry.
           </p>
         </div>
@@ -351,15 +341,15 @@ function ResultPanel({ url, hdUrl, lowResUrl, status, onRetry, onDownload, isDow
   }
   if (status === "done" && (url || lowResUrl)) {
     return (
-      <div className="studio-result relative rounded-2xl overflow-hidden" style={{ minHeight: 260 }}>
+      <div className="studio-result relative min-h-[260px] overflow-hidden rounded-2xl">
         <Image src={url || lowResUrl!} alt="AI Studio result" width={480} height={480}
           className="w-full h-auto object-cover rounded-2xl transition-opacity duration-500"
           style={{ opacity: (url && !lowResUrl) || !hdUrl ? 1 : 0.85 }}
           unoptimized />
         {isHdPending && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/60 pointer-events-none">
-            <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#C8A96E" }} />
-            <span className="ml-2 text-xs font-medium" style={{ color: "#9C7D5B" }}>Enhancing to HD…</span>
+            <Loader2 className="h-7 w-7 animate-spin text-[#C8A96E]" />
+            <span className="ml-2 text-xs font-medium text-[#9C7D5B]">Enhancing to HD…</span>
           </div>
         )}
         <div className="absolute bottom-3 right-3 flex gap-2">
@@ -376,10 +366,9 @@ function ResultPanel({ url, hdUrl, lowResUrl, status, onRetry, onDownload, isDow
     );
   }
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl"
-      style={{ minHeight: 260, background: "#FAF6F0", border: "1px dashed #E8DDD0" }}>
-      <Sparkles className="h-8 w-8" style={{ color: "#C8A96E" }} />
-      <p className="text-sm font-medium" style={{ color: "#9C7D5B" }}>Result will appear here</p>
+    <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#E8DDD0] bg-[#FAF6F0]">
+      <Sparkles className="h-8 w-8 text-[#C8A96E]" />
+      <p className="text-sm font-medium text-[#9C7D5B]">Result will appear here</p>
     </div>
   );
 }
@@ -396,17 +385,16 @@ function StyledDropdown<T extends string>({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#9C7D5B" }}>{label}</label>
+      <label className="text-xs font-semibold uppercase tracking-wide text-[#9C7D5B]">{label}</label>
       <div className="relative">
         <select value={value} onChange={(e) => onChange(e.target.value as T)} disabled={disabled}
-          className="w-full appearance-none rounded-xl px-3.5 py-2.5 text-sm font-medium cursor-pointer pr-8"
-          style={{ background: "#F5EFE7", border: "1.5px solid #E0CEBC", color: "#3D2B1F" }}>
+          className="w-full appearance-none rounded-xl border-[1.5px] border-[#E0CEBC] bg-[#F5EFE7] px-3.5 py-2.5 pr-8 text-sm font-medium cursor-pointer text-[#3D2B1F]">
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
-          style={{ color: "#9C7D5B" }} />
+          className="text-[#9C7D5B]" />
       </div>
     </div>
   );
@@ -458,11 +446,10 @@ function HistoryStrip({ history, currentUrl, onSelect, onClear, onDownload, onUs
   }
 
   return (
-    <div className="px-5 py-3" style={{ borderTop: "1px solid #F0E8DF" }}>
+    <div className="border-t border-[#F0E8DF] px-5 py-3">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#B8A898" }}>History Timeline</p>
-        <button onClick={onClear} className="text-[10px] transition-opacity hover:opacity-70"
-          style={{ color: "#C06B3E" }}>Clear all</button>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#B8A898]">History Timeline</p>
+        <button onClick={onClear} className="text-[10px] text-[#C06B3E] transition-opacity hover:opacity-70">Clear all</button>
       </div>
       <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
         {history.map((item, i) => (
@@ -791,6 +778,27 @@ export function AIBeautyStudio({
     setCameraStatus("idle");
   }, []);
 
+  const isCameraAllowedByDocument = React.useCallback(() => {
+    if (typeof document === "undefined") return true;
+
+    const permissionsPolicy = (document as Document & {
+      permissionsPolicy?: { allowsFeature?: (feature: string) => boolean };
+      featurePolicy?: { allowsFeature?: (feature: string) => boolean };
+    }).permissionsPolicy;
+    if (permissionsPolicy?.allowsFeature && !permissionsPolicy.allowsFeature("camera")) {
+      return false;
+    }
+
+    const featurePolicy = (document as Document & {
+      featurePolicy?: { allowsFeature?: (feature: string) => boolean };
+    }).featurePolicy;
+    if (featurePolicy?.allowsFeature && !featurePolicy.allowsFeature("camera")) {
+      return false;
+    }
+
+    return true;
+  }, []);
+
   const startArOverlayLoop = React.useCallback(() => {
     if (arOverlayAnimationRef.current !== null) {
       cancelAnimationFrame(arOverlayAnimationRef.current);
@@ -934,6 +942,14 @@ export function AIBeautyStudio({
       return;
     }
 
+    if (!isCameraAllowedByDocument()) {
+      stopArCamera();
+      setCameraStatus("blocked");
+      setCameraError("This page is not allowed to use the camera in the current browser context.");
+      setArOverlayMessage("Camera blocked by the current browser context. Open AR in a full browser tab to continue.");
+      return;
+    }
+
     stopArCamera();
     setCameraStatus("requesting");
     setCameraError(null);
@@ -961,10 +977,10 @@ export function AIBeautyStudio({
           arFaceDetectorRef.current = new detectorCtor({ maxDetectedFaces: 1, fastMode: true });
           setArOverlayMessage("Realtime tracking active. Hold still for best guide placement.");
         } catch {
-          setArOverlayMessage("Guide mode active. Face tracking not supported in this browser.");
+          setArOverlayMessage("Guide mode active. Realtime face tracking is unavailable here, but capture still works.");
         }
       } else if (!detectorCtor) {
-        setArOverlayMessage("Guide mode active. Face tracking not supported in this browser.");
+        setArOverlayMessage("Guide mode active. Realtime face tracking is unavailable here, but capture still works.");
       }
 
       setCameraStatus("ready");
@@ -978,7 +994,7 @@ export function AIBeautyStudio({
       setArOverlayMessage("Camera unavailable. Enable camera access to continue.");
       setCameraError(message);
     }
-  }, [stopArCamera]);
+  }, [isCameraAllowedByDocument, stopArCamera]);
 
   function clearArFrame() {
     if (arFramePreview?.startsWith("blob:")) {
@@ -1507,11 +1523,10 @@ export function AIBeautyStudio({
   // ── Paywall ──
   if (!isPaid) {
     return (
-      <div className="rounded-3xl p-10 text-center"
-        style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.18)" }}>
-        <Lock className="h-10 w-10 mx-auto mb-4" style={{ color: "#C8A96E" }} />
-        <p className="text-base font-semibold mb-2" style={{ color: "#fffafc" }}>AI Beauty Studio is a premium feature</p>
-        <p className="text-sm" style={{ color: "#9C7D5B" }}>
+      <div className="rounded-3xl border border-[rgba(17,24,39,0.18)] bg-[linear-gradient(145deg,rgba(255,247,251,0.98),rgba(251,231,242,0.92))] p-10 text-center">
+        <Lock className="mx-auto mb-4 h-10 w-10 text-[#C8A96E]" />
+        <p className="mb-2 text-base font-semibold text-[#fffafc]">AI Beauty Studio is a premium feature</p>
+        <p className="text-sm text-[#9C7D5B]">
           Unlock to try on outfits, apply makeup looks, and change your hair — all powered by AI.
         </p>
       </div>
@@ -1582,25 +1597,22 @@ export function AIBeautyStudio({
   return (
     <>
       <style>{STUDIO_CSS}</style>
-      <div className="rounded-3xl overflow-hidden"
-        style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", boxShadow: "0 2px 24px rgba(61,43,31,0.06)" }}>
+      <div className="overflow-hidden rounded-3xl border border-[#E8DDD0] bg-[#FDFAF6] shadow-[0_2px_24px_rgba(61,43,31,0.06)]">
 
         {/* ── Header ── */}
-        <div className="px-6 py-5 flex items-center gap-3"
-          style={{ borderBottom: "1px solid #E8DDD0", background: "linear-gradient(135deg,rgba(200,169,110,0.08),rgba(232,221,208,0.12))" }}>
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl"
-            style={{ background: "#111827" }}>
-            <Sparkles className="h-4 w-4" style={{ color: "#3D2B1F" }} />
+        <div className="flex items-center gap-3 border-b border-[#E8DDD0] bg-[linear-gradient(135deg,rgba(200,169,110,0.08),rgba(232,221,208,0.12))] px-6 py-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#111827]">
+            <Sparkles className="h-4 w-4 text-[#3D2B1F]" />
           </div>
           <div>
-            <h2 className="text-base font-semibold" style={{ color: "#3D2B1F" }}>AI Beauty Studio</h2>
-            <p className="text-xs" style={{ color: "#9C7D5B" }}>Try on clothing, makeup, hair &amp; outfits - generate &amp; download instantly</p>
+            <h2 className="text-base font-semibold text-[#3D2B1F]">AI Beauty Studio</h2>
+            <p className="text-xs text-[#9C7D5B]">Try on clothing, makeup, hair &amp; outfits - generate &amp; download instantly</p>
           </div>
         </div>
 
         {/* ── Mode tabs ── */}
         <div className="px-5 pt-4 pb-2">
-          <div className="flex items-center gap-1 rounded-2xl p-1" style={{ background: "#F0E8DF" }}>
+          <div className="flex items-center gap-1 rounded-2xl bg-[#F0E8DF] p-1">
             {!isCanvas && <ModeTab label="👗 Clothing" active={mode === "clothing"} onClick={() => switchMode("clothing")} />}
             <ModeTab label="💄 Makeup"   active={mode === "makeup"}   onClick={() => switchMode("makeup")} />
             <ModeTab label="💇 Hair"     active={mode === "hair"}     onClick={() => switchMode("hair")} />
@@ -1611,18 +1623,10 @@ export function AIBeautyStudio({
 
         {/* ── Studio Pro quota banner ── */}
         {isStudioPro && remainingGens !== null && (
-          <div className="mx-5 mt-2 rounded-xl px-4 py-2.5 flex items-center justify-between"
-            style={{
-              background: isAtLimit
-                ? "rgba(239,68,68,0.08)"
-                : isNearLimit
-                  ? "rgba(245,158,11,0.08)"
-                  : "rgba(17,24,39,0.07)",
-              border: `1px solid ${isAtLimit ? "rgba(239,68,68,0.25)" : isNearLimit ? "rgba(245,158,11,0.25)" : "rgba(17,24,39,0.2)"}`,
-            }}>
+          <div className={`mx-5 mt-2 flex items-center justify-between rounded-xl border px-4 py-2.5 ${isAtLimit ? "border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)]" : isNearLimit ? "border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.08)]" : "border-[rgba(17,24,39,0.2)] bg-[rgba(17,24,39,0.07)]"}`}>
             <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 shrink-0" style={{ color: isAtLimit ? "#EF4444" : isNearLimit ? "#F59E0B" : "#C8A96E" }} />
-              <span className="text-xs font-medium" style={{ color: isAtLimit ? "#EF4444" : isNearLimit ? "#B45309" : "#7C5A3A" }}>
+              <Sparkles className={`h-3.5 w-3.5 shrink-0 ${isAtLimit ? "text-[#EF4444]" : isNearLimit ? "text-[#F59E0B]" : "text-[#C8A96E]"}`} />
+              <span className={`text-xs font-medium ${isAtLimit ? "text-[#EF4444]" : isNearLimit ? "text-[#B45309]" : "text-[#7C5A3A]"}`}>
                 {isAtLimit
                   ? `Monthly limit reached — resets ${periodResets ?? "next month"}`
                   : `${remainingGens} of ${cap} Studio generations left this month`}
@@ -1630,14 +1634,8 @@ export function AIBeautyStudio({
             </div>
             {!isAtLimit && usedGens !== null && (
               <div className="flex items-center gap-1.5 shrink-0">
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ width: 60, background: "rgba(0,0,0,0.08)" }}>
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${Math.round((usedGens / cap) * 100)}%`,
-                      background: isNearLimit ? "#F59E0B" : "#C8A96E",
-                    }}
-                  />
+                <div className="h-1.5 w-[60px] overflow-hidden rounded-full bg-[rgba(0,0,0,0.08)]">
+                  <div className={`h-full rounded-full transition-all ${isNearLimit ? "bg-[#F59E0B]" : "bg-[#C8A96E]"}`} style={{ width: `${Math.round((usedGens / cap) * 100)}%` }} />
                 </div>
               </div>
             )}
@@ -1645,11 +1643,11 @@ export function AIBeautyStudio({
         )}
 
         {/* ── Reusable source selector ── */}
-        <div className="mx-5 mt-3 rounded-2xl px-4 py-3" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.18)" }}>
+        <div className="mx-5 mt-3 rounded-2xl border border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.06)] px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9C7D5B" }}>Source for next generation</p>
-              <p className="text-[11px]" style={{ color: "#7C5A3A" }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9C7D5B]">Source for next generation</p>
+              <p className="text-[11px] text-[#7C5A3A]">
                 {sourceAssetId
                   ? `Using generated image from ${selectedVaultItem ? new Date(selectedVaultItem.createdAt).toLocaleString("en-IN") : "vault"}`
                   : "Using original selfie"}
@@ -1657,8 +1655,7 @@ export function AIBeautyStudio({
             </div>
             <button
               onClick={() => { setSourceAssetId(null); setSourcePreviewUrl(null); }}
-              className="rounded-full px-3 py-1.5 text-[11px] font-medium"
-              style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(17,24,39,0.3)", color: "#7C5A3A" }}
+              className="rounded-full border border-[rgba(17,24,39,0.3)] bg-[rgba(255,255,255,0.75)] px-3 py-1.5 text-[11px] font-medium text-[#7C5A3A]"
             >
               Use original
             </button>
@@ -1666,9 +1663,9 @@ export function AIBeautyStudio({
 
           <div className="mt-2 flex items-center gap-2 overflow-x-auto">
             {vaultLoading ? (
-              <p className="text-[11px]" style={{ color: "#B8A898" }}>Loading vault…</p>
+              <p className="text-[11px] text-[#B8A898]">Loading vault…</p>
             ) : vault.length === 0 ? (
-              <p className="text-[11px]" style={{ color: "#B8A898" }}>No generated images yet.</p>
+              <p className="text-[11px] text-[#B8A898]">No generated images yet.</p>
             ) : (
               vault.map((item) => (
                 <button
@@ -1677,8 +1674,8 @@ export function AIBeautyStudio({
                     setSourceAssetId(item.id);
                     setSourcePreviewUrl(item.imageUrl);
                   }}
-                  className="shrink-0 rounded-xl overflow-hidden"
-                  style={{ border: sourceAssetId === item.id ? "2px solid #111827" : "2px solid #E8DDD0", width: 56, height: 56 }}
+                  className={`shrink-0 overflow-hidden rounded-xl border ${sourceAssetId === item.id ? "border-[#111827]" : "border-[#E8DDD0]"}`}
+                  style={{ width: 56, height: 56, borderWidth: 2 }}
                   title={`${item.tool} • ${new Date(item.createdAt).toLocaleString("en-IN")}`}
                 >
                   {item.imageUrl ? (
@@ -1695,33 +1692,26 @@ export function AIBeautyStudio({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
             {/* Left: person */}
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: "#F0E8DF" }}>
+              <div className="flex items-center gap-1 rounded-xl bg-[#F0E8DF] p-1">
                 <button onClick={() => { setPhotoMode("selfie"); setModeResult("clothing", null, null); setModeStatus("clothing", "idle"); }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all"
-                  style={photoMode === "selfie"
-                    ? { background: "#FDFAF6", color: "#3D2B1F", boxShadow: "0 1px 4px rgba(61,43,31,0.12)" }
-                    : { background: "transparent", color: "#9C7D5B" }}>
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${photoMode === "selfie" ? "bg-[#FDFAF6] text-[#3D2B1F] shadow-[0_1px_4px_rgba(61,43,31,0.12)]" : "bg-transparent text-[#9C7D5B]"}`}>
                   <Sparkles className="h-3.5 w-3.5" /> My Selfie
                 </button>
                 <button onClick={() => { setPhotoMode("full"); setModeResult("clothing", null, null); setModeStatus("clothing", "idle"); }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all"
-                  style={photoMode === "full"
-                    ? { background: "#FDFAF6", color: "#3D2B1F", boxShadow: "0 1px 4px rgba(61,43,31,0.12)" }
-                    : { background: "transparent", color: "#9C7D5B" }}>
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all ${photoMode === "full" ? "bg-[#FDFAF6] text-[#3D2B1F] shadow-[0_1px_4px_rgba(61,43,31,0.12)]" : "bg-transparent text-[#9C7D5B]"}`}>
                   <UserRound className="h-3.5 w-3.5" /> Full Body ✦
                 </button>
               </div>
 
               {photoMode === "selfie" ? (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Your Photo</p>
-                  <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "3/4" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#9C7D5B]">Your Photo</p>
+                  <div className="relative overflow-hidden rounded-2xl aspect-[3/4]">
                     <Image src={effectiveSourcePhoto} alt="Your photo" fill className="object-cover" unoptimized />
                   </div>
-                  <div className="flex items-start gap-2 rounded-xl px-3 py-2.5"
-                    style={{ background: "rgba(200,169,110,0.08)", border: "1px solid rgba(200,169,110,0.2)" }}>
-                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#C8A96E" }} />
-                    <p className="text-[11px] leading-snug" style={{ color: "#9C7D5B" }}>
+                  <div className="flex items-start gap-2 rounded-xl border border-[rgba(200,169,110,0.2)] bg-[rgba(200,169,110,0.08)] px-3 py-2.5">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C8A96E]" />
+                    <p className="text-[11px] leading-snug text-[#9C7D5B]">
                       For better draping, switch to <strong>Full Body</strong> and upload a standing photo.
                     </p>
                   </div>
@@ -1729,19 +1719,18 @@ export function AIBeautyStudio({
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Full Body Photo</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#9C7D5B]">Full Body Photo</p>
                     {fullBodyFile && (
-                      <button onClick={clearFullBody} className="flex items-center gap-1 text-xs hover:opacity-70" style={{ color: "#C06B3E" }}>
+                      <button onClick={clearFullBody} className="flex items-center gap-1 text-xs text-[#C06B3E] hover:opacity-70">
                         <X className="h-3 w-3" /> Clear
                       </button>
                     )}
                   </div>
                   <UploadZone onFile={handleFullBodyFile} preview={fullBodyPreview} disabled={status === "loading"}
                     label="Upload full-body photo" hint={"Standing, front-facing · plain background\nJPG / PNG / WEBP · max 10 MB"} />
-                  <div className="flex items-start gap-2 rounded-xl px-3 py-2.5"
-                    style={{ background: "rgba(123,160,91,0.08)", border: "1px solid rgba(123,160,91,0.2)" }}>
-                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#7BA05B" }} />
-                    <p className="text-[11px] leading-snug" style={{ color: "#7BA05B" }}>
+                  <div className="flex items-start gap-2 rounded-xl border border-[rgba(123,160,91,0.2)] bg-[rgba(123,160,91,0.08)] px-3 py-2.5">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#7BA05B]" />
+                    <p className="text-[11px] leading-snug text-[#7BA05B]">
                       Full-body photos give significantly more accurate garment draping results.
                     </p>
                   </div>
@@ -1752,9 +1741,9 @@ export function AIBeautyStudio({
             {/* Right: garment + generate */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Garment</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#9C7D5B]">Garment</p>
                 {clothFile && (
-                  <button onClick={clearGarment} className="flex items-center gap-1 text-xs hover:opacity-70" style={{ color: "#C06B3E" }}>
+                  <button onClick={clearGarment} className="flex items-center gap-1 text-xs text-[#C06B3E] hover:opacity-70">
                     <X className="h-3 w-3" /> Clear
                   </button>
                 )}
@@ -1763,14 +1752,13 @@ export function AIBeautyStudio({
                 label="Upload garment photo" hint={"Drag & drop or click\nJPG / PNG / WEBP · max 10 MB"} />
               <button onClick={generateClothing}
                 disabled={!clothFile || status === "loading" || (photoMode === "full" && !fullBodyFile)}
-                className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
+                className="flex items-center justify-center gap-2 rounded-2xl bg-[#111827] px-5 py-3 text-sm font-semibold text-[#3D2B1F] shadow-[0_2px_12px_rgba(17,24,39,0.35)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
                 {status === "loading"
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Try It On</>}
               </button>
               {photoMode === "full" && !fullBodyFile && (
-                <p className="text-center text-[11px]" style={{ color: "#C06B3E" }}>
+                <p className="text-center text-[11px] text-[#C06B3E]">
                   Please upload a full-body photo to continue
                 </p>
               )}
@@ -1783,21 +1771,18 @@ export function AIBeautyStudio({
           <div className="flex flex-col sm:grid sm:grid-cols-[1fr_220px] gap-0">
 
             {/* ── Left: scrollable controls ── */}
-            <div className="flex flex-col gap-5 p-5 sm:overflow-y-auto sm:max-h-[640px]"
-              style={{ borderRight: "1px solid #F0E8DF" }}>
+            <div className="flex flex-col gap-5 p-5 sm:max-h-[640px] sm:overflow-y-auto sm:border-r sm:border-[#F0E8DF]">
 
                 {/* Sub-mode toggle */}
-                <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: "#E8DDD0" }}>
+                <div className="flex overflow-hidden rounded-xl border border-[#E8DDD0]">
                   <button
                     onClick={() => setMkSubMode("custom")}
-                    className="flex-1 py-2 text-xs font-semibold transition-all"
-                    style={{ background: mkSubMode === "custom" ? "#111827" : "#FDF6F0", color: mkSubMode === "custom" ? "#fff" : "#9C7D5B" }}>
+                    className={`flex-1 py-2 text-xs font-semibold transition-all ${mkSubMode === "custom" ? "bg-[#111827] text-white" : "bg-[#FDF6F0] text-[#9C7D5B]"}`}>
                     ✦ Custom Controls
                   </button>
                   <button
                     onClick={() => setMkSubMode("inspo")}
-                    className="flex-1 py-2 text-xs font-semibold transition-all"
-                    style={{ background: mkSubMode === "inspo" ? "#111827" : "#FDF6F0", color: mkSubMode === "inspo" ? "#fff" : "#9C7D5B" }}>
+                    className={`flex-1 py-2 text-xs font-semibold transition-all ${mkSubMode === "inspo" ? "bg-[#111827] text-white" : "bg-[#FDF6F0] text-[#9C7D5B]"}`}>
                     ✨ Inspo Transfer
                   </button>
                 </div>
@@ -1805,28 +1790,26 @@ export function AIBeautyStudio({
                 {/* Inspo transfer panel */}
                 {mkSubMode === "inspo" && (
                   <div className="flex flex-col gap-4">
-                    <div className="rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: "#E8DDD0", background: "#FDF6F0" }}>
-                      <p className="text-xs font-semibold" style={{ color: "#3D2B1F" }}>Upload a photo of makeup you love</p>
-                      <p className="text-[11px]" style={{ color: "#9C7D5B" }}>We&apos;ll analyse the look and apply it to your photo</p>
+                    <div className="flex flex-col gap-3 rounded-2xl border border-[#E8DDD0] bg-[#FDF6F0] p-4">
+                      <p className="text-xs font-semibold text-[#3D2B1F]">Upload a photo of makeup you love</p>
+                      <p className="text-[11px] text-[#9C7D5B]">We&apos;ll analyse the look and apply it to your photo</p>
                       {inspoPreview ? (
                         <div className="relative">
-                          <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                          <div className="relative w-full overflow-hidden rounded-xl aspect-[4/3]">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={inspoPreview} alt="Inspo preview" className="w-full h-full object-cover" />
                           </div>
                           <button
                             type="button"
                             onClick={() => { setInspoFile(null); setInspoPreview(null); setInspoDetectedLook(null); }}
-                            className="absolute top-2 right-2 rounded-full p-1 shadow"
-                            style={{ background: "rgba(61,43,31,0.7)" }}>
+                            className="absolute right-2 top-2 rounded-full bg-[rgba(61,43,31,0.7)] p-1 shadow">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                           </button>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed cursor-pointer py-6 transition-colors hover:bg-pink-50"
-                          style={{ borderColor: "#E8DDD0" }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" style={{ color: "#111827" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M7 10l5-5 5 5M12 5v10"/></svg>
-                          <span className="text-xs font-semibold" style={{ color: "#9C7D5B" }}>Tap to upload inspo photo</span>
+                        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-[#E8DDD0] py-6 transition-colors hover:bg-pink-50">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#111827]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M7 10l5-5 5 5M12 5v10"/></svg>
+                          <span className="text-xs font-semibold text-[#9C7D5B]">Tap to upload inspo photo</span>
                           <input type="file" accept="image/*" className="sr-only" onChange={(e) => {
                             const f = e.target.files?.[0];
                             if (!f) return;
@@ -1838,14 +1821,13 @@ export function AIBeautyStudio({
                         </label>
                       )}
                       {inspoDetectedLook && (
-                        <div className="rounded-xl px-3 py-2 text-xs" style={{ background: "rgba(17,24,39,0.08)", color: "#6B5344", border: "1px solid rgba(17,24,39,0.18)" }}>
+                        <div className="rounded-xl border border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.08)] px-3 py-2 text-xs text-[#6B5344]">
                           ✨ Detected look: <strong>{inspoDetectedLook}</strong>
                         </div>
                       )}
                     </div>
                     <button onClick={() => void generateMakeupTransfer()} disabled={!inspoFile || status === "loading"}
-                      className="flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}>
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-[#111827] px-5 py-3 text-sm font-semibold text-[#3D2B1F] shadow-[0_2px_12px_rgba(17,24,39,0.35)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
                       {status === "loading"
                         ? <><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Transferring…</>
                         : <>✨ Transfer Makeup</>}
@@ -1948,7 +1930,7 @@ export function AIBeautyStudio({
                       <span className="flex gap-0.5 shrink-0">
                         {e.swatches.length > 0
                           ? e.swatches.map((h) => (
-                              <span key={h} className="h-3.5 w-3.5 rounded-full" style={{ background: h }} />
+                        <div className="rounded-xl border border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.08)] px-3 py-2 text-xs text-[#6B5344]">
                             ))
                           : <span className="h-3.5 w-3.5 rounded-full" style={{ background: "#E0CEBC" }} />}
                       </span>
@@ -2735,9 +2717,9 @@ export function AIBeautyStudio({
             <p key={tip} className="text-[11px]" style={{ color: "#B8A898" }}>✦ {tip}</p>
           ))}
           {mode === "outfit" && [
-            "Outfit Generator is in scaffold stage",
-            "Future versions will include occasion and weather-aware looks",
-            "You can still use Studio modes for immediate try-ons",
+            "Pick a preset first, then fine-tune occasion and vibe",
+            "Generated looks are saved to your outfit history for quick reuse",
+            "Use the source selector to build on your best previous result",
           ].map((tip) => (
             <p key={tip} className="text-[11px]" style={{ color: "#B8A898" }}>✦ {tip}</p>
           ))}

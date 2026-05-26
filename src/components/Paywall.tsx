@@ -224,11 +224,12 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, appReturnToUrl, in
       });
       const payload = await res.json();
       if (!res.ok) {
-        throw new Error(
-          payload.code === "SUBSCRIPTION_NOT_CONFIGURED"
-            ? "Studio Pro subscriptions are coming soon! Contact us for early access."
-            : (payload.error ?? "Failed to create subscription"),
-        );
+        if (payload.code === "SUBSCRIPTION_NOT_CONFIGURED") {
+          setPlan("report");
+          throw new Error("Studio Pro checkout is not configured here yet. You can still unlock this report now, or set the Razorpay plan IDs later to enable monthly access.");
+        }
+
+        throw new Error(payload.error ?? "Failed to create subscription");
       }
 
       const { subscriptionId, keyId } = payload as CreateSubscriptionResponse;
