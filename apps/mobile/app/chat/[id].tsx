@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     color: t.color.textMuted,
   },
   userRoleLabel: {
-    color: "rgba(255,255,255,0.7)",
+    color: t.color.textOnDark70,
   },
   messageText: {
     color: t.color.text,
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   bookmarkInlineButton: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "rgba(17,24,39,0.08)",
+    backgroundColor: t.color.overlayDark08,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },

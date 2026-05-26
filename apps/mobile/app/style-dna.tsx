@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(17,24,39,0.08)",
+    borderColor: t.color.overlayDark08,
   },
   swatchLabel: {
     fontSize: 11,

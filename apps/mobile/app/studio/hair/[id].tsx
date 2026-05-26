@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.12)",
+    borderColor: t.color.borderDark12,
   },
   generateButton: {
     borderRadius: 16,

@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   intentBodyActive: {
-    color: "rgba(255,255,255,0.8)",
+    color: t.color.textOnDark80,
   },
   intentBulletList: {
     marginTop: 4,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   intentBulletActive: {
-    color: "rgba(255,255,255,0.75)",
+    color: t.color.textOnDark75,
   },
   tipsCard: {
     borderRadius: 16,
