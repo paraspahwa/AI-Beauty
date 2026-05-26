@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ExpoLinking from "expo-linking";
 import { Alert, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { cancelSubscription, fetchSubscriptionStatus, listReports, type MobileStudioEntitlement } from "@/lib/api";
@@ -7,6 +7,7 @@ import { mobileEnv } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
 
 export default function AccountTabScreen() {
+  const router = useRouter();
   const params = useLocalSearchParams<{ checkout?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -246,6 +247,17 @@ export default function AccountTabScreen() {
               <Text style={styles.secondaryButtonLabel}>Refresh activation status</Text>
             </Pressable>
           ) : null}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Style insights</Text>
+          <Text style={styles.sectionBody}>Open your aggregated style profile and track changes across completed reports.</Text>
+          <Pressable onPress={() => router.push("/style-dna")} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonLabel}>Open Style DNA</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/progress")} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonLabel}>Open Progress Tracker</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.status}>Status: {status}</Text>

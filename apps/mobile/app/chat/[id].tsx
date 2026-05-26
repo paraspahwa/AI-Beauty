@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { fetchChatHistory, fetchReport, type MobileChatMessage, type MobileReport, sendChatMessage } from "@/lib/api";
+import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
+import { analyzeIngredients, deleteChatBookmark, fetchChatBookmarks, fetchChatHistory, fetchReport, saveChatBookmark, type MobileChatBookmark, type MobileChatMessage, type MobileIngredientAnalysis, type MobileReport, sendChatMessage } from "@/lib/api";
 
 function buildChatSuggestions(report: MobileReport | null): string[] {
   const suggestions: string[] = [];
@@ -36,6 +36,11 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookmarks, setBookmarks] = useState<MobileChatBookmark[]>([]);
+  const [savingBookmarkFor, setSavingBookmarkFor] = useState<number | null>(null);
+  const [ingredientInput, setIngredientInput] = useState("");
+  const [ingredientLoading, setIngredientLoading] = useState(false);
+  const [ingredientResult, setIngredientResult] = useState<MobileIngredientAnalysis | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const suggestions = useMemo(() => buildChatSuggestions(report), [report]);
@@ -51,9 +56,11 @@ export default function ChatScreen() {
           fetchReport(params.id),
           fetchChatHistory(params.id),
         ]);
+        const nextBookmarks = await fetchChatBookmarks(params.id).catch(() => []);
         if (!cancelled) {
           setReport(nextReport);
           setMessages(history);
+          setBookmarks(nextBookmarks);
         }
       } catch (err) {
         if (!cancelled) {
@@ -96,6 +103,60 @@ export default function ChatScreen() {
     }
   }
 
+  async function handleSaveBookmark(message: MobileChatMessage, index: number) {
+    try {
+      if (!params.id) throw new Error("Missing report id");
+      if (message.role !== "assistant") return;
+      setSavingBookmarkFor(index);
+      const bookmark = await saveChatBookmark(params.id, message.content);
+      setBookmarks((prev) => [bookmark, ...prev.filter((item) => item.id !== bookmark.id)]);
+    } catch (err) {
+      Alert.alert("Save bookmark", String(err));
+    } finally {
+      setSavingBookmarkFor(null);
+    }
+  }
+
+  async function handleRemoveBookmark(bookmarkId: string) {
+    try {
+      await deleteChatBookmark(bookmarkId);
+      setBookmarks((prev) => prev.filter((item) => item.id !== bookmarkId));
+    } catch (err) {
+      Alert.alert("Remove bookmark", String(err));
+    }
+  }
+
+  async function handleShareSnippet(content: string) {
+    try {
+      await Share.share({ message: content });
+    } catch (err) {
+      Alert.alert("Share", String(err));
+    }
+  }
+
+  async function handleAnalyzeIngredients() {
+    try {
+      const payload = ingredientInput.trim();
+      if (payload.length < 10) {
+        Alert.alert("Ingredient analysis", "Please paste a longer ingredient list.");
+        return;
+      }
+
+      setIngredientLoading(true);
+      const result = await analyzeIngredients(payload, report?.skinAnalysis?.type
+        ? {
+            type: report.skinAnalysis.type,
+            concerns: report.skinAnalysis.concerns?.map((item) => item.label) ?? [],
+          }
+        : undefined);
+      setIngredientResult(result);
+    } catch (err) {
+      Alert.alert("Ingredient analysis", String(err));
+    } finally {
+      setIngredientLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
@@ -134,6 +195,66 @@ export default function ChatScreen() {
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
       >
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Saved tips</Text>
+          {!bookmarks.length ? (
+            <Text style={styles.helper}>Bookmark assistant replies to save your favorite guidance.</Text>
+          ) : (
+            <View style={styles.bookmarkList}>
+              {bookmarks.slice(0, 6).map((bookmark) => (
+                <View key={bookmark.id} style={styles.bookmarkCard}>
+                  <Text style={styles.bookmarkText} numberOfLines={4}>{bookmark.content}</Text>
+                  <View style={styles.bookmarkActions}>
+                    <Pressable
+                      onPress={() => {
+                        setInput(bookmark.content);
+                        scrollRef.current?.scrollToEnd({ animated: true });
+                      }}
+                      style={styles.bookmarkActionButton}
+                    >
+                      <Text style={styles.bookmarkActionLabel}>Reuse</Text>
+                    </Pressable>
+                    <Pressable onPress={() => void handleShareSnippet(bookmark.content)} style={styles.bookmarkActionButton}>
+                      <Text style={styles.bookmarkActionLabel}>Share</Text>
+                    </Pressable>
+                    <Pressable onPress={() => void handleRemoveBookmark(bookmark.id)} style={styles.bookmarkDeleteButton}>
+                      <Text style={styles.bookmarkDeleteLabel}>Remove</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Ingredient analyzer</Text>
+          <Text style={styles.helper}>Paste a product ingredient list and get a quick suitability read based on your profile.</Text>
+          <TextInput
+            value={ingredientInput}
+            onChangeText={setIngredientInput}
+            placeholder="Paste ingredient list..."
+            style={styles.ingredientInput}
+            multiline
+          />
+          <Pressable
+            onPress={() => void handleAnalyzeIngredients()}
+            disabled={ingredientLoading || ingredientInput.trim().length < 10}
+            style={[styles.secondarySendButton, ingredientLoading || ingredientInput.trim().length < 10 ? styles.disabledButton : null]}
+          >
+            <Text style={styles.sendButtonLabel}>{ingredientLoading ? "Analyzing..." : "Analyze ingredients"}</Text>
+          </Pressable>
+
+          {ingredientResult ? (
+            <View style={styles.ingredientResultCard}>
+              <Text style={styles.ingredientScore}>Score: {ingredientResult.overallScore}/10</Text>
+              <Text style={styles.helper}>{ingredientResult.summary}</Text>
+              {ingredientResult.highlights?.length ? <Text style={styles.helper}>Highlights: {ingredientResult.highlights.join(" • ")}</Text> : null}
+              {ingredientResult.concerns?.length ? <Text style={styles.helper}>Concerns: {ingredientResult.concerns.join(" • ")}</Text> : null}
+            </View>
+          ) : null}
+        </View>
+
         <View style={styles.suggestionRow}>
           {suggestions.map((item) => (
             <Pressable key={item} onPress={() => void handleSendMessage(item)} style={styles.suggestionChip}>
@@ -159,6 +280,20 @@ export default function ChatScreen() {
                 <Text style={[styles.messageText, message.role === "user" ? styles.userMessageText : null]}>
                   {message.content}
                 </Text>
+                {message.role === "assistant" ? (
+                  <View style={styles.inlineActionRow}>
+                    <Pressable
+                      onPress={() => void handleSaveBookmark(message, index)}
+                      disabled={savingBookmarkFor === index}
+                      style={[styles.bookmarkInlineButton, savingBookmarkFor === index ? styles.disabledButton : null]}
+                    >
+                      <Text style={styles.bookmarkInlineLabel}>{savingBookmarkFor === index ? "Saving..." : "Bookmark"}</Text>
+                    </Pressable>
+                    <Pressable onPress={() => void handleShareSnippet(message.content)} style={styles.bookmarkInlineButton}>
+                      <Text style={styles.bookmarkInlineLabel}>Share</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
               </View>
             ))
           )}
@@ -248,6 +383,90 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     gap: 16,
   },
+  sectionCard: {
+    borderRadius: 18,
+    backgroundColor: "#ffffff",
+    padding: 14,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  bookmarkList: {
+    gap: 8,
+  },
+  bookmarkCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#f3f4f6",
+    padding: 10,
+    gap: 8,
+    backgroundColor: "#fffafc",
+  },
+  bookmarkText: {
+    color: "#374151",
+    lineHeight: 20,
+  },
+  bookmarkActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  bookmarkActionButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#ffffff",
+  },
+  bookmarkActionLabel: {
+    color: "#374151",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  bookmarkDeleteButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#fef2f2",
+  },
+  bookmarkDeleteLabel: {
+    color: "#b91c1c",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  ingredientInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    textAlignVertical: "top",
+  },
+  secondarySendButton: {
+    borderRadius: 12,
+    backgroundColor: "#111827",
+    paddingVertical: 11,
+    alignItems: "center",
+  },
+  ingredientResultCard: {
+    borderRadius: 12,
+    backgroundColor: "#f9fafb",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    padding: 10,
+    gap: 6,
+  },
+  ingredientScore: {
+    color: "#111827",
+    fontWeight: "700",
+  },
   suggestionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -304,6 +523,24 @@ const styles = StyleSheet.create({
   messageText: {
     color: "#111827",
     lineHeight: 21,
+  },
+  inlineActionRow: {
+    marginTop: 2,
+    flexDirection: "row",
+    gap: 8,
+  },
+  bookmarkInlineButton: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    backgroundColor: "rgba(17,24,39,0.08)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  bookmarkInlineLabel: {
+    color: "#374151",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   userMessageText: {
     color: "#ffffff",
