@@ -12,7 +12,7 @@ const ANALYSIS_STEPS = [
 ];
 
 export default function AnalysisScreen() {
-  const params = useLocalSearchParams<{ id: string; imageUri?: string }>();
+  const params = useLocalSearchParams<{ id: string; imageUri?: string; intent?: string }>();
   const [status, setStatus] = useState("Preparing analysis...");
   const [error, setError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -45,7 +45,7 @@ export default function AnalysisScreen() {
           return;
         }
 
-        router.replace({ pathname: "/report/[id]", params: { id: params.id } });
+        router.replace({ pathname: "/report/[id]", params: { id: params.id, intent: params.intent } });
       } catch (err) {
         if (cancelled) return;
         setError(String(err));

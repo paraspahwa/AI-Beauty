@@ -16,6 +16,20 @@ export type MobileColorAnalysis = {
   palette?: { name: string; hex: string }[];
 };
 
+export type MobileFaceLandmark = {
+  x: number;
+  y: number;
+};
+
+export type MobileFaceLandmarks = {
+  faceShape?: MobileFaceLandmark;
+  eyes?: MobileFaceLandmark;
+  nose?: MobileFaceLandmark;
+  eyebrows?: MobileFaceLandmark;
+  cheeks?: MobileFaceLandmark;
+  lips?: MobileFaceLandmark;
+};
+
 export type MobileSkinAnalysis = {
   type: string;
   concerns?: { label: string; severity: string }[];
@@ -35,6 +49,48 @@ export type MobileHairstyle = {
   avoid?: string[];
 };
 
+export type MobileFeaturePart = {
+  shape: string;
+  notes: string;
+};
+
+export type MobileFeatures = {
+  eyes?: MobileFeaturePart;
+  eyebrows?: MobileFeaturePart;
+  nose?: MobileFeaturePart;
+  lips?: MobileFeaturePart;
+  cheeks?: MobileFeaturePart;
+};
+
+export type MobileVisualAssetStatus = "pending" | "ready" | "failed" | "missing";
+
+export type MobileVisualAsset = {
+  mime?: string;
+  width?: number;
+  height?: number;
+  label?: string;
+  styleName?: string;
+  path?: string;
+  signedUrl?: string;
+  status?: MobileVisualAssetStatus;
+  [key: string]: unknown;
+};
+
+export type MobileVisualAssets = {
+  version?: number;
+  bucket?: string;
+  basePath?: string;
+  assets?: {
+    landmarkOverlay?: MobileVisualAsset;
+    paletteBoard?: MobileVisualAsset;
+    glassesPreviews?: MobileVisualAsset[];
+    hairstylePreviews?: MobileVisualAsset[];
+    colorSwatchPreviews?: MobileVisualAsset[];
+    makeupPreviews?: MobileVisualAsset[];
+  };
+  [key: string]: unknown;
+};
+
 export type MobileStudioEntitlement = {
   tier: "free" | "report" | "studio_pro";
   remainingGens: number | null;
@@ -47,6 +103,12 @@ export type MobileStudioEntitlement = {
 export type MobileChatMessage = {
   role: "user" | "assistant";
   content: string;
+};
+
+export type MobileChatBookmark = {
+  id: string;
+  content: string;
+  createdAt: string;
 };
 
 export type MobileMakeupControls = {
@@ -71,16 +133,22 @@ export type MobileReport = {
   status: "pending" | "processing" | "ready" | "failed";
   isPaid: boolean;
   imageUrl: string;
+  shareToken?: string | null;
   summary?: string;
   createdAt: string;
   studioEntitlement?: MobileStudioEntitlement;
   faceShape?: MobileFaceShape;
   colorAnalysis?: MobileColorAnalysis;
   skinAnalysis?: MobileSkinAnalysis;
+  features?: MobileFeatures;
   glasses?: MobileGlasses;
   hairstyle?: MobileHairstyle;
+  visualAssets?: MobileVisualAssets;
+  faceLandmarks?: MobileFaceLandmarks;
   error?: string | null;
 };
+
+export type AnalyzeIntent = "report" | "studio_pro";
 
 export type MobileReportListItem = {
   id: string;
@@ -108,6 +176,60 @@ export type PaymentCreateResponse = {
   amount: number;
   currency: "INR" | "USD";
   keyId: string | null;
+};
+
+export type ReportShareResponse = {
+  shareToken: string;
+  shareUrl: string;
+};
+
+export type MobileIngredientFlag = {
+  name: string;
+  verdict: "beneficial" | "neutral" | "caution" | "avoid";
+  reason: string;
+};
+
+export type MobileIngredientAnalysis = {
+  overallScore: number;
+  summary: string;
+  highlights: string[];
+  concerns: string[];
+  flags: MobileIngredientFlag[];
+};
+
+export type MobileStyleDnaPrefs = {
+  colorSeason: string | null;
+  undertone: string | null;
+  faceShape: string | null;
+  skinType: string | null;
+  metals: string[];
+  palette: string[];
+  updatedAt: string | null;
+};
+
+export type MobileStyleDnaLatest = {
+  id: string;
+  createdAt: string;
+  colorAnalysis?: MobileColorAnalysis | null;
+  faceShape?: MobileFaceShape | null;
+  skinAnalysis?: MobileSkinAnalysis | null;
+  hairstyle?: MobileHairstyle | null;
+};
+
+export type MobileStyleDnaSummary = {
+  totalReports: number;
+  prefs: MobileStyleDnaPrefs | null;
+  latest: MobileStyleDnaLatest | null;
+};
+
+export type MobileProgressReport = {
+  id: string;
+  createdAt: string;
+  colorAnalysis?: MobileColorAnalysis | null;
+  faceShape?: MobileFaceShape | null;
+  skinAnalysis?: MobileSkinAnalysis | null;
+  isPaid: boolean;
+  status: string;
 };
 
 type RequestOptions = {
@@ -138,7 +260,10 @@ export async function fetchWithAuth<T>(path: string, options: RequestOptions = {
   return (await response.json()) as T;
 }
 
-export async function analyzeSelfie(imageUri: string): Promise<{ reportId: string; visualsPending: boolean }> {
+export async function analyzeSelfie(
+  imageUri: string,
+  _intent?: AnalyzeIntent,
+): Promise<{ reportId: string; visualsPending: boolean }> {
   const form = new FormData();
   form.append("image", {
     uri: imageUri,
@@ -219,6 +344,34 @@ export async function fetchChatHistory(reportId: string): Promise<MobileChatMess
   return response.messages ?? [];
 }
 
+export async function fetchChatBookmarks(reportId: string): Promise<MobileChatBookmark[]> {
+  const response = await fetchWithAuth<{ bookmarks?: { id: string; content: string; created_at: string }[] }>(`/api/chat/bookmarks?reportId=${reportId}`);
+  return (response.bookmarks ?? []).map((item) => ({
+    id: item.id,
+    content: item.content,
+    createdAt: item.created_at,
+  }));
+}
+
+export async function saveChatBookmark(reportId: string, content: string): Promise<MobileChatBookmark> {
+  const response = await fetchWithAuth<{ bookmark: { id: string; content: string; created_at: string } }>("/api/chat/bookmarks", {
+    method: "POST",
+    body: JSON.stringify({ reportId, content }),
+  });
+
+  return {
+    id: response.bookmark.id,
+    content: response.bookmark.content,
+    createdAt: response.bookmark.created_at,
+  };
+}
+
+export async function deleteChatBookmark(bookmarkId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth<{ ok: boolean }>(`/api/chat/bookmarks/${bookmarkId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function sendChatMessage(reportId: string, messages: MobileChatMessage[]): Promise<{ reply: string }> {
   return fetchWithAuth<{ reply: string }>("/api/chat", {
     method: "POST",
@@ -251,4 +404,118 @@ export async function cancelSubscription(subscriptionId: string): Promise<{ ok: 
     method: "POST",
     body: JSON.stringify({ subscriptionId }),
   });
+}
+
+export async function createReportShareLink(reportId: string): Promise<ReportShareResponse> {
+  return fetchWithAuth<ReportShareResponse>(`/api/reports/${reportId}/share`, {
+    method: "POST",
+  });
+}
+
+export async function revokeReportShareLink(reportId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth<{ ok: boolean }>(`/api/reports/${reportId}/share`, {
+    method: "DELETE",
+  });
+}
+
+export async function deleteReport(reportId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth<{ ok: boolean }>(`/api/reports/${reportId}/delete`, {
+    method: "DELETE",
+  });
+}
+
+export async function analyzeIngredients(
+  ingredients: string,
+  skinContext?: { type: string; concerns: string[] },
+): Promise<MobileIngredientAnalysis> {
+  return fetchWithAuth<MobileIngredientAnalysis>("/api/ingredients/analyze", {
+    method: "POST",
+    body: JSON.stringify({ ingredients, skinContext }),
+  });
+}
+
+export async function fetchStyleDnaSummary(): Promise<MobileStyleDnaSummary> {
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+  if (!user) {
+    return { totalReports: 0, prefs: null, latest: null };
+  }
+
+  const prefsPromise = supabase
+    .from("user_style_prefs")
+    .select("color_season, undertone, face_shape, skin_type, prefs, updated_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const latestPromise = supabase
+    .from("reports")
+    .select("id, created_at, color_analysis, face_shape, skin_analysis, hairstyle")
+    .eq("user_id", user.id)
+    .eq("status", "ready")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const countPromise = supabase
+    .from("reports")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  const [prefsResult, latestResult, countResult] = await Promise.allSettled([prefsPromise, latestPromise, countPromise]);
+
+  const prefs = prefsResult.status === "fulfilled" && prefsResult.value.data
+    ? {
+        colorSeason: (prefsResult.value.data.color_season as string | null) ?? null,
+        undertone: (prefsResult.value.data.undertone as string | null) ?? null,
+        faceShape: (prefsResult.value.data.face_shape as string | null) ?? null,
+        skinType: (prefsResult.value.data.skin_type as string | null) ?? null,
+        metals: Array.isArray((prefsResult.value.data.prefs as { metals?: string[] } | null)?.metals)
+          ? ((prefsResult.value.data.prefs as { metals?: string[] }).metals ?? [])
+          : [],
+        palette: Array.isArray((prefsResult.value.data.prefs as { palette?: string[] } | null)?.palette)
+          ? ((prefsResult.value.data.prefs as { palette?: string[] }).palette ?? [])
+          : [],
+        updatedAt: (prefsResult.value.data.updated_at as string | null) ?? null,
+      }
+    : null;
+
+  const latest = latestResult.status === "fulfilled" && latestResult.value.data
+    ? {
+        id: latestResult.value.data.id as string,
+        createdAt: latestResult.value.data.created_at as string,
+        colorAnalysis: (latestResult.value.data.color_analysis as MobileColorAnalysis | null) ?? null,
+        faceShape: (latestResult.value.data.face_shape as MobileFaceShape | null) ?? null,
+        skinAnalysis: (latestResult.value.data.skin_analysis as MobileSkinAnalysis | null) ?? null,
+        hairstyle: (latestResult.value.data.hairstyle as MobileHairstyle | null) ?? null,
+      }
+    : null;
+
+  const totalReports = countResult.status === "fulfilled" ? countResult.value.count ?? 0 : 0;
+
+  return { totalReports, prefs, latest };
+}
+
+export async function fetchProgressReports(): Promise<MobileProgressReport[]> {
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+  if (!user) return [];
+
+  const { data: rows, error } = await supabase
+    .from("reports")
+    .select("id, created_at, color_analysis, face_shape, skin_analysis, is_paid, status")
+    .eq("user_id", user.id)
+    .eq("status", "ready")
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  return (rows ?? []).map((row) => ({
+    id: row.id as string,
+    createdAt: row.created_at as string,
+    colorAnalysis: (row.color_analysis as MobileColorAnalysis | null) ?? null,
+    faceShape: (row.face_shape as MobileFaceShape | null) ?? null,
+    skinAnalysis: (row.skin_analysis as MobileSkinAnalysis | null) ?? null,
+    isPaid: Boolean(row.is_paid),
+    status: row.status as string,
+  }));
 }

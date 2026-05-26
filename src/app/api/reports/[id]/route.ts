@@ -186,6 +186,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     isPaid: effectivePremium,
     detectedGender: normalizeRekognitionGender(row.rekognition),
     studioEntitlement,
+    shareToken: row.share_token ?? null,
     faceShape: row.face_shape ?? undefined,
     colorAnalysis: row.color_analysis ?? undefined,
     // Free preview shows ONLY face shape + color analysis
