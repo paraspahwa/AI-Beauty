@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { deleteReport, listReports, type MobileReportListItem } from "@/lib/api";
@@ -16,6 +16,24 @@ export default function ReportsTabScreen() {
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
   const [reports, setReports] = useState<MobileReportListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<"continue" | "history">("continue");
+
+  const { continueReports, historyReports, activeReports } = useMemo(() => {
+    const inFlight = reports.filter((report) => report.status === "processing");
+    const failed = reports.filter((report) => report.status === "failed" || report.status === "error");
+    const latestReady = reports.find((report) => report.status === "ready") ?? null;
+    const continueItems = [...inFlight, ...failed];
+    if (latestReady && !continueItems.some((item) => item.id === latestReady.id)) {
+      continueItems.push(latestReady);
+    }
+
+    const historyItems = reports.filter((report) => report.status === "ready" && report.id !== latestReady?.id);
+    return {
+      continueReports: continueItems,
+      historyReports: historyItems,
+      activeReports: activeView === "continue" ? continueItems : historyItems,
+    };
+  }, [reports, activeView]);
 
   async function load() {
     try {
@@ -78,7 +96,7 @@ export default function ReportsTabScreen() {
         <View style={styles.headerRow}>
           <View style={styles.headerCopy}>
             <Text style={styles.title}>Your reports</Text>
-            <Text style={styles.subtitle}>Open any report to review insights, chat, or Studio actions.</Text>
+            <Text style={styles.subtitle}>{reports.length} analyses in your history. Open any report to review insights, chat, or Studio actions.</Text>
           </View>
           <Pressable onPress={() => void refreshReports()} style={styles.refreshButton}>
             <Text style={styles.refreshButtonLabel}>Refresh</Text>
@@ -115,7 +133,39 @@ export default function ReportsTabScreen() {
           </View>
         ) : null}
 
-        {reports.map((report) => (
+        {!error && reports.length > 0 ? (
+          <View style={styles.viewSwitchRow}>
+            <Pressable
+              onPress={() => setActiveView("continue")}
+              style={[styles.viewChip, activeView === "continue" ? styles.viewChipActive : null]}
+            >
+              <Text style={[styles.viewChipLabel, activeView === "continue" ? styles.viewChipLabelActive : null]}>
+                Continue ({continueReports.length})
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setActiveView("history")}
+              style={[styles.viewChip, activeView === "history" ? styles.viewChipActive : null]}
+            >
+              <Text style={[styles.viewChipLabel, activeView === "history" ? styles.viewChipLabelActive : null]}>
+                History ({historyReports.length})
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {!error && reports.length > 0 && activeReports.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>{activeView === "continue" ? "You are all caught up" : "No older completed reports yet"}</Text>
+            <Text style={styles.emptyBody}>
+              {activeView === "continue"
+                ? "Start a new analysis anytime to get fresh recommendations."
+                : "Your previous completed reports will appear here as your history grows."}
+            </Text>
+          </View>
+        ) : null}
+
+        {activeReports.map((report) => (
           <View key={report.id} style={styles.reportCard}>
             <Pressable onPress={() => router.push({ pathname: "/report/[id]", params: { id: report.id } })}>
               <Text style={styles.reportId} numberOfLines={1}>#{report.id.slice(0, 8)}</Text>
@@ -290,6 +340,31 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.surface,
     padding: 14,
     gap: 3,
+  },
+  viewSwitchRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  viewChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  viewChipActive: {
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
+  },
+  viewChipLabel: {
+    color: t.color.textSoft,
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  viewChipLabelActive: {
+    color: t.color.textOnDark,
   },
   reportId: {
     color: t.color.text,

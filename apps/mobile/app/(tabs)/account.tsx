@@ -190,6 +190,11 @@ export default function AccountTabScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Account</Text>
         <Text style={styles.subtitle}>Sign in to access your reports, chat, and Studio features.</Text>
+        <View style={styles.tierPill}>
+          <Text style={styles.tierPillLabel}>
+            {entitlement?.tier === "studio_pro" ? "Studio Pro" : entitlement?.tier === "report" ? "Report" : "Free"}
+          </Text>
+        </View>
 
         <TextInput
           autoCapitalize="none"
@@ -285,6 +290,22 @@ const styles = StyleSheet.create({
     color: t.color.textMuted,
     lineHeight: 21,
     marginBottom: 4,
+  },
+  tierPill: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surfaceMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  tierPillLabel: {
+    color: t.color.textSoft,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   input: {
     borderWidth: 1,

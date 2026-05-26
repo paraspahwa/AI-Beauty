@@ -6,16 +6,21 @@ import { analyzeSelfie, listReports, type AnalyzeIntent } from "@/lib/api";
 import { assertMobileEnv } from "@/lib/env";
 import { mobileTheme as t } from "@/lib/theme";
 
-const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string; bullets: string[] }> = {
+const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string; bullets: string[]; price: string; cadence: string; badge?: string }> = {
   report: {
     title: "Master Blueprint Report",
     subtitle: "One-time deep diagnostic with your complete beauty profile and downloadable report.",
-    bullets: ["Skin routine (AM + PM)", "Color season palette", "Hairstyle guide", "Spectacles recommendations"],
+    bullets: ["Skin routine (AM + PM)", "Color season palette", "Hairstyle guide", "Spectacles recommendations", "PDF download + style chat"],
+    price: "\u20b9299",
+    cadence: "One-time",
   },
   studio_pro: {
     title: "Full Interactive AI Studio",
     subtitle: "Live try-ons, hair and makeup sandbox, plus premium report access and monthly generations.",
-    bullets: ["Everything in Blueprint Report", "Hair and makeup try-ons", "Wardrobe and swatches", "150 generations / month"],
+    bullets: ["Everything in Blueprint Report", "Hair and makeup try-ons", "Wardrobe and swatches", "150 generations / month", "Cancel anytime"],
+    price: "\u20b9999/mo",
+    cadence: "Monthly",
+    badge: "Best value",
   },
 };
 
@@ -136,8 +141,8 @@ export default function HomeTabScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Renovaara Mobile</Text>
-        <Text style={styles.subtitle}>Upload your selfie for a free face-shape preview, then unlock your full beauty analysis.</Text>
+        <Text style={styles.title}>Upload your selfie</Text>
+        <Text style={styles.subtitle}>Upload your selfie for a free face-shape overview, then unlock your complete skin routine, hairstyle guide, virtual try-ons, and more.</Text>
 
         <View style={styles.intentSection}>
           <Text style={styles.intentEyebrow}>Choose your path</Text>
@@ -150,12 +155,20 @@ export default function HomeTabScreen() {
                   onPress={() => setSelectedIntent(intent)}
                   style={[styles.intentCard, active ? styles.intentCardActive : null]}
                 >
+                  {INTENT_COPY[intent].badge ? (
+                    <View style={[styles.intentBadge, active ? styles.intentBadgeActive : null]}>
+                      <Text style={styles.intentBadgeLabel}>{INTENT_COPY[intent].badge}</Text>
+                    </View>
+                  ) : null}
                   <Text style={[styles.intentTitle, active ? styles.intentTitleActive : null]}>{INTENT_COPY[intent].title}</Text>
                   <Text style={[styles.intentBody, active ? styles.intentBodyActive : null]}>{INTENT_COPY[intent].subtitle}</Text>
                   <View style={styles.intentBulletList}>
                     {INTENT_COPY[intent].bullets.map((item) => (
                       <Text key={`${intent}-${item}`} style={[styles.intentBullet, active ? styles.intentBulletActive : null]}>• {item}</Text>
                     ))}
+                  </View>
+                  <View style={styles.intentPriceRow}>
+                    <Text style={[styles.intentPrice, active ? styles.intentTitleActive : null]}>{INTENT_COPY[intent].cadence} · {INTENT_COPY[intent].price}</Text>
                   </View>
                 </Pressable>
               );
@@ -269,6 +282,26 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 6,
   },
+  intentBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surfaceMuted,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  intentBadgeActive: {
+    borderColor: t.color.surface,
+    backgroundColor: t.color.overlayDark08,
+  },
+  intentBadgeLabel: {
+    color: t.color.textSoft,
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
   intentCardActive: {
     backgroundColor: t.color.text,
     borderColor: t.color.text,
@@ -299,6 +332,17 @@ const styles = StyleSheet.create({
   },
   intentBulletActive: {
     color: t.color.textOnDark75,
+  },
+  intentPriceRow: {
+    marginTop: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: t.color.overlayDark08,
+  },
+  intentPrice: {
+    color: t.color.text,
+    fontSize: 13,
+    fontWeight: "700",
   },
   tipsCard: {
     borderRadius: 16,
