@@ -1,38 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { generateHairColorPreview } from "@/lib/api";
+import { generateGlassesPreview } from "@/lib/api";
 import { clearStudioHistory, type StudioHistoryItem, loadStudioHistory, pushStudioHistoryItem, saveVisualForReport } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
 
-type HairColorOption = {
-  label: string;
-  colorName: string;
-  colorHex: string;
-};
-
-const HAIR_COLOR_OPTIONS: HairColorOption[] = [
-  { label: "Natural black", colorName: "black", colorHex: "#1f1f1f" },
-  { label: "Dark brown", colorName: "dark_brown", colorHex: "#4b2e2b" },
-  { label: "Chestnut", colorName: "chestnut", colorHex: "#8b5a2b" },
-  { label: "Auburn", colorName: "auburn", colorHex: "#a52a2a" },
-  { label: "Caramel", colorName: "caramel", colorHex: "#c68e5f" },
-  { label: "Blonde", colorName: "blonde", colorHex: "#e2c07b" },
-  { label: "Burgundy", colorName: "burgundy", colorHex: "#800020" },
-  { label: "Silver", colorName: "silver", colorHex: "#c0c0c0" },
-];
-
-export default function MobileHairStudioScreen() {
+export default function MobileGlassesStudioScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string; imageUrl?: string }>();
-  const [selectedColor, setSelectedColor] = useState<HairColorOption>(HAIR_COLOR_OPTIONS[0]);
+  const [referenceImageUri, setReferenceImageUri] = useState<string | null>(null);
+  const [personImageUri, setPersonImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultCreatedAt, setResultCreatedAt] = useState<string | null>(null);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   const [recentLooks, setRecentLooks] = useState<StudioHistoryItem[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const sourceImageUrl = useMemo(() => {
+    const value = Array.isArray(params.imageUrl) ? params.imageUrl[0] : params.imageUrl;
+    return value ?? null;
+  }, [params.imageUrl]);
 
   function formatUpdatedAt(value: string | null): string | null {
     if (!value) return null;
@@ -57,17 +47,12 @@ export default function MobileHairStudioScreen() {
     });
   }
 
-  const sourceImageUrl = useMemo(() => {
-    const value = Array.isArray(params.imageUrl) ? params.imageUrl[0] : params.imageUrl;
-    return value ?? null;
-  }, [params.imageUrl]);
-
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       if (!params.id) return;
-      const entries = await loadStudioHistory("hair", params.id);
+      const entries = await loadStudioHistory("glasses", params.id);
       if (!cancelled) {
         setRecentLooks(entries);
         if (entries.length > 0) {
@@ -85,14 +70,56 @@ export default function MobileHairStudioScreen() {
     };
   }, [params.id]);
 
+  async function chooseImage(
+    mode: "camera" | "library",
+    onPicked: (uri: string) => void,
+    permissionMessage: string,
+  ) {
+    try {
+      const permission = mode === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Permission needed", permissionMessage);
+        return;
+      }
+
+      const result = mode === "camera"
+        ? await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            cameraType: ImagePicker.CameraType.back,
+            quality: 0.9,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        quality: 0.9,
+      });
+
+      if (result.canceled || result.assets.length === 0) {
+        return;
+      }
+
+      void Haptics.selectionAsync();
+      onPicked(result.assets[0].uri);
+    } catch (err) {
+      Alert.alert("Reference image", String(err));
+    }
+  }
+
   async function handleGenerate() {
     try {
       if (!params.id) throw new Error("Missing report id");
+      if (!referenceImageUri) {
+        Alert.alert("Glasses reference", "Choose a glasses reference image first.");
+        return;
+      }
+
       void Haptics.selectionAsync();
       setLoading(true);
-      const result = await generateHairColorPreview(params.id, {
-        colorName: selectedColor.colorName,
-        colorHex: selectedColor.colorHex,
+      const result = await generateGlassesPreview(params.id, {
+        clothImageUri: referenceImageUri,
+        personImageUri: personImageUri ?? undefined,
       });
       const generatedUrl = result.hdUrl ?? result.lowResUrl;
       setResultUrl(generatedUrl);
@@ -100,20 +127,21 @@ export default function MobileHairStudioScreen() {
       setResultCreatedAt(createdAt);
 
       if (generatedUrl) {
-        const historyId = result.asset?.id ?? `hair_${Date.now()}`;
-        const next = await pushStudioHistoryItem("hair", params.id, {
+        const historyId = result.asset?.id ?? `glasses_${Date.now()}`;
+        const next = await pushStudioHistoryItem("glasses", params.id, {
           id: historyId,
           imageUrl: generatedUrl,
           createdAt,
-          label: selectedColor.label,
+          label: "Glasses try-on",
         });
         setRecentLooks(next);
         setSelectedHistoryId(historyId);
       }
+
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Hair color preview", String(err));
+      Alert.alert("Glasses preview", String(err));
     } finally {
       setLoading(false);
     }
@@ -122,14 +150,14 @@ export default function MobileHairStudioScreen() {
   async function handleClearHistory() {
     if (!params.id) return;
     void Haptics.selectionAsync();
-    Alert.alert("Clear hair history?", "This removes recent generated hair color looks for this report on this device.", [
+    Alert.alert("Clear glasses history?", "This removes recent generated glasses looks for this report on this device.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Clear",
         style: "destructive",
         onPress: () => {
           void (async () => {
-            await clearStudioHistory("hair", params.id);
+            await clearStudioHistory("glasses", params.id);
             setRecentLooks([]);
             setNotice("History cleared");
             setTimeout(() => setNotice(null), 1800);
@@ -142,14 +170,14 @@ export default function MobileHairStudioScreen() {
 
   async function handleUseInReport() {
     if (!params.id || !resultUrl) return;
-    const visualId = selectedHistoryId ?? `hair_saved_${Date.now()}`;
+    const visualId = selectedHistoryId ?? `glasses_saved_${Date.now()}`;
     const createdAt = resultCreatedAt ?? new Date().toISOString();
     await saveVisualForReport(params.id, {
       id: visualId,
-      kind: "hair",
+      kind: "glasses",
       imageUrl: resultUrl,
       createdAt,
-      label: selectedColor.label,
+      label: "Glasses try-on",
     });
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setNotice("Saved to report visuals");
@@ -163,8 +191,8 @@ export default function MobileHairStudioScreen() {
           <Text style={styles.backButtonLabel}>Back</Text>
         </Pressable>
 
-        <Text style={styles.heading}>AI Hair Color Studio</Text>
-        <Text style={styles.helperText}>Pick a color direction and generate a realistic recolor preview using your report photo.</Text>
+        <Text style={styles.heading}>AI Glasses Studio</Text>
+        <Text style={styles.helperText}>Choose a glasses reference image and generate a try-on preview using your report photo.</Text>
 
         {notice ? <Text style={styles.notice}>{notice}</Text> : null}
 
@@ -176,28 +204,42 @@ export default function MobileHairStudioScreen() {
         ) : null}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Color options</Text>
-          <View style={styles.optionGrid}>
-            {HAIR_COLOR_OPTIONS.map((option) => (
-              <Pressable
-                key={option.label}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setSelectedColor(option);
-                }}
-                style={[styles.optionChip, selectedColor.label === option.label ? styles.optionChipActive : null]}
-              >
-                <View style={[styles.colorDot, { backgroundColor: option.colorHex }]} />
-                <Text style={[styles.optionChipLabel, selectedColor.label === option.label ? styles.optionChipLabelActive : null]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
+          <Text style={styles.sectionTitle}>Reference image</Text>
+          <Text style={styles.helperText}>Upload a clean product or model image of the frame shape you want to try.</Text>
+          <View style={styles.buttonRow}>
+            <Pressable onPress={() => void chooseImage("library", setReferenceImageUri, "Allow photo access to choose a glasses reference image.")} style={styles.generateButtonCompact}>
+              <Text style={styles.generateButtonLabel}>{referenceImageUri ? "Change from library" : "Choose from library"}</Text>
+            </Pressable>
+            <Pressable onPress={() => void chooseImage("camera", setReferenceImageUri, "Allow camera access to capture a glasses reference image.")} style={styles.generateButtonCompact}>
+              <Text style={styles.generateButtonLabel}>Capture reference</Text>
+            </Pressable>
           </View>
+          {referenceImageUri ? <Image source={{ uri: referenceImageUri }} style={styles.previewImage} /> : null}
         </View>
 
-        <Pressable onPress={handleGenerate} disabled={loading} style={[styles.generateButton, loading ? styles.generateButtonDisabled : null]}>
-          <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate hair color preview"}</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Alternate person photo</Text>
+          <Text style={styles.helperText}>Optional. Override the report selfie with another person image for better try-on alignment.</Text>
+          <View style={styles.buttonRow}>
+            <Pressable onPress={() => void chooseImage("library", setPersonImageUri, "Allow photo access to choose a person image.")} style={styles.secondaryButtonCompact}>
+              <Text style={styles.secondaryButtonLabel}>{personImageUri ? "Change person photo" : "Choose person photo"}</Text>
+            </Pressable>
+            <Pressable onPress={() => void chooseImage("camera", setPersonImageUri, "Allow camera access to capture a person image.")} style={styles.secondaryButtonCompact}>
+              <Text style={styles.secondaryButtonLabel}>Capture person</Text>
+            </Pressable>
+          </View>
+          {personImageUri ? (
+            <>
+              <Image source={{ uri: personImageUri }} style={styles.previewImage} />
+              <Pressable onPress={() => setPersonImageUri(null)} style={styles.clearPersonButton}>
+                <Text style={styles.clearPersonButtonLabel}>Use original report photo instead</Text>
+              </Pressable>
+            </>
+          ) : null}
+        </View>
+
+        <Pressable onPress={() => void handleGenerate()} disabled={loading || !referenceImageUri} style={[styles.generateButton, loading || !referenceImageUri ? styles.generateButtonDisabled : null]}>
+          <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate glasses preview"}</Text>
         </Pressable>
 
         {loading ? <ActivityIndicator size="small" color={t.color.text} /> : null}
@@ -245,7 +287,7 @@ export default function MobileHairStudioScreen() {
                       </View>
                     ) : null}
                   </View>
-                  <Text style={styles.historyLabel} numberOfLines={1}>{item.label ?? "Hair look"}</Text>
+                  <Text style={styles.historyLabel} numberOfLines={1}>{item.label ?? "Glasses look"}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -255,7 +297,7 @@ export default function MobileHairStudioScreen() {
         {!recentLooks.length && !loading ? (
           <View style={styles.emptyStateCard}>
             <Text style={styles.emptyStateTitle}>No looks yet</Text>
-            <Text style={styles.emptyStateBody}>Generate your first hair color preview to create reusable history for this report.</Text>
+            <Text style={styles.emptyStateBody}>Choose a frame reference and generate your first glasses preview for this report.</Text>
           </View>
         ) : null}
       </ScrollView>
@@ -292,7 +334,17 @@ const styles = StyleSheet.create({
     color: t.color.textMuted,
     lineHeight: 21,
   },
+  notice: {
+    color: t.color.brandWarm,
+    fontWeight: "600",
+  },
   section: {
+    gap: 10,
+  },
+  previewSection: {
+    borderRadius: 18,
+    backgroundColor: t.color.surface,
+    padding: 14,
     gap: 10,
   },
   sectionTitle: {
@@ -300,178 +352,160 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: t.color.text,
   },
-  optionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  optionChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderRadius: 999,
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  optionChipActive: {
-    backgroundColor: t.color.text,
-    borderColor: t.color.text,
-  },
-  optionChipLabel: {
-    color: t.color.textSoft,
-    fontWeight: "600",
-  },
-  optionChipLabelActive: {
-    color: t.color.surface,
-  },
-  colorDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: t.color.borderDark12,
+  previewImage: {
+    width: "100%",
+    aspectRatio: 3 / 4,
+    borderRadius: 18,
+    backgroundColor: t.color.surfaceSubtle,
   },
   generateButton: {
     borderRadius: 16,
     backgroundColor: t.color.text,
+    paddingHorizontal: 16,
     paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
   },
   generateButtonDisabled: {
     opacity: 0.5,
   },
-  generateButtonLabel: {
-    color: t.color.surface,
-    fontWeight: "700",
-  },
-  previewSection: {
-    gap: 10,
-  },
-  previewImage: {
-    width: "100%",
-    height: 420,
-    borderRadius: 24,
-    backgroundColor: t.color.surfaceSubtle,
-  },
-  notice: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
+  generateButtonCompact: {
+    flex: 1,
+    borderRadius: 16,
     backgroundColor: t.color.text,
-    color: t.color.surface,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    fontSize: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  generateButtonLabel: {
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
-  historyRow: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  historyHeaderRow: {
+  buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 10,
+  },
+  secondaryButton: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: t.color.borderStrong,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     alignItems: "center",
   },
-  clearHistoryButton: {
-    borderRadius: 999,
-    backgroundColor: t.color.surfaceSubtle,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  secondaryButtonLabel: {
+    color: t.color.text,
+    fontWeight: "600",
   },
-  clearHistoryLabel: {
-    fontSize: 12,
-    color: t.color.textSoft,
-    fontWeight: "700",
-  },
-  historyCard: {
-    width: 132,
-    gap: 6,
+  secondaryButtonCompact: {
+    flex: 1,
     borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "transparent",
-    padding: 2,
+    borderWidth: 1,
+    borderColor: t.color.borderStrong,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    alignItems: "center",
   },
-  historyCardActive: {
-    borderColor: t.color.text,
-  },
-  historyImageWrap: {
-    position: "relative",
-  },
-  historyImage: {
-    width: 132,
-    height: 168,
+  clearPersonButton: {
     borderRadius: 14,
-    backgroundColor: t.color.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    alignItems: "center",
   },
-  historyTimePill: {
-    position: "absolute",
-    right: 6,
-    bottom: 6,
-    borderRadius: 999,
-    backgroundColor: t.color.overlayDark78,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  historyTimeText: {
-    color: t.color.surface,
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  currentBadge: {
-    position: "absolute",
-    left: 6,
-    top: 6,
-    borderRadius: 999,
-    backgroundColor: t.color.overlayDark86,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  currentBadgeText: {
-    color: t.color.surface,
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  historyLabel: {
-    fontSize: 12,
-    color: t.color.textSoft,
+  clearPersonButtonLabel: {
+    color: t.color.textMuted,
     fontWeight: "600",
   },
   timestampText: {
     color: t.color.textMuted,
     fontSize: 12,
-    fontWeight: "500",
   },
-  secondaryButton: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: t.color.borderStrong,
-    paddingVertical: 10,
+  historyHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
   },
-  secondaryButtonLabel: {
-    color: t.color.textSoft,
+  clearHistoryButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  clearHistoryLabel: {
+    color: t.color.text,
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  historyRow: {
+    gap: 12,
+  },
+  historyCard: {
+    width: 164,
+    gap: 8,
+  },
+  historyCardActive: {
+    opacity: 1,
+  },
+  historyImageWrap: {
+    position: "relative",
+  },
+  historyImage: {
+    width: 164,
+    height: 220,
+    borderRadius: 18,
+    backgroundColor: t.color.surfaceSubtle,
+  },
+  currentBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    borderRadius: 999,
+    backgroundColor: t.color.text,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  currentBadgeText: {
+    color: t.color.textOnDark,
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  historyTimePill: {
+    position: "absolute",
+    right: 10,
+    bottom: 10,
+    borderRadius: 999,
+    backgroundColor: "rgba(17, 24, 39, 0.72)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  historyTimeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  historyLabel: {
+    color: t.color.text,
     fontWeight: "600",
   },
   emptyStateCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: t.color.border,
     backgroundColor: t.color.surface,
     padding: 14,
-    gap: 4,
+    gap: 6,
   },
   emptyStateTitle: {
     color: t.color.text,
-    fontSize: 14,
     fontWeight: "700",
   },
   emptyStateBody: {
     color: t.color.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
+    lineHeight: 20,
   },
 });
-

@@ -34,6 +34,37 @@ const TABS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "jewellery", label: "Jewellery" },
 ];
 
+type OutfitOccasion = "casual" | "work" | "date" | "wedding" | "travel";
+type OutfitVibe = "minimal" | "classic" | "bold" | "romantic" | "street";
+
+type OutfitLook = {
+  title: string;
+  occasion: OutfitOccasion;
+  vibe: OutfitVibe;
+  pieces: string[];
+  accentColors: { name: string; hex: string }[];
+  metal: string;
+  whyItWorks: string;
+};
+
+type OutfitSession = {
+  id: string;
+  createdAt: string;
+  occasion: OutfitOccasion;
+  vibe: OutfitVibe;
+  season: string;
+  undertone: string;
+  looks: OutfitLook[];
+  feedback?: {
+    liked: boolean;
+    saved: boolean;
+    worn: boolean;
+  };
+};
+
+const STYLE_OCCASIONS: OutfitOccasion[] = ["casual", "work", "date", "wedding", "travel"];
+const STYLE_VIBES: OutfitVibe[] = ["minimal", "classic", "bold", "romantic", "street"];
+
 interface Props {
   report: CompiledReport;
   /** True on the public /r/[token] page — disables auth-gated features */
@@ -69,7 +100,15 @@ export function ReportLayout({
   const [paymentInitiated, setPaymentInitiated] = React.useState(false);
   const [paywallOpen, setPaywallOpen] = React.useState(initialPaywallOpen);
   const [activeMode, setActiveMode] = React.useState<"report" | "studio">(initialTab === "studio" ? "studio" : "report");
+  const [outfitOccasion, setOutfitOccasion] = React.useState<OutfitOccasion>("casual");
+  const [outfitVibe, setOutfitVibe] = React.useState<OutfitVibe>("minimal");
+  const [outfitLooks, setOutfitLooks] = React.useState<OutfitLook[]>([]);
+  const [outfitHistory, setOutfitHistory] = React.useState<OutfitSession[]>([]);
+  const [outfitHistoryLoading, setOutfitHistoryLoading] = React.useState(false);
+  const [outfitLoading, setOutfitLoading] = React.useState(false);
+  const [outfitError, setOutfitError] = React.useState<string | null>(null);
   const hairstyleBestRequested = React.useRef<Set<string>>(new Set());
+  const outfitHistoryRequested = React.useRef<Set<string>>(new Set());
   const isPaid = report.isPaid;
   const isStudioPro = report.studioEntitlement?.tier === "studio_pro";
   const isProcessing = report.status === "processing" || report.status === "pending";
@@ -102,6 +141,25 @@ export function ReportLayout({
     const res = await fetch(`/api/reports/${report.id}`, { cache: "no-store" });
     if (res.ok) setReport(await res.json());
   }, [report.id]);
+
+  const loadOutfitHistory = React.useCallback(async () => {
+    if (isReadOnly || !isPaid || !publicEnv.flags.doAvoidModule) return;
+    setOutfitHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/reports/${report.id}/outfit-generator`, { cache: "no-store" });
+      if (!res.ok) throw new Error("Could not load outfit history");
+      const json = (await res.json()) as { history?: OutfitSession[] };
+      const history = json.history ?? [];
+      setOutfitHistory(history);
+      if (history.length > 0) {
+        setOutfitLooks(history[0].looks);
+      }
+    } catch {
+      setOutfitError("Unable to load outfit history right now.");
+    } finally {
+      setOutfitHistoryLoading(false);
+    }
+  }, [isPaid, isReadOnly, report.id]);
 
   const triggerVisuals = React.useCallback(async () => {
     setVisualsLoading(true);
@@ -183,6 +241,77 @@ export function ReportLayout({
       cancelled = true;
     };
   }, [activeTab, isPaid, isReadOnly, report.hairstyle, report.id, report.visualAssets, hairstyleBestLoading, refresh]);
+
+  React.useEffect(() => {
+    if (activeMode !== "report" || activeTab !== "style" || !publicEnv.flags.doAvoidModule || isReadOnly || !isPaid) return;
+
+    const requestKey = `${report.id}:style-outfit-history`;
+    if (outfitHistoryRequested.current.has(requestKey)) return;
+    outfitHistoryRequested.current.add(requestKey);
+    void loadOutfitHistory();
+  }, [activeMode, activeTab, isPaid, isReadOnly, loadOutfitHistory, report.id]);
+
+  async function generateOutfitRecommendations() {
+    setOutfitLoading(true);
+    setOutfitError(null);
+    try {
+      const res = await fetch(`/api/reports/${report.id}/outfit-generator`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ occasion: outfitOccasion, vibe: outfitVibe }),
+      });
+      const json = (await res.json()) as {
+        looks?: OutfitLook[];
+        history?: OutfitSession[];
+        error?: string;
+      };
+      if (!res.ok || !json.looks || json.looks.length === 0) {
+        throw new Error(json.error ?? "Could not generate outfits right now.");
+      }
+      setOutfitLooks(json.looks);
+      if (json.history) {
+        setOutfitHistory(json.history);
+      }
+    } catch (err) {
+      setOutfitError((err as Error).message || "Could not generate outfits right now.");
+      setOutfitLooks([]);
+    } finally {
+      setOutfitLoading(false);
+    }
+  }
+
+  async function toggleOutfitFeedback(sessionId: string, field: "liked" | "saved" | "worn", value?: boolean) {
+    const previous = outfitHistory;
+    const optimistic = outfitHistory.map((session) => {
+      if (session.id !== sessionId) return session;
+      const current = {
+        liked: session.feedback?.liked ?? false,
+        saved: session.feedback?.saved ?? false,
+        worn: session.feedback?.worn ?? false,
+      };
+      return {
+        ...session,
+        feedback: {
+          ...current,
+          [field]: typeof value === "boolean" ? value : !current[field],
+        },
+      };
+    });
+    setOutfitHistory(optimistic);
+
+    try {
+      const res = await fetch(`/api/reports/${report.id}/outfit-generator`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, field, value }),
+      });
+      const json = (await res.json()) as { history?: OutfitSession[] };
+      if (!res.ok) throw new Error("Failed to update outfit feedback");
+      if (json.history) setOutfitHistory(json.history);
+    } catch {
+      setOutfitHistory(previous);
+    }
+  }
 
   /** Generate a single color swatch slot on user click. */
   async function generateSwatchSlot(slot: number) {
@@ -647,9 +776,145 @@ export function ReportLayout({
                     animate="visible"
                     exit="exit"
                   >
-                    <p className="text-center text-sm text-ink-stone mb-6">
-                      General style guidance — personalized outfit recommendations are coming soon.
-                    </p>
+                    {!isPaid ? (
+                      <Locked
+                        reportId={report.id}
+                        onUnlocked={refresh}
+                        initialPaywallPlan={initialPaywallPlan}
+                        title="Personalized style guide"
+                      />
+                    ) : (
+                      <div className="mb-6 rounded-3xl p-5" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex flex-col gap-2">
+                            <p className="text-sm font-semibold" style={{ color: "#3D2B1F" }}>Personalized outfit recommendations</p>
+                            <p className="text-xs" style={{ color: "#9C7D5B" }}>
+                              Generate looks using your report palette, face profile, and seasonal style direction.
+                            </p>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="flex flex-col gap-1.5">
+                              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Occasion</span>
+                              <select
+                                value={outfitOccasion}
+                                onChange={(event) => setOutfitOccasion(event.target.value as OutfitOccasion)}
+                                className="rounded-xl px-3 py-2 text-sm"
+                                style={{ background: "#F5EFE7", border: "1px solid #E8DDD0", color: "#3D2B1F" }}
+                              >
+                                {STYLE_OCCASIONS.map((option) => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="flex flex-col gap-1.5">
+                              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>Vibe</span>
+                              <select
+                                value={outfitVibe}
+                                onChange={(event) => setOutfitVibe(event.target.value as OutfitVibe)}
+                                className="rounded-xl px-3 py-2 text-sm"
+                                style={{ background: "#F5EFE7", border: "1px solid #E8DDD0", color: "#3D2B1F" }}
+                              >
+                                {STYLE_VIBES.map((option) => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={() => void generateOutfitRecommendations()}
+                              disabled={outfitLoading}
+                              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                              style={{ background: "#111827", color: "#fff" }}
+                            >
+                              {outfitLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                              {outfitLoading ? "Generating..." : "Generate outfit ideas"}
+                            </button>
+                            {outfitHistoryLoading ? (
+                              <span className="inline-flex items-center gap-2 text-xs" style={{ color: "#9C7D5B" }}>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                Loading your previous outfit sessions...
+                              </span>
+                            ) : null}
+                          </div>
+                          {outfitError ? (
+                            <p className="text-xs" style={{ color: "#C06B3E" }}>{outfitError}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+
+                    {isPaid && outfitHistory.length > 0 ? (
+                      <div className="mb-6 rounded-2xl p-4" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#9C7D5B" }}>Recent outfit sessions</p>
+                        <div className="flex flex-wrap gap-2">
+                          {outfitHistory.slice(0, 6).map((session) => (
+                            <button
+                              key={session.id}
+                              onClick={() => setOutfitLooks(session.looks)}
+                              className="rounded-full px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-85"
+                              style={{ background: "rgba(17,24,39,0.08)", color: "#3D2B1F", border: "1px solid rgba(17,24,39,0.15)" }}
+                            >
+                              {session.occasion} • {session.vibe}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {isPaid && outfitLooks.length > 0 ? (
+                      <div className="mb-6 grid gap-4 md:grid-cols-2">
+                        {outfitLooks.map((look, index) => (
+                          <div key={`${look.title}-${index}`} className="rounded-3xl p-5" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+                            <h4 className="text-base font-semibold" style={{ color: "#3D2B1F" }}>{look.title}</h4>
+                            <p className="mt-2 text-xs" style={{ color: "#9C7D5B" }}>{look.occasion} • {look.vibe}</p>
+                            <ul className="mt-3 space-y-1.5 text-sm" style={{ color: "#6B5344" }}>
+                              {look.pieces.map((piece) => (
+                                <li key={`${look.title}-${piece}`}>• {piece}</li>
+                              ))}
+                            </ul>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {look.accentColors.map((color) => (
+                                <span key={`${look.title}-${color.hex}`} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]" style={{ background: "rgba(17,24,39,0.08)", color: "#3D2B1F" }}>
+                                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: color.hex, border: "1px solid rgba(0,0,0,0.2)" }} />
+                                  {color.name}
+                                </span>
+                              ))}
+                            </div>
+                            <p className="mt-3 text-sm leading-relaxed" style={{ color: "#6B5344" }}>{look.whyItWorks}</p>
+                            <p className="mt-2 text-xs" style={{ color: "#9C7D5B" }}>Suggested metal: {look.metal}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {isPaid && outfitHistory[0] ? (
+                      <div className="mb-6 rounded-2xl p-4" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#9C7D5B" }}>Session feedback</p>
+                        <div className="flex flex-wrap gap-2">
+                          {([
+                            ["liked", "Liked"],
+                            ["saved", "Saved"],
+                            ["worn", "Worn"],
+                          ] as const).map(([field, label]) => {
+                            const active = Boolean(outfitHistory[0].feedback?.[field]);
+                            return (
+                              <button
+                                key={field}
+                                onClick={() => void toggleOutfitFeedback(outfitHistory[0].id, field)}
+                                className="rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-85"
+                                style={active
+                                  ? { background: "#111827", color: "#fff" }
+                                  : { background: "rgba(17,24,39,0.08)", color: "#3D2B1F", border: "1px solid rgba(17,24,39,0.15)" }}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+
                     <div className="grid gap-6 md:grid-cols-3">
                       {(guidanceData as DoAvoidGuidanceConfig).map((block) => (
                         <DoAvoidGuidanceCard key={block.category} block={block} location="report" />

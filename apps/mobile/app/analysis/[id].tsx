@@ -63,7 +63,7 @@ export default function AnalysisScreen() {
     <SafeAreaView style={styles.container}>
       {params.imageUri ? <Image source={{ uri: params.imageUri }} style={styles.image} /> : null}
       <View style={styles.card}>
-        <ActivityIndicator size="large" color=t.color.text />
+        <ActivityIndicator size="large" color={t.color.text} />
         <Text style={styles.title}>Creating your Renovaara report</Text>
         <Text style={styles.body}>{error ?? status}</Text>
         {!error ? (

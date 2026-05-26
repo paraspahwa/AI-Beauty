@@ -128,6 +128,97 @@ export type MobileHairColorControls = {
   styleName?: string;
 };
 
+export type MobilePaletteColor = {
+  name: string;
+  hex: string;
+};
+
+export type MobileOutfitOccasion = "casual" | "work" | "date" | "wedding" | "travel";
+
+export type MobileOutfitVibe = "minimal" | "classic" | "bold" | "romantic" | "street";
+
+export type MobileOutfitLook = {
+  title: string;
+  occasion: MobileOutfitOccasion;
+  vibe: MobileOutfitVibe;
+  pieces: string[];
+  accentColors: MobilePaletteColor[];
+  metal: string;
+  whyItWorks: string;
+};
+
+export type MobileOutfitFeedback = {
+  liked: boolean;
+  saved: boolean;
+  worn: boolean;
+};
+
+export type MobileOutfitSession = {
+  id: string;
+  createdAt: string;
+  occasion: MobileOutfitOccasion;
+  vibe: MobileOutfitVibe;
+  season: string;
+  undertone: string;
+  looks: MobileOutfitLook[];
+  feedback?: MobileOutfitFeedback;
+};
+
+export type MobileCanvasColorScan = {
+  season?: string;
+  undertone?: string;
+  palette?: MobilePaletteColor[];
+  avoidColors?: MobilePaletteColor[];
+};
+
+export type MobileCanvasGenerateMode = "makeup" | "hair" | "outfit";
+
+export type MobileCanvasOutfitLook = {
+  title: string;
+  pieces: string[];
+  notes: string;
+  palette?: MobilePaletteColor[];
+};
+
+export type MobileCanvasOutfitResult = {
+  occasion: string;
+  vibe: string;
+  looks: MobileCanvasOutfitLook[];
+  summary: string;
+};
+
+export type MobileCanvasGenerateResponse = {
+  lowResUrl: string;
+  hdUrl: string;
+  asset?: { id: string; createdAt: string } | null;
+  outfit?: MobileCanvasOutfitResult;
+};
+
+export type MobileCanvasUploadResponse = {
+  canvasId: string;
+  photoUrl: string;
+  quota: {
+    remaining: number;
+    tier: string;
+    usedThisMonth: number;
+  };
+};
+
+export type MobileCanvasShareResponse = {
+  shareToken: string;
+  shareUrl: string;
+};
+
+export type MobileGlassesPreviewInput = {
+  clothImageUri: string;
+  clothImageName?: string;
+  clothImageMime?: string;
+  personImageUri?: string;
+  personImageName?: string;
+  personImageMime?: string;
+  sourceAssetId?: string;
+};
+
 export type MobileReport = {
   id: string;
   status: "pending" | "processing" | "ready" | "failed";
@@ -277,6 +368,24 @@ export async function analyzeSelfie(
   });
 }
 
+export async function uploadStudioCanvas(
+  imageUri: string,
+  fileName = "canvas-selfie.jpg",
+  mimeType = "image/jpeg",
+): Promise<MobileCanvasUploadResponse> {
+  const form = new FormData();
+  form.append("file", {
+    uri: imageUri,
+    name: fileName,
+    type: mimeType,
+  } as unknown as Blob);
+
+  return fetchWithAuth<MobileCanvasUploadResponse>("/api/studio/upload", {
+    method: "POST",
+    body: form,
+  });
+}
+
 export async function fetchReport(reportId: string): Promise<MobileReport> {
   return fetchWithAuth<MobileReport>(`/api/reports/${reportId}`);
 }
@@ -396,6 +505,109 @@ export async function generateHairColorPreview(
   return fetchWithAuth<{ lowResUrl: string; hdUrl: string; asset?: { id: string; createdAt: string } | null }>(`/api/reports/${reportId}/hair-color`, {
     method: "POST",
     body: JSON.stringify(controls),
+  });
+}
+
+export async function generateGlassesPreview(
+  reportId: string,
+  input: MobileGlassesPreviewInput,
+): Promise<{ lowResUrl: string; hdUrl: string; stored?: boolean; asset?: { id: string; createdAt: string } | null }> {
+  const form = new FormData();
+  form.append("clothImage", {
+    uri: input.clothImageUri,
+    name: input.clothImageName ?? "glasses-reference.jpg",
+    type: input.clothImageMime ?? "image/jpeg",
+  } as unknown as Blob);
+
+  if (input.personImageUri) {
+    form.append("personImage", {
+      uri: input.personImageUri,
+      name: input.personImageName ?? "person-image.jpg",
+      type: input.personImageMime ?? "image/jpeg",
+    } as unknown as Blob);
+  }
+
+  if (input.sourceAssetId) {
+    form.append("sourceAssetId", input.sourceAssetId);
+  }
+
+  return fetchWithAuth<{ lowResUrl: string; hdUrl: string; stored?: boolean; asset?: { id: string; createdAt: string } | null }>(`/api/reports/${reportId}/virtual-tryon`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function generateReportOutfits(
+  reportId: string,
+  payload: { occasion: MobileOutfitOccasion; vibe: MobileOutfitVibe },
+): Promise<{ looks: MobileOutfitLook[]; session?: MobileOutfitSession; history?: MobileOutfitSession[] }> {
+  return fetchWithAuth<{ looks: MobileOutfitLook[]; session?: MobileOutfitSession; history?: MobileOutfitSession[] }>(`/api/reports/${reportId}/outfit-generator`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchReportOutfitHistory(reportId: string): Promise<MobileOutfitSession[]> {
+  const response = await fetchWithAuth<{ history?: MobileOutfitSession[] }>(`/api/reports/${reportId}/outfit-generator`);
+  return response.history ?? [];
+}
+
+export async function toggleReportOutfitFeedback(
+  reportId: string,
+  sessionId: string,
+  field: keyof MobileOutfitFeedback,
+  value?: boolean,
+): Promise<{ session: MobileOutfitSession; history: MobileOutfitSession[] }> {
+  return fetchWithAuth<{ session: MobileOutfitSession; history: MobileOutfitSession[] }>(`/api/reports/${reportId}/outfit-generator`, {
+    method: "PATCH",
+    body: JSON.stringify({ sessionId, field, value }),
+  });
+}
+
+export async function generateReportColorSwatchSlot(
+  reportId: string,
+  slot: number,
+): Promise<{ ok: boolean; slot: number; status?: MobileVisualAssetStatus; skipped?: boolean }> {
+  return fetchWithAuth<{ ok: boolean; slot: number; status?: MobileVisualAssetStatus; skipped?: boolean }>(`/api/reports/${reportId}/visuals/colors?slot=${slot}`, {
+    method: "POST",
+  });
+}
+
+export async function scanStudioCanvasColor(canvasId: string): Promise<MobileCanvasColorScan> {
+  const response = await fetchWithAuth<{ analysis?: MobileCanvasColorScan }>("/api/studio/scan-color", {
+    method: "POST",
+    body: JSON.stringify({ canvasId }),
+  });
+  return response.analysis ?? {};
+}
+
+export async function generateStudioCanvas(
+  canvasId: string,
+  mode: MobileCanvasGenerateMode,
+  options: Record<string, unknown>,
+): Promise<MobileCanvasGenerateResponse> {
+  return fetchWithAuth<MobileCanvasGenerateResponse>("/api/studio/generate", {
+    method: "POST",
+    body: JSON.stringify({
+      contextType: "canvas",
+      contextId: canvasId,
+      mode,
+      options,
+    }),
+  });
+}
+
+export async function createStudioCanvasShareLink(canvasId: string): Promise<MobileCanvasShareResponse> {
+  return fetchWithAuth<MobileCanvasShareResponse>("/api/studio/share", {
+    method: "POST",
+    body: JSON.stringify({ canvasId }),
+  });
+}
+
+export async function revokeStudioCanvasShareLink(canvasId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth<{ ok: boolean }>("/api/studio/share", {
+    method: "DELETE",
+    body: JSON.stringify({ canvasId }),
   });
 }
 

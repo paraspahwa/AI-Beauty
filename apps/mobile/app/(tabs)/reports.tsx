@@ -20,7 +20,7 @@ export default function ReportsTabScreen() {
 
   const { continueReports, historyReports, activeReports } = useMemo(() => {
     const inFlight = reports.filter((report) => report.status === "processing");
-    const failed = reports.filter((report) => report.status === "failed" || report.status === "error");
+    const failed = reports.filter((report) => report.status === "failed");
     const latestReady = reports.find((report) => report.status === "ready") ?? null;
     const continueItems = [...inFlight, ...failed];
     if (latestReady && !continueItems.some((item) => item.id === latestReady.id)) {

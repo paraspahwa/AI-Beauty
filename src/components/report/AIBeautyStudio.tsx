@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import {
   Sparkles, Upload, Wand2, Loader2, RefreshCw, ShoppingBag,
-  X, History, UserRound, Info, Download, ChevronDown, Lock, Undo2, Redo2,
+  X, History, UserRound, Info, Download, ChevronDown, Lock, Undo2, Redo2, Camera, VideoOff,
 } from "lucide-react";
 import type { ColorAnalysisResult, StudioEntitlement } from "@/types/report";
 import {
@@ -43,6 +43,8 @@ const STUDIO_CSS = `
 type StudioMode = "clothing" | "makeup" | "hair" | "ar" | "outfit";
 type GenStatus  = "idle" | "loading" | "done" | "error";
 type PhotoMode  = "selfie" | "full";
+type CameraStatus = "idle" | "requesting" | "ready" | "blocked" | "error";
+type FaceBox = { x: number; y: number; width: number; height: number };
 
 
 type GeneratedAssetMeta = {
@@ -604,6 +606,22 @@ export function AIBeautyStudio({
   const [outfitHistory, setOutfitHistory] = React.useState<OutfitSession[]>([]);
   const [outfitHistoryLoading, setOutfitHistoryLoading] = React.useState(false);
 
+  // ── AR-lite state ──
+  const arVideoRef = React.useRef<HTMLVideoElement | null>(null);
+  const arCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const arOverlayCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const arStreamRef = React.useRef<MediaStream | null>(null);
+  const arOverlayAnimationRef = React.useRef<number | null>(null);
+  const arDetectingRef = React.useRef(false);
+  const arLastDetectRef = React.useRef(0);
+  const arFaceBoxRef = React.useRef<FaceBox | null>(null);
+  const arFaceDetectorRef = React.useRef<any>(null);
+  const [cameraStatus, setCameraStatus] = React.useState<CameraStatus>("idle");
+  const [cameraError, setCameraError] = React.useState<string | null>(null);
+  const [arFrameFile, setArFrameFile] = React.useState<File | null>(null);
+  const [arFramePreview, setArFramePreview] = React.useState<string | null>(null);
+  const [arOverlayMessage, setArOverlayMessage] = React.useState("Realtime frame guide is active.");
+
   // ── Batch results state (per mode) ──
   // Each mode holds an array of BatchResult
   const [batchResults, setBatchResults] = React.useState<Record<StudioMode, BatchResult[]>>({
@@ -743,8 +761,263 @@ export function AIBeautyStudio({
   React.useEffect(() => () => {
     if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview);
     if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
-      if (inspoPreview?.startsWith("blob:")) URL.revokeObjectURL(inspoPreview);
-    }, [clothPreview, fullBodyPreview, inspoPreview]);
+    if (inspoPreview?.startsWith("blob:")) URL.revokeObjectURL(inspoPreview);
+    if (arFramePreview?.startsWith("blob:")) URL.revokeObjectURL(arFramePreview);
+    }, [clothPreview, fullBodyPreview, inspoPreview, arFramePreview]);
+
+  const stopArCamera = React.useCallback(() => {
+    if (arOverlayAnimationRef.current !== null) {
+      cancelAnimationFrame(arOverlayAnimationRef.current);
+      arOverlayAnimationRef.current = null;
+    }
+    const overlayCanvas = arOverlayCanvasRef.current;
+    if (overlayCanvas) {
+      const overlayCtx = overlayCanvas.getContext("2d");
+      overlayCtx?.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    }
+    arFaceBoxRef.current = null;
+    arLastDetectRef.current = 0;
+    arDetectingRef.current = false;
+    if (arStreamRef.current) {
+      for (const track of arStreamRef.current.getTracks()) {
+        track.stop();
+      }
+      arStreamRef.current = null;
+    }
+    const video = arVideoRef.current;
+    if (video) {
+      video.srcObject = null;
+    }
+    setCameraStatus("idle");
+  }, []);
+
+  const startArOverlayLoop = React.useCallback(() => {
+    if (arOverlayAnimationRef.current !== null) {
+      cancelAnimationFrame(arOverlayAnimationRef.current);
+      arOverlayAnimationRef.current = null;
+    }
+
+    const video = arVideoRef.current;
+    const canvas = arOverlayCanvasRef.current;
+    if (!video || !canvas) return;
+
+    const drawRoundedRect = (
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radius: number,
+    ) => {
+      const r = Math.max(0, Math.min(radius, Math.min(w, h) / 2));
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    };
+
+    const loop = (now: number) => {
+      const overlay = arOverlayCanvasRef.current;
+      const vid = arVideoRef.current;
+      if (!overlay || !vid) return;
+
+      const width = overlay.clientWidth;
+      const height = overlay.clientHeight;
+      if (width <= 0 || height <= 0) {
+        arOverlayAnimationRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
+      const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+      const targetWidth = Math.floor(width * dpr);
+      const targetHeight = Math.floor(height * dpr);
+      if (overlay.width !== targetWidth || overlay.height !== targetHeight) {
+        overlay.width = targetWidth;
+        overlay.height = targetHeight;
+      }
+
+      const ctx = overlay.getContext("2d");
+      if (!ctx) {
+        arOverlayAnimationRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+      ctx.scale(dpr, dpr);
+
+      const detector = arFaceDetectorRef.current;
+      const canDetect = !!detector && vid.readyState >= 2;
+      if (canDetect && !arDetectingRef.current && now - arLastDetectRef.current > 380) {
+        arDetectingRef.current = true;
+        arLastDetectRef.current = now;
+        detector.detect(vid)
+          .then((faces: any[]) => {
+            const face = faces?.[0];
+            const box = face?.boundingBox;
+            if (box && Number.isFinite(box.width) && Number.isFinite(box.height)) {
+              const videoWidth = Math.max(1, vid.videoWidth);
+              const videoHeight = Math.max(1, vid.videoHeight);
+              arFaceBoxRef.current = {
+                x: (box.x / videoWidth) * width,
+                y: (box.y / videoHeight) * height,
+                width: (box.width / videoWidth) * width,
+                height: (box.height / videoHeight) * height,
+              };
+            }
+          })
+          .catch(() => {
+            // Ignore detector hiccups and keep fallback guide.
+          })
+          .finally(() => {
+            arDetectingRef.current = false;
+          });
+      }
+
+      const fallbackBox: FaceBox = {
+        width: width * 0.5,
+        height: height * 0.62,
+        x: width * 0.25,
+        y: height * 0.14,
+      };
+      const face = arFaceBoxRef.current ?? fallbackBox;
+      const pulse = Math.sin(now / 420) * 1.4;
+
+      const frameWidth = Math.max(120, face.width * 0.9);
+      const frameHeight = frameWidth * 0.34;
+      const centerX = face.x + face.width / 2;
+      const centerY = face.y + face.height * 0.43 + pulse;
+      const leftX = centerX - frameWidth * 0.54;
+      const rightX = centerX + frameWidth * 0.02;
+      const y = centerY - frameHeight / 2;
+
+      ctx.fillStyle = "rgba(17,24,39,0.20)";
+      ctx.strokeStyle = "rgba(245,237,227,0.90)";
+      ctx.lineWidth = 2;
+      drawRoundedRect(ctx, leftX, y, frameWidth * 0.48, frameHeight, frameHeight * 0.35);
+      ctx.fill();
+      ctx.stroke();
+      drawRoundedRect(ctx, rightX, y, frameWidth * 0.48, frameHeight, frameHeight * 0.35);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - frameWidth * 0.04, centerY - frameHeight * 0.02);
+      ctx.lineTo(centerX + frameWidth * 0.04, centerY - frameHeight * 0.02);
+      ctx.strokeStyle = "rgba(245,237,227,0.9)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      const text = "Align eyes with the guide, then capture";
+      ctx.font = "600 12px ui-sans-serif, system-ui, -apple-system, Segoe UI";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(245,237,227,0.92)";
+      ctx.fillText(text, width / 2, height - 16);
+
+      arOverlayAnimationRef.current = requestAnimationFrame(loop);
+    };
+
+    arOverlayAnimationRef.current = requestAnimationFrame(loop);
+  }, []);
+
+  const startArCamera = React.useCallback(async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setCameraStatus("error");
+      setCameraError("Camera is not supported in this browser.");
+      return;
+    }
+
+    stopArCamera();
+    setCameraStatus("requesting");
+    setCameraError(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 720 },
+          height: { ideal: 960 },
+        },
+        audio: false,
+      });
+
+      arStreamRef.current = stream;
+      const video = arVideoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        await video.play().catch(() => undefined);
+      }
+
+      const detectorCtor = (window as any).FaceDetector;
+      if (detectorCtor && !arFaceDetectorRef.current) {
+        try {
+          arFaceDetectorRef.current = new detectorCtor({ maxDetectedFaces: 1, fastMode: true });
+          setArOverlayMessage("Realtime tracking active. Hold still for best guide placement.");
+        } catch {
+          setArOverlayMessage("Guide mode active. Face tracking not supported in this browser.");
+        }
+      } else if (!detectorCtor) {
+        setArOverlayMessage("Guide mode active. Face tracking not supported in this browser.");
+      }
+
+      setCameraStatus("ready");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to access camera.";
+      if (message.toLowerCase().includes("permission") || message.toLowerCase().includes("notallowed")) {
+        setCameraStatus("blocked");
+      } else {
+        setCameraStatus("error");
+      }
+      setArOverlayMessage("Camera unavailable. Enable camera access to continue.");
+      setCameraError(message);
+    }
+  }, [stopArCamera]);
+
+  function clearArFrame() {
+    if (arFramePreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(arFramePreview);
+    }
+    setArFrameFile(null);
+    setArFramePreview(null);
+  }
+
+  async function captureArFrame() {
+    const video = arVideoRef.current;
+    const canvas = arCanvasRef.current;
+    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+      setCameraError("Camera is not ready yet. Try again in a moment.");
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      setCameraError("Could not initialize capture canvas.");
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.92);
+    });
+    if (!blob) {
+      setCameraError("Unable to capture frame. Please retry.");
+      return;
+    }
+
+    clearArFrame();
+    const file = new File([blob], `ar-frame-${Date.now()}.jpg`, { type: "image/jpeg" });
+    setArFrameFile(file);
+    setArFramePreview(URL.createObjectURL(file));
+  }
 
   const loadVault = React.useCallback(async () => {
     setVaultLoading(true);
@@ -1048,6 +1321,50 @@ export function AIBeautyStudio({
     }
   }
 
+  async function generateArGlasses() {
+    if (isCanvas) return;
+    if (!arFrameFile || !clothFile) {
+      setCameraError("Capture a frame and upload a glasses reference first.");
+      return;
+    }
+
+    const idx = pushPendingResult("ar", {
+      mode: "camera_glasses",
+      sourceAssetId,
+    });
+
+    try {
+      const form = new FormData();
+      form.append("clothImage", clothFile);
+      form.append("personImage", arFrameFile);
+      if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
+
+      const res = await fetch(`/api/reports/${resolvedContextId}/virtual-tryon`, {
+        method: "POST",
+        body: form,
+      });
+      const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
+      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "AR try-on failed");
+
+      updateBatchResult("ar", idx, {
+        hdUrl: json.hdUrl ?? null,
+        lowResUrl: json.lowResUrl ?? null,
+        assetId: json.asset?.id ?? null,
+        status: json.hdUrl ? "done" : "loading",
+      });
+      setHistory((h) => [{ url: json.hdUrl ?? json.lowResUrl!, assetId: json.asset?.id ?? null, createdAt: json.asset?.createdAt ?? null }, ...h].slice(0, 10));
+      if (json.asset?.id) {
+        setSourceAssetId(json.asset.id);
+        setSourcePreviewUrl(json.hdUrl ?? json.lowResUrl ?? null);
+      }
+      void loadVault();
+      if (!json.hdUrl && json.asset?.id) void pollForHd("ar", json.asset.id, idx);
+    } catch (err) {
+      setCameraError((err as Error).message || "AR try-on failed.");
+      updateBatchResult("ar", idx, { status: "error" });
+    }
+  }
+
   async function setOutfitFeedback(sessionId: string, field: "liked" | "saved" | "worn", value?: boolean) {
     if (isCanvas) return;
     const previous = outfitHistory;
@@ -1085,10 +1402,41 @@ export function AIBeautyStudio({
     if (mode === "clothing") generateClothing();
     else if (mode === "makeup") generateMakeup();
     else if (mode === "hair") generateHair();
+    else if (mode === "ar") void generateArGlasses();
     else if (mode === "outfit") void generateOutfits();
   }
 
   function switchMode(m: StudioMode) { setMode(m); }
+
+  React.useEffect(() => {
+    if (mode !== "ar") {
+      stopArCamera();
+      return;
+    }
+
+    void startArCamera();
+    return () => {
+      stopArCamera();
+    };
+  }, [mode, startArCamera, stopArCamera]);
+
+  React.useEffect(() => {
+    if (mode !== "ar" || cameraStatus !== "ready") {
+      if (arOverlayAnimationRef.current !== null) {
+        cancelAnimationFrame(arOverlayAnimationRef.current);
+        arOverlayAnimationRef.current = null;
+      }
+      return;
+    }
+
+    startArOverlayLoop();
+    return () => {
+      if (arOverlayAnimationRef.current !== null) {
+        cancelAnimationFrame(arOverlayAnimationRef.current);
+        arOverlayAnimationRef.current = null;
+      }
+    };
+  }, [cameraStatus, mode, startArOverlayLoop]);
 
   async function downloadBatchResult(item: BatchResult, m: StudioMode, i: number) {
     const directUrl = item.hdUrl || item.lowResUrl;
@@ -1862,24 +2210,115 @@ export function AIBeautyStudio({
           </div>
         )}
 
-        {/* ── AR mode (scaffold) ── */}
+        {/* ── AR mode (beta) ── */}
         {mode === "ar" && (
           <div className="p-5">
             <div
-              className="rounded-3xl border p-8 text-center"
+              className="rounded-3xl border p-5"
               style={{ background: "linear-gradient(145deg, rgba(17,24,39,0.06), rgba(34,211,238,0.08))", borderColor: "#E8DDD0" }}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>
-                AR Try-On Preview
-              </p>
-              <h3 className="mt-2 text-xl font-semibold" style={{ color: "#3D2B1F" }}>
-                Real-time camera try-on is coming soon
-              </h3>
+              <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#9C7D5B" }}>AR Beta (realtime overlay + capture)</p>
+              <h3 className="mt-2 text-xl font-semibold" style={{ color: "#3D2B1F" }}>Align in realtime, then render a high-quality try-on</h3>
               <p className="mt-2 text-sm" style={{ color: "#9C7D5B" }}>
-                We are preparing live camera overlays for glasses, makeup, and hair experiments.
+                A live overlay helps framing before capture. Final output still uses the full server-quality generation pipeline.
               </p>
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold" style={{ background: "rgba(17,24,39,0.12)", color: "#111827" }}>
-                Beta waitlist opens in a future update
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-2xl border p-3" style={{ borderColor: "#E8DDD0", background: "#FFFDFA" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#9C7D5B" }}>Live camera</p>
+                  <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "3/4", background: "#111827" }}>
+                    {cameraStatus === "ready" ? (
+                      <>
+                        <video ref={arVideoRef} className="h-full w-full object-cover" muted playsInline autoPlay />
+                        <canvas ref={arOverlayCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
+                        <VideoOff className="h-6 w-6" style={{ color: "#E8DDD0" }} />
+                        <p className="text-xs" style={{ color: "#E8DDD0" }}>
+                          {cameraStatus === "requesting"
+                            ? "Requesting camera permission..."
+                            : cameraStatus === "blocked"
+                              ? "Camera blocked. Allow permission and retry."
+                              : "Camera is not active."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <canvas ref={arCanvasRef} className="hidden" />
+                  <p className="mt-2 text-[11px]" style={{ color: "#9C7D5B" }}>{arOverlayMessage}</p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => void startArCamera()}
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+                      style={{ background: "rgba(17,24,39,0.10)", color: "#111827", border: "1px solid rgba(17,24,39,0.18)" }}
+                    >
+                      <Camera className="h-3.5 w-3.5" /> Start camera
+                    </button>
+                    <button
+                      onClick={() => void captureArFrame()}
+                      disabled={cameraStatus !== "ready"}
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+                      style={{ background: "#111827", color: "#3D2B1F" }}
+                    >
+                      <Camera className="h-3.5 w-3.5" /> Capture frame
+                    </button>
+                    <button
+                      onClick={clearArFrame}
+                      disabled={!arFrameFile}
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+                      style={{ background: "rgba(17,24,39,0.08)", color: "#111827" }}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" /> Retake
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border p-3" style={{ borderColor: "#E8DDD0", background: "#FFFDFA" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#9C7D5B" }}>Captured frame + frame reference</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="mb-1 text-[11px]" style={{ color: "#9C7D5B" }}>Your captured frame</p>
+                      <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "3/4", background: "#F5EFE7" }}>
+                        {arFramePreview ? (
+                          <Image src={arFramePreview} alt="Captured AR frame" fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center px-3 text-center text-[11px]" style={{ color: "#B8A898" }}>
+                            Capture a frame to continue
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-[11px]" style={{ color: "#9C7D5B" }}>Glasses reference image</p>
+                      <UploadZone
+                        onFile={handleClothFile}
+                        preview={clothPreview}
+                        disabled={status === "loading"}
+                        label={clothFile ? "Change reference" : "Upload glasses image"}
+                        hint={"Front-facing product photo works best"}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => void generateArGlasses()}
+                    disabled={!arFrameFile || !clothFile || status === "loading"}
+                    className="mt-3 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
+                    style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}
+                  >
+                    {status === "loading"
+                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
+                      : <><Wand2 className="h-4 w-4" /> Render try-on from captured frame</>}
+                  </button>
+
+                  {cameraError ? (
+                    <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: "rgba(192,107,62,0.10)", color: "#C06B3E" }}>
+                      {cameraError}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -2289,9 +2728,9 @@ export function AIBeautyStudio({
             <p key={tip} className="text-[11px]" style={{ color: "#B8A898" }}>✦ {tip}</p>
           ))}
           {mode === "ar" && [
-            "AR mode is currently in scaffold stage",
-            "Use clothing, makeup, or hair tabs for full generation today",
-            "Your feedback will shape live try-on interactions",
+            "Capture a stable front-facing frame before generating",
+            "Upload a clear glasses reference image (front view works best)",
+            "Generated AR results are saved in your Studio history and vault",
           ].map((tip) => (
             <p key={tip} className="text-[11px]" style={{ color: "#B8A898" }}>✦ {tip}</p>
           ))}

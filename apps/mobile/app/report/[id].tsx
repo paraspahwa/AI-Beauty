@@ -449,7 +449,7 @@ export default function ReportScreen() {
   if (!report) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color=t.color.text />
+        <ActivityIndicator size="large" color={t.color.text} />
       </SafeAreaView>
     );
   }
@@ -516,7 +516,7 @@ export default function ReportScreen() {
         {checkoutStatus && !report.isPaid ? (
           <Card title={checkoutFlow === "studio_pro" ? "Studio Pro status" : "Payment status"}>
             <Text style={styles.mutedText}>{checkoutStatus}</Text>
-            {awaitingBrowserCheckout ? <ActivityIndicator size="small" color=t.color.text /> : null}
+            {awaitingBrowserCheckout ? <ActivityIndicator size="small" color={t.color.text} /> : null}
           </Card>
         ) : null}
 
@@ -654,6 +654,16 @@ export default function ReportScreen() {
                 <EmptyCard text="Glasses guidance is not available yet for this report." />
               )}
 
+              <Card title="Glasses actions">
+                <Text style={styles.mutedText}>Upload a glasses reference image and generate a try-on preview using your report photo.</Text>
+                <Pressable
+                  onPress={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+                  style={styles.chatLaunchButton}
+                >
+                  <Text style={styles.chatLaunchButtonLabel}>Open glasses studio</Text>
+                </Pressable>
+              </Card>
+
               <VisualGallery
                 title="Glasses previews"
                 assets={report.visualAssets?.assets?.glassesPreviews}
@@ -749,6 +759,18 @@ export default function ReportScreen() {
                 >
                   <Text style={styles.secondaryButtonLabel}>Open hair color studio</Text>
                 </Pressable>
+                <Pressable
+                  onPress={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+                  style={styles.secondaryButton}
+                >
+                  <Text style={styles.secondaryButtonLabel}>Open glasses studio</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => router.push({ pathname: "/studio/outfits/[id]", params: { id: report.id } })}
+                  style={styles.secondaryButton}
+                >
+                  <Text style={styles.secondaryButtonLabel}>Open outfit studio</Text>
+                </Pressable>
               </Card>
 
               <VisualGallery
@@ -764,11 +786,11 @@ export default function ReportScreen() {
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.savedVisualsRow}>
                     {savedVisuals.map((item) => (
                       <View key={item.id} style={styles.savedVisualCard}>
-                        <Pressable onPress={() => setPreviewVisual({ imageUrl: item.imageUrl, label: `${item.kind === "makeup" ? "Makeup" : "Hair"}${item.label ? ` - ${item.label}` : ""}` })}>
+                        <Pressable onPress={() => setPreviewVisual({ imageUrl: item.imageUrl, label: `${item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}${item.label ? ` - ${item.label}` : ""}` })}>
                           <Image source={{ uri: item.imageUrl }} style={styles.savedVisualImage} />
                         </Pressable>
                         <Text style={styles.savedVisualLabel} numberOfLines={1}>
-                          {item.kind === "makeup" ? "Makeup" : "Hair"}
+                          {item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}
                           {item.label ? ` - ${item.label}` : ""}
                         </Text>
                         {formatSavedVisualTime(item.createdAt) ? <Text style={styles.savedVisualTime}>{formatSavedVisualTime(item.createdAt)}</Text> : null}
@@ -780,7 +802,7 @@ export default function ReportScreen() {
                   </ScrollView>
                 </Card>
               ) : (
-                <EmptyCard text="Saved makeup and hair looks will appear here once you keep them from Studio." />
+                <EmptyCard text="Saved makeup, hair, and glasses looks will appear here once you keep them from Studio." />
               )}
             </>
           ) : (
@@ -813,6 +835,13 @@ export default function ReportScreen() {
                 fallbackLabel="Color swatch"
                 onPreview={setPreviewVisual}
               />
+
+              <Card title="Color swatch studio">
+                <Text style={styles.mutedText}>Generate or retry individual color swatch slots directly from your report palette.</Text>
+                <Pressable onPress={() => router.push({ pathname: "/studio/colors/[id]", params: { id: report.id } })} style={styles.chatLaunchButton}>
+                  <Text style={styles.chatLaunchButtonLabel}>Open color swatch studio</Text>
+                </Pressable>
+              </Card>
 
               <Card title="Continue with chat">
                 <Text style={styles.mutedText}>Use the style consultant to ask follow-up questions about outfits, shopping choices, or how to use your palette.</Text>

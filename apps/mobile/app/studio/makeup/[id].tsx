@@ -268,7 +268,7 @@ export default function MobileMakeupStudioScreen() {
           <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate preview"}</Text>
         </Pressable>
 
-        {loading ? <ActivityIndicator size="small" color=t.color.text /> : null}
+        {loading ? <ActivityIndicator size="small" color={t.color.text} /> : null}
 
         {resultUrl ? (
           <View style={styles.previewSection}>

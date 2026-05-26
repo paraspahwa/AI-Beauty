@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type StudioHistoryKind = "makeup" | "hair";
+export type StudioHistoryKind = "makeup" | "hair" | "glasses";
 
 export type StudioHistoryItem = {
   id: string;

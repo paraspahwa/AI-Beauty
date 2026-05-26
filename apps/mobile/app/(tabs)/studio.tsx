@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { fetchReport, fetchStudioVault, removeStudioVaultAsset, type MobileVaultAsset } from "@/lib/api";
+import { mobileTheme as t } from "@/lib/theme";
 
 type VaultFilter = "all" | "canvas" | "report";
 type VaultSort = "newest" | "oldest" | "tool";
@@ -779,14 +780,29 @@ export default function StudioVaultTabScreen() {
   function openSource(asset: MobileVaultAsset) {
     if (asset.sourceType === "report" && asset.sourceId) {
       router.push({ pathname: "/report/[id]", params: { id: asset.sourceId } });
+      return;
+    }
+
+    if (asset.sourceType === "canvas" && asset.sourceId) {
+      router.push({
+        pathname: "/studio/canvas/[id]",
+        params: {
+          id: asset.sourceId,
+          photoUrl: asset.lowResUrl || asset.hdUrl,
+        },
+      });
     }
   }
 
-  async function openStudioAction(asset: MobileVaultAsset, mode: "makeup" | "hair") {
+  async function openStudioAction(asset: MobileVaultAsset, mode: "makeup" | "hair" | "glasses") {
     if (asset.sourceType !== "report" || !asset.sourceId) return;
     try {
       const report = await fetchReport(asset.sourceId);
-      const pathname = mode === "makeup" ? "/studio/makeup/[id]" : "/studio/hair/[id]";
+      const pathname = mode === "makeup"
+        ? "/studio/makeup/[id]"
+        : mode === "hair"
+          ? "/studio/hair/[id]"
+          : "/studio/glasses/[id]";
       router.push({ pathname, params: { id: asset.sourceId, imageUrl: report.imageUrl } });
     } catch {
       // Fallback to report if image lookup fails
@@ -899,7 +915,7 @@ export default function StudioVaultTabScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color=t.color.text />
+        <ActivityIndicator size="large" color={t.color.text} />
       </SafeAreaView>
     );
   }
@@ -908,6 +924,9 @@ export default function StudioVaultTabScreen() {
     <View style={styles.listHeader}>
       <Text style={styles.title}>Studio Vault</Text>
       <Text style={styles.subtitle}>Browse generated looks across report and canvas contexts.</Text>
+      <Pressable onPress={() => router.push("/studio/canvas/create")} style={styles.canvasEntryButton}>
+        <Text style={styles.canvasEntryButtonLabel}>Start standalone canvas</Text>
+      </Pressable>
 
       {ENABLE_VAULT_PERF_LOGS ? (
         <View style={styles.perfPanelWrap}>
@@ -1044,7 +1063,6 @@ export default function StudioVaultTabScreen() {
                         <View
                           style={[
                             styles.perfBadge,
-                      import { mobileTheme as t } from "@/lib/theme";
                             level === "fast"
                               ? styles.perfBadgeFast
                               : level === "medium"
@@ -1126,7 +1144,7 @@ export default function StudioVaultTabScreen() {
         value={query}
         onChangeText={setQuery}
         placeholder="Search by tool or variant"
-        placeholderTextColor=t.color.textFaint
+        placeholderTextColor={t.color.textFaint}
         style={styles.searchInput}
         autoCapitalize="none"
         autoCorrect={false}
@@ -1285,7 +1303,30 @@ export default function StudioVaultTabScreen() {
                 >
                   <Text style={styles.actionButtonLabel}>Open hair studio</Text>
                 </Pressable>
+                <Pressable
+                  onPress={() => {
+                    if (!actionAsset) return;
+                    void openStudioAction(actionAsset, "glasses");
+                    setActionAsset(null);
+                  }}
+                  style={styles.actionButton}
+                >
+                  <Text style={styles.actionButtonLabel}>Open glasses studio</Text>
+                </Pressable>
               </>
+            ) : null}
+
+            {actionAsset?.sourceType === "canvas" ? (
+              <Pressable
+                onPress={() => {
+                  if (!actionAsset) return;
+                  openSource(actionAsset);
+                  setActionAsset(null);
+                }}
+                style={styles.actionButton}
+              >
+                <Text style={styles.actionButtonLabel}>Open source canvas</Text>
+              </Pressable>
             ) : null}
 
             <Pressable
@@ -1344,6 +1385,17 @@ const styles = StyleSheet.create({
   subtitle: {
     color: t.color.textMuted,
     lineHeight: 21,
+  },
+  canvasEntryButton: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    backgroundColor: t.color.text,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  canvasEntryButtonLabel: {
+    color: t.color.surface,
+    fontWeight: "700",
   },
   perfPanelWrap: {
     gap: 8,
