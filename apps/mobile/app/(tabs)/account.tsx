@@ -5,6 +5,7 @@ import { Alert, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, 
 import { cancelSubscription, fetchSubscriptionStatus, listReports, type MobileStudioEntitlement } from "@/lib/api";
 import { mobileEnv } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
+import { mobileTheme as t } from "@/lib/theme";
 
 export default function AccountTabScreen() {
   const router = useRouter();
@@ -269,7 +270,7 @@ export default function AccountTabScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -278,72 +279,72 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   subtitle: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
     marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 11,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   button: {
     marginTop: 4,
     borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
   },
   buttonDisabled: {
-    opacity: 0.45,
+    opacity: t.opacity.disabled,
   },
   buttonLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
   secondaryButton: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingVertical: 11,
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   secondaryButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   status: {
     marginTop: 8,
-    color: "#6b7280",
+    color: t.color.textMuted,
   },
   sectionCard: {
     marginTop: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 6,
   },
   sectionTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontSize: 17,
     fontWeight: "700",
   },
   sectionBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 20,
   },
   activationNote: {
     marginTop: 4,
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },

@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchProgressReports, type MobileProgressReport } from "@/lib/api";
 import { PillButton } from "@/lib/ui/PillButton";
+import { mobileTheme as t } from "@/lib/theme";
 
 function formatDate(value: string): string {
   const parsed = new Date(value);
@@ -71,7 +72,7 @@ export default function ProgressScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color={t.color.text} />
       </SafeAreaView>
     );
   }
@@ -174,13 +175,13 @@ export default function ProgressScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -194,29 +195,29 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   eyebrow: {
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 1.4,
     fontWeight: "700",
-    color: "#9C7D5B",
+    color: t.color.brandWarm,
   },
   subtitle: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
   },
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 8,
   },
   cardTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
     fontSize: 16,
   },
@@ -225,9 +226,9 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     borderRadius: 14,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     padding: 12,
     gap: 4,
   },
@@ -239,12 +240,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   summaryValue: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
     fontSize: 17,
   },
   summaryMeta: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
   },
   singleTagsRow: {
@@ -255,9 +256,9 @@ const styles = StyleSheet.create({
   singleTag: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#f9fafb",
-    color: "#374151",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surfaceMuted,
+    color: t.color.textSoft,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 12,
@@ -277,53 +278,53 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 999,
-    backgroundColor: "#d1d5db",
+    backgroundColor: t.color.borderStrong,
     marginTop: 4,
   },
   timelineDotActive: {
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
   },
   timelineLine: {
     width: 1,
     flex: 1,
     minHeight: 22,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: t.color.border,
     marginTop: 4,
   },
   timelineCopy: {
     flex: 1,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#f3f4f6",
-    backgroundColor: "#fffafc",
+    borderColor: t.color.divider,
+    backgroundColor: t.color.bg,
     padding: 10,
     gap: 4,
   },
   timelineDate: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   timelineMeta: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 13,
   },
   timelineButton: {
     marginTop: 4,
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   timelineButtonLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontSize: 12,
     fontWeight: "700",
   },
   noteText: {
-    color: "#6b7280",
+    color: t.color.textMuted,
   },
   errorText: {
-    color: "#b91c1c",
+    color: t.color.danger,
   },
 });

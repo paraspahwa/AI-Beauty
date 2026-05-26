@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchStyleDnaSummary, type MobileStyleDnaSummary } from "@/lib/api";
 import { PillButton } from "@/lib/ui/PillButton";
+import { mobileTheme as t } from "@/lib/theme";
 
 function formatDate(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -46,7 +47,7 @@ export default function StyleDnaScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color={t.color.text} />
       </SafeAreaView>
     );
   }
@@ -129,13 +130,13 @@ export default function StyleDnaScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -149,42 +150,42 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   eyebrow: {
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 1.4,
     fontWeight: "700",
-    color: "#9C7D5B",
+    color: t.color.brandWarm,
   },
   subtitle: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
   },
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 6,
   },
   cardTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
     fontSize: 16,
   },
   bodyText: {
-    color: "#374151",
+    color: t.color.textSoft,
     lineHeight: 20,
   },
   noteText: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
   },
   errorText: {
-    color: "#b91c1c",
+    color: t.color.danger,
   },
   swatchRow: {
     flexDirection: "row",
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
   },
   swatchLabel: {
     fontSize: 11,
-    color: "#6b7280",
+    color: t.color.textMuted,
     textAlign: "center",
   },
 });

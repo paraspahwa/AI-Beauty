@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
+import { mobileTheme as t } from "@/lib/theme";
 
 type PillButtonVariant = "solid" | "outline" | "subtle";
 
@@ -44,27 +45,27 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   solid: {
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
   },
   outline: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
   },
   subtle: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
   solidLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
     fontSize: 12,
   },
   subtleLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 12,
   },
   disabled: {
-    opacity: 0.45,
+    opacity: t.opacity.disabled,
   },
 });

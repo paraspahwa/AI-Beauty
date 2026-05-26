@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { analyzeSelfie, listReports, type AnalyzeIntent } from "@/lib/api";
 import { assertMobileEnv } from "@/lib/env";
+import { mobileTheme as t } from "@/lib/theme";
 
 const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string; bullets: string[] }> = {
   report: {
@@ -240,7 +241,7 @@ function ActionButton({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -255,33 +256,33 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
-    color: "#9d174d",
+    color: t.color.brandRose,
   },
   intentGrid: {
     gap: 10,
   },
   intentCard: {
     borderRadius: 18,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     padding: 16,
     gap: 6,
   },
   intentCardActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
   },
   intentTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   intentTitleActive: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
   },
   intentBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 20,
   },
   intentBodyActive: {
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   intentBullet: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -301,54 +302,54 @@ const styles = StyleSheet.create({
   },
   tipsCard: {
     borderRadius: 16,
-    backgroundColor: "#fff1f6",
+    backgroundColor: t.color.brandRoseSurface,
     padding: 14,
     gap: 4,
   },
   tipsTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   tipsBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 20,
   },
   title: {
     fontSize: 30,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
     marginTop: 8,
   },
   subtitle: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 22,
     marginBottom: 8,
   },
   error: {
     marginBottom: 10,
-    color: "#b91c1c",
+    color: t.color.danger,
   },
   button: {
     borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 13,
     paddingHorizontal: 12,
     alignItems: "center",
   },
   buttonSecondary: {
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
   },
   buttonDisabled: {
-    opacity: 0.45,
+    opacity: t.opacity.disabled,
   },
   buttonLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
   buttonLabelSecondary: {
-    color: "#374151",
+    color: t.color.textSoft,
   },
   quickLinksRow: {
     flexDirection: "row",
@@ -362,25 +363,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   trustItem: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 12,
   },
   status: {
     marginTop: 8,
-    color: "#374151",
+    color: t.color.textSoft,
   },
   previewBlock: {
     marginTop: 8,
     gap: 8,
   },
   previewLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "600",
   },
   previewImage: {
     width: 180,
     height: 220,
     borderRadius: 16,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
   },
 });

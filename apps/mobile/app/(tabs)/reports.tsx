@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { deleteReport, listReports, type MobileReportListItem } from "@/lib/api";
+import { mobileTheme as t } from "@/lib/theme";
 
 function formatDate(value: string): string {
   const parsed = new Date(value);
@@ -66,7 +67,7 @@ export default function ReportsTabScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color={t.color.text} />
       </SafeAreaView>
     );
   }
@@ -160,13 +161,13 @@ export default function ReportsTabScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   container: {
     padding: 20,
@@ -185,23 +186,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   subtitle: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
     marginBottom: 6,
   },
   refreshButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   refreshButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -209,17 +210,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#fbcfe8",
-    backgroundColor: "#fff1f6",
+    backgroundColor: t.color.brandRoseSurface,
     padding: 14,
     gap: 8,
   },
   insightsTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
     fontSize: 15,
   },
   insightsBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 20,
   },
   insightsActions: {
@@ -230,72 +231,72 @@ const styles = StyleSheet.create({
   insightsButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.borderStrong,
+    backgroundColor: t.color.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   insightsButtonLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 12,
   },
   errorCard: {
     borderRadius: 16,
-    backgroundColor: "#fef2f2",
+    backgroundColor: t.color.dangerSurface,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: t.color.dangerBorder,
     padding: 14,
     gap: 6,
   },
   errorTitle: {
-    color: "#991b1b",
+    color: t.color.dangerStrong,
     fontWeight: "700",
   },
   errorBody: {
-    color: "#b91c1c",
+    color: t.color.danger,
   },
   retryButton: {
     marginTop: 4,
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   retryButtonLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
   emptyCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 4,
   },
   emptyTitle: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   emptyBody: {
-    color: "#6b7280",
+    color: t.color.textMuted,
   },
   reportCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 3,
   },
   reportId: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   reportMeta: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     fontSize: 13,
   },
   reportActionsRow: {
@@ -306,21 +307,21 @@ const styles = StyleSheet.create({
   reportActionButton: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   reportActionLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontWeight: "700",
     fontSize: 12,
   },
   reportDeleteButton: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#fecaca",
-    backgroundColor: "#fef2f2",
+    borderColor: t.color.dangerBorder,
+    backgroundColor: t.color.dangerSurface,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
@@ -328,19 +329,19 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   reportDeleteLabel: {
-    color: "#b91c1c",
+    color: t.color.danger,
     fontWeight: "700",
     fontSize: 12,
   },
   quickOpenButton: {
     marginTop: 4,
     borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
   },
   quickOpenLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
 });

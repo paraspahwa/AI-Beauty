@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
 import { analyzeIngredients, deleteChatBookmark, fetchChatBookmarks, fetchChatHistory, fetchReport, saveChatBookmark, type MobileChatBookmark, type MobileChatMessage, type MobileIngredientAnalysis, type MobileReport, sendChatMessage } from "@/lib/api";
+import { mobileTheme as t } from "@/lib/theme";
 
 function buildChatSuggestions(report: MobileReport | null): string[] {
   const suggestions: string[] = [];
@@ -160,7 +161,7 @@ export default function ChatScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#111827" />
+        <ActivityIndicator size="large" color={t.color.text} />
       </SafeAreaView>
     );
   }
@@ -329,14 +330,14 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   header: {
     paddingHorizontal: 20,
@@ -350,32 +351,32 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: t.color.surfaceSubtle,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   backButtonLabel: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "600",
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   helper: {
-    color: "#6b7280",
+    color: t.color.textMuted,
     lineHeight: 21,
   },
   retryButton: {
     marginTop: 16,
     borderRadius: 14,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   retryButtonLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
   container: {
@@ -385,14 +386,14 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     borderRadius: 18,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     padding: 14,
     gap: 8,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111827",
+    color: t.color.text,
   },
   bookmarkList: {
     gap: 8,
@@ -400,13 +401,13 @@ const styles = StyleSheet.create({
   bookmarkCard: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#f3f4f6",
+    borderColor: t.color.divider,
     padding: 10,
     gap: 8,
-    backgroundColor: "#fffafc",
+    backgroundColor: t.color.bg,
   },
   bookmarkText: {
-    color: "#374151",
+    color: t.color.textSoft,
     lineHeight: 20,
   },
   bookmarkActions: {
@@ -416,55 +417,55 @@ const styles = StyleSheet.create({
   bookmarkActionButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: t.color.borderStrong,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   bookmarkActionLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 12,
     fontWeight: "700",
   },
   bookmarkDeleteButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: t.color.dangerBorder,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#fef2f2",
+    backgroundColor: t.color.dangerSurface,
   },
   bookmarkDeleteLabel: {
-    color: "#b91c1c",
+    color: t.color.danger,
     fontSize: 12,
     fontWeight: "700",
   },
   ingredientInput: {
     minHeight: 96,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     borderRadius: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     paddingHorizontal: 12,
     paddingVertical: 10,
     textAlignVertical: "top",
   },
   secondarySendButton: {
     borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 11,
     alignItems: "center",
   },
   ingredientResultCard: {
     borderRadius: 12,
-    backgroundColor: "#f9fafb",
+    backgroundColor: t.color.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     padding: 10,
     gap: 6,
   },
   ingredientScore: {
-    color: "#111827",
+    color: t.color.text,
     fontWeight: "700",
   },
   suggestionRow: {
@@ -474,12 +475,12 @@ const styles = StyleSheet.create({
   },
   suggestionChip: {
     borderRadius: 999,
-    backgroundColor: "#fdf2f8",
+    backgroundColor: t.color.brandRoseSurface,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   suggestionLabel: {
-    color: "#9d174d",
+    color: t.color.brandRose,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     borderRadius: 18,
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     padding: 16,
   },
   bubble: {
@@ -503,25 +504,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   userBubble: {
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     alignSelf: "flex-end",
     maxWidth: "90%",
   },
   assistantBubble: {
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
     alignSelf: "stretch",
   },
   roleLabel: {
     fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
-    color: "#6b7280",
+    color: t.color.textMuted,
   },
   userRoleLabel: {
     color: "rgba(255,255,255,0.7)",
   },
   messageText: {
-    color: "#111827",
+    color: t.color.text,
     lineHeight: 21,
   },
   inlineActionRow: {
@@ -537,42 +538,42 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   bookmarkInlineLabel: {
-    color: "#374151",
+    color: t.color.textSoft,
     fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
   },
   userMessageText: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
   },
   composer: {
     padding: 20,
     gap: 10,
     borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-    backgroundColor: "#fffafc",
+    borderTopColor: t.color.divider,
+    backgroundColor: t.color.bg,
   },
   input: {
     minHeight: 96,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: t.color.border,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 12,
     textAlignVertical: "top",
-    backgroundColor: "#ffffff",
+    backgroundColor: t.color.surface,
   },
   sendButton: {
     borderRadius: 14,
-    backgroundColor: "#111827",
+    backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
   },
   disabledButton: {
-    opacity: 0.45,
+    opacity: t.opacity.disabled,
   },
   sendButtonLabel: {
-    color: "#ffffff",
+    color: t.color.textOnDark,
     fontWeight: "700",
   },
 });
