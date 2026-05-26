@@ -1126,7 +1126,7 @@ export default function StudioVaultTabScreen() {
         value={query}
         onChangeText={setQuery}
         placeholder="Search by tool or variant"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor=t.color.textFaint
         style={styles.searchInput}
         autoCapitalize="none"
         autoCorrect={false}
@@ -1373,23 +1373,23 @@ const styles = StyleSheet.create({
     borderColor: t.color.dangerBorder,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#fff1f2",
+    backgroundColor: t.color.dangerSurfaceSoft,
   },
   perfClearLabel: {
-    color: "#be123c",
+    color: t.color.dangerTextSoft,
     fontSize: 12,
     fontWeight: "700",
   },
   perfRecordToggleButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#bfdbfe",
+    borderColor: t.color.infoBorder,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#eff6ff",
+    backgroundColor: t.color.infoSurface,
   },
   perfRecordToggleLabel: {
-    color: "#1d4ed8",
+    color: t.color.infoText,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -1402,7 +1402,7 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.surface,
   },
   perfSlowToggleButtonActive: {
-    borderColor: "#fca5a5",
+    borderColor: t.color.dangerBorderSoft,
     backgroundColor: t.color.dangerSurface,
   },
   perfSlowToggleLabel: {
@@ -1435,7 +1435,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: t.color.borderStrong,
-    backgroundColor: "#f9fafb",
+    backgroundColor: t.color.surfaceMuted,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
@@ -1550,13 +1550,13 @@ const styles = StyleSheet.create({
   perfBaselineButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#bfdbfe",
-    backgroundColor: "#eff6ff",
+    borderColor: t.color.infoBorder,
+    backgroundColor: t.color.infoSurface,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   perfBaselineButtonLabel: {
-    color: "#1d4ed8",
+    color: t.color.infoText,
     fontSize: 11,
     fontWeight: "700",
   },
@@ -1579,17 +1579,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   perfBaselineLabel: {
-    color: "#1e3a8a",
+    color: t.color.infoTextStrong,
     fontSize: 11,
     fontWeight: "600",
   },
   perfBaselineDeltaLabel: {
-    color: "#7c2d12",
+    color: t.color.warnTextStrong,
     fontSize: 11,
     fontWeight: "700",
   },
   perfWorstLabel: {
-    color: "#7c2d12",
+    color: t.color.warnTextStrong,
     fontSize: 11,
     fontWeight: "700",
   },
@@ -1618,19 +1618,19 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   perfBadgeFast: {
-    backgroundColor: "#ecfdf3",
+    backgroundColor: t.color.successSurface,
     borderWidth: 1,
-    borderColor: "#86efac",
+    borderColor: t.color.successBorder,
   },
   perfBadgeMedium: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: t.color.warnSurface,
     borderWidth: 1,
-    borderColor: "#fcd34d",
+    borderColor: t.color.warnBorder,
   },
   perfBadgeSlow: {
     backgroundColor: t.color.dangerSurface,
     borderWidth: 1,
-    borderColor: "#fca5a5",
+    borderColor: t.color.dangerBorderSoft,
   },
   perfBadgeLabel: {
     color: t.color.textSoft,
@@ -1666,12 +1666,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: t.color.dangerBorder,
-    backgroundColor: "#fff1f2",
+    backgroundColor: t.color.dangerSurfaceSoft,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
   bulkDeleteButtonLabel: {
-    color: "#be123c",
+    color: t.color.dangerTextSoft,
     fontWeight: "700",
     fontSize: 12,
   },
@@ -1723,8 +1723,8 @@ const styles = StyleSheet.create({
   bulkRetryCard: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#fed7aa",
-    backgroundColor: "#fffbeb",
+    borderColor: t.color.warnBorderSoft,
+    backgroundColor: t.color.warnSurface,
     paddingHorizontal: 12,
     paddingVertical: 8,
     flexDirection: "row",
@@ -1732,20 +1732,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   bulkRetryText: {
-    color: "#9a3412",
+    color: t.color.warnText,
     fontWeight: "600",
     fontSize: 12,
   },
   bulkRetryButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#fdba74",
+    borderColor: t.color.warnBorderStrong,
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: t.color.surface,
   },
   bulkRetryButtonLabel: {
-    color: "#9a3412",
+    color: t.color.warnText,
     fontWeight: "700",
     fontSize: 12,
   },
@@ -1865,7 +1865,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3e8ee",
+    borderBottomColor: t.color.brandRoseBorderSoft,
     marginBottom: 8,
   },
   groupSelectButton: {
@@ -1972,10 +1972,10 @@ const styles = StyleSheet.create({
   },
   actionButtonDanger: {
     borderColor: t.color.dangerBorder,
-    backgroundColor: "#fff1f2",
+    backgroundColor: t.color.dangerSurfaceSoft,
   },
   actionButtonDangerLabel: {
-    color: "#be123c",
+    color: t.color.dangerTextSoft,
     fontWeight: "700",
   },
   actionButtonDisabled: {
@@ -2007,7 +2007,7 @@ const styles = StyleSheet.create({
   },
   previewBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(17,24,39,0.8)",
+    backgroundColor: t.color.overlayDark80,
     justifyContent: "center",
     padding: 16,
   },
@@ -2039,3 +2039,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+

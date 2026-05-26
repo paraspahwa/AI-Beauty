@@ -132,10 +132,10 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.border,
   },
   stepDotActive: {
-    backgroundColor: "#ec4899",
+    backgroundColor: t.color.brandRoseStrong,
   },
   stepText: {
-    color: "#9ca3af",
+    color: t.color.textFaint,
   },
   stepTextActive: {
     color: t.color.text,
@@ -144,8 +144,9 @@ const styles = StyleSheet.create({
   footnote: {
     marginTop: 4,
     fontSize: 12,
-    color: "#9ca3af",
+    color: t.color.textFaint,
   },
 });
+
 
 

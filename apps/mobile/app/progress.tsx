@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   summaryLabel: {
-    color: "#9ca3af",
+    color: t.color.textFaint,
     fontSize: 11,
     textTransform: "uppercase",
     fontWeight: "700",
@@ -328,3 +328,4 @@ const styles = StyleSheet.create({
     color: t.color.danger,
   },
 });
+

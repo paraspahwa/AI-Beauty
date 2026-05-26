@@ -1,12 +1,13 @@
 import { Tabs } from "expo-router";
+import { mobileTheme as t } from "@/lib/theme";
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#111827",
-        tabBarInactiveTintColor: "#9ca3af",
+        tabBarActiveTintColor: t.color.text,
+        tabBarInactiveTintColor: t.color.textFaint,
       }}
     >
       <Tabs.Screen name="home" options={{ title: "Home" }} />

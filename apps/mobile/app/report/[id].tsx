@@ -1114,13 +1114,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "#f3e8ef",
+    borderColor: t.color.brandRoseBorderSoft,
   },
   metricLabel: {
     fontSize: 10,
     fontWeight: "700",
     textTransform: "uppercase",
-    color: "#9ca3af",
+    color: t.color.textFaint,
   },
   metricValue: {
     color: t.color.text,
@@ -1198,7 +1198,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: t.color.textFaint,
     lineHeight: 18,
   },
   emptyCard: {
@@ -1342,7 +1342,7 @@ const styles = StyleSheet.create({
   },
   previewBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(17, 24, 39, 0.78)",
+    backgroundColor: t.color.overlayDark78,
   },
   previewSheet: {
     borderRadius: 20,
@@ -1380,5 +1380,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
 
 

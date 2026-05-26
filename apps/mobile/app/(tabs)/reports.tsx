@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   insightsCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#fbcfe8",
+    borderColor: t.color.brandRoseBorder,
     backgroundColor: t.color.brandRoseSurface,
     padding: 14,
     gap: 8,

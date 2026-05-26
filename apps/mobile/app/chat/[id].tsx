@@ -300,7 +300,7 @@ export default function ChatScreen() {
           )}
           {sending ? (
             <View style={styles.sendingRow}>
-              <ActivityIndicator size="small" color="#111827" />
+              <ActivityIndicator size="small" color={t.color.text} />
               <Text style={styles.helper}>Consultant is thinking...</Text>
             </View>
           ) : null}
