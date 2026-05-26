@@ -59,12 +59,15 @@ export default function StyleDnaScreen() {
           <PillButton label="Refresh" variant="subtle" onPress={() => void refresh()} />
         </View>
 
+        <Text style={styles.eyebrow}>✦ Style Profile</Text>
         <Text style={styles.title}>Style DNA</Text>
         <Text style={styles.subtitle}>
           {summary?.totalReports
-            ? `Derived from ${summary.totalReports} completed analyses.`
+            ? `Derived from ${summary.totalReports} analysis${summary.totalReports === 1 ? "" : "es"}.${formatDate(summary?.prefs?.updatedAt) ? ` Last updated ${formatDate(summary?.prefs?.updatedAt)}.` : ""}`
             : "Complete your first report to unlock your Style DNA profile."}
         </Text>
+
+        <PillButton label="New analysis" variant="outline" onPress={() => router.push("/home")} />
 
         {error ? (
           <View style={styles.card}>
@@ -85,8 +88,9 @@ export default function StyleDnaScreen() {
           </View>
         ) : (
           <View style={styles.card}>
-            <Text style={styles.noteText}>No aggregated style profile yet. Run at least one complete report.</Text>
-            <PillButton label="Go to Home" onPress={() => router.push("/home")} />
+            <Text style={styles.cardTitle}>No style data yet</Text>
+            <Text style={styles.noteText}>Complete your first beauty analysis to unlock your Style DNA profile.</Text>
+            <PillButton label="Get my report" onPress={() => router.push("/home")} />
           </View>
         )}
 
@@ -146,6 +150,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     color: "#111827",
+  },
+  eyebrow: {
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1.4,
+    fontWeight: "700",
+    color: "#9C7D5B",
   },
   subtitle: {
     color: "#6b7280",

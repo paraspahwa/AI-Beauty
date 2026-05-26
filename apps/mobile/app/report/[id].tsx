@@ -20,8 +20,8 @@ type PreviewItem = {
 const REPORT_TABS: { key: ReportTab; label: string }[] = [
   { key: "face", label: "Face" },
   { key: "skin", label: "Skin" },
-  { key: "glasses", label: "Glasses" },
   { key: "hair", label: "Hair" },
+  { key: "glasses", label: "Glasses" },
   { key: "studio", label: "Studio" },
   { key: "shop", label: "Shop" },
 ];

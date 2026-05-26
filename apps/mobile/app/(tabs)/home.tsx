@@ -5,16 +5,24 @@ import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, Vi
 import { analyzeSelfie, listReports, type AnalyzeIntent } from "@/lib/api";
 import { assertMobileEnv } from "@/lib/env";
 
-const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string }> = {
+const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string; bullets: string[] }> = {
   report: {
-    title: "Complete Analysis",
-    subtitle: "Best if you want the full report first: face shape, skin, hair, glasses, and chat guidance.",
+    title: "Master Blueprint Report",
+    subtitle: "One-time deep diagnostic with your complete beauty profile and downloadable report.",
+    bullets: ["Skin routine (AM + PM)", "Color season palette", "Hairstyle guide", "Spectacles recommendations"],
   },
   studio_pro: {
-    title: "Studio Pro",
-    subtitle: "Best if you mainly want ongoing try-ons, higher generation limits, and premium access.",
+    title: "Full Interactive AI Studio",
+    subtitle: "Live try-ons, hair and makeup sandbox, plus premium report access and monthly generations.",
+    bullets: ["Everything in Blueprint Report", "Hair and makeup try-ons", "Wardrobe and swatches", "150 generations / month"],
   },
 };
+
+const TIPS = [
+  "Look straight into the camera and keep hair off your forehead",
+  "Use natural light and avoid heavy filters",
+  "Use one face per photo for strongest results",
+];
 
 export default function HomeTabScreen() {
   const router = useRouter();
@@ -128,7 +136,7 @@ export default function HomeTabScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Renovaara Mobile</Text>
-        <Text style={styles.subtitle}>Choose your path, then upload a selfie to start your beauty analysis.</Text>
+        <Text style={styles.subtitle}>Upload your selfie for a free face-shape preview, then unlock your full beauty analysis.</Text>
 
         <View style={styles.intentSection}>
           <Text style={styles.intentEyebrow}>Choose your path</Text>
@@ -143,13 +151,20 @@ export default function HomeTabScreen() {
                 >
                   <Text style={[styles.intentTitle, active ? styles.intentTitleActive : null]}>{INTENT_COPY[intent].title}</Text>
                   <Text style={[styles.intentBody, active ? styles.intentBodyActive : null]}>{INTENT_COPY[intent].subtitle}</Text>
+                  <View style={styles.intentBulletList}>
+                    {INTENT_COPY[intent].bullets.map((item) => (
+                      <Text key={`${intent}-${item}`} style={[styles.intentBullet, active ? styles.intentBulletActive : null]}>• {item}</Text>
+                    ))}
+                  </View>
                 </Pressable>
               );
             })}
           </View>
           <View style={styles.tipsCard}>
             <Text style={styles.tipsTitle}>Photo tips</Text>
-            <Text style={styles.tipsBody}>Look straight at the camera, use balanced light, and keep your forehead visible for the strongest analysis.</Text>
+            {TIPS.map((tip) => (
+              <Text key={tip} style={styles.tipsBody}>• {tip}</Text>
+            ))}
           </View>
         </View>
 
@@ -175,6 +190,12 @@ export default function HomeTabScreen() {
           <View style={styles.quickLinkItem}>
             <ActionButton label="Open Progress" disabled={loading || !envOk} onPress={() => router.push("/progress")} variant="secondary" />
           </View>
+        </View>
+
+        <View style={styles.trustRow}>
+          <Text style={styles.trustItem}>Private photo handling</Text>
+          <Text style={styles.trustItem}>Results in about 60 seconds</Text>
+          <Text style={styles.trustItem}>Instant digital delivery</Text>
         </View>
 
         {selectedImageUri ? (
@@ -266,6 +287,18 @@ const styles = StyleSheet.create({
   intentBodyActive: {
     color: "rgba(255,255,255,0.8)",
   },
+  intentBulletList: {
+    marginTop: 4,
+    gap: 3,
+  },
+  intentBullet: {
+    color: "#6b7280",
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  intentBulletActive: {
+    color: "rgba(255,255,255,0.75)",
+  },
   tipsCard: {
     borderRadius: 16,
     backgroundColor: "#fff1f6",
@@ -323,6 +356,14 @@ const styles = StyleSheet.create({
   },
   quickLinkItem: {
     flex: 1,
+  },
+  trustRow: {
+    marginTop: 6,
+    gap: 6,
+  },
+  trustItem: {
+    color: "#6b7280",
+    fontSize: 12,
   },
   status: {
     marginTop: 8,

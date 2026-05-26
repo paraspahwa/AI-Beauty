@@ -66,6 +66,7 @@ export default function ProgressScreen() {
   const dominantSeason = dominant(seasonValues);
   const dominantFace = dominant(faceValues);
   const dominantSkin = dominant(skinValues);
+  const firstReport = reports[0] ?? null;
 
   if (loading) {
     return (
@@ -83,8 +84,11 @@ export default function ProgressScreen() {
           <PillButton label="Refresh" variant="subtle" onPress={() => void refresh()} />
         </View>
 
+        <Text style={styles.eyebrow}>✦ Your Journey</Text>
         <Text style={styles.title}>Progress Tracker</Text>
-        <Text style={styles.subtitle}>Track how your style profile changed across your completed reports.</Text>
+        <Text style={styles.subtitle}>
+          How your style profile has evolved across {reports.length} completed {reports.length === 1 ? "analysis" : "analyses"}.
+        </Text>
 
         {error ? (
           <View style={styles.card}>
@@ -95,8 +99,19 @@ export default function ProgressScreen() {
 
         {reports.length === 0 ? (
           <View style={styles.card}>
-            <Text style={styles.noteText}>No completed reports yet. Run your first analysis from Home.</Text>
-            <PillButton label="Go to Home" onPress={() => router.push("/home")} />
+            <Text style={styles.cardTitle}>No completed analyses yet</Text>
+            <Text style={styles.noteText}>Complete your first beauty analysis and return here to track how your profile evolves.</Text>
+            <PillButton label="Get my report" onPress={() => router.push("/home")} />
+          </View>
+        ) : reports.length === 1 && firstReport ? (
+          <View style={styles.card}>
+            <Text style={styles.noteText}>You have 1 analysis. Complete a second one to see how your profile evolves over time.</Text>
+            <View style={styles.singleTagsRow}>
+              {firstReport.colorAnalysis?.season ? <Text style={styles.singleTag}>{firstReport.colorAnalysis.season}</Text> : null}
+              {firstReport.faceShape?.shape ? <Text style={styles.singleTag}>{firstReport.faceShape.shape} face</Text> : null}
+              {firstReport.skinAnalysis?.type ? <Text style={styles.singleTag}>{firstReport.skinAnalysis.type} skin</Text> : null}
+            </View>
+            <PillButton label="Add another analysis" variant="outline" onPress={() => router.push("/home")} />
           </View>
         ) : (
           <>
@@ -181,6 +196,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
   },
+  eyebrow: {
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1.4,
+    fontWeight: "700",
+    color: "#9C7D5B",
+  },
   subtitle: {
     color: "#6b7280",
     lineHeight: 21,
@@ -223,6 +245,21 @@ const styles = StyleSheet.create({
   },
   summaryMeta: {
     color: "#6b7280",
+    fontSize: 12,
+  },
+  singleTagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  singleTag: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    backgroundColor: "#f9fafb",
+    color: "#374151",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     fontSize: 12,
   },
   timelineList: {
