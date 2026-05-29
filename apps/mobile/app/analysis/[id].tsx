@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { pollReportUntilReady } from "@/lib/analyze-polling";
 import { mobileTheme as t } from "@/lib/theme";
+import { useRequireMobileSession } from "@/lib/use-mobile-session";
 
 const ANALYSIS_STEPS = [
   "Checking image quality",
@@ -14,6 +15,7 @@ const ANALYSIS_STEPS = [
 
 export default function AnalysisScreen() {
   const params = useLocalSearchParams<{ id: string; imageUri?: string; intent?: string }>();
+  const isAuthed = useRequireMobileSession();
   const [status, setStatus] = useState("Preparing analysis...");
   const [error, setError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -36,6 +38,7 @@ export default function AnalysisScreen() {
 
     async function run() {
       try {
+        if (!isAuthed) return;
         if (!params.id) throw new Error("Missing report id");
         setStatus("AI analysis running. This can take around a minute.");
         const result = await pollReportUntilReady(params.id);
@@ -57,7 +60,15 @@ export default function AnalysisScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id]);
+  }, [isAuthed, params.id]);
+
+  if (!isAuthed) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color={t.color.text} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

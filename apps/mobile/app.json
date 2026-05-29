@@ -9,18 +9,40 @@
       "**/*"
     ],
     "ios": {
+      "bundleIdentifier": "com.paraspahwa.renovaaramobile",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.paraspahwa.renovaaramobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Renovaara to access your photos for beauty analysis.",
+          "cameraPermission": "Allow Renovaara to use your camera for beauty analysis selfies."
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0ba8678c-0c8b-4f04-8151-a95fd9b528f8"
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import { mobileEnv } from "@/lib/env";
+import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
 
 export type MobileFaceShape = {
@@ -347,8 +347,9 @@ type RequestOptions = {
 export async function fetchWithAuth<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
+  const apiBaseUrl = getValidatedMobileApiBaseUrl();
 
-  const response = await fetch(`${mobileEnv.apiBaseUrl}${path}`, {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
     method: options.method ?? "GET",
     body: options.body,
     headers: {

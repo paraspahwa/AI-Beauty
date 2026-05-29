@@ -4,6 +4,7 @@ import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, View } f
 import { fetchStyleDnaSummary, type MobileStyleDnaSummary } from "@/lib/api";
 import { PillButton } from "@/lib/ui/PillButton";
 import { mobileTheme as t } from "@/lib/theme";
+import { useRequireMobileSession } from "@/lib/use-mobile-session";
 
 function formatDate(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -14,6 +15,7 @@ function formatDate(value: string | null | undefined): string | null {
 
 export default function StyleDnaScreen() {
   const router = useRouter();
+  const isAuthed = useRequireMobileSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<MobileStyleDnaSummary | null>(null);
@@ -39,12 +41,13 @@ export default function StyleDnaScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (!isAuthed) return;
       setLoading(true);
       void load();
-    }, []),
+    }, [isAuthed]),
   );
 
-  if (loading) {
+  if (!isAuthed || loading) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color={t.color.text} />

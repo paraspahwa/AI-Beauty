@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
 import { analyzeIngredients, compareIngredients, deleteChatBookmark, fetchChatBookmarks, fetchChatHistory, fetchReport, saveChatBookmark, type MobileChatBookmark, type MobileChatMessage, type MobileIngredientAnalysis, type MobileProductComparisonResult, type MobileReport, sendChatMessage } from "@/lib/api";
 import { mobileTheme as t } from "@/lib/theme";
+import { useRequireMobileSession } from "@/lib/use-mobile-session";
 
 function buildChatSuggestions(report: MobileReport | null): string[] {
   const suggestions: string[] = [];
@@ -30,6 +31,7 @@ function buildChatSuggestions(report: MobileReport | null): string[] {
 export default function ChatScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
+  const isAuthed = useRequireMobileSession();
   const scrollRef = useRef<ScrollView | null>(null);
   const [report, setReport] = useState<MobileReport | null>(null);
   const [messages, setMessages] = useState<MobileChatMessage[]>([]);
@@ -57,6 +59,7 @@ export default function ChatScreen() {
 
     async function load() {
       try {
+        if (!isAuthed) return;
         if (!params.id) throw new Error("Missing report id");
         setError(null);
         const [nextReport, history] = await Promise.all([
@@ -84,7 +87,7 @@ export default function ChatScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id, reloadToken]);
+  }, [isAuthed, params.id, reloadToken]);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
@@ -194,6 +197,14 @@ export default function ChatScreen() {
   }
 
   if (loading) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color={t.color.text} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!isAuthed) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator size="large" color={t.color.text} />

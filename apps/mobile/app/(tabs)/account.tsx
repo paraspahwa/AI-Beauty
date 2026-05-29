@@ -3,7 +3,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ExpoLinking from "expo-linking";
 import { Alert, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { cancelSubscription, fetchSubscriptionStatus, listReports, type MobileStudioEntitlement } from "@/lib/api";
-import { mobileEnv } from "@/lib/env";
+import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
 import { mobileTheme as t } from "@/lib/theme";
 
@@ -130,15 +130,16 @@ export default function AccountTabScreen() {
 
   function getStudioCheckoutUrl(): string {
     const returnTo = ExpoLinking.createURL("/account?checkout=studio_pro_return");
+    const apiBaseUrl = getValidatedMobileApiBaseUrl();
     if (latestReportId) {
-      const reportUrl = new URL(`${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/report/${latestReportId}`);
+      const reportUrl = new URL(`${apiBaseUrl}/report/${latestReportId}`);
       reportUrl.searchParams.set("paywall", "open");
       reportUrl.searchParams.set("plan", "studio_pro");
       reportUrl.searchParams.set("appReturnTo", returnTo);
       return reportUrl.toString();
     }
 
-    const uploadUrl = new URL(`${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/upload`);
+    const uploadUrl = new URL(`${apiBaseUrl}/upload`);
     uploadUrl.searchParams.set("paywall", "open");
     uploadUrl.searchParams.set("plan", "studio_pro");
     uploadUrl.searchParams.set("appReturnTo", returnTo);

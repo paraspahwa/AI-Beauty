@@ -3,9 +3,10 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ExpoLinking from "expo-linking";
 import { ActivityIndicator, Alert, Animated, AppState, Image, Linking, Modal, PanResponder, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { createPaymentOrder, createReportShareLink, fetchReport, revokeReportShareLink, type MobileReport, type MobileVisualAsset, verifyTestPayment } from "@/lib/api";
-import { mobileEnv } from "@/lib/env";
+import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { loadSavedVisuals, removeSavedVisual, type SavedVisual } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
+import { useRequireMobileSession } from "@/lib/use-mobile-session";
 
 type CheckoutFlow = "report" | "studio_pro";
 
@@ -116,6 +117,7 @@ function getDefaultTab(report: MobileReport, intent: ReportIntent | null): Repor
 export default function ReportScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string; checkout?: string; intent?: string }>();
+  const isAuthed = useRequireMobileSession();
   const [report, setReport] = useState<MobileReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -197,6 +199,7 @@ export default function ReportScreen() {
 
     async function load() {
       try {
+        if (!isAuthed) return;
         if (!params.id) throw new Error("Missing report id");
         const next = await fetchReport(params.id);
         if (!cancelled) {
@@ -213,19 +216,21 @@ export default function ReportScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id]);
+  }, [isAuthed, params.id]);
 
   useFocusEffect(
     useCallback(() => {
+      if (!isAuthed) return;
       void loadReportVisuals();
-    }, [params.id]),
+    }, [isAuthed, params.id]),
   );
 
   useEffect(() => {
+    if (!isAuthed) return;
     if (previewVisual) {
       previewTranslateY.setValue(0);
     }
-  }, [previewVisual, previewTranslateY]);
+  }, [isAuthed, previewVisual, previewTranslateY]);
 
   useEffect(() => {
     const flow = parseCheckoutFlow(params.checkout);
@@ -332,10 +337,18 @@ export default function ReportScreen() {
     );
   }, [report?.visualAssets]);
 
+  if (!isAuthed) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color={t.color.text} />
+      </SafeAreaView>
+    );
+  }
+
   const studioPromptTitle = preferredIntent === "studio_pro" ? "Continue with Studio Pro" : "Go Studio Pro instead";
 
   function getBrowserReportUrl(reportId: string, flow: CheckoutFlow): string {
-    const webUrl = new URL(`${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/report/${reportId}`);
+    const webUrl = new URL(`${getValidatedMobileApiBaseUrl()}/report/${reportId}`);
     const appReturnTo = ExpoLinking.createURL(`/report/${reportId}?checkout=${flow}_return`);
     webUrl.searchParams.set("appReturnTo", appReturnTo);
     return webUrl.toString();
@@ -354,7 +367,7 @@ export default function ReportScreen() {
       setShareLoading(true);
 
       let nextToken = shareToken;
-      let shareUrl = shareToken ? `${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/r/${shareToken}` : "";
+      let shareUrl = shareToken ? `${getValidatedMobileApiBaseUrl()}/r/${shareToken}` : "";
 
       if (!nextToken) {
         const response = await createReportShareLink(report.id);
@@ -398,7 +411,7 @@ export default function ReportScreen() {
   async function handleOpenWebReportForPdf() {
     if (!report) return;
     setShowExportSheet(false);
-    const webUrl = `${mobileEnv.apiBaseUrl.replace(/\/$/, "")}/report/${report.id}`;
+    const webUrl = `${getValidatedMobileApiBaseUrl()}/report/${report.id}`;
     await Linking.openURL(webUrl);
   }
 

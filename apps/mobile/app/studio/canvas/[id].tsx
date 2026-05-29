@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { createStudioCanvasShareLink, fetchStudioVault, generateStudioCanvas, revokeStudioCanvasShareLink, scanStudioCanvasColor, type MobileCanvasColorScan, type MobileCanvasGenerateResponse, type MobileCanvasGenerateMode, type MobileVaultAsset } from "@/lib/api";
+import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { mobileTheme as t } from "@/lib/theme";
 
 const MAKEUP_STYLES = ["natural", "professional", "glamorous", "bridal"] as const;
@@ -122,8 +123,7 @@ export default function CanvasStudioScreen() {
         shareUrl = response.shareUrl;
         setShareToken(response.shareToken);
       } else {
-        const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
-        shareUrl = `${baseUrl}/c/${nextToken}`;
+        shareUrl = `${getValidatedMobileApiBaseUrl()}/c/${nextToken}`;
       }
       await Share.share({ message: `View my Renovaara Studio Canvas: ${shareUrl}`, url: shareUrl });
     } catch (err) {
