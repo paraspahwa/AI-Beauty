@@ -393,8 +393,7 @@ function StyledDropdown<T extends string>({
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
-          className="text-[#9C7D5B]" />
+        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none text-[#9C7D5B]" />
       </div>
     </div>
   );
@@ -1930,7 +1929,11 @@ export function AIBeautyStudio({
                       <span className="flex gap-0.5 shrink-0">
                         {e.swatches.length > 0
                           ? e.swatches.map((h) => (
-                        <div className="rounded-xl border border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.08)] px-3 py-2 text-xs text-[#6B5344]">
+                              <span
+                                key={`${e.value}-${h}`}
+                                className="h-3.5 w-3.5 rounded-full"
+                                style={{ background: h }}
+                              />
                             ))
                           : <span className="h-3.5 w-3.5 rounded-full" style={{ background: "#E0CEBC" }} />}
                       </span>
