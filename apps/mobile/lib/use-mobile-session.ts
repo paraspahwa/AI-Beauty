@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { supabase } from "@/lib/supabase";
 
-export function useRequireMobileSession(redirectHref = "/account"): boolean {
+export function useRequireMobileSession(redirectHref: Href = "/account"): boolean {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
