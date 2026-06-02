@@ -93,14 +93,17 @@ export default function ReportsTabScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={styles.title}>Your reports</Text>
-            <Text style={styles.subtitle}>{reports.length} analyses in your history. Open any report to review insights, chat, or Studio actions.</Text>
+        <View style={styles.heroCard}>
+          <Text style={styles.eyebrow}>History</Text>
+          <View style={styles.headerRow}>
+            <View style={styles.headerCopy}>
+              <Text style={styles.title}>Your reports</Text>
+              <Text style={styles.subtitle}>{reports.length} analyses in your history. Open any report to review insights, chat, or Studio actions.</Text>
+            </View>
+            <Pressable onPress={() => void refreshReports()} style={styles.refreshButton}>
+              <Text style={styles.refreshButtonLabel}>Refresh</Text>
+            </Pressable>
           </View>
-          <Pressable onPress={() => void refreshReports()} style={styles.refreshButton}>
-            <Text style={styles.refreshButtonLabel}>Refresh</Text>
-          </Pressable>
         </View>
 
         <View style={styles.insightsCard}>
@@ -181,6 +184,12 @@ export default function ReportsTabScreen() {
                 <Text style={styles.reportActionLabel}>Open</Text>
               </Pressable>
               <Pressable
+                onPress={() => router.push({ pathname: "/report/[id]", params: { id: report.id, comparison: "1", tab: "studio" } })}
+                style={[styles.reportActionButton, styles.reportCompareButton]}
+              >
+                <Text style={styles.reportActionLabel}>Compare</Text>
+              </Pressable>
+              <Pressable
                 onPress={() => void handleDelete(report.id)}
                 style={[styles.reportDeleteButton, deletingReportId === report.id ? styles.reportDeleteButtonDisabled : null]}
                 disabled={deletingReportId === report.id}
@@ -222,6 +231,27 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     gap: 12,
+    paddingBottom: 28,
+  },
+  heroCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: t.color.brandRoseBorderSoft,
+    backgroundColor: t.color.surface,
+    padding: 16,
+    gap: 8,
+    shadowColor: "#111827",
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
+  },
+  eyebrow: {
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    fontWeight: "700",
+    color: t.color.brandRose,
   },
   headerRow: {
     flexDirection: "row",
@@ -241,7 +271,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: t.color.textMuted,
     lineHeight: 21,
-    marginBottom: 6,
+    marginBottom: 0,
   },
   refreshButton: {
     borderRadius: 999,
@@ -263,6 +293,11 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.brandRoseSurface,
     padding: 14,
     gap: 8,
+    shadowColor: "#111827",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
   },
   insightsTitle: {
     color: t.color.text,
@@ -340,6 +375,11 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.surface,
     padding: 14,
     gap: 3,
+    shadowColor: "#111827",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
   },
   viewSwitchRow: {
     flexDirection: "row",
@@ -386,6 +426,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     backgroundColor: t.color.surface,
+  },
+  reportCompareButton: {
+    backgroundColor: t.color.surfaceMuted,
   },
   reportActionLabel: {
     color: t.color.textSoft,

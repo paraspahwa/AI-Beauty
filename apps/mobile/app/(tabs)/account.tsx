@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ExpoLinking from "expo-linking";
 import { Alert, Linking, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { cancelSubscription, fetchSubscriptionStatus, listReports, type MobileStudioEntitlement } from "@/lib/api";
+import { cancelSubscription, fetchSubscriptionStatus, listReports, requestCloudDataRemoval, type MobileStudioEntitlement } from "@/lib/api";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
 import { mobileTheme as t } from "@/lib/theme";
@@ -19,6 +19,7 @@ export default function AccountTabScreen() {
   const [latestReportId, setLatestReportId] = useState<string | null>(null);
   const [activationPending, setActivationPending] = useState(false);
   const [activationStatus, setActivationStatus] = useState<string | null>(null);
+  const [removingCloudData, setRemovingCloudData] = useState(false);
 
   const isFormValid = useMemo(() => email.trim().length > 0 && password.trim().length > 0, [email, password]);
 
@@ -186,41 +187,93 @@ export default function AccountTabScreen() {
     ]);
   }
 
+  async function handleOpenPrivacyPolicy() {
+    try {
+      const apiBaseUrl = getValidatedMobileApiBaseUrl();
+      await Linking.openURL(`${apiBaseUrl}/privacy`);
+    } catch (err) {
+      Alert.alert("Privacy", String(err));
+    }
+  }
+
+  async function runCloudCacheRemovalRequest() {
+    try {
+      setRemovingCloudData(true);
+      const result = await requestCloudDataRemoval();
+      const lines = [
+        `Removed canvas sessions: ${result.removed.canvases}`,
+        `Removed generated assets: ${result.removed.generatedAssets}`,
+        `Removed storage files: ${result.removed.storageFiles}`,
+      ];
+      if (result.storageCleanupFailed) {
+        lines.push("Some file cleanup may still be processing. Please retry in a minute if needed.");
+      }
+
+      Alert.alert("Cloud data removed", lines.join("\n"));
+    } catch (err) {
+      Alert.alert("Cloud data request", String(err));
+    } finally {
+      setRemovingCloudData(false);
+    }
+  }
+
+  function handleCloudCacheRemovalRequest() {
+    Alert.alert(
+      "Remove cloud-edited photos?",
+      "This will delete your temporary Studio canvas uploads and generated try-on images from cloud storage. Your report text remains unchanged.",
+      [
+        { text: "Keep", style: "cancel" },
+        {
+          text: "Remove now",
+          style: "destructive",
+          onPress: () => {
+            void runCloudCacheRemovalRequest();
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Account</Text>
-        <Text style={styles.subtitle}>Sign in to access your reports, chat, and Studio features.</Text>
-        <View style={styles.tierPill}>
-          <Text style={styles.tierPillLabel}>
-            {entitlement?.tier === "studio_pro" ? "Studio Pro" : entitlement?.tier === "report" ? "Report" : "Free"}
-          </Text>
+        <View style={styles.heroCard}>
+          <Text style={styles.eyebrow}>Membership</Text>
+          <Text style={styles.title}>Account</Text>
+          <Text style={styles.subtitle}>Sign in to access your reports, chat, and Studio features.</Text>
+          <View style={styles.tierPill}>
+            <Text style={styles.tierPillLabel}>
+              {entitlement?.tier === "studio_pro" ? "Studio Pro" : entitlement?.tier === "report" ? "Report" : "Free"}
+            </Text>
+          </View>
         </View>
 
-        <TextInput
-          autoCapitalize="none"
-          keyboardType="email-address"
-          placeholder="Email"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-        />
+        <View style={styles.formCard}>
+          <TextInput
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholder="Email"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+          />
 
-        <TextInput
-          secureTextEntry
-          placeholder="Password"
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-        />
+          <TextInput
+            secureTextEntry
+            placeholder="Password"
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+          />
 
-        <Pressable onPress={() => void signIn()} disabled={loading || !isFormValid} style={[styles.button, loading || !isFormValid ? styles.buttonDisabled : null]}>
-          <Text style={styles.buttonLabel}>Sign in</Text>
-        </Pressable>
+          <Pressable onPress={() => void signIn()} disabled={loading || !isFormValid} style={[styles.button, loading || !isFormValid ? styles.buttonDisabled : null]}>
+            <Text style={styles.buttonLabel}>Sign in</Text>
+          </Pressable>
 
-        <Pressable onPress={() => void signOut()} disabled={loading} style={[styles.secondaryButton, loading ? styles.buttonDisabled : null]}>
-          <Text style={styles.secondaryButtonLabel}>Sign out</Text>
-        </Pressable>
+          <Pressable onPress={() => void signOut()} disabled={loading} style={[styles.secondaryButton, loading ? styles.buttonDisabled : null]}>
+            <Text style={styles.secondaryButtonLabel}>Sign out</Text>
+          </Pressable>
+        </View>
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Studio Pro</Text>
@@ -267,6 +320,18 @@ export default function AccountTabScreen() {
           </Pressable>
         </View>
 
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Privacy controls</Text>
+          <Text style={styles.sectionBody}>Only the photo you choose for editing is uploaded for processing. Cloud edits are temporary and should be removed shortly after processing.</Text>
+          <Text style={styles.privacyFinePrint}>If you want immediate removal, use the cloud data request action below.</Text>
+          <Pressable onPress={handleCloudCacheRemovalRequest} disabled={removingCloudData} style={[styles.secondaryButton, removingCloudData ? styles.buttonDisabled : null]}>
+            <Text style={styles.secondaryButtonLabel}>{removingCloudData ? "Removing..." : "Request cloud data removal"}</Text>
+          </Pressable>
+          <Pressable onPress={() => void handleOpenPrivacyPolicy()} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonLabel}>Open Privacy Policy</Text>
+          </Pressable>
+        </View>
+
         <Text style={styles.status}>Status: {status}</Text>
       </ScrollView>
     </SafeAreaView>
@@ -280,6 +345,35 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 20,
+    gap: 12,
+    paddingBottom: 28,
+  },
+  heroCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: t.color.brandRoseBorderSoft,
+    backgroundColor: t.color.surface,
+    padding: 16,
+    gap: 6,
+    shadowColor: "#111827",
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
+  },
+  eyebrow: {
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    fontWeight: "700",
+    color: t.color.brandRose,
+  },
+  formCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
+    padding: 12,
     gap: 10,
   },
   title: {
@@ -290,7 +384,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: t.color.textMuted,
     lineHeight: 21,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   tierPill: {
     alignSelf: "flex-start",
@@ -317,11 +411,15 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.surface,
   },
   button: {
-    marginTop: 4,
     borderRadius: 12,
     backgroundColor: t.color.text,
     paddingVertical: 12,
     alignItems: "center",
+    shadowColor: "#111827",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   buttonDisabled: {
     opacity: t.opacity.disabled,
@@ -347,13 +445,17 @@ const styles = StyleSheet.create({
     color: t.color.textMuted,
   },
   sectionCard: {
-    marginTop: 6,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: t.color.border,
     backgroundColor: t.color.surface,
     padding: 14,
-    gap: 6,
+    gap: 8,
+    shadowColor: "#111827",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
   },
   sectionTitle: {
     color: t.color.text,
@@ -367,6 +469,11 @@ const styles = StyleSheet.create({
   activationNote: {
     marginTop: 4,
     color: t.color.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  privacyFinePrint: {
+    color: t.color.textFaint,
     fontSize: 12,
     lineHeight: 18,
   },

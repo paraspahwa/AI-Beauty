@@ -8,6 +8,8 @@ config.resolver = {
 	blockList: exclusionList([
 		/.*\\\.cxx\\.*/,
 		/.*\/\.cxx\/.*/,
+		/.*\\android\\\.gradle\\.*/,
+		/.*\/android\/\.gradle\/.*/,
 	]),
 };
 

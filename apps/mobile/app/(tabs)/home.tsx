@@ -62,7 +62,7 @@ export default function HomeTabScreen() {
     }
   }
 
-  async function pickAndAnalyze() {
+  async function pickAndAnalyze(intentOverride?: AnalyzeIntent) {
     try {
       setLoading(true);
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -86,11 +86,12 @@ export default function HomeTabScreen() {
       setSelectedImageUri(asset.uri);
       setStatus("Uploading selfie...");
 
-      const response = await analyzeSelfie(asset.uri, selectedIntent);
+      const effectiveIntent = intentOverride ?? selectedIntent;
+      const response = await analyzeSelfie(asset.uri, effectiveIntent);
       setStatus("Analysis started");
       router.push({
         pathname: "/analysis/[id]",
-        params: { id: response.reportId, imageUri: asset.uri, intent: selectedIntent },
+        params: { id: response.reportId, imageUri: asset.uri, intent: effectiveIntent },
       });
     } catch (err) {
       Alert.alert("Analyze failed", String(err));
@@ -100,7 +101,7 @@ export default function HomeTabScreen() {
     }
   }
 
-  async function captureAndAnalyze() {
+  async function captureAndAnalyze(intentOverride?: AnalyzeIntent) {
     try {
       setLoading(true);
       const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -124,11 +125,12 @@ export default function HomeTabScreen() {
       setSelectedImageUri(asset.uri);
       setStatus("Uploading selfie...");
 
-      const response = await analyzeSelfie(asset.uri, selectedIntent);
+      const effectiveIntent = intentOverride ?? selectedIntent;
+      const response = await analyzeSelfie(asset.uri, effectiveIntent);
       setStatus("Analysis started");
       router.push({
         pathname: "/analysis/[id]",
-        params: { id: response.reportId, imageUri: asset.uri, intent: selectedIntent },
+        params: { id: response.reportId, imageUri: asset.uri, intent: effectiveIntent },
       });
     } catch (err) {
       Alert.alert("Analyze failed", String(err));
@@ -141,8 +143,27 @@ export default function HomeTabScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Upload your selfie</Text>
-        <Text style={styles.subtitle}>Upload your selfie for a free face-shape overview, then unlock your complete skin routine, hairstyle guide, virtual try-ons, and more.</Text>
+        <View style={styles.heroCard}>
+          <Text style={styles.eyebrow}>Renovaara Mobile</Text>
+          <Text style={styles.title}>Upload your selfie</Text>
+          <Text style={styles.subtitle}>Upload your selfie for a free face-shape overview, then unlock your complete skin routine, hairstyle guide, virtual try-ons, and more.</Text>
+          <View style={styles.heroMetaRow}>
+            <View style={styles.heroMetaPill}>
+              <Text style={styles.heroMetaLabel}>Fast result</Text>
+            </View>
+            <View style={styles.heroMetaPill}>
+              <Text style={styles.heroMetaLabel}>Private upload</Text>
+            </View>
+          </View>
+          <ActionButton
+            label="One-tap instant analysis"
+            disabled={loading || !envOk}
+            onPress={() => {
+              setSelectedIntent("report");
+              void pickAndAnalyze("report");
+            }}
+          />
+        </View>
 
         <View style={styles.intentSection}>
           <Text style={styles.intentEyebrow}>Choose your path</Text>
@@ -206,10 +227,13 @@ export default function HomeTabScreen() {
           </View>
         </View>
 
-        <View style={styles.trustRow}>
-          <Text style={styles.trustItem}>Private photo handling</Text>
-          <Text style={styles.trustItem}>Results in about 60 seconds</Text>
-          <Text style={styles.trustItem}>Instant digital delivery</Text>
+        <View style={styles.trustCard}>
+          <Text style={styles.trustTitle}>Why users finish here</Text>
+          <View style={styles.trustRow}>
+            <Text style={styles.trustItem}>Private photo handling</Text>
+            <Text style={styles.trustItem}>Results in about 60 seconds</Text>
+            <Text style={styles.trustItem}>Instant digital delivery</Text>
+          </View>
         </View>
 
         {selectedImageUri ? (
@@ -258,11 +282,51 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 20,
-    gap: 10,
+    gap: 12,
+    paddingBottom: 28,
+  },
+  heroCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: t.color.brandRoseBorderSoft,
+    backgroundColor: t.color.surface,
+    padding: 16,
+    gap: 8,
+    shadowColor: "#111827",
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    color: t.color.brandRose,
+  },
+  heroMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 2,
+  },
+  heroMetaPill: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surfaceMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  heroMetaLabel: {
+    color: t.color.textSoft,
+    fontSize: 11,
+    fontWeight: "700",
   },
   intentSection: {
     gap: 10,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   intentEyebrow: {
     fontSize: 12,
@@ -281,6 +345,11 @@ const styles = StyleSheet.create({
     borderColor: t.color.border,
     padding: 16,
     gap: 6,
+    shadowColor: "#111827",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
   },
   intentBadge: {
     alignSelf: "flex-start",
@@ -347,6 +416,8 @@ const styles = StyleSheet.create({
   tipsCard: {
     borderRadius: 16,
     backgroundColor: t.color.brandRoseSurface,
+    borderWidth: 1,
+    borderColor: t.color.brandRoseBorder,
     padding: 14,
     gap: 4,
   },
@@ -362,12 +433,12 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "700",
     color: t.color.text,
-    marginTop: 8,
+    lineHeight: 36,
   },
   subtitle: {
     color: t.color.textMuted,
     lineHeight: 22,
-    marginBottom: 8,
+    marginBottom: 2,
   },
   error: {
     marginBottom: 10,
@@ -379,6 +450,11 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 12,
     alignItems: "center",
+    shadowColor: "#111827",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   buttonSecondary: {
     backgroundColor: t.color.surface,
@@ -398,21 +474,44 @@ const styles = StyleSheet.create({
   quickLinksRow: {
     flexDirection: "row",
     gap: 8,
+    marginTop: 2,
   },
   quickLinkItem: {
     flex: 1,
   },
-  trustRow: {
+  trustCard: {
     marginTop: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
+    padding: 12,
+    gap: 8,
+  },
+  trustTitle: {
+    color: t.color.text,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  trustRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   trustItem: {
-    color: t.color.textMuted,
+    color: t.color.textSoft,
     fontSize: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surfaceMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   status: {
     marginTop: 8,
     color: t.color.textSoft,
+    fontSize: 12,
   },
   previewBlock: {
     marginTop: 8,

@@ -2,6 +2,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ExpoLinking from "expo-linking";
 import { ActivityIndicator, Alert, Animated, AppState, Image, Linking, Modal, PanResponder, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
 import { createPaymentOrder, createReportShareLink, fetchReport, revokeReportShareLink, type MobileReport, type MobileVisualAsset, verifyTestPayment } from "@/lib/api";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { loadSavedVisuals, removeSavedVisual, type SavedVisual } from "@/lib/studio-history";
@@ -17,6 +18,7 @@ type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
 type PreviewItem = {
   imageUrl: string;
   label: string;
+  beforeImageUrl?: string;
 };
 
 const REPORT_TABS: { key: ReportTab; label: string }[] = [
@@ -39,6 +41,17 @@ function parseCheckoutFlow(value: string | string[] | undefined): CheckoutFlow |
   const candidate = Array.isArray(value) ? value[0] : value;
   if (candidate === "report_return") return "report";
   if (candidate === "studio_pro_return") return "studio_pro";
+  return null;
+}
+
+function parseReportTab(value: string | string[] | undefined): ReportTab | null {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  if (candidate === "face") return "face";
+  if (candidate === "skin") return "skin";
+  if (candidate === "glasses") return "glasses";
+  if (candidate === "hair") return "hair";
+  if (candidate === "studio") return "studio";
+  if (candidate === "shop") return "shop";
   return null;
 }
 
@@ -116,7 +129,7 @@ function getDefaultTab(report: MobileReport, intent: ReportIntent | null): Repor
 
 export default function ReportScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id: string; checkout?: string; intent?: string }>();
+  const params = useLocalSearchParams<{ id: string; checkout?: string; intent?: string; tab?: string; comparison?: string }>();
   const isAuthed = useRequireMobileSession();
   const [report, setReport] = useState<MobileReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +145,8 @@ export default function ReportScreen() {
   const [showExportSheet, setShowExportSheet] = useState(false);
   const previewTranslateY = useRef(new Animated.Value(0)).current;
   const preferredIntent = parseReportIntent(params.intent);
+  const requestedTab = parseReportTab(params.tab);
+  const compareModeRequested = params.comparison === "1" || params.comparison === "true";
 
   const previewPanResponder = useRef(
     PanResponder.create({
@@ -205,7 +220,11 @@ export default function ReportScreen() {
         if (!cancelled) {
           setReport(next);
           setShareToken(next.shareToken ?? null);
-          setActiveTab((current) => (current === "face" ? getDefaultTab(next, preferredIntent) : current));
+          setActiveTab((current) => {
+            if (requestedTab) return requestedTab;
+            if (compareModeRequested) return next.isPaid ? "studio" : "face";
+            return current === "face" ? getDefaultTab(next, preferredIntent) : current;
+          });
         }
       } catch (err) {
         if (!cancelled) setError(String(err));
@@ -511,6 +530,7 @@ export default function ReportScreen() {
             <MetricPill label="Status" value={report.status} />
             <MetricPill label="Access" value={report.isPaid ? "Premium" : "Preview"} />
             {formatCreatedAt(report.createdAt) ? <MetricPill label="Created" value={formatCreatedAt(report.createdAt) ?? ""} /> : null}
+            {compareModeRequested ? <MetricPill label="Mode" value="Compare" /> : null}
           </View>
         </View>
 
@@ -616,6 +636,7 @@ export default function ReportScreen() {
               title="Face overlay"
               asset={report.visualAssets?.assets?.landmarkOverlay}
               emptyText="Landmark overlay will appear here when the visual asset is ready."
+              beforeImageUrl={report.imageUrl}
               onPreview={setPreviewVisual}
             />
 
@@ -623,6 +644,7 @@ export default function ReportScreen() {
               title="Palette board"
               asset={report.visualAssets?.assets?.paletteBoard}
               emptyText="Palette board will appear here when your color visual is ready."
+              beforeImageUrl={report.imageUrl}
               onPreview={setPreviewVisual}
             />
           </>
@@ -692,6 +714,7 @@ export default function ReportScreen() {
                 assets={report.visualAssets?.assets?.glassesPreviews}
                 emptyText="Glasses previews will appear here when the visual assets are ready."
                 fallbackLabel="Glasses preview"
+                beforeImageUrl={report.imageUrl}
                 onPreview={setPreviewVisual}
               />
             </>
@@ -736,6 +759,7 @@ export default function ReportScreen() {
                 assets={report.visualAssets?.assets?.hairstylePreviews}
                 emptyText="Hairstyle previews will appear here when the visual assets are ready."
                 fallbackLabel="Hairstyle preview"
+                beforeImageUrl={report.imageUrl}
                 onPreview={setPreviewVisual}
               />
 
@@ -801,6 +825,7 @@ export default function ReportScreen() {
                 assets={report.visualAssets?.assets?.makeupPreviews}
                 emptyText="Makeup previews will appear here when the visual assets are ready."
                 fallbackLabel="Makeup preview"
+                beforeImageUrl={report.imageUrl}
                 onPreview={setPreviewVisual}
               />
 
@@ -809,7 +834,7 @@ export default function ReportScreen() {
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.savedVisualsRow}>
                     {savedVisuals.map((item) => (
                       <View key={item.id} style={styles.savedVisualCard}>
-                        <Pressable onPress={() => setPreviewVisual({ imageUrl: item.imageUrl, label: `${item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}${item.label ? ` - ${item.label}` : ""}` })}>
+                        <Pressable onPress={() => setPreviewVisual({ imageUrl: item.imageUrl, beforeImageUrl: report.imageUrl ?? undefined, label: `${item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}${item.label ? ` - ${item.label}` : ""}` })}>
                           <Image source={{ uri: item.imageUrl }} style={styles.savedVisualImage} />
                         </Pressable>
                         <Text style={styles.savedVisualLabel} numberOfLines={1}>
@@ -856,6 +881,7 @@ export default function ReportScreen() {
                 assets={report.visualAssets?.assets?.colorSwatchPreviews}
                 emptyText="Color swatches will appear here when the shopping visuals are ready."
                 fallbackLabel="Color swatch"
+                beforeImageUrl={report.imageUrl}
                 onPreview={setPreviewVisual}
               />
 
@@ -936,7 +962,17 @@ export default function ReportScreen() {
             <Pressable onPress={() => setPreviewVisual(null)} style={styles.previewCloseButton}>
               <Text style={styles.previewCloseButtonLabel}>Close</Text>
             </Pressable>
-            {previewVisual ? <Image source={{ uri: previewVisual.imageUrl }} style={styles.previewFullscreenImage} /> : null}
+            {previewVisual ? (
+              previewVisual.beforeImageUrl && previewVisual.beforeImageUrl !== previewVisual.imageUrl ? (
+                <BeforeAfterCompare
+                  beforeUri={previewVisual.beforeImageUrl}
+                  afterUri={previewVisual.imageUrl}
+                  height={460}
+                />
+              ) : (
+                <Image source={{ uri: previewVisual.imageUrl }} style={styles.previewFullscreenImage} />
+              )
+            ) : null}
             {previewVisual ? (
               <Text style={styles.previewCaption}>{previewVisual.label}</Text>
             ) : null}
@@ -1004,11 +1040,13 @@ function VisualAssetCard({
   title,
   asset,
   emptyText,
+  beforeImageUrl,
   onPreview,
 }: {
   title: string;
   asset?: MobileVisualAsset | null;
   emptyText: string;
+  beforeImageUrl?: string;
   onPreview: (item: PreviewItem) => void;
 }) {
   const assetUrl = getAssetUrl(asset);
@@ -1019,7 +1057,7 @@ function VisualAssetCard({
 
   return (
     <Card title={title}>
-      <Pressable onPress={() => onPreview({ imageUrl: assetUrl, label: getAssetLabel(asset, title) })}>
+      <Pressable onPress={() => onPreview({ imageUrl: assetUrl, label: getAssetLabel(asset, title), beforeImageUrl })}>
         <Image source={{ uri: assetUrl }} style={styles.featuredVisual} />
       </Pressable>
       <Text style={styles.mutedText}>{getAssetLabel(asset, title)}</Text>
@@ -1032,12 +1070,14 @@ function VisualGallery({
   assets,
   emptyText,
   fallbackLabel,
+  beforeImageUrl,
   onPreview,
 }: {
   title: string;
   assets?: MobileVisualAsset[];
   emptyText: string;
   fallbackLabel: string;
+  beforeImageUrl?: string;
   onPreview: (item: PreviewItem) => void;
 }) {
   const readyAssets = (assets ?? []).filter((asset) => Boolean(getAssetUrl(asset)));
@@ -1054,7 +1094,7 @@ function VisualGallery({
           if (!assetUrl) return null;
           const label = getAssetLabel(asset, `${fallbackLabel} ${index + 1}`);
           return (
-            <Pressable key={`${label}-${index}`} onPress={() => onPreview({ imageUrl: assetUrl, label })} style={styles.galleryCard}>
+            <Pressable key={`${label}-${index}`} onPress={() => onPreview({ imageUrl: assetUrl, label, beforeImageUrl })} style={styles.galleryCard}>
               <Image source={{ uri: assetUrl }} style={styles.galleryImage} />
               <Text style={styles.galleryLabel} numberOfLines={1}>{label}</Text>
             </Pressable>

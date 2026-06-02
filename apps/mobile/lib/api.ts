@@ -338,6 +338,16 @@ export type MobileProgressReport = {
   status: string;
 };
 
+export type MobileCloudDataRemovalResult = {
+  ok: boolean;
+  removed: {
+    canvases: number;
+    generatedAssets: number;
+    storageFiles: number;
+  };
+  storageCleanupFailed?: boolean;
+};
+
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: BodyInit | null;
@@ -649,6 +659,12 @@ export async function revokeReportShareLink(reportId: string): Promise<{ ok: boo
 export async function deleteReport(reportId: string): Promise<{ ok: boolean }> {
   return fetchWithAuth<{ ok: boolean }>(`/api/reports/${reportId}/delete`, {
     method: "DELETE",
+  });
+}
+
+export async function requestCloudDataRemoval(): Promise<MobileCloudDataRemovalResult> {
+  return fetchWithAuth<MobileCloudDataRemovalResult>("/api/privacy/cloud-data", {
+    method: "POST",
   });
 }
 

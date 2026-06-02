@@ -88,11 +88,13 @@ export default function ProgressScreen() {
           <PillButton label="Refresh" variant="subtle" onPress={() => void refresh()} />
         </View>
 
-        <Text style={styles.eyebrow}>✦ Your Journey</Text>
-        <Text style={styles.title}>Progress Tracker</Text>
-        <Text style={styles.subtitle}>
-          How your style profile has evolved across {reports.length} completed {reports.length === 1 ? "analysis" : "analyses"}.
-        </Text>
+        <View style={styles.heroCard}>
+          <Text style={styles.eyebrow}>✦ Your Journey</Text>
+          <Text style={styles.title}>Progress Tracker</Text>
+          <Text style={styles.subtitle}>
+            How your style profile has evolved across {reports.length} completed {reports.length === 1 ? "analysis" : "analyses"}.
+          </Text>
+        </View>
 
         {error ? (
           <View style={styles.card}>
@@ -189,11 +191,25 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     gap: 12,
+    paddingBottom: 28,
   },
   topActions: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10,
+  },
+  heroCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: t.color.brandRoseBorderSoft,
+    backgroundColor: t.color.surface,
+    padding: 16,
+    gap: 6,
+    shadowColor: "#111827",
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
   },
   title: {
     fontSize: 28,
@@ -218,6 +234,11 @@ const styles = StyleSheet.create({
     backgroundColor: t.color.surface,
     padding: 14,
     gap: 8,
+    shadowColor: "#111827",
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
   },
   cardTitle: {
     color: t.color.text,
@@ -234,6 +255,11 @@ const styles = StyleSheet.create({
     borderColor: t.color.border,
     padding: 12,
     gap: 4,
+    shadowColor: "#111827",
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
   summaryLabel: {
     color: t.color.textFaint,
