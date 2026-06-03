@@ -190,6 +190,39 @@ function buildAnalyzeRateLimitErrorMessage(kind: "burst" | "daily", retryAfterSe
   return `Too many requests. Please wait about ${retryMinutes} minute${retryMinutes === 1 ? "" : "s"} before trying again.`;
 }
 
+function isTrustedAnalyzeRequestOrigin(req: NextRequest): boolean {
+  const authorization = req.headers.get("authorization") ?? "";
+  if (authorization.toLowerCase().startsWith("bearer ")) {
+    // Mobile/native callers use bearer auth and may not send browser origin headers.
+    return true;
+  }
+
+  const allowedOrigins = new Set<string>();
+  try {
+    allowedOrigins.add(new URL(env.app.url).origin);
+  } catch {
+    // Ignore malformed env in this check; request will fail later during assertServer.
+  }
+  allowedOrigins.add(req.nextUrl.origin);
+
+  const origin = req.headers.get("origin");
+  if (origin) {
+    return allowedOrigins.has(origin);
+  }
+
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      return allowedOrigins.has(new URL(referer).origin);
+    } catch {
+      return false;
+    }
+  }
+
+  // Non-browser clients may legitimately omit both headers.
+  return true;
+}
+
 export async function GET() {
   try {
     env.assertServer();
@@ -245,6 +278,11 @@ function validateMagicBytes(buf: Buffer): boolean {
  * This keeps this route under 60 s and well within Vercel hobby limits.
  */
 export async function POST(req: NextRequest) {
+  env.assertServer();
+  if (!isTrustedAnalyzeRequestOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
+  }
+
   const streamRequested = req.nextUrl.searchParams.get("stream") === "1";
 
   if (streamRequested) {
@@ -257,7 +295,6 @@ export async function POST(req: NextRequest) {
 
         void (async () => {
           try {
-            env.assertServer();
             env.assertRekognition();
 
             const supabase = await createSupabaseServerClient();
@@ -525,8 +562,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    env.assertServer();
-
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

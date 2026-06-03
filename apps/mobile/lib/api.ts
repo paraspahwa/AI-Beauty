@@ -398,27 +398,52 @@ type RequestOptions = {
   headers?: Record<string, string>;
 };
 
+const MOBILE_API_TIMEOUT_MS = 30000;
+
+function sanitizeApiErrorText(raw: string): string {
+  // Remove control characters to keep alerts safe and readable.
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\x00-\x1F\x7F]/g, " ").trim().slice(0, 320);
+}
+
 export async function fetchWithAuth<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   const apiBaseUrl = getValidatedMobileApiBaseUrl();
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method: options.method ?? "GET",
-    body: options.body,
-    headers: {
-      ...(options.body && !(options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), MOBILE_API_TIMEOUT_MS);
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`API ${response.status}: ${errText}`);
+  try {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
+      method: options.method ?? "GET",
+      body: options.body,
+      signal: controller.signal,
+      headers: {
+        ...(options.body && !(options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errText = sanitizeApiErrorText(await response.text());
+      throw new Error(`API ${response.status}: ${errText || "Request failed"}`);
+    }
+
+    try {
+      return (await response.json()) as T;
+    } catch {
+      throw new Error("API returned a non-JSON response");
+    }
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`API request timed out after ${Math.round(MOBILE_API_TIMEOUT_MS / 1000)}s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return (await response.json()) as T;
 }
 
 export async function analyzeSelfie(

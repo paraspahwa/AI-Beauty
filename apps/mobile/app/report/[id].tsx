@@ -8,15 +8,15 @@ import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { loadSavedVisuals, removeSavedVisual, type SavedVisual } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
 import { useRequireMobileSession } from "@/lib/use-mobile-session";
-import { FaceSection } from "./_components/FaceSection";
-import { GlassesSection } from "./_components/GlassesSection";
-import { HairSection } from "./_components/HairSection";
-import { ReportHeader } from "./_components/ReportHeader";
-import { ReportTabs, type ReportTab } from "./_components/ReportTabs";
-import { ShopSection } from "./_components/ShopSection";
-import { SkinSection } from "./_components/SkinSection";
-import { StudioSection } from "./_components/StudioSection";
-import { Card, EmptyCard, type CheckoutFlow, type PreviewItem, type ReportIntent } from "./_components/ReportPrimitives";
+import { FaceSection } from "@/components/report/FaceSection";
+import { GlassesSection } from "@/components/report/GlassesSection";
+import { HairSection } from "@/components/report/HairSection";
+import { ReportHeader } from "@/components/report/ReportHeader";
+import { ReportTabs, type ReportTab } from "@/components/report/ReportTabs";
+import { ShopSection } from "@/components/report/ShopSection";
+import { SkinSection } from "@/components/report/SkinSection";
+import { StudioSection } from "@/components/report/StudioSection";
+import { Card, EmptyCard, type CheckoutFlow, type PreviewItem, type ReportIntent } from "@/components/report/ReportPrimitives";
 
 function parseReportIntent(value: string | string[] | undefined): ReportIntent | null {
   const candidate = Array.isArray(value) ? value[0] : value;
@@ -697,119 +697,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  heroCard: {
-    gap: 14,
-  },
-  heroHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  headerActionColumn: {
-    gap: 8,
-  },
-  heroCopy: {
-    flex: 1,
-    gap: 4,
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: t.color.text,
-  },
-  heroSubheading: {
-    color: t.color.textMuted,
-    lineHeight: 20,
-  },
-  headerActionButton: {
-    borderRadius: 999,
-    backgroundColor: t.color.text,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  headerActionLabel: {
-    color: t.color.surface,
-    fontWeight: "700",
-  },
-  headerSecondaryAction: {
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.border,
-  },
-  headerSecondaryActionLabel: {
-    color: t.color.textSoft,
-    fontWeight: "700",
-  },
-  heroImage: {
-    width: "100%",
-    height: 340,
-    borderRadius: 24,
-    backgroundColor: t.color.surfaceSubtle,
-  },
-  metricRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  metricPill: {
-    borderRadius: 999,
-    backgroundColor: t.color.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: t.color.brandRoseBorderSoft,
-  },
-  metricLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    color: t.color.textFaint,
-  },
-  metricValue: {
-    color: t.color.text,
-    fontWeight: "700",
-  },
-  tabRow: {
-    gap: 8,
-    paddingRight: 8,
-  },
-  tabChip: {
-    borderRadius: 999,
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  tabChipActive: {
-    backgroundColor: t.color.text,
-    borderColor: t.color.text,
-  },
-  tabChipLabel: {
-    color: t.color.textSoft,
-    fontWeight: "700",
-  },
-  tabChipLabelActive: {
-    color: t.color.surface,
-  },
-  card: {
-    backgroundColor: t.color.surface,
-    borderRadius: 20,
-    padding: 18,
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: t.color.text,
-  },
   bodyText: {
     fontSize: 16,
     color: t.color.text,
-  },
-  inlineSection: {
-    gap: 2,
   },
   mutedText: {
     fontSize: 15,
@@ -840,47 +730,6 @@ const styles = StyleSheet.create({
     color: t.color.surface,
     fontWeight: "700",
   },
-  helperText: {
-    fontSize: 12,
-    color: t.color.textFaint,
-    lineHeight: 18,
-  },
-  emptyCard: {
-    borderRadius: 20,
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.divider,
-    padding: 18,
-  },
-  emptyCardText: {
-    color: t.color.textMuted,
-    lineHeight: 21,
-  },
-  featuredVisual: {
-    width: "100%",
-    height: 320,
-    borderRadius: 18,
-    backgroundColor: t.color.surfaceSubtle,
-  },
-  galleryRow: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  galleryCard: {
-    width: 170,
-    gap: 6,
-  },
-  galleryImage: {
-    width: 170,
-    height: 220,
-    borderRadius: 16,
-    backgroundColor: t.color.surfaceSubtle,
-  },
-  galleryLabel: {
-    color: t.color.text,
-    fontSize: 12,
-    fontWeight: "700",
-  },
   chatLaunchButton: {
     marginTop: 4,
     borderRadius: 14,
@@ -903,81 +752,6 @@ const styles = StyleSheet.create({
   secondaryButtonLabel: {
     color: t.color.textSoft,
     fontWeight: "600",
-  },
-  swatchRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 6,
-  },
-  swatchCard: {
-    alignItems: "center",
-    gap: 6,
-    width: 72,
-  },
-  swatchCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: t.color.overlayDark08,
-  },
-  swatchLabel: {
-    color: t.color.textMuted,
-    fontSize: 11,
-    textAlign: "center",
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  tag: {
-    borderRadius: 999,
-    backgroundColor: t.color.brandRoseSurface,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  tagLabel: {
-    color: t.color.brandRose,
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  savedVisualsRow: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  savedVisualCard: {
-    width: 148,
-    gap: 4,
-  },
-  savedVisualImage: {
-    width: 148,
-    height: 188,
-    borderRadius: 14,
-    backgroundColor: t.color.surfaceSubtle,
-  },
-  savedVisualLabel: {
-    color: t.color.text,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  savedVisualTime: {
-    color: t.color.textMuted,
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  savedVisualRemoveButton: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    paddingVertical: 6,
-    alignItems: "center",
-  },
-  savedVisualRemoveButtonLabel: {
-    color: t.color.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
   },
   previewRoot: {
     flex: 1,
