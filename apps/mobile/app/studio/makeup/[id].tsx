@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
-import { generateMakeupPreview } from "@/lib/api";
+import { generateMakeupPreview, generateMakeupTransferPreview } from "@/lib/api";
 import { clearStudioHistory, type StudioHistoryItem, loadStudioHistory, pushStudioHistoryItem, saveVisualForReport } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
 
@@ -69,8 +70,11 @@ const INTENSITY_OPTIONS = [
 export default function MobileMakeupStudioScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string; imageUrl?: string }>();
+  const [mode, setMode] = useState<"custom" | "inspo">("custom");
   const [selectedStyle, setSelectedStyle] = useState<StyleOption>(STYLE_OPTIONS[0]);
   const [selectedIntensity, setSelectedIntensity] = useState<(typeof INTENSITY_OPTIONS)[number]["value"]>("medium");
+  const [referenceImageUri, setReferenceImageUri] = useState<string | null>(null);
+  const [detectedLook, setDetectedLook] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultCreatedAt, setResultCreatedAt] = useState<string | null>(null);
@@ -129,7 +133,43 @@ export default function MobileMakeupStudioScreen() {
     };
   }, [params.id]);
 
-  async function handleGenerate() {
+  async function chooseImage(
+    modeValue: "camera" | "library",
+    onPicked: (uri: string) => void,
+    permissionMessage: string,
+  ) {
+    try {
+      const permission = modeValue === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert("Permission needed", permissionMessage);
+        return;
+      }
+
+      const result = modeValue === "camera"
+        ? await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            cameraType: ImagePicker.CameraType.back,
+            quality: 0.9,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            allowsEditing: true,
+            quality: 0.9,
+          });
+
+      if (result.canceled || result.assets.length === 0) return;
+      void Haptics.selectionAsync();
+      onPicked(result.assets[0].uri);
+      setDetectedLook(null);
+    } catch (err) {
+      Alert.alert("Reference image", String(err));
+    }
+  }
+
+  async function handleGenerateCustom() {
     try {
       if (!params.id) throw new Error("Missing report id");
       void Haptics.selectionAsync();
@@ -164,6 +204,45 @@ export default function MobileMakeupStudioScreen() {
     } catch (err) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Makeup preview", String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGenerateInspo() {
+    try {
+      if (!params.id) throw new Error("Missing report id");
+      if (!referenceImageUri) {
+        Alert.alert("Makeup reference", "Choose a makeup inspiration image first.");
+        return;
+      }
+
+      void Haptics.selectionAsync();
+      setLoading(true);
+      const result = await generateMakeupTransferPreview(params.id, {
+        referenceImageUri,
+      });
+      const generatedUrl = result.hdUrl ?? result.lowResUrl;
+      setResultUrl(generatedUrl);
+      const createdAt = result.asset?.createdAt ?? new Date().toISOString();
+      setResultCreatedAt(createdAt);
+      setDetectedLook(result.detectedLook ?? null);
+
+      if (generatedUrl) {
+        const historyId = result.asset?.id ?? `makeup_inspo_${Date.now()}`;
+        const next = await pushStudioHistoryItem("makeup", params.id, {
+          id: historyId,
+          imageUrl: generatedUrl,
+          createdAt,
+          label: result.detectedLook ? `Inspo: ${result.detectedLook}` : "Inspo transfer",
+        });
+        setRecentLooks(next);
+        setSelectedHistoryId(historyId);
+      }
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Makeup transfer", String(err));
     } finally {
       setLoading(false);
     }
@@ -216,6 +295,15 @@ export default function MobileMakeupStudioScreen() {
         <Text style={styles.heading}>AI Makeup Studio</Text>
         <Text style={styles.helperText}>Choose a curated makeup direction and generate a try-on preview on your report photo.</Text>
 
+        <View style={styles.modeToggleRow}>
+          <Pressable onPress={() => setMode("custom")} style={[styles.modeToggleButton, mode === "custom" ? styles.modeToggleButtonActive : null]}>
+            <Text style={[styles.modeToggleLabel, mode === "custom" ? styles.modeToggleLabelActive : null]}>Custom</Text>
+          </Pressable>
+          <Pressable onPress={() => setMode("inspo")} style={[styles.modeToggleButton, mode === "inspo" ? styles.modeToggleButtonActive : null]}>
+            <Text style={[styles.modeToggleLabel, mode === "inspo" ? styles.modeToggleLabelActive : null]}>Inspo Transfer</Text>
+          </Pressable>
+        </View>
+
         {notice ? <Text style={styles.notice}>{notice}</Text> : null}
 
         {sourceImageUrl ? (
@@ -225,49 +313,74 @@ export default function MobileMakeupStudioScreen() {
           </View>
         ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Looks</Text>
-          <View style={styles.optionGrid}>
-            {STYLE_OPTIONS.map((option) => (
-              <Pressable
-                key={option.label}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setSelectedStyle(option);
-                }}
-                style={[styles.optionChip, selectedStyle.label === option.label ? styles.optionChipActive : null]}
-              >
-                <Text style={[styles.optionChipLabel, selectedStyle.label === option.label ? styles.optionChipLabelActive : null]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        {mode === "custom" ? (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Looks</Text>
+              <View style={styles.optionGrid}>
+                {STYLE_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.label}
+                    onPress={() => {
+                      void Haptics.selectionAsync();
+                      setSelectedStyle(option);
+                    }}
+                    style={[styles.optionChip, selectedStyle.label === option.label ? styles.optionChipActive : null]}
+                  >
+                    <Text style={[styles.optionChipLabel, selectedStyle.label === option.label ? styles.optionChipLabelActive : null]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Intensity</Text>
-          <View style={styles.optionGrid}>
-            {INTENSITY_OPTIONS.map((option) => (
-              <Pressable
-                key={option.value}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setSelectedIntensity(option.value);
-                }}
-                style={[styles.optionChip, selectedIntensity === option.value ? styles.optionChipActive : null]}
-              >
-                <Text style={[styles.optionChipLabel, selectedIntensity === option.value ? styles.optionChipLabelActive : null]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Intensity</Text>
+              <View style={styles.optionGrid}>
+                {INTENSITY_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => {
+                      void Haptics.selectionAsync();
+                      setSelectedIntensity(option.value);
+                    }}
+                    style={[styles.optionChip, selectedIntensity === option.value ? styles.optionChipActive : null]}
+                  >
+                    <Text style={[styles.optionChipLabel, selectedIntensity === option.value ? styles.optionChipLabelActive : null]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
 
-        <Pressable onPress={handleGenerate} disabled={loading} style={[styles.generateButton, loading ? styles.generateButtonDisabled : null]}>
-          <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate preview"}</Text>
-        </Pressable>
+            <Pressable onPress={() => void handleGenerateCustom()} disabled={loading} style={[styles.generateButton, loading ? styles.generateButtonDisabled : null]}>
+              <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate preview"}</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Reference image</Text>
+              <Text style={styles.helperText}>Upload another person image with the makeup look you want to transfer.</Text>
+              <View style={styles.buttonRow}>
+                <Pressable onPress={() => void chooseImage("library", setReferenceImageUri, "Allow photo access to choose a makeup reference image.")} style={styles.generateButtonCompact}>
+                  <Text style={styles.generateButtonLabel}>{referenceImageUri ? "Change from library" : "Choose from library"}</Text>
+                </Pressable>
+                <Pressable onPress={() => void chooseImage("camera", setReferenceImageUri, "Allow camera access to capture a makeup reference image.")} style={styles.generateButtonCompact}>
+                  <Text style={styles.generateButtonLabel}>Capture reference</Text>
+                </Pressable>
+              </View>
+              {referenceImageUri ? <Image source={{ uri: referenceImageUri }} style={styles.previewImage} /> : null}
+              {detectedLook ? <Text style={styles.detectedText}>Detected look: {detectedLook}</Text> : null}
+            </View>
+
+            <Pressable onPress={() => void handleGenerateInspo()} disabled={loading || !referenceImageUri} style={[styles.generateButton, loading || !referenceImageUri ? styles.generateButtonDisabled : null]}>
+              <Text style={styles.generateButtonLabel}>{loading ? "Transferring..." : "Transfer makeup look"}</Text>
+            </Pressable>
+          </>
+        )}
 
         {loading ? <ActivityIndicator size="small" color={t.color.text} /> : null}
 
@@ -364,8 +477,49 @@ const styles = StyleSheet.create({
     color: t.color.textMuted,
     lineHeight: 21,
   },
+  modeToggleRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  modeToggleButton: {
+    flex: 1,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  modeToggleButtonActive: {
+    backgroundColor: t.color.text,
+    borderColor: t.color.text,
+  },
+  modeToggleLabel: {
+    color: t.color.textSoft,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  modeToggleLabelActive: {
+    color: t.color.surface,
+  },
   section: {
     gap: 10,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  generateButtonCompact: {
+    borderRadius: 12,
+    backgroundColor: t.color.text,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  detectedText: {
+    color: t.color.textSoft,
+    fontSize: 12,
+    fontWeight: "600",
   },
   sectionTitle: {
     fontSize: 16,

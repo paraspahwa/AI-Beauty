@@ -567,6 +567,13 @@ export function AIBeautyStudio({
   function resetMakeupResult() { setModeResult("makeup", null, null); setModeStatus("makeup", "idle"); }
 
   // ── Hair state ──
+  type HairSubMode = "custom" | "inspo";
+  const [hairSubMode, setHairSubMode] = React.useState<HairSubMode>("custom");
+  const [hairInspoFile, setHairInspoFile] = React.useState<File | null>(null);
+  const [hairInspoPreview, setHairInspoPreview] = React.useState<string | null>(null);
+  const [hairInspoDetectedLook, setHairInspoDetectedLook] = React.useState<string | null>(null);
+  const [hairInspoDetectedStyle, setHairInspoDetectedStyle] = React.useState<string | null>(null);
+  const [hairInspoDetectedColor, setHairInspoDetectedColor] = React.useState<string | null>(null);
   const [hairStyle, setHairStyle]   = React.useState<HairStyleValue>("No change");
   const [hairColor, setHairColor]   = React.useState<HairColorValue>("natural");
   const [showAdvancedHair, setShowAdvancedHair] = React.useState(false);
@@ -654,6 +661,12 @@ export function AIBeautyStudio({
   React.useEffect(() => {
     if (isCanvas && mode === "clothing") setMode("makeup");
   }, [isCanvas, mode]);
+
+  React.useEffect(() => {
+    if (isCanvas && hairSubMode === "inspo") {
+      setHairSubMode("custom");
+    }
+  }, [hairSubMode, isCanvas]);
 
   // Helper functions for batch
   function addBatchResult(m: StudioMode, result: BatchResult) {
@@ -748,8 +761,9 @@ export function AIBeautyStudio({
     if (clothPreview?.startsWith("blob:")) URL.revokeObjectURL(clothPreview);
     if (fullBodyPreview?.startsWith("blob:")) URL.revokeObjectURL(fullBodyPreview);
     if (inspoPreview?.startsWith("blob:")) URL.revokeObjectURL(inspoPreview);
+    if (hairInspoPreview?.startsWith("blob:")) URL.revokeObjectURL(hairInspoPreview);
     if (arFramePreview?.startsWith("blob:")) URL.revokeObjectURL(arFramePreview);
-    }, [clothPreview, fullBodyPreview, inspoPreview, arFramePreview]);
+    }, [clothPreview, fullBodyPreview, inspoPreview, hairInspoPreview, arFramePreview]);
 
   const stopArCamera = React.useCallback(() => {
     if (arOverlayAnimationRef.current !== null) {
@@ -1277,6 +1291,68 @@ export function AIBeautyStudio({
         setSourceAssetId(json.asset.id);
         setSourcePreviewUrl(json.hdUrl ?? json.lowResUrl ?? null);
       }
+      void loadVault();
+      if (!json.hdUrl && json.asset?.id) void pollForHd("hair", json.asset.id, idx);
+    } catch {
+      updateBatchResult("hair", idx, { status: "error" });
+    }
+  }
+
+  async function generateHairTransfer() {
+    if (isCanvas || !hairInspoFile) return;
+
+    const idx = pushPendingResult("hair", { mode: "inspo", sourceAssetId });
+    try {
+      const form = new FormData();
+      form.append("referenceImage", hairInspoFile);
+      if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
+
+      const res = await fetch(`/api/reports/${resolvedContextId}/hair-transfer`, {
+        method: "POST",
+        body: form,
+      });
+      const json = await res.json() as {
+        hdUrl?: string;
+        lowResUrl?: string;
+        error?: string;
+        detectedLook?: string;
+        controls?: { styleName?: string; colorName?: string };
+        asset?: GeneratedAssetMeta | null;
+      };
+
+      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Transfer failed");
+
+      updateBatchResult("hair", idx, {
+        hdUrl: json.hdUrl ?? null,
+        lowResUrl: json.lowResUrl ?? null,
+        assetId: json.asset?.id ?? null,
+        status: json.hdUrl ? "done" : "loading",
+      });
+
+      setHairInspoDetectedLook(json.detectedLook ?? null);
+      setHairInspoDetectedStyle(json.controls?.styleName ?? null);
+      setHairInspoDetectedColor(json.controls?.colorName ?? null);
+
+      if (json.controls?.styleName) {
+        const styleMatch = hairStyleOptions.find((item) => item.value === json.controls?.styleName);
+        if (styleMatch) setHairStyle(styleMatch.value);
+      }
+      if (json.controls?.colorName) {
+        const colorMatch = HAIR_COLORS.find((item) => item.value === json.controls?.colorName);
+        if (colorMatch) setHairColor(colorMatch.value);
+      }
+
+      setHistory((h) => [{
+        url: json.hdUrl ?? json.lowResUrl!,
+        assetId: json.asset?.id ?? null,
+        createdAt: json.asset?.createdAt ?? null,
+      }, ...h].slice(0, 10));
+
+      if (json.asset?.id) {
+        setSourceAssetId(json.asset.id);
+        setSourcePreviewUrl(json.hdUrl ?? json.lowResUrl ?? null);
+      }
+
       void loadVault();
       if (!json.hdUrl && json.asset?.id) void pollForHd("hair", json.asset.id, idx);
     } catch {
@@ -2093,6 +2169,89 @@ export function AIBeautyStudio({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5">
             {/* Left: controls */}
             <div className="flex flex-col gap-4">
+              <div className="flex overflow-hidden rounded-xl border border-[#E8DDD0]">
+                <button
+                  onClick={() => setHairSubMode("custom")}
+                  className={`flex-1 py-2 text-xs font-semibold transition-all ${hairSubMode === "custom" ? "bg-[#111827] text-white" : "bg-[#FDF6F0] text-[#9C7D5B]"}`}
+                >
+                  ✦ Custom Controls
+                </button>
+                {!isCanvas && (
+                  <button
+                    onClick={() => setHairSubMode("inspo")}
+                    className={`flex-1 py-2 text-xs font-semibold transition-all ${hairSubMode === "inspo" ? "bg-[#111827] text-white" : "bg-[#FDF6F0] text-[#9C7D5B]"}`}
+                  >
+                    ✨ Inspo Transfer
+                  </button>
+                )}
+              </div>
+
+              {hairSubMode === "inspo" && !isCanvas && (
+                <>
+                  <section className="rounded-2xl border border-[#E8DDD0] bg-[#FDF6F0] p-4 flex flex-col gap-3">
+                    <p className="text-xs font-semibold text-[#3D2B1F]">Upload a hairstyle reference photo</p>
+                    <p className="text-[11px] text-[#9C7D5B]">We analyze the look and transfer the closest style and color to your photo.</p>
+                    {hairInspoPreview ? (
+                      <div className="relative">
+                        <div className="relative w-full overflow-hidden rounded-xl aspect-[4/3]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={hairInspoPreview} alt="Hair inspo preview" className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHairInspoFile(null);
+                            setHairInspoPreview(null);
+                            setHairInspoDetectedLook(null);
+                            setHairInspoDetectedStyle(null);
+                            setHairInspoDetectedColor(null);
+                          }}
+                          className="absolute right-2 top-2 rounded-full bg-[rgba(61,43,31,0.7)] p-1 shadow"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-[#E8DDD0] py-6 transition-colors hover:bg-pink-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#111827]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M7 10l5-5 5 5M12 5v10"/></svg>
+                        <span className="text-xs font-semibold text-[#9C7D5B]">Tap to upload hairstyle inspo</span>
+                        <input type="file" accept="image/*" className="sr-only" onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          setHairInspoFile(f);
+                          const url = URL.createObjectURL(f);
+                          setHairInspoPreview(url);
+                          setHairInspoDetectedLook(null);
+                          setHairInspoDetectedStyle(null);
+                          setHairInspoDetectedColor(null);
+                        }} />
+                      </label>
+                    )}
+
+                    {(hairInspoDetectedLook || hairInspoDetectedStyle || hairInspoDetectedColor) && (
+                      <div className="rounded-xl border border-[rgba(17,24,39,0.18)] bg-[rgba(17,24,39,0.08)] px-3 py-2 text-xs text-[#6B5344] flex flex-col gap-1">
+                        {hairInspoDetectedLook && <p>✨ Detected look: <strong>{hairInspoDetectedLook}</strong></p>}
+                        {(hairInspoDetectedStyle || hairInspoDetectedColor) && (
+                          <p>
+                            Applied controls: <strong>{hairInspoDetectedStyle ?? "No change"}</strong>
+                            {" + "}
+                            <strong>{hairInspoDetectedColor ?? "natural"}</strong>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </section>
+
+                  <button onClick={() => void generateHairTransfer()} disabled={!hairInspoFile || status === "loading"}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-[#111827] px-5 py-3 text-sm font-semibold text-[#3D2B1F] shadow-[0_2px_12px_rgba(17,24,39,0.35)] transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
+                    {status === "loading"
+                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Transferring…</>
+                      : <>✨ Transfer Hairstyle</>}
+                  </button>
+                </>
+              )}
+
+              {hairSubMode === "custom" && <>
               <section className="rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: "#E8DDD0", background: "#FFFBF8" }}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -2184,6 +2343,7 @@ export function AIBeautyStudio({
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
                   : <><Wand2 className="h-4 w-4" /> Try Hair Look</>}
               </button>
+              </>}
             </div>
             {/* Right: your photo */}
             <div className="flex flex-col gap-3">

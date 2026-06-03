@@ -307,6 +307,11 @@ export default function AccountTabScreen() {
               <Text style={styles.secondaryButtonLabel}>Refresh activation status</Text>
             </Pressable>
           ) : null}
+          {activationStatus && entitlement?.tier !== "studio_pro" ? (
+            <Pressable onPress={() => void handleUpgrade()} disabled={managing} style={[styles.secondaryButton, managing ? styles.buttonDisabled : null]}>
+              <Text style={styles.secondaryButtonLabel}>Open Studio Pro checkout again</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <View style={styles.sectionCard}>

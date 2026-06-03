@@ -14,6 +14,11 @@ export type MobileColorAnalysis = {
   metals?: string[];
   avoidColors?: { name: string; hex: string }[];
   palette?: { name: string; hex: string }[];
+  clothingObservation?: {
+    color: string;
+    hex: string;
+    effect: "flattering" | "clashing" | "neutral";
+  };
 };
 
 export type MobileFaceLandmark = {
@@ -32,21 +37,29 @@ export type MobileFaceLandmarks = {
 
 export type MobileSkinAnalysis = {
   type: string;
+  imageConfidence?: number;
   concerns?: { label: string; severity: string }[];
   zones?: { zone: string; observation: string }[];
+  routine?:
+    | { am: { step: string; product: string }[]; pm: { step: string; product: string }[] }
+    | { step: string; product: string }[];
 };
 
 export type MobileGlasses = {
   goals?: string[];
   recommended?: { style: string; reason: string }[];
+  avoid?: { style: string; reason: string }[];
+  colors?: { name: string; hex: string }[];
   fitTips?: string[];
 };
 
 export type MobileHairstyle = {
   styles?: { name: string; description: string }[];
   lengths?: { name: string; description: string }[];
-  colors?: { name: string; description: string }[];
+  colors?: { name: string; hex?: string; description: string }[];
   avoid?: string[];
+  stylingTips?: string[];
+  hairType?: string;
 };
 
 export type MobileFeaturePart = {
@@ -70,10 +83,26 @@ export type MobileVisualAsset = {
   height?: number;
   label?: string;
   styleName?: string;
+  error?: string | null;
   path?: string;
   signedUrl?: string;
   status?: MobileVisualAssetStatus;
   [key: string]: unknown;
+};
+
+export type MobilePipelineStage = {
+  stage: string;
+  durationMs: number;
+  degraded: boolean;
+  variantId?: string;
+};
+
+export type MobilePipelineMeta = {
+  totalDurationMs: number;
+  rekognitionAvailable: boolean;
+  blendedConfidence: number;
+  gptRawConfidence: number;
+  stages: MobilePipelineStage[];
 };
 
 export type MobileVisualAssets = {
@@ -219,11 +248,25 @@ export type MobileGlassesPreviewInput = {
   sourceAssetId?: string;
 };
 
+export type MobileInspoImageInput = {
+  referenceImageUri: string;
+  referenceImageName?: string;
+  referenceImageMime?: string;
+  sourceAssetId?: string;
+};
+
+export type MobileHairTransferControls = {
+  styleName?: string;
+  colorName?: string;
+};
+
 export type MobileReport = {
   id: string;
+  userId?: string;
   status: "pending" | "processing" | "ready" | "failed";
   isPaid: boolean;
   imageUrl: string;
+  detectedGender?: "none" | "male" | "female";
   shareToken?: string | null;
   summary?: string;
   createdAt: string;
@@ -235,6 +278,7 @@ export type MobileReport = {
   glasses?: MobileGlasses;
   hairstyle?: MobileHairstyle;
   visualAssets?: MobileVisualAssets;
+  pipelineMeta?: MobilePipelineMeta;
   faceLandmarks?: MobileFaceLandmarks;
   error?: string | null;
 };
@@ -379,7 +423,7 @@ export async function fetchWithAuth<T>(path: string, options: RequestOptions = {
 
 export async function analyzeSelfie(
   imageUri: string,
-  _intent?: AnalyzeIntent,
+  intent?: AnalyzeIntent,
 ): Promise<{ reportId: string; visualsPending: boolean }> {
   const form = new FormData();
   form.append("image", {
@@ -387,6 +431,9 @@ export async function analyzeSelfie(
     name: "selfie.jpg",
     type: "image/jpeg",
   } as unknown as Blob);
+  if (intent) {
+    form.append("intent", intent);
+  }
 
   return fetchWithAuth<{ reportId: string; visualsPending: boolean }>("/api/analyze", {
     method: "POST",
@@ -524,6 +571,37 @@ export async function generateMakeupPreview(
   });
 }
 
+export async function generateMakeupTransferPreview(
+  reportId: string,
+  input: MobileInspoImageInput,
+): Promise<{
+  lowResUrl: string;
+  hdUrl: string;
+  detectedLook?: string;
+  asset?: { id: string; createdAt: string } | null;
+}> {
+  const form = new FormData();
+  form.append("referenceImage", {
+    uri: input.referenceImageUri,
+    name: input.referenceImageName ?? "makeup-reference.jpg",
+    type: input.referenceImageMime ?? "image/jpeg",
+  } as unknown as Blob);
+
+  if (input.sourceAssetId) {
+    form.append("sourceAssetId", input.sourceAssetId);
+  }
+
+  return fetchWithAuth<{
+    lowResUrl: string;
+    hdUrl: string;
+    detectedLook?: string;
+    asset?: { id: string; createdAt: string } | null;
+  }>(`/api/reports/${reportId}/makeup-transfer`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 export async function generateHairColorPreview(
   reportId: string,
   controls: MobileHairColorControls,
@@ -531,6 +609,39 @@ export async function generateHairColorPreview(
   return fetchWithAuth<{ lowResUrl: string; hdUrl: string; asset?: { id: string; createdAt: string } | null }>(`/api/reports/${reportId}/hair-color`, {
     method: "POST",
     body: JSON.stringify(controls),
+  });
+}
+
+export async function generateHairTransferPreview(
+  reportId: string,
+  input: MobileInspoImageInput,
+): Promise<{
+  lowResUrl: string;
+  hdUrl: string;
+  detectedLook?: string;
+  controls?: MobileHairTransferControls;
+  asset?: { id: string; createdAt: string } | null;
+}> {
+  const form = new FormData();
+  form.append("referenceImage", {
+    uri: input.referenceImageUri,
+    name: input.referenceImageName ?? "hair-reference.jpg",
+    type: input.referenceImageMime ?? "image/jpeg",
+  } as unknown as Blob);
+
+  if (input.sourceAssetId) {
+    form.append("sourceAssetId", input.sourceAssetId);
+  }
+
+  return fetchWithAuth<{
+    lowResUrl: string;
+    hdUrl: string;
+    detectedLook?: string;
+    controls?: MobileHairTransferControls;
+    asset?: { id: string; createdAt: string } | null;
+  }>(`/api/reports/${reportId}/hair-transfer`, {
+    method: "POST",
+    body: form,
   });
 }
 

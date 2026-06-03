@@ -1,34 +1,22 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ExpoLinking from "expo-linking";
 import { ActivityIndicator, Alert, Animated, AppState, Image, Linking, Modal, PanResponder, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
-import { createPaymentOrder, createReportShareLink, fetchReport, revokeReportShareLink, type MobileReport, type MobileVisualAsset, verifyTestPayment } from "@/lib/api";
+import { createPaymentOrder, createReportShareLink, fetchReport, revokeReportShareLink, type MobileReport, verifyTestPayment } from "@/lib/api";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { loadSavedVisuals, removeSavedVisual, type SavedVisual } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
 import { useRequireMobileSession } from "@/lib/use-mobile-session";
-
-type CheckoutFlow = "report" | "studio_pro";
-
-type ReportIntent = CheckoutFlow;
-
-type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
-
-type PreviewItem = {
-  imageUrl: string;
-  label: string;
-  beforeImageUrl?: string;
-};
-
-const REPORT_TABS: { key: ReportTab; label: string }[] = [
-  { key: "face", label: "Face" },
-  { key: "skin", label: "Skin" },
-  { key: "hair", label: "Hair" },
-  { key: "glasses", label: "Glasses" },
-  { key: "studio", label: "Studio" },
-  { key: "shop", label: "Shop" },
-];
+import { FaceSection } from "./_components/FaceSection";
+import { GlassesSection } from "./_components/GlassesSection";
+import { HairSection } from "./_components/HairSection";
+import { ReportHeader } from "./_components/ReportHeader";
+import { ReportTabs, type ReportTab } from "./_components/ReportTabs";
+import { ShopSection } from "./_components/ShopSection";
+import { SkinSection } from "./_components/SkinSection";
+import { StudioSection } from "./_components/StudioSection";
+import { Card, EmptyCard, type CheckoutFlow, type PreviewItem, type ReportIntent } from "./_components/ReportPrimitives";
 
 function parseReportIntent(value: string | string[] | undefined): ReportIntent | null {
   const candidate = Array.isArray(value) ? value[0] : value;
@@ -94,25 +82,6 @@ function formatSavedVisualTime(value: string): string | null {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-}
-
-function formatCreatedAt(value: string): string | null {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function getAssetUrl(asset: MobileVisualAsset | null | undefined): string | null {
-  if (!asset) return null;
-  if (typeof asset.signedUrl === "string" && asset.signedUrl.length > 0) return asset.signedUrl;
-  return null;
-}
-
-function getAssetLabel(asset: MobileVisualAsset | null | undefined, fallback: string): string {
-  if (!asset) return fallback;
-  if (typeof asset.styleName === "string" && asset.styleName.trim().length > 0) return asset.styleName;
-  if (typeof asset.label === "string" && asset.label.trim().length > 0) return asset.label;
-  return fallback;
 }
 
 function getLockedCopy(intent: ReportIntent | null, title: string): string {
@@ -343,19 +312,6 @@ export default function ReportScreen() {
       .map(([key]) => key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()));
   }, [report?.faceLandmarks]);
 
-  const hasAnyReportVisuals = useMemo(() => {
-    const visuals = report?.visualAssets?.assets;
-    if (!visuals) return false;
-    return Boolean(
-      visuals.landmarkOverlay
-      || visuals.paletteBoard
-      || visuals.glassesPreviews?.length
-      || visuals.hairstylePreviews?.length
-      || visuals.colorSwatchPreviews?.length
-      || visuals.makeupPreviews?.length,
-    );
-  }, [report?.visualAssets]);
-
   if (!isAuthed) {
     return (
       <SafeAreaView style={styles.centered}>
@@ -499,40 +455,14 @@ export default function ReportScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.heroCard}>
-          <View style={styles.heroHeaderRow}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.heading}>Your report</Text>
-              <Text style={styles.heroSubheading}>
-                {report.isPaid ? "Full report unlocked" : "Preview unlocked. Premium sections are shown with contextual locks."}
-              </Text>
-            </View>
-            <View style={styles.headerActionColumn}>
-              <Pressable
-                onPress={() => router.push({ pathname: "/chat/[id]", params: { id: report.id } })}
-                style={styles.headerActionButton}
-              >
-                <Text style={styles.headerActionLabel}>Open chat</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => void handleShareReport()}
-                style={[styles.headerActionButton, styles.headerSecondaryAction]}
-                disabled={shareLoading}
-              >
-                <Text style={styles.headerSecondaryActionLabel}>{shareLoading ? "Sharing..." : shareToken ? "Share link" : "Share"}</Text>
-              </Pressable>
-            </View>
-          </View>
-
-          {report.imageUrl ? <Image source={{ uri: report.imageUrl }} style={styles.heroImage} /> : null}
-
-          <View style={styles.metricRow}>
-            <MetricPill label="Status" value={report.status} />
-            <MetricPill label="Access" value={report.isPaid ? "Premium" : "Preview"} />
-            {formatCreatedAt(report.createdAt) ? <MetricPill label="Created" value={formatCreatedAt(report.createdAt) ?? ""} /> : null}
-            {compareModeRequested ? <MetricPill label="Mode" value="Compare" /> : null}
-          </View>
-        </View>
+        <ReportHeader
+          report={report}
+          compareModeRequested={compareModeRequested}
+          shareLoading={shareLoading}
+          shareToken={shareToken}
+          onOpenChat={() => router.push({ pathname: "/chat/[id]", params: { id: report.id } })}
+          onShare={() => void handleShareReport()}
+        />
 
         {report.studioEntitlement ? (
           <Card title={report.studioEntitlement.tier === "studio_pro" ? "Studio Pro membership" : "Studio access"}>
@@ -560,379 +490,125 @@ export default function ReportScreen() {
           <Card title={checkoutFlow === "studio_pro" ? "Studio Pro status" : "Payment status"}>
             <Text style={styles.mutedText}>{checkoutStatus}</Text>
             {awaitingBrowserCheckout ? <ActivityIndicator size="small" color={t.color.text} /> : null}
+            <Pressable onPress={() => void refreshReport()} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonLabel}>I returned from browser, refresh now</Text>
+            </Pressable>
+            {checkoutFlow === "studio_pro" ? (
+              <Pressable onPress={() => void handleStudioPro()} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonLabel}>Open Studio Pro checkout again</Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => void handleUnlock()} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonLabel}>Open report checkout again</Text>
+              </Pressable>
+            )}
           </Card>
         ) : null}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
-          {REPORT_TABS.map((tab) => (
-            <Pressable
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              style={[styles.tabChip, activeTab === tab.key ? styles.tabChipActive : null]}
-            >
-              <Text style={[styles.tabChipLabel, activeTab === tab.key ? styles.tabChipLabelActive : null]}>{tab.label}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        <ReportTabs activeTab={activeTab} onChange={setActiveTab} />
 
         {activeTab === "face" ? (
-          <>
-            {report.faceShape ? (
-              <Card title="Face shape">
-                <Text style={styles.bodyText}>{report.faceShape.shape}</Text>
-                <Text style={styles.mutedText}>{report.faceShape.traits.join(", ")}</Text>
-              </Card>
-            ) : null}
-
-            {report.colorAnalysis ? (
-              <Card title="Color analysis">
-                <Text style={styles.bodyText}>{report.colorAnalysis.season}</Text>
-                <Text style={styles.mutedText}>Undertone: {report.colorAnalysis.undertone}</Text>
-                <Text style={styles.mutedText}>{report.colorAnalysis.description}</Text>
-                {report.colorAnalysis.metals?.length ? (
-                  <Text style={styles.mutedText}>Best metals: {report.colorAnalysis.metals.join(", ")}</Text>
-                ) : null}
-                {report.colorAnalysis.palette?.length ? (
-                  <View style={styles.swatchRow}>
-                    {report.colorAnalysis.palette.slice(0, 6).map((item) => (
-                      <View key={`${item.name}-${item.hex}`} style={styles.swatchCard}>
-                        <View style={[styles.swatchCircle, { backgroundColor: item.hex }]} />
-                        <Text style={styles.swatchLabel}>{item.name}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : null}
-              </Card>
-            ) : null}
-
-            {report.features ? (
-              <Card title="Feature breakdown">
-                {Object.entries(report.features).map(([key, value]) => {
-                  if (!value || typeof value !== "object") return null;
-                  const feature = value as { shape?: string; notes?: string };
-                  return (
-                    <View key={key} style={styles.inlineSection}>
-                      <Text style={styles.bodyText}>{key.replace(/^./, (char) => char.toUpperCase())}: {feature.shape ?? ""}</Text>
-                      {feature.notes ? <Text style={styles.mutedText}>{feature.notes}</Text> : null}
-                    </View>
-                  );
-                })}
-              </Card>
-            ) : null}
-
-            {faceLandmarkLabels.length ? (
-              <Card title="Landmarks detected">
-                <View style={styles.tagRow}>
-                  {faceLandmarkLabels.map((label) => (
-                    <View key={label} style={styles.tag}>
-                      <Text style={styles.tagLabel}>{label}</Text>
-                    </View>
-                  ))}
-                </View>
-              </Card>
-            ) : null}
-
-            <VisualAssetCard
-              title="Face overlay"
-              asset={report.visualAssets?.assets?.landmarkOverlay}
-              emptyText="Landmark overlay will appear here when the visual asset is ready."
-              beforeImageUrl={report.imageUrl}
-              onPreview={setPreviewVisual}
-            />
-
-            <VisualAssetCard
-              title="Palette board"
-              asset={report.visualAssets?.assets?.paletteBoard}
-              emptyText="Palette board will appear here when your color visual is ready."
-              beforeImageUrl={report.imageUrl}
-              onPreview={setPreviewVisual}
-            />
-          </>
+          <FaceSection report={report} faceLandmarkLabels={faceLandmarkLabels} onPreview={setPreviewVisual} />
         ) : null}
 
         {activeTab === "skin" ? (
-          report.isPaid ? (
-            report.skinAnalysis ? (
-              <Card title="Skin analysis">
-                <Text style={styles.bodyText}>Skin type: {report.skinAnalysis.type}</Text>
-                {report.skinAnalysis.concerns?.length ? (
-                  <Text style={styles.mutedText}>Concerns: {report.skinAnalysis.concerns.map((item) => item.label).join(", ")}</Text>
-                ) : null}
-                {report.skinAnalysis.zones?.length ? (
-                  <Text style={styles.mutedText}>Zones: {report.skinAnalysis.zones.map((item) => `${item.zone} (${item.observation})`).join(" • ")}</Text>
-                ) : null}
-              </Card>
-            ) : (
-              <EmptyCard text="Skin analysis is not available yet for this report." />
-            )
-          ) : (
-            <LockedSection
-              title="Skin analysis"
-              body={getLockedCopy(preferredIntent, "Skin analysis")}
-              preferredIntent={preferredIntent}
-              unlocking={unlocking}
-              awaitingBrowserCheckout={awaitingBrowserCheckout}
-              checkoutFlow={checkoutFlow}
-              checkoutStatus={checkoutStatus}
-              onUnlock={handleUnlock}
-              onStudioPro={handleStudioPro}
-              onRefresh={() => void refreshReport()}
-            />
-          )
+          <SkinSection
+            report={report}
+            lockedBody={getLockedCopy(preferredIntent, "Skin analysis")}
+            preferredIntent={preferredIntent}
+            unlocking={unlocking}
+            awaitingBrowserCheckout={awaitingBrowserCheckout}
+            checkoutFlow={checkoutFlow}
+            checkoutStatus={checkoutStatus}
+            onUnlock={handleUnlock}
+            onStudioPro={handleStudioPro}
+            onRefresh={() => void refreshReport()}
+          />
         ) : null}
 
         {activeTab === "glasses" ? (
-          report.isPaid ? (
-            <>
-              {report.glasses ? (
-                <Card title="Glasses guide">
-                  {report.glasses.goals?.length ? <Text style={styles.mutedText}>Goals: {report.glasses.goals.join(", ")}</Text> : null}
-                  {report.glasses.recommended?.slice(0, 4).map((item) => (
-                    <View key={item.style} style={styles.inlineSection}>
-                      <Text style={styles.bodyText}>{item.style}</Text>
-                      <Text style={styles.mutedText}>{item.reason}</Text>
-                    </View>
-                  ))}
-                  {report.glasses.fitTips?.length ? <Text style={styles.mutedText}>Fit tips: {report.glasses.fitTips.join(" • ")}</Text> : null}
-                </Card>
-              ) : (
-                <EmptyCard text="Glasses guidance is not available yet for this report." />
-              )}
-
-              <Card title="Glasses actions">
-                <Text style={styles.mutedText}>Upload a glasses reference image and generate a try-on preview using your report photo.</Text>
-                <Pressable
-                  onPress={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-                  style={styles.chatLaunchButton}
-                >
-                  <Text style={styles.chatLaunchButtonLabel}>Open glasses studio</Text>
-                </Pressable>
-              </Card>
-
-              <VisualGallery
-                title="Glasses previews"
-                assets={report.visualAssets?.assets?.glassesPreviews}
-                emptyText="Glasses previews will appear here when the visual assets are ready."
-                fallbackLabel="Glasses preview"
-                beforeImageUrl={report.imageUrl}
-                onPreview={setPreviewVisual}
-              />
-            </>
-          ) : (
-            <LockedSection
-              title="Glasses guide"
-              body={getLockedCopy(preferredIntent, "Glasses recommendations")}
-              preferredIntent={preferredIntent}
-              unlocking={unlocking}
-              awaitingBrowserCheckout={awaitingBrowserCheckout}
-              checkoutFlow={checkoutFlow}
-              checkoutStatus={checkoutStatus}
-              onUnlock={handleUnlock}
-              onStudioPro={handleStudioPro}
-              onRefresh={() => void refreshReport()}
-            />
-          )
+          <GlassesSection
+            report={report}
+            lockedBody={getLockedCopy(preferredIntent, "Glasses recommendations")}
+            preferredIntent={preferredIntent}
+            unlocking={unlocking}
+            awaitingBrowserCheckout={awaitingBrowserCheckout}
+            checkoutFlow={checkoutFlow}
+            checkoutStatus={checkoutStatus}
+            onUnlock={handleUnlock}
+            onStudioPro={handleStudioPro}
+            onRefresh={() => void refreshReport()}
+            onOpenStudio={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+            onPreview={setPreviewVisual}
+          />
         ) : null}
 
         {activeTab === "hair" ? (
-          report.isPaid ? (
-            <>
-              {report.hairstyle ? (
-                <Card title="Hairstyle guide">
-                  {report.hairstyle.styles?.slice(0, 3).map((item) => (
-                    <View key={item.name} style={styles.inlineSection}>
-                      <Text style={styles.bodyText}>{item.name}</Text>
-                      <Text style={styles.mutedText}>{item.description}</Text>
-                    </View>
-                  ))}
-                  {report.hairstyle.colors?.slice(0, 3).map((item) => (
-                    <Text key={`${item.name}-${item.description}`} style={styles.mutedText}>{item.name}: {item.description}</Text>
-                  ))}
-                  {report.hairstyle.avoid?.length ? <Text style={styles.mutedText}>Avoid: {report.hairstyle.avoid.join(", ")}</Text> : null}
-                </Card>
-              ) : (
-                <EmptyCard text="Hairstyle guidance is not available yet for this report." />
-              )}
-
-              <VisualGallery
-                title="Hairstyle previews"
-                assets={report.visualAssets?.assets?.hairstylePreviews}
-                emptyText="Hairstyle previews will appear here when the visual assets are ready."
-                fallbackLabel="Hairstyle preview"
-                beforeImageUrl={report.imageUrl}
-                onPreview={setPreviewVisual}
-              />
-
-              <Card title="Hair actions">
-                <Text style={styles.mutedText}>Open the mobile hair color studio using your report photo.</Text>
-                <Pressable
-                  onPress={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-                  style={styles.chatLaunchButton}
-                >
-                  <Text style={styles.chatLaunchButtonLabel}>Open hair color studio</Text>
-                </Pressable>
-              </Card>
-            </>
-          ) : (
-            <LockedSection
-              title="Hairstyle guide"
-              body={getLockedCopy(preferredIntent, "Hairstyle guidance")}
-              preferredIntent={preferredIntent}
-              unlocking={unlocking}
-              awaitingBrowserCheckout={awaitingBrowserCheckout}
-              checkoutFlow={checkoutFlow}
-              checkoutStatus={checkoutStatus}
-              onUnlock={handleUnlock}
-              onStudioPro={handleStudioPro}
-              onRefresh={() => void refreshReport()}
-            />
-          )
+          <HairSection
+            report={report}
+            lockedBody={getLockedCopy(preferredIntent, "Hairstyle guidance")}
+            preferredIntent={preferredIntent}
+            unlocking={unlocking}
+            awaitingBrowserCheckout={awaitingBrowserCheckout}
+            checkoutFlow={checkoutFlow}
+            checkoutStatus={checkoutStatus}
+            onUnlock={handleUnlock}
+            onStudioPro={handleStudioPro}
+            onRefresh={() => void refreshReport()}
+            onOpenStudio={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+            onPreview={setPreviewVisual}
+          />
         ) : null}
 
         {activeTab === "studio" ? (
-          report.isPaid ? (
-            <>
-              <Card title="AI Studio">
-                <Text style={styles.mutedText}>Start with mobile-safe Studio actions using your report photo.</Text>
-                <Pressable
-                  onPress={() => router.push({ pathname: "/studio/makeup/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-                  style={styles.chatLaunchButton}
-                >
-                  <Text style={styles.chatLaunchButtonLabel}>Open makeup studio</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-                  style={styles.secondaryButton}
-                >
-                  <Text style={styles.secondaryButtonLabel}>Open hair color studio</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-                  style={styles.secondaryButton}
-                >
-                  <Text style={styles.secondaryButtonLabel}>Open glasses studio</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push({ pathname: "/studio/outfits/[id]", params: { id: report.id } })}
-                  style={styles.secondaryButton}
-                >
-                  <Text style={styles.secondaryButtonLabel}>Open outfit studio</Text>
-                </Pressable>
-              </Card>
-
-              <VisualGallery
-                title="Makeup previews"
-                assets={report.visualAssets?.assets?.makeupPreviews}
-                emptyText="Makeup previews will appear here when the visual assets are ready."
-                fallbackLabel="Makeup preview"
-                beforeImageUrl={report.imageUrl}
-                onPreview={setPreviewVisual}
-              />
-
-              {savedVisuals.length ? (
-                <Card title="Saved visuals">
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.savedVisualsRow}>
-                    {savedVisuals.map((item) => (
-                      <View key={item.id} style={styles.savedVisualCard}>
-                        <Pressable onPress={() => setPreviewVisual({ imageUrl: item.imageUrl, beforeImageUrl: report.imageUrl ?? undefined, label: `${item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}${item.label ? ` - ${item.label}` : ""}` })}>
-                          <Image source={{ uri: item.imageUrl }} style={styles.savedVisualImage} />
-                        </Pressable>
-                        <Text style={styles.savedVisualLabel} numberOfLines={1}>
-                          {item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}
-                          {item.label ? ` - ${item.label}` : ""}
-                        </Text>
-                        {formatSavedVisualTime(item.createdAt) ? <Text style={styles.savedVisualTime}>{formatSavedVisualTime(item.createdAt)}</Text> : null}
-                        <Pressable onPress={() => void handleRemoveVisual(item)} style={styles.savedVisualRemoveButton}>
-                          <Text style={styles.savedVisualRemoveButtonLabel}>Remove</Text>
-                        </Pressable>
-                      </View>
-                    ))}
-                  </ScrollView>
-                </Card>
-              ) : (
-                <EmptyCard text="Saved makeup, hair, and glasses looks will appear here once you keep them from Studio." />
-              )}
-            </>
-          ) : (
-            <LockedSection
-              title="AI Studio"
-              body={getLockedCopy(preferredIntent, "AI Studio")}
-              preferredIntent={preferredIntent}
-              unlocking={unlocking}
-              awaitingBrowserCheckout={awaitingBrowserCheckout}
-              checkoutFlow={checkoutFlow}
-              checkoutStatus={checkoutStatus}
-              onUnlock={handleUnlock}
-              onStudioPro={handleStudioPro}
-              onRefresh={() => void refreshReport()}
-            />
-          )
+          <StudioSection
+            report={report}
+            savedVisuals={savedVisuals}
+            lockedBody={getLockedCopy(preferredIntent, "AI Studio")}
+            preferredIntent={preferredIntent}
+            unlocking={unlocking}
+            awaitingBrowserCheckout={awaitingBrowserCheckout}
+            checkoutFlow={checkoutFlow}
+            checkoutStatus={checkoutStatus}
+            onUnlock={handleUnlock}
+            onStudioPro={handleStudioPro}
+            onRefresh={() => void refreshReport()}
+            onOpenMakeupStudio={() => router.push({ pathname: "/studio/makeup/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+            onOpenHairStudio={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+            onOpenGlassesStudio={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+            onOpenOutfitStudio={() => router.push({ pathname: "/studio/outfits/[id]", params: { id: report.id } })}
+            onRemoveSavedVisual={(visual) => void handleRemoveVisual(visual)}
+            onPreview={setPreviewVisual}
+            formatSavedVisualTime={formatSavedVisualTime}
+          />
         ) : null}
 
         {activeTab === "shop" ? (
-          report.isPaid ? (
-            <>
-              <Card title="Style summary">
-                <Text style={styles.mutedText}>{report.summary ?? "Your premium summary will appear here once the report finishes compiling."}</Text>
-              </Card>
-
-              <VisualGallery
-                title="Color swatches"
-                assets={report.visualAssets?.assets?.colorSwatchPreviews}
-                emptyText="Color swatches will appear here when the shopping visuals are ready."
-                fallbackLabel="Color swatch"
-                beforeImageUrl={report.imageUrl}
-                onPreview={setPreviewVisual}
-              />
-
-              <Card title="Color swatch studio">
-                <Text style={styles.mutedText}>Generate or retry individual color swatch slots directly from your report palette.</Text>
-                <Pressable onPress={() => router.push({ pathname: "/studio/colors/[id]", params: { id: report.id } })} style={styles.chatLaunchButton}>
-                  <Text style={styles.chatLaunchButtonLabel}>Open color swatch studio</Text>
-                </Pressable>
-              </Card>
-
-              <Card title="Continue with chat">
-                <Text style={styles.mutedText}>Use the style consultant to ask follow-up questions about outfits, shopping choices, or how to use your palette.</Text>
-                <Pressable onPress={() => router.push({ pathname: "/chat/[id]", params: { id: report.id } })} style={styles.chatLaunchButton}>
-                  <Text style={styles.chatLaunchButtonLabel}>Open style chat</Text>
-                </Pressable>
-              </Card>
-
-              <Card title="Share and export">
-                <Text style={styles.mutedText}>Create a public report link to share with others, or open the web report to download the existing PDF export.</Text>
-                <Pressable onPress={() => void handleShareReport()} style={styles.chatLaunchButton} disabled={shareLoading}>
-                  <Text style={styles.chatLaunchButtonLabel}>{shareLoading ? "Preparing share..." : shareToken ? "Share public link" : "Create and share link"}</Text>
-                </Pressable>
-                {shareToken ? (
-                  <Pressable onPress={() => void handleRevokeShare()} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonLabel}>Revoke public link</Text>
-                  </Pressable>
-                ) : null}
-                <Pressable onPress={() => void handlePdfHandoff()} style={styles.secondaryButton}>
-                  <Text style={styles.secondaryButtonLabel}>Open web report for PDF</Text>
-                </Pressable>
-              </Card>
-            </>
-          ) : (
-            <LockedSection
-              title="Shop your look"
-              body={getLockedCopy(preferredIntent, "Shopping and styling guidance")}
-              preferredIntent={preferredIntent}
-              unlocking={unlocking}
-              awaitingBrowserCheckout={awaitingBrowserCheckout}
-              checkoutFlow={checkoutFlow}
-              checkoutStatus={checkoutStatus}
-              onUnlock={handleUnlock}
-              onStudioPro={handleStudioPro}
-              onRefresh={() => void refreshReport()}
-            />
-          )
+          <ShopSection
+            report={report}
+            lockedBody={getLockedCopy(preferredIntent, "Shopping and styling guidance")}
+            preferredIntent={preferredIntent}
+            unlocking={unlocking}
+            awaitingBrowserCheckout={awaitingBrowserCheckout}
+            checkoutFlow={checkoutFlow}
+            checkoutStatus={checkoutStatus}
+            shareLoading={shareLoading}
+            shareToken={shareToken}
+            onUnlock={handleUnlock}
+            onStudioPro={handleStudioPro}
+            onRefresh={() => void refreshReport()}
+            onOpenColorStudio={() => router.push({ pathname: "/studio/colors/[id]", params: { id: report.id } })}
+            onOpenChat={() => router.push({ pathname: "/chat/[id]", params: { id: report.id } })}
+            onShare={() => void handleShareReport()}
+            onRevokeShare={() => void handleRevokeShare()}
+            onOpenPdf={() => void handlePdfHandoff()}
+            onPreview={setPreviewVisual}
+          />
         ) : null}
 
         {!report.isPaid && activeTab === "face" ? (
           <Card title="Unlock the rest of your report">
-            <Text style={styles.mutedText}>You can already see your free preview. The remaining tabs unlock detailed skin, glasses, hair, Studio, and shopping guidance.</Text>
+            <Text style={styles.mutedText}>You can already see your free preview. Unlock only this report with a one-time payment, or choose Studio Pro for subscription access and monthly generations.</Text>
             <Pressable
               onPress={preferredIntent === "studio_pro" ? handleStudioPro : handleUnlock}
               disabled={unlocking}
@@ -944,10 +620,6 @@ export default function ReportScreen() {
               <Text style={styles.secondaryButtonLabel}>{preferredIntent === "studio_pro" ? "Unlock only this report" : studioPromptTitle}</Text>
             </Pressable>
           </Card>
-        ) : null}
-
-        {!hasAnyReportVisuals && activeTab === "face" ? (
-          <EmptyCard text="Additional report visuals are still processing or were not generated for this report." />
         ) : null}
       </ScrollView>
 
@@ -1007,153 +679,6 @@ export default function ReportScreen() {
         </View>
       </Modal>
     </SafeAreaView>
-  );
-}
-
-function Card({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>{title}</Text>
-      {children}
-    </View>
-  );
-}
-
-function MetricPill({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.metricPill}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
-    </View>
-  );
-}
-
-function EmptyCard({ text }: { text: string }) {
-  return (
-    <View style={styles.emptyCard}>
-      <Text style={styles.emptyCardText}>{text}</Text>
-    </View>
-  );
-}
-
-function VisualAssetCard({
-  title,
-  asset,
-  emptyText,
-  beforeImageUrl,
-  onPreview,
-}: {
-  title: string;
-  asset?: MobileVisualAsset | null;
-  emptyText: string;
-  beforeImageUrl?: string;
-  onPreview: (item: PreviewItem) => void;
-}) {
-  const assetUrl = getAssetUrl(asset);
-
-  if (!assetUrl) {
-    return <EmptyCard text={emptyText} />;
-  }
-
-  return (
-    <Card title={title}>
-      <Pressable onPress={() => onPreview({ imageUrl: assetUrl, label: getAssetLabel(asset, title), beforeImageUrl })}>
-        <Image source={{ uri: assetUrl }} style={styles.featuredVisual} />
-      </Pressable>
-      <Text style={styles.mutedText}>{getAssetLabel(asset, title)}</Text>
-    </Card>
-  );
-}
-
-function VisualGallery({
-  title,
-  assets,
-  emptyText,
-  fallbackLabel,
-  beforeImageUrl,
-  onPreview,
-}: {
-  title: string;
-  assets?: MobileVisualAsset[];
-  emptyText: string;
-  fallbackLabel: string;
-  beforeImageUrl?: string;
-  onPreview: (item: PreviewItem) => void;
-}) {
-  const readyAssets = (assets ?? []).filter((asset) => Boolean(getAssetUrl(asset)));
-
-  if (readyAssets.length === 0) {
-    return <EmptyCard text={emptyText} />;
-  }
-
-  return (
-    <Card title={title}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
-        {readyAssets.map((asset, index) => {
-          const assetUrl = getAssetUrl(asset);
-          if (!assetUrl) return null;
-          const label = getAssetLabel(asset, `${fallbackLabel} ${index + 1}`);
-          return (
-            <Pressable key={`${label}-${index}`} onPress={() => onPreview({ imageUrl: assetUrl, label, beforeImageUrl })} style={styles.galleryCard}>
-              <Image source={{ uri: assetUrl }} style={styles.galleryImage} />
-              <Text style={styles.galleryLabel} numberOfLines={1}>{label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </Card>
-  );
-}
-
-function LockedSection({
-  title,
-  body,
-  preferredIntent,
-  unlocking,
-  awaitingBrowserCheckout,
-  checkoutFlow,
-  checkoutStatus,
-  onUnlock,
-  onStudioPro,
-  onRefresh,
-}: {
-  title: string;
-  body: string;
-  preferredIntent: ReportIntent | null;
-  unlocking: boolean;
-  awaitingBrowserCheckout: boolean;
-  checkoutFlow: CheckoutFlow | null;
-  checkoutStatus: string | null;
-  onUnlock: () => void;
-  onStudioPro: () => void;
-  onRefresh: () => void;
-}) {
-  const studioFirst = preferredIntent === "studio_pro";
-
-  return (
-    <Card title={title}>
-      <Text style={styles.mutedText}>{body}</Text>
-      <Pressable
-        onPress={studioFirst ? onStudioPro : onUnlock}
-        disabled={unlocking}
-        style={[styles.unlockButton, unlocking ? styles.unlockButtonDisabled : null]}
-      >
-        <Text style={styles.unlockButtonLabel}>
-          {studioFirst ? "Continue with Studio Pro" : unlocking ? "Processing..." : "Unlock full report"}
-        </Text>
-      </Pressable>
-      <Pressable onPress={studioFirst ? onUnlock : onStudioPro} style={styles.secondaryButton}>
-        <Text style={styles.secondaryButtonLabel}>{studioFirst ? "Unlock only this report" : "Go Studio Pro instead"}</Text>
-      </Pressable>
-      {checkoutStatus ? <Text style={styles.helperText}>{checkoutStatus}</Text> : null}
-      {awaitingBrowserCheckout || checkoutStatus ? (
-        <Pressable onPress={onRefresh} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonLabel}>
-            {checkoutFlow === "studio_pro" ? "Check Studio Pro status again" : "Check unlock again"}
-          </Text>
-        </Pressable>
-      ) : null}
-    </Card>
   );
 }
 
