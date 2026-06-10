@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, History, Loader2, Palette, ScanFace, Shirt, Sparkles, Wand2 } from "lucide-react";
 import { track } from "@/lib/track";
 import { formatApiError, errorMessageFromUnknown } from "@/lib/api-errors";
+import { STUDIO_EXPERIENCES } from "@/lib/product-copy";
 import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
 import { StyleMomentShare } from "@/components/StyleMomentShare";
@@ -208,7 +209,7 @@ export function CanvasStudio({
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <span className="section-label inline-flex">Canvas Studio</span>
+            <span className="section-label inline-flex">{STUDIO_EXPERIENCES.quickTry.name}</span>
             {selectedPalette?.season && (
               <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: "rgba(17,24,39,0.10)", color: "#111827" }}>{selectedPalette.season}</span>
             )}

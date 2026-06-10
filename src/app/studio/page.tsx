@@ -10,7 +10,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import styles from "./studio.module.css";
 import { GuestStudioTry } from "@/components/studio/GuestStudioTry";
-import { PRODUCT_COPY } from "@/lib/product-copy";
+import { StudioExperienceCompare } from "@/components/studio/StudioExperienceCompare";
+import { PRODUCT_COPY, STUDIO_EXPERIENCES } from "@/lib/product-copy";
 
 /**
  * AI Beauty Studio Canvas
@@ -199,6 +200,10 @@ export default function StudioPage() {
               </div>
             ))}
           </div>
+
+          <div className="mt-8">
+            <StudioExperienceCompare variant="compact" highlight="quick" />
+          </div>
         </div>
       </main>
     );
@@ -212,16 +217,20 @@ export default function StudioPage() {
           <div>
             <span className="section-label mb-3 inline-flex">
               <Sparkles className="mr-2 h-3.5 w-3.5" />
-              AI Studio Canvas
+              {STUDIO_EXPERIENCES.quickTry.name}
             </span>
-            <h1 className="font-sans text-3xl sm:text-4xl text-ink">Virtual Try-On Studio</h1>
+            <h1 className="font-sans text-3xl sm:text-4xl text-ink">{STUDIO_EXPERIENCES.quickTry.name}</h1>
             <p className="mt-2 max-w-2xl text-base sm:text-lg text-ink-stone">
-              Upload your photo once and reuse it across makeup, hair, and outfit modes.
+              {STUDIO_EXPERIENCES.quickTry.tagline}
             </p>
           </div>
           <p className={`text-sm ${styles.textMuted}`}>
             3 free generations per month · <Link href="/auth?plan=studio_pro" className="underline hover:no-underline text-[#111827]">Upgrade to Studio Pro for unlimited</Link>
           </p>
+        </div>
+
+        <div className="mb-8">
+          <StudioExperienceCompare variant="full" highlight="quick" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

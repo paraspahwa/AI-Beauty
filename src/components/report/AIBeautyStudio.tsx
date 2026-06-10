@@ -24,6 +24,7 @@ import {
 } from "@/lib/hair-options";
 import { track } from "@/lib/track";
 import { formatApiError } from "@/lib/api-errors";
+import { STUDIO_EXPERIENCES } from "@/lib/product-copy";
 import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
 import { StyleMomentShare } from "@/components/StyleMomentShare";
@@ -1764,6 +1765,20 @@ export function AIBeautyStudio({
   return (
     <>
       <style>{STUDIO_CSS}</style>
+      {isCanvas && (
+        <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-[#E8DDD0] bg-[#FDFAF6] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-[#3D2B1F]">{STUDIO_EXPERIENCES.advancedStudio.name}</p>
+            <p className="text-xs text-[#9C7D5B]">{STUDIO_EXPERIENCES.advancedStudio.tagline}</p>
+          </div>
+          <Link
+            href={`/studio/${resolvedContextId}`}
+            className="text-sm font-medium text-[#111827] underline hover:no-underline shrink-0"
+          >
+            {STUDIO_EXPERIENCES.backToQuickTry}
+          </Link>
+        </div>
+      )}
       <div className="overflow-hidden rounded-3xl border border-[#E8DDD0] bg-[#FDFAF6] shadow-[0_2px_24px_rgba(61,43,31,0.06)]">
 
         {/* ── Header ── */}
@@ -1772,9 +1787,17 @@ export function AIBeautyStudio({
             <Sparkles className="h-4 w-4 text-[#3D2B1F]" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-[#3D2B1F]">AI Beauty Studio</h2>
+            <h2 className="text-base font-semibold text-[#3D2B1F]">
+              {isCanvas
+                ? STUDIO_EXPERIENCES.advancedStudio.name
+                : STUDIO_EXPERIENCES.reportTryOn.name}
+            </h2>
             <p className="text-xs text-[#9C7D5B]">
-              {presetFirst ? "Pick a preset or tap Surprise Me — one tap to see your new look" : "Try on clothing, makeup, hair & outfits — generate & download instantly"}
+              {isCanvas
+                ? STUDIO_EXPERIENCES.advancedStudio.tagline
+                : presetFirst
+                  ? "Pick a preset or tap Surprise Me — one tap to see your new look"
+                  : "Try on clothing, makeup, hair & outfits — generate & download instantly"}
             </p>
           </div>
           {presetFirst ? (

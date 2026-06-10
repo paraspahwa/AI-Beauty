@@ -5,8 +5,10 @@ import { getCanvasQuota } from "@/lib/entitlement";
 import { detectFaceDetails } from "@/lib/ai/rekognition";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
 import { CanvasStudio } from "@/components/studio/CanvasStudio";
+import { AdvancedStudioPromo } from "@/components/studio/StudioExperienceCompare";
 import { AIBeautyStudio } from "@/components/report/AIBeautyStudio";
 import { CanvasShareButton } from "@/components/studio/CanvasShareButton";
+import { STUDIO_EXPERIENCES } from "@/lib/product-copy";
 import type { StudioEntitlement } from "@/types/report";
 import styles from "../studio.module.css";
 
@@ -90,8 +92,15 @@ export default async function StudioSessionPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <span className="section-label mb-2 inline-flex text-xs">Studio Canvas</span>
-              <h1 className="font-sans text-2xl sm:text-3xl text-ink">Virtual Try-On Studio</h1>
+              <h1 className="font-sans text-2xl sm:text-3xl text-ink">
+                {advanced ? STUDIO_EXPERIENCES.advancedStudio.name : STUDIO_EXPERIENCES.quickTry.name}
+              </h1>
               <p className="text-ink-stone text-sm mt-2">
+                {advanced
+                  ? STUDIO_EXPERIENCES.advancedStudio.tagline
+                  : STUDIO_EXPERIENCES.canvasSessionHint}
+              </p>
+              <p className="text-ink-stone text-xs mt-1">
                 Canvas created {new Date(canvas.created_at).toLocaleDateString("en-IN", {
                   year: "numeric",
                   month: "short",
@@ -154,11 +163,7 @@ export default async function StudioSessionPage({
               studioEntitlement={studioEntitlement}
               initialSourceAssetId={null}
             />
-            <p className="mt-6 text-center text-sm text-ink-stone">
-              <a href={`/studio/${canvasId}?advanced=1`} className="underline hover:no-underline">
-                Open advanced studio
-              </a>
-            </p>
+            <AdvancedStudioPromo canvasId={canvasId} />
           </>
         )}
       </div>

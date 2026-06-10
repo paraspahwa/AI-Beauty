@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +23,7 @@ import guidanceData from "@/content/do-avoid-guidance.json";
 import { publicEnv } from "@/lib/public-env";
 import { Paywall } from "@/components/Paywall";
 import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
-import { PRODUCT_COPY } from "@/lib/product-copy";
+import { PRODUCT_COPY, STUDIO_EXPERIENCES } from "@/lib/product-copy";
 import { StyleChatDrawer } from "@/components/StyleChatDrawer";
 import type { CompiledReport } from "@/types/report";
 import { fadeUp, staggerContainer, tabContent } from "@/lib/animations";
@@ -693,6 +694,17 @@ export function ReportLayout({
                       faceShape: report.faceShape?.shape,
                     }}
                   />
+                  <div
+                    className="rounded-2xl border px-4 py-3"
+                    style={{ background: "rgba(17,24,39,0.04)", borderColor: "rgba(17,24,39,0.10)" }}
+                  >
+                    <p className="text-sm text-ink-stone">
+                      {STUDIO_EXPERIENCES.reportTryOnStrip}{" "}
+                      <Link href="/studio" className="font-medium text-ink underline hover:no-underline">
+                        {STUDIO_EXPERIENCES.quickTry.name}
+                      </Link>
+                    </p>
+                  </div>
                   <AIBeautyStudio
                     reportId={report.id}
                     photoUrl={report.imageUrl}

@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
 import { DashboardTour } from "@/components/TourProvider";
 import { DashboardProgress } from "@/components/dashboard/DashboardProgress";
+import { StudioExperienceCompare } from "@/components/studio/StudioExperienceCompare";
 import { parseOnboardingProgress } from "@/lib/progressive-unlock";
+import { STUDIO_EXPERIENCES } from "@/lib/product-copy";
 import styles from "./dashboard.module.css";
 
 type ReportRow = {
@@ -115,7 +117,7 @@ export default async function DashboardPage({
               <Button asChild variant="accent" size="sm">
                 <Link href="/studio">
                   <Sparkles className="h-4 w-4" />
-                  Open AI Studio
+                  {STUDIO_EXPERIENCES.quickTry.name}
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm">
@@ -130,6 +132,13 @@ export default async function DashboardPage({
 
       <DashboardProgress remainingGens={entitlement.remainingGens} tier={tier} />
 
+      <div className="mb-6">
+        <StudioExperienceCompare
+          variant="full"
+          latestReportId={latestReadyReport?.id ?? null}
+        />
+      </div>
+
       {/* Single continue card */}
       <div className={`mb-6 rounded-2xl p-6 ${styles.tileSurface}`}>
         <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink">Continue</p>
@@ -138,16 +147,24 @@ export default async function DashboardPage({
         </p>
         <p className="mt-2 text-sm text-ink-stone max-w-xl">
           {latestReadyReport
-            ? `Your latest report is ready${latestReadyReport.face_shape?.shape ? ` — ${latestReadyReport.face_shape.shape} face shape` : ""}. Jump into try-ons or unlock deeper analysis.`
-            : "Start with Studio for instant makeup and hair try-ons. Unlock your full report when you want skin routine, hairstyle guide, and Style DNA."}
+            ? `Your latest report is ready${latestReadyReport.face_shape?.shape ? ` — ${latestReadyReport.face_shape.shape} face shape` : ""}. Use Report Try-On for personalized looks, or Quick Try Studio for instant presets.`
+            : `Start with ${STUDIO_EXPERIENCES.quickTry.name} for instant makeup and hair presets. Get a full report when you want skin routine, hairstyle guide, and Style DNA.`}
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Button asChild variant="accent" size="sm">
             <Link href={latestReadyReport ? `/report/${latestReadyReport.id}?tab=try-shop` : "/studio"}>
               <Sparkles className="h-4 w-4" />
-              {latestReadyReport ? "Continue try-ons" : "Try a Look Free"}
+              {latestReadyReport ? STUDIO_EXPERIENCES.reportTryOn.cta : STUDIO_EXPERIENCES.quickTry.cta}
             </Link>
           </Button>
+          {latestReadyReport && (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/studio">
+                <Sparkles className="h-4 w-4" />
+                {STUDIO_EXPERIENCES.quickTry.cta}
+              </Link>
+            </Button>
+          )}
           {latestReadyReport ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/report/${latestReadyReport.id}`}>
