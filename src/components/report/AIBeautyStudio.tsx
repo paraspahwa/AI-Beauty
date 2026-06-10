@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Sparkles, Upload, Wand2, Loader2, RefreshCw, ShoppingBag,
   X, History, UserRound, Info, Download, ChevronDown, Lock, Undo2, Redo2, Camera, VideoOff,
@@ -21,6 +22,11 @@ import {
   type HairStyleValue,
   getHairStyleOptionsForGender,
 } from "@/lib/hair-options";
+import { track } from "@/lib/track";
+import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
+import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
+import { StyleMomentShare } from "@/components/StyleMomentShare";
+import { PRODUCT_COPY } from "@/lib/product-copy";
 
 // ── Shared animation CSS ──────────────────────────────────────────────────────
 const STUDIO_CSS = `
@@ -244,11 +250,14 @@ interface Props {
   photoUrl: string;
   isPaid: boolean;
   detectedGender?: HairGender;
+  faceShape?: string;
   studioEntitlement?: StudioEntitlement;
   colorAnalysis?: ColorAnalysisResult;
   initialSourceAssetId?: string | null;
   contextType?: "report" | "canvas";
   contextId?: string;
+  /** Hide advanced controls by default; emphasize presets + Surprise Me. */
+  presetFirst?: boolean;
 }
 
 // ── Upload zone ───────────────────────────────────────────────────────────────
@@ -295,10 +304,11 @@ function UploadZone({ onFile, preview, disabled, label, hint }: {
 }
 
 // ── Shared Result Panel ───────────────────────────────────────────────────────
-function ResultPanel({ url, hdUrl, lowResUrl, status, onRetry, onDownload, isDownloading, isHdPending }: {
+function ResultPanel({ url, hdUrl, lowResUrl, beforeUrl, status, onRetry, onDownload, isDownloading, isHdPending }: {
   url: string | null;
   hdUrl?: string | null;
   lowResUrl?: string | null;
+  beforeUrl?: string | null;
   status: GenStatus;
   onRetry: () => void;
   onDownload: () => void;
@@ -340,9 +350,18 @@ function ResultPanel({ url, hdUrl, lowResUrl, status, onRetry, onDownload, isDow
     );
   }
   if (status === "done" && (url || lowResUrl)) {
+    const after = url || lowResUrl!;
+    if (beforeUrl) {
+      return (
+        <div className="studio-result">
+          <BeforeAfterReveal beforeUrl={beforeUrl} afterUrl={after} className="w-full max-w-md mx-auto" />
+          <StyleMomentShare beforeUrl={beforeUrl} afterUrl={after} />
+        </div>
+      );
+    }
     return (
       <div className="studio-result relative min-h-[260px] overflow-hidden rounded-2xl">
-        <Image src={url || lowResUrl!} alt="AI Studio result" width={480} height={480}
+        <Image src={after} alt="AI Studio result" width={480} height={480}
           className="w-full h-auto object-cover rounded-2xl transition-opacity duration-500"
           style={{ opacity: (url && !lowResUrl) || !hdUrl ? 1 : 0.85 }}
           unoptimized />
@@ -530,11 +549,13 @@ export function AIBeautyStudio({
   photoUrl,
   isPaid,
   detectedGender = "none",
+  faceShape,
   studioEntitlement,
   colorAnalysis,
   initialSourceAssetId = null,
   contextType = "report",
   contextId,
+  presetFirst = false,
 }: Props) {
   const isCanvas = contextType === "canvas";
   const resolvedContextId = isCanvas ? (contextId ?? reportId ?? "") : (reportId ?? "");
@@ -562,7 +583,8 @@ export function AIBeautyStudio({
   const [mkFoundation, setMkFoundation] = React.useState<FoundationShadeValue>("medium");
   const [mkContour, setMkContour]       = React.useState(false);
   const [mkEyeliner, setMkEyeliner]     = React.useState<EyelinerStyleValue>("classic");
-  const [showAdvancedMakeup, setShowAdvancedMakeup] = React.useState(false);
+  const [showAdvancedMakeup, setShowAdvancedMakeup] = React.useState(!presetFirst);
+  const [tryOnCount, setTryOnCount] = React.useState(0);
 
   function resetMakeupResult() { setModeResult("makeup", null, null); setModeStatus("makeup", "idle"); }
 
@@ -576,7 +598,7 @@ export function AIBeautyStudio({
   const [hairInspoDetectedColor, setHairInspoDetectedColor] = React.useState<string | null>(null);
   const [hairStyle, setHairStyle]   = React.useState<HairStyleValue>("No change");
   const [hairColor, setHairColor]   = React.useState<HairColorValue>("natural");
-  const [showAdvancedHair, setShowAdvancedHair] = React.useState(false);
+  const [showAdvancedHair, setShowAdvancedHair] = React.useState(!presetFirst);
   const hairStyleOptions = React.useMemo(
     () => getHairStyleOptionsForGender(detectedGender),
     [detectedGender],
@@ -632,6 +654,7 @@ export function AIBeautyStudio({
     ar: [],
     outfit: [],
   });
+  const [batchCompareOpen, setBatchCompareOpen] = React.useState(false);
   const [activeBatchIndex, setActiveBatchIndex] = React.useState<Record<StudioMode, number>>({
     clothing: -1,
     makeup: -1,
@@ -1229,6 +1252,7 @@ export function AIBeautyStudio({
       }
       void loadVault();
       if (!json.hdUrl && json.asset?.id) void pollForHd("makeup", json.asset.id, idx);
+      void recordTryOn();
     } catch {
       updateBatchResult("makeup", idx, { status: "error" });
     }
@@ -1250,6 +1274,7 @@ export function AIBeautyStudio({
       if (json.asset?.id) { setSourceAssetId(json.asset.id); setSourcePreviewUrl(json.hdUrl ?? json.lowResUrl ?? null); }
       void loadVault();
       if (!json.hdUrl && json.asset?.id) void pollForHd("makeup", json.asset.id, idx);
+      void recordTryOn();
     } catch { updateBatchResult("makeup", idx, { status: "error" }); }
   }
 
@@ -1293,6 +1318,7 @@ export function AIBeautyStudio({
       }
       void loadVault();
       if (!json.hdUrl && json.asset?.id) void pollForHd("hair", json.asset.id, idx);
+      void recordTryOn();
     } catch {
       updateBatchResult("hair", idx, { status: "error" });
     }
@@ -1355,6 +1381,7 @@ export function AIBeautyStudio({
 
       void loadVault();
       if (!json.hdUrl && json.asset?.id) void pollForHd("hair", json.asset.id, idx);
+      void recordTryOn();
     } catch {
       updateBatchResult("hair", idx, { status: "error" });
     }
@@ -1595,15 +1622,28 @@ export function AIBeautyStudio({
     [hairStyleOptions],
   );
 
-  // ── Paywall ──
-  if (!isPaid) {
+  // ── Paywall (quota-aware for unpaid + paid report caps) ──
+  const isStudioProTier = studioEntitlement?.tier === "studio_pro";
+  const quotaRemaining = isStudioProTier
+    ? null
+    : (studioEntitlement?.remainingGens ??
+      (isPaid ? PRODUCT_COPY.report.studioGensIncluded : PRODUCT_COPY.free.studioGensPerMonth));
+  const canUseStudio = isStudioProTier || (quotaRemaining !== null && quotaRemaining > 0);
+
+  if (!canUseStudio) {
     return (
       <div className="rounded-3xl border border-[rgba(17,24,39,0.18)] bg-[linear-gradient(145deg,rgba(255,247,251,0.98),rgba(251,231,242,0.92))] p-10 text-center">
         <Lock className="mx-auto mb-4 h-10 w-10 text-[#C8A96E]" />
-        <p className="mb-2 text-base font-semibold text-[#fffafc]">AI Beauty Studio is a premium feature</p>
+        <p className="mb-2 text-base font-semibold text-[#3D2B1F]">Free try-ons used up</p>
         <p className="text-sm text-[#9C7D5B]">
-          Unlock to try on outfits, apply makeup looks, and change your hair — all powered by AI.
+          Unlock your full report for more try-ons, or visit Studio for your monthly free looks.
         </p>
+        <Link
+          href={reportId ? `/report/${reportId}?paywall=open` : "/upload?paywall=open"}
+          className="mt-4 inline-flex rounded-full bg-[#111827] px-5 py-2 text-sm font-semibold text-white"
+        >
+          Unlock full report
+        </Link>
       </div>
     );
   }
@@ -1662,6 +1702,57 @@ export function AIBeautyStudio({
     return outfitOccasion === preset.occasion && outfitVibe === preset.vibe;
   }
 
+  async function recordTryOn() {
+    const next = tryOnCount + 1;
+    setTryOnCount(next);
+    track(next === 1 ? "first_tryon" : next === 2 ? "second_tryon" : "tryon", { count: next, mode });
+    try {
+      await fetch("/api/studio/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "try_on",
+          season: colorAnalysis?.season,
+          faceShape,
+        }),
+      });
+    } catch {
+      // non-blocking
+    }
+  }
+
+  function surpriseMe() {
+    if (mode === "hair" && HAIR_PRESETS.length > 0) {
+      const preset = HAIR_PRESETS[Math.floor(Math.random() * HAIR_PRESETS.length)];
+      applyHairPreset(preset);
+      void generateHair();
+      return;
+    }
+    if (MAKEUP_PRESETS.length > 0) {
+      const preset = MAKEUP_PRESETS[Math.floor(Math.random() * MAKEUP_PRESETS.length)];
+      applyMakeupPreset(preset);
+      setMode("makeup");
+      void generateMakeup();
+    }
+  }
+
+  const tryNextPresets: TryNextPreset[] = React.useMemo(() => {
+    if (mode === "hair") {
+      return HAIR_PRESETS.slice(0, 3).map((p) => ({
+        id: p.id,
+        label: p.label,
+        mode: "hair" as const,
+        variant: p.id,
+      }));
+    }
+    return MAKEUP_PRESETS.slice(0, 3).map((p) => ({
+      id: p.id,
+      label: p.label,
+      mode: "makeup" as const,
+      variant: p.id,
+    }));
+  }, [mode]);
+
   function applyOutfitPreset(preset: OutfitPreset) {
     setOutfitOccasion(preset.occasion);
     setOutfitVibe(preset.vibe);
@@ -1681,18 +1772,31 @@ export function AIBeautyStudio({
           </div>
           <div>
             <h2 className="text-base font-semibold text-[#3D2B1F]">AI Beauty Studio</h2>
-            <p className="text-xs text-[#9C7D5B]">Try on clothing, makeup, hair &amp; outfits - generate &amp; download instantly</p>
+            <p className="text-xs text-[#9C7D5B]">
+              {presetFirst ? "Pick a preset or tap Surprise Me — one tap to see your new look" : "Try on clothing, makeup, hair & outfits — generate & download instantly"}
+            </p>
           </div>
+          {presetFirst ? (
+            <button
+              type="button"
+              onClick={() => surpriseMe()}
+              disabled={status === "loading"}
+              className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: "#111827" }}
+            >
+              ✨ Surprise Me
+            </button>
+          ) : null}
         </div>
 
         {/* ── Mode tabs ── */}
         <div className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-1 rounded-2xl bg-[#F0E8DF] p-1">
-            {!isCanvas && <ModeTab label="👗 Clothing" active={mode === "clothing"} onClick={() => switchMode("clothing")} />}
+            {!isCanvas && isPaid && <ModeTab label="👗 Clothing" active={mode === "clothing"} onClick={() => switchMode("clothing")} />}
             <ModeTab label="💄 Makeup"   active={mode === "makeup"}   onClick={() => switchMode("makeup")} />
             <ModeTab label="💇 Hair"     active={mode === "hair"}     onClick={() => switchMode("hair")} />
-            <ModeTab label="🧥 Outfit"   active={mode === "outfit"}   onClick={() => switchMode("outfit")} />
-            {!isCanvas && <ModeTab label="🕶 AR" active={mode === "ar"} onClick={() => switchMode("ar")} />}
+            {isPaid && <ModeTab label="🧥 Outfit"   active={mode === "outfit"}   onClick={() => switchMode("outfit")} />}
+            {!isCanvas && isPaid && <ModeTab label="🕶 AR" active={mode === "ar"} onClick={() => switchMode("ar")} />}
           </div>
         </div>
 
@@ -2752,6 +2856,7 @@ export function AIBeautyStudio({
                   url={result.hdUrl || result.lowResUrl}
                   hdUrl={result.hdUrl}
                   lowResUrl={result.lowResUrl}
+                  beforeUrl={sourcePreviewUrl ?? photoUrl}
                   status={result.status}
                   onRetry={retryCurrentMode}
                   onDownload={() => { void downloadBatchResult(result, mode, idx); }}
@@ -2769,6 +2874,21 @@ export function AIBeautyStudio({
               </div>
             ))}
           </div>
+          <TryTheseNext
+            presets={tryNextPresets}
+            loading={status === "loading"}
+            onSelect={(preset) => {
+              if (preset.mode === "hair") {
+                const hairPreset = HAIR_PRESETS.find((p) => p.id === preset.variant);
+                if (hairPreset) applyHairPreset(hairPreset);
+                void generateHair();
+              } else {
+                const mkPreset = MAKEUP_PRESETS.find((p) => p.id === preset.variant);
+                if (mkPreset) applyMakeupPreset(mkPreset);
+                void generateMakeup();
+              }
+            }}
+          />
           {selectedBatchIndexes[mode].length > 1 && (
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {selectedBatchIndexes[mode].map((idx) => {
@@ -2798,6 +2918,7 @@ export function AIBeautyStudio({
               <button
                 className="px-4 py-2 rounded-full bg-iris text-white font-medium text-xs transition-all hover:opacity-90"
                 type="button"
+                onClick={() => setBatchCompareOpen(true)}
               >
                 Compare Selected
               </button>
@@ -2888,6 +3009,41 @@ export function AIBeautyStudio({
           ))}
         </div>
       </div>
+
+      {batchCompareOpen && selectedBatchIndexes[mode].length > 1 ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(17,24,39,0.55)" }}
+          onClick={() => setBatchCompareOpen(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm font-semibold text-[#3D2B1F]">Compare selected variations</p>
+              <button type="button" onClick={() => setBatchCompareOpen(false)} className="rounded-full p-1 hover:opacity-70">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {selectedBatchIndexes[mode].map((idx) => {
+                const item = batchResults[mode][idx];
+                const url = item?.lowResUrl ?? item?.hdUrl;
+                if (!url) return null;
+                return (
+                  <div key={idx} className="overflow-hidden rounded-2xl border" style={{ borderColor: "#E8DDD0" }}>
+                    <div className="relative aspect-[3/4]">
+                      <Image src={url} alt={`Variation ${idx + 1}`} fill unoptimized className="object-cover" />
+                    </div>
+                    <p className="px-3 py-2 text-xs font-medium" style={{ color: "#9C7D5B" }}>Variation {idx + 1}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

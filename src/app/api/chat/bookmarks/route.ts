@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 
 const MAX_BOOKMARK_CONTENT_CHARS = 5000;
@@ -14,23 +15,29 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   try {
     env.assertServer();
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const reportId = req.nextUrl.searchParams.get("reportId");
     if (!reportId) return NextResponse.json({ error: "reportId required" }, { status: 400 });
     if (!UUID_RE.test(reportId)) return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
 
+    const admin = createSupabaseAdminClient();
+
     // Verify ownership
-    const { data: report } = await supabase
-      .from("reports").select("id").eq("id", reportId).eq("user_id", user.id).single();
+    const { data: report } = await admin
+      .from("reports")
+      .select("id")
+      .eq("id", reportId)
+      .eq("user_id", user.id)
+      .single();
     if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
-    const { data } = await supabase
+    const { data } = await admin
       .from("chat_bookmarks")
       .select("id, content, created_at")
       .eq("report_id", reportId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     return NextResponse.json({ bookmarks: data ?? [] });
@@ -48,8 +55,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     env.assertServer();
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = (await req.json()) as { reportId?: string; content?: string };
@@ -62,12 +68,18 @@ export async function POST(req: NextRequest) {
 
     const trimmedContent = body.content.trim().slice(0, MAX_BOOKMARK_CONTENT_CHARS);
 
+    const admin = createSupabaseAdminClient();
+
     // Verify ownership
-    const { data: report } = await supabase
-      .from("reports").select("id").eq("id", body.reportId).eq("user_id", user.id).single();
+    const { data: report } = await admin
+      .from("reports")
+      .select("id")
+      .eq("id", body.reportId)
+      .eq("user_id", user.id)
+      .single();
     if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("chat_bookmarks")
       .insert({ report_id: body.reportId, user_id: user.id, content: trimmedContent })
       .select("id, content, created_at")

@@ -79,8 +79,8 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
     setError(null);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-    if (!skinContext) setShowQuestionnaire(true);
-  }, [skinContext]);
+    // Skin questionnaire deferred until user unlocks full analysis (studio-first funnel).
+  }, []);
 
   const onDropRejected = React.useCallback((rejections: FileRejection[]) => {
     if (rejections.length > 1) {

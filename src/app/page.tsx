@@ -60,23 +60,20 @@ const FEATURES = [
 
 const STEPS = [
   {
-    title: "Upload a clear selfie",
-    description: "Use a front-facing photo in natural light for the most accurate analysis.",
+    title: "Try a look in Studio",
+    description: "Upload a selfie and preview makeup or hair instantly — no account required.",
   },
   {
-    title: "AI maps your features",
-    description:
-      "Face shape, season, undertone, and key style traits are analyzed in under a minute.",
+    title: "Share your moment",
+    description: "Drag to compare before and after, then share your favourite look with friends.",
   },
   {
-    title: "Explore your Style Guide",
-    description:
-      "Browse Do vs Avoid rules for tops, bottoms, and necklines — with reference images for every recommendation.",
+    title: "Unlock your Style DNA",
+    description: "Each try-on reveals more about your color season and face shape.",
   },
   {
-    title: "Try styles and get your report",
-    description:
-      "Test makeup, hairstyles, and clothing virtually, then unlock your full personalized blueprint.",
+    title: "Get your full report",
+    description: "When you're ready, unlock skin routine, hairstyle guide, and personalized shopping picks.",
   },
 ];
 
@@ -123,7 +120,7 @@ const FAQS: FAQItem[] = [
     id: "free-preview",
     question: "What is included in free preview?",
     answer:
-      "The free preview includes core face-shape insights. Paid plans unlock full beauty and style recommendations.",
+      "Start in AI Studio with 3 free try-ons per month — no account required. You get face-shape insights and progressive unlock teasers; paid plans unlock your full beauty analysis and Style DNA.",
   },
   {
     id: "style-guide",
@@ -161,17 +158,17 @@ const PLANS: {
     name: "Free Preview",
     price: "₹0",
     note: "No card required",
-    cta: "Try for free",
-    href: "/upload",
+    cta: "Try a look free",
+    href: "/studio",
     featured: false,
-    items: ["Face shape overview", "Starter style summary", "Shareable report link"],
+    items: ["3 free try-ons / month", "Face shape overview", "Starter style summary", "No card required"],
   },
   {
-    name: "Complete Analysis",
+    name: "Full Report",
     price: "₹299",
     originalPrice: "₹599",
     note: "One-time payment",
-    cta: "Buy Complete Analysis — ₹299",
+    cta: "Unlock Full Report — ₹299",
     href: "/upload?intent=purchase",
     featured: true,
     items: [
@@ -189,7 +186,7 @@ const PLANS: {
     price: "₹999/mo",
     note: "Cancel anytime",
     cta: "Start Studio Pro — ₹999/mo",
-    href: "/upload?intent=studio",
+    href: "/studio",
     featured: false,
     items: [
       "Everything in Full Report",
@@ -429,8 +426,8 @@ export default function HomePage() {
             </p>
             <div className="mt-8">
               <Button asChild size="lg" variant="accent" className="group cta-shimmer">
-                <Link href="/upload">
-                  Try the Makeup Studio
+                <Link href="/studio">
+                  Try a Look Free
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
                 </Link>
               </Button>

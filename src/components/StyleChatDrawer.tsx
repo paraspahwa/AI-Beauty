@@ -13,6 +13,8 @@ type Message = { role: "user" | "assistant"; content: string };
 interface Props {
   reportId: string;
   report?: Partial<CompiledReport>;
+  /** Limited context chat for unpaid report owners. */
+  previewMode?: boolean;
 }
 
 // ── Category definitions ────────────────────────────────────────────────────
@@ -213,10 +215,16 @@ declare global {
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
-export function StyleChatDrawer({ reportId, report }: Props) {
+const PREVIEW_GREETING: Message = {
+  role: "assistant",
+  content:
+    "Hi! I can answer questions about your face shape and color season preview. Unlock your full report for skin, hair, glasses, and outfit guidance.",
+};
+
+export function StyleChatDrawer({ reportId, report, previewMode = false }: Props) {
   const searchParams = useSearchParams();
   const [open, setOpen]         = React.useState(() => searchParams.get("chat") === "1");
-  const [messages, setMessages] = React.useState<Message[]>([GREETING]);
+  const [messages, setMessages] = React.useState<Message[]>([previewMode ? PREVIEW_GREETING : GREETING]);
   const [input, setInput]       = React.useState("");
   const [loading, setLoading]   = React.useState(false);
   const [historyLoaded, setHistoryLoaded] = React.useState(false);

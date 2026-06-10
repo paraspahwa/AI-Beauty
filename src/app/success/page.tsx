@@ -33,7 +33,7 @@ function SuccessContent() {
   const reportId = searchParams.get("reportId");
   const purchaseType = searchParams.get("type");
   const isStudioPro = purchaseType === "studio_pro";
-  const reportHref = isStudioPro ? "/dashboard" : (reportId ? `/report/${reportId}` : "/dashboard");
+  const reportHref = isStudioPro ? "/dashboard" : (reportId ? `/report/${reportId}?tab=try-shop` : "/dashboard");
   const perks = isStudioPro ? STUDIO_PERKS : PERKS;
 
   useEffect(() => {

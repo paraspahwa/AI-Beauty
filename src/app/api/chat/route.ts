@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { getOpenAI } from "@/lib/ai/openai";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
+import { redactColorAnalysisForPreview } from "@/lib/entitlement";
 import { consumeIdentityWindow } from "@/lib/rate-limit";
 import type { CompiledReport } from "@/types/report";
 
@@ -134,16 +136,16 @@ function buildReportContext(report: Partial<CompiledReport>): string {
 export async function GET(req: NextRequest) {
   try {
     env.assertServer();
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const admin = createSupabaseAdminClient();
     const reportId = req.nextUrl.searchParams.get("reportId");
     if (!reportId) return NextResponse.json({ error: "reportId is required" }, { status: 400 });
     if (!UUID_RE.test(reportId)) return NextResponse.json({ error: "Invalid reportId" }, { status: 400 });
 
     // Verify ownership
-    const { data: report } = await supabase
+    const { data: report } = await admin
       .from("reports")
       .select("id")
       .eq("id", reportId)
@@ -151,7 +153,7 @@ export async function GET(req: NextRequest) {
       .single();
     if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
-    const { data: rows } = await supabase
+    const { data: rows } = await admin
       .from("chat_messages")
       .select("role, content, created_at")
       .eq("report_id", reportId)
@@ -183,8 +185,7 @@ export async function POST(req: NextRequest) {
   try {
     env.assertServer();
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const admin = createSupabaseAdminClient();
@@ -253,7 +254,9 @@ export async function POST(req: NextRequest) {
     const isPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
     const contextRow: Partial<CompiledReport> = {
       faceShape:     row.face_shape      ?? undefined,
-      colorAnalysis: row.color_analysis   ?? undefined,
+      colorAnalysis: isPremium
+        ? row.color_analysis ?? undefined
+        : redactColorAnalysisForPreview(row.color_analysis),
       skinAnalysis:  isPremium ? row.skin_analysis ?? undefined : undefined,
       features:      isPremium ? row.features      ?? undefined : undefined,
       glasses:       isPremium ? row.glasses       ?? undefined : undefined,

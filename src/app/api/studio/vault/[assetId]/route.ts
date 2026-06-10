@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ assetId: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ assetId: string }> }) {
   try {
     const { assetId } = await params;
     if (!assetId) {
       return NextResponse.json({ error: "Missing assetId" }, { status: 400 });
     }
 
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

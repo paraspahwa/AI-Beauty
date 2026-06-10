@@ -18,6 +18,7 @@ type StylePrefsRow = {
 type LatestReportData = {
   color_analysis: ColorAnalysisResult | null;
   skin_analysis: SkinAnalysisResult | null;
+  is_paid?: boolean;
 };
 
 export default async function WardrobeCapsulePage() {
@@ -36,7 +37,7 @@ export default async function WardrobeCapsulePage() {
       .maybeSingle(),
     admin
       .from("reports")
-      .select("color_analysis, skin_analysis")
+      .select("color_analysis, skin_analysis, is_paid")
       .eq("user_id", user.id)
       .eq("status", "ready")
       .order("created_at", { ascending: false })
@@ -46,6 +47,7 @@ export default async function WardrobeCapsulePage() {
 
   const prefs = prefsRow as StylePrefsRow | null;
   const latest = latestRow as LatestReportData | null;
+  const hasPaidReport = !!latest?.is_paid;
 
   // Extract cached capsule from prefs JSONB for SSR pre-load (avoids a client round-trip)
   const initialCapsule = (prefs?.prefs?.generatedCapsule as GeneratedCapsule | undefined) ?? null;
@@ -91,6 +93,24 @@ export default async function WardrobeCapsulePage() {
             style={{ background: "#111827", color: "#3D2B1F" }}
           >
             Get my report
+          </Link>
+        </div>
+      ) : !hasPaidReport ? (
+        <div
+          className="flex flex-col items-center justify-center gap-4 py-24 rounded-3xl text-center"
+          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))", border: "1px dashed rgba(17,24,39,0.20)" }}
+        >
+          <ShoppingBag className="h-14 w-14 opacity-20" style={{ color: "#111827" }} />
+          <h2 className="font-sans text-2xl text-ink">Unlock your report for wardrobe capsule</h2>
+          <p className="text-sm max-w-xs" style={{ color: "rgba(17,24,39,0.55)" }}>
+            Your seasonal capsule is included with the full beauty analysis.
+          </p>
+          <Link
+            href="/upload"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold transition-all hover:opacity-90"
+            style={{ background: "#111827", color: "#fff" }}
+          >
+            Unlock full report
           </Link>
         </div>
       ) : (

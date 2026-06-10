@@ -1,16 +1,29 @@
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { mobileTheme as t } from "@/lib/theme";
 
-export type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
+export type ReportTab = "about-you" | "your-look" | "try-shop";
 
 export const REPORT_TABS: { key: ReportTab; label: string }[] = [
-  { key: "face", label: "Face" },
-  { key: "skin", label: "Skin" },
-  { key: "hair", label: "Hair" },
-  { key: "glasses", label: "Glasses" },
-  { key: "studio", label: "Studio" },
-  { key: "shop", label: "Shop" },
+  { key: "about-you", label: "About You" },
+  { key: "your-look", label: "Your Look" },
+  { key: "try-shop", label: "Try & Shop" },
 ];
+
+const LEGACY_MAP: Record<string, ReportTab> = {
+  face: "about-you",
+  skin: "about-you",
+  hair: "your-look",
+  glasses: "your-look",
+  studio: "try-shop",
+  shop: "try-shop",
+};
+
+export function normalizeReportTab(tab: string | null | undefined): ReportTab {
+  if (!tab) return "about-you";
+  if (tab in LEGACY_MAP) return LEGACY_MAP[tab];
+  if (REPORT_TABS.some((t) => t.key === tab)) return tab as ReportTab;
+  return "about-you";
+}
 
 export function ReportTabs({
   activeTab,
@@ -35,10 +48,7 @@ export function ReportTabs({
 }
 
 const styles = StyleSheet.create({
-  tabRow: {
-    gap: 8,
-    paddingRight: 8,
-  },
+  tabRow: { gap: 8, paddingRight: 8 },
   tabChip: {
     borderRadius: 999,
     backgroundColor: t.color.surface,
@@ -47,15 +57,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  tabChipActive: {
-    backgroundColor: t.color.text,
-    borderColor: t.color.text,
-  },
-  tabChipLabel: {
-    color: t.color.textSoft,
-    fontWeight: "700",
-  },
-  tabChipLabelActive: {
-    color: t.color.surface,
-  },
+  tabChipActive: { backgroundColor: t.color.text, borderColor: t.color.text },
+  tabChipLabel: { color: t.color.textSoft, fontWeight: "700" },
+  tabChipLabelActive: { color: t.color.surface },
 });

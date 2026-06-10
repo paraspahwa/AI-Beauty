@@ -12,7 +12,9 @@ import { FaceSection } from "@/components/report/FaceSection";
 import { GlassesSection } from "@/components/report/GlassesSection";
 import { HairSection } from "@/components/report/HairSection";
 import { ReportHeader } from "@/components/report/ReportHeader";
-import { ReportTabs, type ReportTab } from "@/components/report/ReportTabs";
+import { ReportTabs, normalizeReportTab, type ReportTab } from "@/components/report/ReportTabs";
+import { FreePreviewTeaser } from "@/components/FreePreviewTeaser";
+import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
 import { ShopSection } from "@/components/report/ShopSection";
 import { SkinSection } from "@/components/report/SkinSection";
 import { StudioSection } from "@/components/report/StudioSection";
@@ -34,13 +36,8 @@ function parseCheckoutFlow(value: string | string[] | undefined): CheckoutFlow |
 
 function parseReportTab(value: string | string[] | undefined): ReportTab | null {
   const candidate = Array.isArray(value) ? value[0] : value;
-  if (candidate === "face") return "face";
-  if (candidate === "skin") return "skin";
-  if (candidate === "glasses") return "glasses";
-  if (candidate === "hair") return "hair";
-  if (candidate === "studio") return "studio";
-  if (candidate === "shop") return "shop";
-  return null;
+  if (!candidate) return null;
+  return normalizeReportTab(candidate);
 }
 
 function getCheckoutPendingText(flow: CheckoutFlow): string {
@@ -92,8 +89,9 @@ function getLockedCopy(intent: ReportIntent | null, title: string): string {
 }
 
 function getDefaultTab(report: MobileReport, intent: ReportIntent | null): ReportTab {
-  if (intent === "studio_pro" && report.isPaid) return "studio";
-  return "face";
+  if (intent === "studio_pro" && report.isPaid) return "try-shop";
+  if (!report.isPaid) return "try-shop";
+  return "about-you";
 }
 
 export default function ReportScreen() {
@@ -108,7 +106,7 @@ export default function ReportScreen() {
   const [checkoutFlow, setCheckoutFlow] = useState<CheckoutFlow | null>(null);
   const [savedVisuals, setSavedVisuals] = useState<SavedVisual[]>([]);
   const [previewVisual, setPreviewVisual] = useState<PreviewItem | null>(null);
-  const [activeTab, setActiveTab] = useState<ReportTab>("face");
+  const [activeTab, setActiveTab] = useState<ReportTab>("about-you");
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [showExportSheet, setShowExportSheet] = useState(false);
@@ -191,8 +189,8 @@ export default function ReportScreen() {
           setShareToken(next.shareToken ?? null);
           setActiveTab((current) => {
             if (requestedTab) return requestedTab;
-            if (compareModeRequested) return next.isPaid ? "studio" : "face";
-            return current === "face" ? getDefaultTab(next, preferredIntent) : current;
+            if (compareModeRequested) return "try-shop";
+            return current === "about-you" ? getDefaultTab(next, preferredIntent) : current;
           });
         }
       } catch (err) {
@@ -507,106 +505,123 @@ export default function ReportScreen() {
 
         <ReportTabs activeTab={activeTab} onChange={setActiveTab} />
 
-        {activeTab === "face" ? (
-          <FaceSection report={report} faceLandmarkLabels={faceLandmarkLabels} onPreview={setPreviewVisual} />
+        {activeTab === "about-you" ? (
+          <>
+            <FaceSection report={report} faceLandmarkLabels={faceLandmarkLabels} onPreview={setPreviewVisual} previewOnly={!report.isPaid} />
+            {!report.isPaid ? (
+              <>
+                <UnlockTeaserBanner
+                  hints={{
+                    season: report.colorAnalysis?.season,
+                    faceShape: report.faceShape?.shape,
+                  }}
+                />
+                <FreePreviewTeaser colorAnalysis={report.colorAnalysis} summary={report.summary} />
+              </>
+            ) : null}
+            <SkinSection
+              report={report}
+              lockedBody={getLockedCopy(preferredIntent, "Skin analysis")}
+              preferredIntent={preferredIntent}
+              unlocking={unlocking}
+              awaitingBrowserCheckout={awaitingBrowserCheckout}
+              checkoutFlow={checkoutFlow}
+              checkoutStatus={checkoutStatus}
+              onUnlock={handleUnlock}
+              onStudioPro={handleStudioPro}
+              onRefresh={() => void refreshReport()}
+            />
+          </>
         ) : null}
 
-        {activeTab === "skin" ? (
-          <SkinSection
-            report={report}
-            lockedBody={getLockedCopy(preferredIntent, "Skin analysis")}
-            preferredIntent={preferredIntent}
-            unlocking={unlocking}
-            awaitingBrowserCheckout={awaitingBrowserCheckout}
-            checkoutFlow={checkoutFlow}
-            checkoutStatus={checkoutStatus}
-            onUnlock={handleUnlock}
-            onStudioPro={handleStudioPro}
-            onRefresh={() => void refreshReport()}
-          />
+        {activeTab === "your-look" ? (
+          <>
+            <HairSection
+              report={report}
+              lockedBody={getLockedCopy(preferredIntent, "Hairstyle guidance")}
+              preferredIntent={preferredIntent}
+              unlocking={unlocking}
+              awaitingBrowserCheckout={awaitingBrowserCheckout}
+              checkoutFlow={checkoutFlow}
+              checkoutStatus={checkoutStatus}
+              onUnlock={handleUnlock}
+              onStudioPro={handleStudioPro}
+              onRefresh={() => void refreshReport()}
+              onOpenStudio={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+              onPreview={setPreviewVisual}
+            />
+            <GlassesSection
+              report={report}
+              lockedBody={getLockedCopy(preferredIntent, "Glasses recommendations")}
+              preferredIntent={preferredIntent}
+              unlocking={unlocking}
+              awaitingBrowserCheckout={awaitingBrowserCheckout}
+              checkoutFlow={checkoutFlow}
+              checkoutStatus={checkoutStatus}
+              onUnlock={handleUnlock}
+              onStudioPro={handleStudioPro}
+              onRefresh={() => void refreshReport()}
+              onOpenStudio={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+              onPreview={setPreviewVisual}
+            />
+          </>
         ) : null}
 
-        {activeTab === "glasses" ? (
-          <GlassesSection
-            report={report}
-            lockedBody={getLockedCopy(preferredIntent, "Glasses recommendations")}
-            preferredIntent={preferredIntent}
-            unlocking={unlocking}
-            awaitingBrowserCheckout={awaitingBrowserCheckout}
-            checkoutFlow={checkoutFlow}
-            checkoutStatus={checkoutStatus}
-            onUnlock={handleUnlock}
-            onStudioPro={handleStudioPro}
-            onRefresh={() => void refreshReport()}
-            onOpenStudio={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-            onPreview={setPreviewVisual}
-          />
+        {activeTab === "try-shop" ? (
+          <>
+            <StudioSection
+              report={report}
+              savedVisuals={savedVisuals}
+              lockedBody={getLockedCopy(preferredIntent, "AI Studio")}
+              preferredIntent={preferredIntent}
+              unlocking={unlocking}
+              awaitingBrowserCheckout={awaitingBrowserCheckout}
+              checkoutFlow={checkoutFlow}
+              checkoutStatus={checkoutStatus}
+              onUnlock={handleUnlock}
+              onStudioPro={handleStudioPro}
+              onRefresh={() => void refreshReport()}
+              onOpenMakeupStudio={() => router.push({ pathname: "/studio/makeup/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+              onOpenHairStudio={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+              onOpenGlassesStudio={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
+              onOpenOutfitStudio={() => router.push({ pathname: "/studio/outfits/[id]", params: { id: report.id } })}
+              onRemoveSavedVisual={(visual) => void handleRemoveVisual(visual)}
+              onPreview={setPreviewVisual}
+              formatSavedVisualTime={formatSavedVisualTime}
+            />
+            <ShopSection
+              report={report}
+              lockedBody={getLockedCopy(preferredIntent, "Shopping and styling guidance")}
+              preferredIntent={preferredIntent}
+              unlocking={unlocking}
+              awaitingBrowserCheckout={awaitingBrowserCheckout}
+              checkoutFlow={checkoutFlow}
+              checkoutStatus={checkoutStatus}
+              shareLoading={shareLoading}
+              shareToken={shareToken}
+              onUnlock={handleUnlock}
+              onStudioPro={handleStudioPro}
+              onRefresh={() => void refreshReport()}
+              onOpenColorStudio={() => router.push({ pathname: "/studio/colors/[id]", params: { id: report.id } })}
+              onOpenChat={() => router.push({ pathname: "/chat/[id]", params: { id: report.id } })}
+              onShare={() => void handleShareReport()}
+              onRevokeShare={() => void handleRevokeShare()}
+              onOpenPdf={() => void handlePdfHandoff()}
+              onPreview={setPreviewVisual}
+            />
+          </>
         ) : null}
 
-        {activeTab === "hair" ? (
-          <HairSection
-            report={report}
-            lockedBody={getLockedCopy(preferredIntent, "Hairstyle guidance")}
-            preferredIntent={preferredIntent}
-            unlocking={unlocking}
-            awaitingBrowserCheckout={awaitingBrowserCheckout}
-            checkoutFlow={checkoutFlow}
-            checkoutStatus={checkoutStatus}
-            onUnlock={handleUnlock}
-            onStudioPro={handleStudioPro}
-            onRefresh={() => void refreshReport()}
-            onOpenStudio={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-            onPreview={setPreviewVisual}
-          />
+        {!report.isPaid ? (
+          <View style={styles.upgradePill}>
+            <Text style={styles.upgradePillText}>Unlock your complete analysis</Text>
+            <Pressable onPress={preferredIntent === "studio_pro" ? handleStudioPro : handleUnlock} style={styles.upgradePillButton}>
+              <Text style={styles.upgradePillButtonLabel}>Upgrade</Text>
+            </Pressable>
+          </View>
         ) : null}
 
-        {activeTab === "studio" ? (
-          <StudioSection
-            report={report}
-            savedVisuals={savedVisuals}
-            lockedBody={getLockedCopy(preferredIntent, "AI Studio")}
-            preferredIntent={preferredIntent}
-            unlocking={unlocking}
-            awaitingBrowserCheckout={awaitingBrowserCheckout}
-            checkoutFlow={checkoutFlow}
-            checkoutStatus={checkoutStatus}
-            onUnlock={handleUnlock}
-            onStudioPro={handleStudioPro}
-            onRefresh={() => void refreshReport()}
-            onOpenMakeupStudio={() => router.push({ pathname: "/studio/makeup/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-            onOpenHairStudio={() => router.push({ pathname: "/studio/hair/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-            onOpenGlassesStudio={() => router.push({ pathname: "/studio/glasses/[id]", params: { id: report.id, imageUrl: report.imageUrl } })}
-            onOpenOutfitStudio={() => router.push({ pathname: "/studio/outfits/[id]", params: { id: report.id } })}
-            onRemoveSavedVisual={(visual) => void handleRemoveVisual(visual)}
-            onPreview={setPreviewVisual}
-            formatSavedVisualTime={formatSavedVisualTime}
-          />
-        ) : null}
-
-        {activeTab === "shop" ? (
-          <ShopSection
-            report={report}
-            lockedBody={getLockedCopy(preferredIntent, "Shopping and styling guidance")}
-            preferredIntent={preferredIntent}
-            unlocking={unlocking}
-            awaitingBrowserCheckout={awaitingBrowserCheckout}
-            checkoutFlow={checkoutFlow}
-            checkoutStatus={checkoutStatus}
-            shareLoading={shareLoading}
-            shareToken={shareToken}
-            onUnlock={handleUnlock}
-            onStudioPro={handleStudioPro}
-            onRefresh={() => void refreshReport()}
-            onOpenColorStudio={() => router.push({ pathname: "/studio/colors/[id]", params: { id: report.id } })}
-            onOpenChat={() => router.push({ pathname: "/chat/[id]", params: { id: report.id } })}
-            onShare={() => void handleShareReport()}
-            onRevokeShare={() => void handleRevokeShare()}
-            onOpenPdf={() => void handlePdfHandoff()}
-            onPreview={setPreviewVisual}
-          />
-        ) : null}
-
-        {!report.isPaid && activeTab === "face" ? (
+        {!report.isPaid && activeTab !== "try-shop" ? (
           <Card title="Unlock the rest of your report">
             <Text style={styles.mutedText}>You can already see your free preview. Unlock only this report with a one-time payment, or choose Studio Pro for subscription access and monthly generations.</Text>
             <Pressable
@@ -729,6 +744,34 @@ const styles = StyleSheet.create({
   unlockButtonLabel: {
     color: t.color.surface,
     fontWeight: "700",
+  },
+  upgradePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    borderRadius: 999,
+    backgroundColor: t.color.text,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  upgradePillText: {
+    flex: 1,
+    color: t.color.surface,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  upgradePillButton: {
+    borderRadius: 999,
+    backgroundColor: t.color.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  upgradePillButtonLabel: {
+    color: t.color.text,
+    fontWeight: "800",
+    fontSize: 13,
   },
   chatLaunchButton: {
     marginTop: 4,

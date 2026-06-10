@@ -922,7 +922,7 @@ export default function StudioVaultTabScreen() {
 
   const renderHeader = () => (
     <View style={styles.listHeader}>
-      <Text style={styles.title}>Studio Vault</Text>
+      <Text style={styles.title}>My Looks</Text>
       <Text style={styles.subtitle}>Browse generated looks across report and canvas contexts.</Text>
       <Pressable onPress={() => router.push("/studio/canvas/create")} style={styles.canvasEntryButton}>
         <Text style={styles.canvasEntryButtonLabel}>Start standalone canvas</Text>

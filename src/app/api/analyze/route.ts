@@ -4,6 +4,7 @@ import { createHash } from "crypto";
 import type { PipelineStageEvent } from "@/lib/ai/pipeline";
 import { persistStylePrefs } from "@/lib/ai/memory";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { consumeIdentityWindow } from "@/lib/rate-limit";
 
@@ -223,11 +224,10 @@ function isTrustedAnalyzeRequestOrigin(req: NextRequest): boolean {
   return true;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     env.assertServer();
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const eta = await getCachedEta();
@@ -297,13 +297,13 @@ export async function POST(req: NextRequest) {
           try {
             env.assertRekognition();
 
-            const supabase = await createSupabaseServerClient();
-            const { data: { user } } = await supabase.auth.getUser();
+            const user = await getRequestUser(req);
             if (!user) {
               emit({ type: "failed", message: "Unauthorized" });
               controller.close();
               return;
             }
+            const supabase = await createSupabaseServerClient();
 
             const form = await req.formData();
             const file = form.get("image");
@@ -562,10 +562,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const supabase = await createSupabaseServerClient();
     const form = await req.formData();
     const file = form.get("image");
     if (!(file instanceof Blob)) {

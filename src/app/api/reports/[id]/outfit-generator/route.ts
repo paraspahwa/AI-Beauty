@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
+import { assertReportStudioAccess, studioAccessToResponse } from "@/lib/studio-access";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -229,8 +231,7 @@ export async function POST(
     const { id } = await params;
     if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = (await req.json().catch(() => ({}))) as {
@@ -260,10 +261,9 @@ export async function POST(
     if (row.user_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     if (row.status !== "ready") return NextResponse.json({ error: "Report not ready" }, { status: 409 });
 
-    const { data: tierData } = await admin.rpc("get_user_plan_tier", { p_user: user.id });
-    const planTier = (tierData as string | null) ?? "free";
-    if (planTier !== "studio_pro" && !row.is_paid) {
-      return NextResponse.json({ error: "Payment required" }, { status: 402 });
+    const access = await assertReportStudioAccess(admin, user.id, !!row.is_paid, { paidOnly: true, reportId: id });
+    if (!access.allowed) {
+      return NextResponse.json(studioAccessToResponse(access), { status: access.status });
     }
 
     const colorAnalysis = (row.color_analysis as {
@@ -337,8 +337,7 @@ export async function GET(
     const { id } = await params;
     if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const admin = createSupabaseAdminClient();
@@ -371,8 +370,7 @@ export async function PATCH(
     const { id } = await params;
     if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = (await req.json().catch(() => ({}))) as {

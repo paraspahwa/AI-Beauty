@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
-import { generateMakeupPreview, generateMakeupTransferPreview } from "@/lib/api";
+import { generateMakeupPreview, generateMakeupTransferPreview, postStudioProgress } from "@/lib/api";
 import { clearStudioHistory, type StudioHistoryItem, loadStudioHistory, pushStudioHistoryItem, saveVisualForReport } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
 
@@ -169,20 +169,21 @@ export default function MobileMakeupStudioScreen() {
     }
   }
 
-  async function handleGenerateCustom() {
+  async function handleGenerateCustom(styleOverride?: StyleOption) {
+    const style = styleOverride ?? selectedStyle;
     try {
       if (!params.id) throw new Error("Missing report id");
       void Haptics.selectionAsync();
       setLoading(true);
       const result = await generateMakeupPreview(params.id, {
-        style: selectedStyle.style,
+        style: style.style,
         intensity: selectedIntensity,
-        lipColor: selectedStyle.lipColor,
-        eyeshadow: selectedStyle.eyeshadow,
-        blushColor: selectedStyle.blushColor,
-        blushIntensity: selectedStyle.blushIntensity,
-        eyeliner: selectedStyle.eyeliner,
-        contour: selectedStyle.contour,
+        lipColor: style.lipColor,
+        eyeshadow: style.eyeshadow,
+        blushColor: style.blushColor,
+        blushIntensity: style.blushIntensity,
+        eyeliner: style.eyeliner,
+        contour: style.contour,
       });
       const generatedUrl = result.hdUrl ?? result.lowResUrl;
       setResultUrl(generatedUrl);
@@ -195,12 +196,13 @@ export default function MobileMakeupStudioScreen() {
           id: historyId,
           imageUrl: generatedUrl,
           createdAt,
-          label: `${selectedStyle.label} (${selectedIntensity})`,
+          label: `${style.label} (${selectedIntensity})`,
         });
         setRecentLooks(next);
         setSelectedHistoryId(historyId);
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void postStudioProgress("try_on").catch(() => undefined);
     } catch (err) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Makeup preview", String(err));
@@ -240,6 +242,7 @@ export default function MobileMakeupStudioScreen() {
         setSelectedHistoryId(historyId);
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void postStudioProgress("try_on").catch(() => undefined);
     } catch (err) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Makeup transfer", String(err));
@@ -355,6 +358,17 @@ export default function MobileMakeupStudioScreen() {
               </View>
             </View>
 
+            <Pressable
+              onPress={() => {
+                const option = STYLE_OPTIONS[Math.floor(Math.random() * STYLE_OPTIONS.length)];
+                setSelectedStyle(option);
+                void handleGenerateCustom(option);
+              }}
+              disabled={loading}
+              style={[styles.generateButtonCompact, loading ? styles.generateButtonDisabled : null]}
+            >
+              <Text style={styles.generateButtonLabel}>Surprise Me</Text>
+            </Pressable>
             <Pressable onPress={() => void handleGenerateCustom()} disabled={loading} style={[styles.generateButton, loading ? styles.generateButtonDisabled : null]}>
               <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate preview"}</Text>
             </Pressable>

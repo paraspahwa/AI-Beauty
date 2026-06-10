@@ -1,4 +1,5 @@
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -30,8 +31,7 @@ const MAX_LIMIT = 100;
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
     
     if (!user) {
       return NextResponse.json(
@@ -49,8 +49,10 @@ export async function GET(request: NextRequest) {
     const offset = Number.isFinite(rawOffset) ? Math.max(0, Math.floor(rawOffset)) : 0;
     const filter = rawFilter === "canvas" || rawFilter === "report" ? rawFilter : "all";
 
+    const admin = createSupabaseAdminClient();
+
     // Build query
-    let query = supabase
+    let query = admin
       .from("generated_assets")
       .select(
         "id, studio_canvas_id, report_id, tool, variant, result_image_path, created_at, meta",
@@ -78,7 +80,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Sign URLs for each asset
-    const admin = createSupabaseAdminClient();
     const signedAssets = await Promise.all(
       (assets ?? []).map(async (asset) => {
         const { data: signed } = await admin.storage

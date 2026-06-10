@@ -4,6 +4,7 @@ import { env } from "@/lib/env";
 import { getCanvasQuota } from "@/lib/entitlement";
 import { detectFaceDetails } from "@/lib/ai/rekognition";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
+import { CanvasStudio } from "@/components/studio/CanvasStudio";
 import { AIBeautyStudio } from "@/components/report/AIBeautyStudio";
 import { CanvasShareButton } from "@/components/studio/CanvasShareButton";
 import type { StudioEntitlement } from "@/types/report";
@@ -17,10 +18,14 @@ import styles from "../studio.module.css";
  */
 export default async function StudioSessionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ canvasId: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { canvasId } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const advanced = sp.advanced === "1" || sp.advanced === "true";
 
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -130,16 +135,32 @@ export default async function StudioSessionPage({
           </div>
         )}
 
-        {/* Try-On Component */}
-        <AIBeautyStudio
-          contextType="canvas"
-          contextId={canvasId}
-          photoUrl={signed?.signedUrl ?? ""}
-          isPaid={true}
-          detectedGender={detectedGender}
-          studioEntitlement={studioEntitlement}
-          initialSourceAssetId={null}
-        />
+        {advanced ? (
+          <AIBeautyStudio
+            contextType="canvas"
+            contextId={canvasId}
+            photoUrl={signed?.signedUrl ?? ""}
+            isPaid={true}
+            detectedGender={detectedGender}
+            studioEntitlement={studioEntitlement}
+            initialSourceAssetId={null}
+          />
+        ) : (
+          <>
+            <CanvasStudio
+              canvasId={canvasId}
+              photoUrl={signed?.signedUrl ?? ""}
+              detectedGender={detectedGender}
+              studioEntitlement={studioEntitlement}
+              initialSourceAssetId={null}
+            />
+            <p className="mt-6 text-center text-sm text-ink-stone">
+              <a href={`/studio/${canvasId}?advanced=1`} className="underline hover:no-underline">
+                Open advanced studio
+              </a>
+            </p>
+          </>
+        )}
       </div>
     </main>
   );

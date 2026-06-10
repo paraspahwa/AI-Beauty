@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VisitorChatWidget } from "@/components/VisitorChatWidget";
+import { GuestProgressMerge } from "@/components/GuestProgressMerge";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
@@ -112,6 +113,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <Navbar />
+        <GuestProgressMerge />
         <div id="main-content" className="flex-1">{children}</div>
         <VisitorChatWidget />
         <Footer />

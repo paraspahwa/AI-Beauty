@@ -1,4 +1,5 @@
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { getCanvasQuota } from "@/lib/entitlement";
 import { compressForAI } from "@/lib/ai/image";
@@ -21,8 +22,7 @@ const ALLOWED_UPLOAD_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
     
     if (!user) {
       return NextResponse.json(
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create studio_canvases row
-    const { data: canvas, error: dbErr } = await supabase
+    const { data: canvas, error: dbErr } = await admin
       .from("studio_canvases")
       .insert({
         id: canvasId,

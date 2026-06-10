@@ -35,7 +35,11 @@ export default async function ProgressPage() {
     .eq("status", "ready")
     .order("created_at", { ascending: true });
 
-  const reports = (rows ?? []) as ProgressReport[];
+  const reports = ((rows ?? []) as ProgressReport[]).map((row) => ({
+    ...row,
+    skin_analysis: row.is_paid ? row.skin_analysis : null,
+    color_analysis: row.is_paid ? row.color_analysis : null,
+  }));
 
   return (
     <main className="container max-w-3xl py-10 sm:py-16 min-h-screen">

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { PRODUCT_COPY } from "@/lib/product-copy";
 
 const NAV_LINKS = [
   { href: "/#how", label: "How it works" },
@@ -164,10 +165,13 @@ export function Navbar() {
                   </div>
                 )}
               </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/upload">{PRODUCT_COPY.secondaryCta}</Link>
+              </Button>
               <Button asChild variant="accent" size="sm" className="group">
                 <Link href="/studio">
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>Open Studio</span>
+                  <span>{PRODUCT_COPY.primaryCta}</span>
                 </Link>
               </Button>
             </>
@@ -179,7 +183,7 @@ export function Navbar() {
               <Button asChild variant="accent" size="sm" className="group">
                 <Link href="/studio">
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>Try AI Studio</span>
+                  <span>{PRODUCT_COPY.primaryCta}</span>
                 </Link>
               </Button>
             </>

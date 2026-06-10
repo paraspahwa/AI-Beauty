@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { hasPremiumAccess } from "@/lib/auth/access";
+import { getStudioEntitlement } from "@/lib/entitlement";
+import { parseOnboardingProgress } from "@/lib/progressive-unlock";
 import { Dna, ChevronLeft, Copy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StyleDnaCard } from "@/components/StyleDnaCard";
@@ -51,6 +54,19 @@ export default async function StyleDnaPage() {
     .maybeSingle();
 
   const prefs = prefsRow as StylePrefsRow | null;
+
+  const [{ count: paidCount }, entitlement] = await Promise.all([
+    admin.from("reports").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_paid", true),
+    getStudioEntitlement(user.id),
+  ]);
+
+  const onboardingProgress = parseOnboardingProgress(
+    (prefs?.prefs as { onboardingProgress?: unknown } | null)?.onboardingProgress,
+  );
+  const canViewFullStyleDna =
+    onboardingProgress.analysisUnlocked ||
+    (paidCount ?? 0) > 0 ||
+    entitlement.tier === "studio_pro";
 
   // Fetch latest ready report for richer data (palette names, routines, etc.)
   const { data: latestReport } = await admin
@@ -133,6 +149,23 @@ export default async function StyleDnaPage() {
           </p>
           <Button asChild variant="accent">
             <Link href="/upload">Get my report</Link>
+          </Button>
+        </div>
+      ) : !canViewFullStyleDna ? (
+        <div
+          className="flex flex-col items-center justify-center gap-4 py-24 rounded-3xl text-center"
+          style={{
+            background: "linear-gradient(145deg, rgba(255,247,251,0.92), rgba(251,231,242,0.78))",
+            border: "1px dashed rgba(17,24,39,0.20)",
+          }}
+        >
+          <Dna className="h-14 w-14 opacity-20" style={{ color: "#111827" }} />
+          <h2 className="font-sans text-2xl text-ink">Style DNA unlocks with your full report</h2>
+          <p style={{ color: "rgba(17,24,39,0.55)" }} className="text-sm max-w-sm">
+            Keep trying looks in Studio or unlock your report to see your complete color season, skin profile, and style guide.
+          </p>
+          <Button asChild variant="accent">
+            <Link href="/upload">Unlock full analysis</Link>
           </Button>
         </div>
       ) : (

@@ -8,6 +8,14 @@
  */
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import {
+  FREE_STUDIO_CAP,
+  REPORT_STUDIO_CAP,
+  STUDIO_PRO_CAP,
+  getMonthlyGenerationUsage,
+  getReportStudioUsage,
+} from "@/lib/studio-access";
+import type { ColorAnalysisResult } from "@/types/report";
 
 export type PlanTier = "free" | "report" | "studio_pro";
 
@@ -42,13 +50,33 @@ export async function getStudioEntitlement(userId: string): Promise<StudioEntitl
       console.warn("[entitlement] get_studio_entitlement failed", error?.message);
       return FALLBACK;
     }
+    const tier = (data.tier as PlanTier) ?? "free";
+
+    if (tier === "studio_pro") {
+      return {
+        tier,
+        remainingGens: data.remaining_gens ?? null,
+        usedGens: data.used_gens ?? null,
+        cap: data.cap ?? STUDIO_PRO_CAP,
+        periodResets: data.period_resets ?? null,
+        subscriptionId: data.subscription_id ?? null,
+      };
+    }
+
+    // Free / report: enrich with monthly free studio quota from usage_counters
+    const usage = await getMonthlyGenerationUsage(admin, userId);
+    const cap = FREE_STUDIO_CAP;
+    const nextPeriod = new Date();
+    nextPeriod.setMonth(nextPeriod.getMonth() + 1, 1);
+    nextPeriod.setHours(0, 0, 0, 0);
+
     return {
-      tier:           (data.tier as PlanTier) ?? "free",
-      remainingGens:  data.remaining_gens  ?? null,
-      usedGens:       data.used_gens       ?? null,
-      cap:            data.cap             ?? null,
-      periodResets:   data.period_resets   ?? null,
-      subscriptionId: data.subscription_id ?? null,
+      tier,
+      remainingGens: Math.max(0, cap - usage.used),
+      usedGens: usage.used,
+      cap,
+      periodResets: nextPeriod.toISOString(),
+      subscriptionId: null,
     };
   } catch (err) {
     console.warn("[entitlement] unexpected error", err);
@@ -62,6 +90,43 @@ export async function getStudioEntitlement(userId: string): Promise<StudioEntitl
  */
 export function isStudioPro(entitlement: StudioEntitlement): boolean {
   return entitlement.tier === "studio_pro";
+}
+
+/** Strip color analysis for unpaid report previews (progressive unlock reveals teasers instead). */
+export function redactColorAnalysisForPreview(_color: unknown): ColorAnalysisResult | undefined {
+  return undefined;
+}
+
+/** Truncated summary teaser for unpaid report previews (matches SSR page). */
+export function previewSummaryForUnpaid(summary: unknown, max = 280): string | undefined {
+  if (typeof summary !== "string" || !summary) return undefined;
+  return summary.slice(0, max) + (summary.length > max ? "…" : "");
+}
+
+/** Align entitlement display with per-report try-on cap for paid reports. */
+export async function enrichReportStudioEntitlement(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  reportId: string,
+  reportIsPaid: boolean,
+  base: StudioEntitlement,
+): Promise<StudioEntitlement> {
+  if (base.tier === "studio_pro") return base;
+
+  if (reportIsPaid) {
+    const used = await getReportStudioUsage(admin, userId, reportId);
+    return {
+      ...base,
+      tier: "report",
+      remainingGens: Math.max(0, REPORT_STUDIO_CAP - used),
+      usedGens: used,
+      cap: REPORT_STUDIO_CAP,
+      periodResets: null,
+      subscriptionId: base.subscriptionId,
+    };
+  }
+
+  return base;
 }
 
 /**
@@ -100,37 +165,14 @@ export async function getCanvasQuota(userId: string): Promise<CanvasQuota> {
       };
     }
 
-    // Free / Report tier = 3 gens/month on canvas
-    // Count canvas generations this month (studio_canvas_id IS NOT NULL)
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    const { count, error } = await admin
-      .from("generated_assets")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .not("studio_canvas_id", "is", null)
-      .gte("created_at", monthStart.toISOString());
-
-    if (error) {
-      console.warn("[getCanvasQuota] count query failed:", error.message);
-      return {
-        tier: entitlement.tier,
-        remaining: 3,
-        used: 0,
-        limit: 3,
-        periodResets: null,
-      };
-    }
-
-    const used = count ?? 0;
-    const limit = 3;
-    const remaining = Math.max(0, limit - used);
+    const usage = await getMonthlyGenerationUsage(admin, userId);
+    const limit = FREE_STUDIO_CAP;
+    const remaining = Math.max(0, limit - usage.used);
 
     return {
       tier: entitlement.tier,
       remaining,
-      used,
+      used: usage.used,
       limit,
       periodResets: entitlement.periodResets,
     };

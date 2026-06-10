@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { isAdminUserEmail } from "@/lib/auth/access";
 
 export const runtime = "nodejs";
@@ -14,9 +15,8 @@ export const maxDuration = 30;
  * Can also be called by a Supabase Edge Function cron job using the
  * service_role key directly against expire_stuck_reports() RPC.
  */
-export async function POST(req: Request) {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function POST(req: NextRequest) {
+  const user = await getRequestUser(req);
   if (!user || !isAdminUserEmail(user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

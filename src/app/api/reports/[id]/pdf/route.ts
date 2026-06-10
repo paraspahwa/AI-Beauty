@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
 import type {
@@ -25,17 +26,17 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * Chromium binary is downloaded on first Lambda cold-start via
  * @sparticuz/chromium-min and cached in /tmp for subsequent invocations.
  */
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!env.flags.pdfEnabled) {
     return NextResponse.json({ error: "PDF disabled" }, { status: 403 });
   }
   const { id } = await params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getRequestUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: row } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: row } = await admin
     .from("reports")
     .select("id, user_id, status, is_paid, created_at, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary")
     .eq("id", id)

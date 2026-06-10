@@ -6,10 +6,12 @@ export function FaceSection({
   report,
   faceLandmarkLabels,
   onPreview,
+  previewOnly = false,
 }: {
   report: MobileReport;
   faceLandmarkLabels: string[];
   onPreview: (item: PreviewItem) => void;
+  previewOnly?: boolean;
 }) {
   return (
     <>
@@ -20,7 +22,7 @@ export function FaceSection({
         </Card>
       ) : null}
 
-      {report.colorAnalysis ? (
+      {report.colorAnalysis && !previewOnly ? (
         <Card title="Color analysis">
           <Text style={primitiveStyles.bodyText}>{report.colorAnalysis.season}</Text>
           <Text style={primitiveStyles.mutedText}>Undertone: {report.colorAnalysis.undertone}</Text>

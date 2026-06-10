@@ -1,7 +1,8 @@
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text } from "react-native";
+import { PRODUCT_COPY } from "@/lib/product-copy";
 import { type MobileReport } from "@/lib/api";
 import { type SavedVisual } from "@/lib/studio-history";
-import { Card, EmptyCard, LockedSection, VisualGallery, styles as primitiveStyles, type CheckoutFlow, type PreviewItem, type ReportIntent } from "./ReportPrimitives";
+import { Card, LockedSection, VisualGallery, styles as primitiveStyles, type CheckoutFlow, type PreviewItem, type ReportIntent } from "./ReportPrimitives";
 
 export function StudioSection({
   report,
@@ -42,11 +43,18 @@ export function StudioSection({
   onPreview: (item: PreviewItem) => void;
   formatSavedVisualTime: (value: string) => string | null;
 }) {
-  if (!report.isPaid) {
+  const isStudioPro = report.studioEntitlement?.tier === "studio_pro";
+  const remaining = isStudioPro
+    ? 999
+    : (report.studioEntitlement?.remainingGens ??
+      (report.isPaid ? PRODUCT_COPY.report.studioGensIncluded : PRODUCT_COPY.free.studioGensPerMonth));
+  const canUseStudio = report.isPaid ? (isStudioPro || remaining > 0) : remaining > 0;
+
+  if (!canUseStudio) {
     return (
       <LockedSection
         title="AI Studio"
-        body={lockedBody}
+        body={report.isPaid ? "Report try-ons used up. Upgrade to Studio Pro for more generations." : lockedBody}
         preferredIntent={preferredIntent}
         unlocking={unlocking}
         awaitingBrowserCheckout={awaitingBrowserCheckout}
@@ -59,10 +67,42 @@ export function StudioSection({
     );
   }
 
+  if (!report.isPaid) {
+    return (
+      <>
+        <Card title="AI Studio">
+          <Text style={primitiveStyles.mutedText}>
+            {remaining} free try-on{remaining === 1 ? "" : "s"} left this month — makeup and hair previews.
+          </Text>
+          <Pressable onPress={onOpenMakeupStudio} style={primitiveStyles.chatLaunchButton}>
+            <Text style={primitiveStyles.chatLaunchButtonLabel}>Try makeup</Text>
+          </Pressable>
+          <Pressable onPress={onOpenHairStudio} style={primitiveStyles.secondaryButton}>
+            <Text style={primitiveStyles.secondaryButtonLabel}>Try hair color</Text>
+          </Pressable>
+        </Card>
+        <VisualGallery
+          title="Saved looks"
+          emptyLabel="Try a look above — saves appear here after generation."
+          visuals={savedVisuals}
+          onRemove={onRemoveSavedVisual}
+          onPreview={onPreview}
+          formatTime={formatSavedVisualTime}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Card title="AI Studio">
-        <Text style={primitiveStyles.mutedText}>Start with mobile-safe Studio actions using your report photo.</Text>
+        {!isStudioPro && report.isPaid ? (
+          <Text style={primitiveStyles.mutedText}>
+            {remaining} of {report.studioEntitlement?.cap ?? PRODUCT_COPY.report.studioGensIncluded} report try-ons remaining.
+          </Text>
+        ) : (
+          <Text style={primitiveStyles.mutedText}>Start with mobile-safe Studio actions using your report photo.</Text>
+        )}
         <Pressable onPress={onOpenMakeupStudio} style={primitiveStyles.chatLaunchButton}>
           <Text style={primitiveStyles.chatLaunchButtonLabel}>Open makeup studio</Text>
         </Pressable>
@@ -78,37 +118,13 @@ export function StudioSection({
       </Card>
 
       <VisualGallery
-        title="Makeup previews"
-        assets={report.visualAssets?.assets?.makeupPreviews}
-        emptyText="Makeup previews will appear here when the visual assets are ready."
-        fallbackLabel="Makeup preview"
-        beforeImageUrl={report.imageUrl}
+        title="Saved looks"
+        emptyLabel="Generate a look in Studio to see it here."
+        visuals={savedVisuals}
+        onRemove={onRemoveSavedVisual}
         onPreview={onPreview}
+        formatTime={formatSavedVisualTime}
       />
-
-      {savedVisuals.length ? (
-        <Card title="Saved visuals">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={primitiveStyles.savedVisualsRow}>
-            {savedVisuals.map((item) => (
-              <View key={item.id} style={primitiveStyles.savedVisualCard}>
-                <Pressable onPress={() => onPreview({ imageUrl: item.imageUrl, beforeImageUrl: report.imageUrl ?? undefined, label: `${item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}${item.label ? ` - ${item.label}` : ""}` })}>
-                  <Image source={{ uri: item.imageUrl }} style={primitiveStyles.savedVisualImage} />
-                </Pressable>
-                <Text style={primitiveStyles.savedVisualLabel} numberOfLines={1}>
-                  {item.kind === "makeup" ? "Makeup" : item.kind === "hair" ? "Hair" : "Glasses"}
-                  {item.label ? ` - ${item.label}` : ""}
-                </Text>
-                {formatSavedVisualTime(item.createdAt) ? <Text style={primitiveStyles.savedVisualTime}>{formatSavedVisualTime(item.createdAt)}</Text> : null}
-                <Pressable onPress={() => onRemoveSavedVisual(item)} style={primitiveStyles.savedVisualRemoveButton}>
-                  <Text style={primitiveStyles.savedVisualRemoveButtonLabel}>Remove</Text>
-                </Pressable>
-              </View>
-            ))}
-          </ScrollView>
-        </Card>
-      ) : (
-        <EmptyCard text="Saved makeup, hair, and glasses looks will appear here once you keep them from Studio." />
-      )}
     </>
   );
 }

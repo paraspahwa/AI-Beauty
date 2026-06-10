@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import {
@@ -20,6 +21,8 @@ import { publicEnv } from "@/lib/public-env";
 import { formatCurrency } from "@/lib/utils";
 import { detectCurrency, type SupportedCurrency } from "@/lib/currency";
 import { fadeUp, staggerContainer } from "@/lib/animations";
+import { PRODUCT_COPY } from "@/lib/product-copy";
+import { track } from "@/lib/track";
 
 // ── Razorpay types ────────────────────────────────────────────────────────────
 interface RazorpayPaymentResponse {
@@ -71,11 +74,11 @@ const REPORT_PERKS = [
   { icon: Scissors, text: "Hairstyle, length & colour guide" },
   { icon: FileDown, text: "Downloadable PDF for stylists" },
   { icon: Share2,   text: "Shareable preview cards" },
-  { icon: Sparkles, text: "5 AI Studio generations included" },
+  { icon: Sparkles, text: `${PRODUCT_COPY.report.studioGensIncluded} AI try-ons included` },
 ];
 
 const PRO_PERKS = [
-  { icon: Sparkles, text: "150 AI Studio generations / month" },
+  { icon: Sparkles, text: `${PRODUCT_COPY.studioPro.studioGensPerMonth} AI try-ons / month` },
   { icon: Droplets, text: "Unlimited reports every month" },
   { icon: Glasses,  text: "Full analysis on every report" },
   { icon: FileDown, text: "PDF download on every report" },
@@ -172,6 +175,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, appReturnToUrl, in
         const vp = await verify.json().catch(() => ({}));
         if (!verify.ok) throw new Error(vp.error ?? "Verification failed");
         setOpen(false);
+        track("unlock_analysis", { plan: "report", mode: "test" });
         onUnlocked?.();
         return;
       }
@@ -199,6 +203,7 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, appReturnToUrl, in
           });
           if (verify.ok) {
             setOpen(false);
+            track("unlock_analysis", { plan: "report" });
             onUnlocked?.();
             if (appReturnToUrl) window.location.href = appReturnToUrl;
           }
@@ -501,6 +506,17 @@ export function Paywall({ reportId, onUnlocked, onSubscribed, appReturnToUrl, in
                       {badge}
                     </div>
                   ))}
+                </motion.div>
+
+                <motion.div variants={fadeUp} className="mt-4 text-center">
+                  <Link
+                    href="/studio"
+                    className="text-sm font-medium underline-offset-2 hover:underline"
+                    style={{ color: "#6A5A7C" }}
+                    onClick={() => handleOpenChange(false)}
+                  >
+                    Keep trying free looks →
+                  </Link>
                 </motion.div>
 
                 <motion.p variants={fadeUp} className="mt-3 text-center text-[11px]" style={{ color: "#3A2A1A" }}>

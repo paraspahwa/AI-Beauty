@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Linking, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
+import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
+import { postStudioProgress } from "@/lib/api";
 import { createStudioCanvasShareLink, fetchStudioVault, generateStudioCanvas, revokeStudioCanvasShareLink, scanStudioCanvasColor, type MobileCanvasColorScan, type MobileCanvasGenerateResponse, type MobileCanvasGenerateMode, type MobileVaultAsset } from "@/lib/api";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { mobileTheme as t } from "@/lib/theme";
@@ -10,6 +13,12 @@ const MAKEUP_INTENSITIES = ["light", "medium", "heavy"] as const;
 const HAIR_COLORS = ["natural", "black", "dark_brown", "chestnut", "auburn", "blonde", "burgundy"] as const;
 const OUTFIT_OCCASIONS = ["casual", "work", "date", "wedding", "travel"] as const;
 const OUTFIT_VIBES = ["minimal", "classic", "bold", "romantic", "street"] as const;
+
+const QUICK_PRESETS: TryNextPreset[] = [
+  { id: "natural", label: "Natural glow", mode: "makeup", variant: "natural" },
+  { id: "glam", label: "Evening glam", mode: "makeup", variant: "glamorous" },
+  { id: "hair", label: "New hair", mode: "hair", variant: "hair" },
+];
 
 export default function CanvasStudioScreen() {
   const router = useRouter();
@@ -100,6 +109,7 @@ export default function CanvasStudioScreen() {
 
       const generated = await generateStudioCanvas(canvasId, mode, options);
       setResult(generated);
+      void postStudioProgress("try_on").catch(() => undefined);
       if (generated.asset?.id) {
         setSourceAssetId(generated.asset.id);
         setSourcePreviewUrl(generated.hdUrl ?? generated.lowResUrl);
@@ -184,6 +194,23 @@ export default function CanvasStudioScreen() {
           ) : null}
         </Card>
 
+        <Pressable onPress={() => void handleGenerate("makeup")} disabled={loading} style={styles.surpriseButton}>
+          <Text style={styles.surpriseButtonLabel}>{loading ? "Creating…" : "Surprise Me"}</Text>
+        </Pressable>
+
+        <TryTheseNext
+          presets={QUICK_PRESETS}
+          onSelect={(preset) => {
+            if (preset.mode === "makeup") {
+              setMakeupStyle(preset.variant as (typeof MAKEUP_STYLES)[number]);
+              void handleGenerate("makeup");
+            } else {
+              void handleGenerate("hair");
+            }
+          }}
+          loading={loading}
+        />
+
         <Card title="Makeup">
           <View style={styles.chipRow}>
             {MAKEUP_STYLES.map((item) => (
@@ -245,7 +272,33 @@ export default function CanvasStudioScreen() {
 
         {result?.hdUrl || result?.lowResUrl ? (
           <Card title="Latest result">
-            <Image source={{ uri: result.hdUrl ?? result.lowResUrl }} style={styles.previewImage} />
+            {sourcePreviewUrl ? (
+              <BeforeAfterCompare
+                beforeUri={sourcePreviewUrl}
+                afterUri={result.hdUrl ?? result.lowResUrl ?? ""}
+              />
+            ) : (
+              <Image source={{ uri: result.hdUrl ?? result.lowResUrl }} style={styles.previewImage} />
+            )}
+            <Pressable
+              style={styles.secondaryButtonCompact}
+              onPress={() => {
+                const url = result.hdUrl ?? result.lowResUrl;
+                if (url) void Share.share({ message: "My Renovaara look", url });
+                void postStudioProgress("share").catch(() => undefined);
+              }}
+            >
+              <Text style={styles.secondaryButtonCompactLabel}>Share moment</Text>
+            </Pressable>
+            <Pressable
+              style={styles.secondaryButtonCompact}
+              onPress={() => {
+                const url = result.hdUrl ?? result.lowResUrl;
+                if (url) void Linking.openURL(url);
+              }}
+            >
+              <Text style={styles.secondaryButtonCompactLabel}>Download</Text>
+            </Pressable>
             {result.outfit?.summary ? <Text style={styles.helperText}>{result.outfit.summary}</Text> : null}
             {result.outfit?.looks?.length ? (
               <View style={styles.lookList}>
@@ -333,6 +386,8 @@ const styles = StyleSheet.create({
   choiceChipActive: { backgroundColor: t.color.text, borderColor: t.color.text },
   choiceChipLabel: { color: t.color.textSoft, fontWeight: "600" },
   choiceChipLabelActive: { color: t.color.textOnDark },
+  surpriseButton: { borderRadius: 999, backgroundColor: t.color.text, paddingVertical: 14, alignItems: "center", marginBottom: 4 },
+  surpriseButtonLabel: { color: t.color.textOnDark, fontWeight: "800", fontSize: 15 },
   primaryButton: { borderRadius: 16, backgroundColor: t.color.text, paddingVertical: 14, alignItems: "center" },
   primaryButtonCompact: { flex: 1, borderRadius: 16, backgroundColor: t.color.text, paddingVertical: 12, alignItems: "center" },
   primaryButtonLabel: { color: t.color.textOnDark, fontWeight: "700" },

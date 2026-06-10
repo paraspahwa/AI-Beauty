@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import { isAdminUserEmail } from "@/lib/auth/access";
@@ -25,8 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     env.assertServer();
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;

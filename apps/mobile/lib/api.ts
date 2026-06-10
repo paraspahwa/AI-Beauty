@@ -910,3 +910,126 @@ export async function fetchProgressReports(): Promise<MobileProgressReport[]> {
     status: row.status as string,
   }));
 }
+
+const GUEST_STUDIO_STATE_KEY = "rv_guest_studio_state";
+
+export type GuestStudioState = {
+  guestId: string;
+  tryOnCount: number;
+  photoUrl?: string;
+};
+
+export type UnlockTeaserResponse = {
+  type: "none" | "color_season" | "face_shape" | "unlock_analysis";
+  message?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+};
+
+async function getGuestStudioStateHeader(): Promise<string | null> {
+  const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+  return AsyncStorage.getItem(GUEST_STUDIO_STATE_KEY);
+}
+
+async function saveGuestStudioState(state: string): Promise<void> {
+  const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+  await AsyncStorage.setItem(GUEST_STUDIO_STATE_KEY, state);
+}
+
+async function fetchGuestApi<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const apiBaseUrl = getValidatedMobileApiBaseUrl();
+  const guestState = await getGuestStudioStateHeader();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
+      method: options.method ?? "GET",
+      body: options.body,
+      signal: controller.signal,
+      headers: {
+        ...(options.body && !(options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+        ...(guestState ? { "X-Guest-Studio-State": guestState } : {}),
+        ...options.headers,
+      },
+    });
+    if (!response.ok) {
+      const errText = sanitizeApiErrorText(await response.text());
+      throw new Error(`API ${response.status}: ${errText || "Request failed"}`);
+    }
+    return (await response.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function guestUpload(imageUri: string): Promise<{ photoUrl: string; remaining: number; guestState: string }> {
+  const form = new FormData();
+  form.append("file", {
+    uri: imageUri,
+    name: "selfie.jpg",
+    type: "image/jpeg",
+  } as unknown as Blob);
+  const json = await fetchGuestApi<{ photoUrl: string; remaining: number; guestState: string }>("/api/studio/guest-upload", {
+    method: "POST",
+    body: form,
+  });
+  if (json.guestState) await saveGuestStudioState(json.guestState);
+  return json;
+}
+
+export async function guestGenerate(body: {
+  mode: "makeup" | "hair";
+  makeupStyle?: string;
+  hairVariant?: string;
+}): Promise<{
+  lowResUrl: string;
+  remaining: number;
+  guestState: string;
+  teaser?: UnlockTeaserResponse;
+  progress?: Record<string, unknown>;
+}> {
+  const json = await fetchGuestApi<{
+    lowResUrl: string;
+    remaining: number;
+    guestState: string;
+    teaser?: UnlockTeaserResponse;
+    progress?: Record<string, unknown>;
+  }>("/api/studio/guest-generate", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  if (json.guestState) await saveGuestStudioState(json.guestState);
+  if (json.progress) {
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    await AsyncStorage.setItem("rv_guest_progress", JSON.stringify(json.progress));
+  }
+  return json;
+}
+
+export async function getStudioProgress(): Promise<{ teaser: UnlockTeaserResponse }> {
+  return fetchWithAuth<{ teaser: UnlockTeaserResponse }>("/api/studio/progress");
+}
+
+export async function postStudioProgress(
+  action: "try_on" | "share" | "dismiss" | "merge_guest",
+  extras?: Record<string, string | number>,
+): Promise<{ teaser: UnlockTeaserResponse }> {
+  return fetchWithAuth<{ teaser: UnlockTeaserResponse }>("/api/studio/progress", {
+    method: "POST",
+    body: JSON.stringify({ action, ...extras }),
+  });
+}
+
+/** Fire-and-forget try-on progress after a successful report studio generation. */
+export async function recordReportStudioTryOn(
+  report: Pick<MobileReport, "faceShape" | "colorAnalysis">,
+): Promise<void> {
+  try {
+    await postStudioProgress("try_on", {
+      season: report.colorAnalysis?.season ?? "",
+      faceShape: report.faceShape?.shape ?? "",
+    });
+  } catch {
+    // non-blocking
+  }
+}

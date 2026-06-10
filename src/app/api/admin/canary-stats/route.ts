@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { isAdminUserEmail } from "@/lib/auth/access";
 
 export const runtime = "nodejs";
@@ -18,9 +19,8 @@ export const maxDuration = 30;
  *
  * Access: restricted to users in ADMIN_EMAIL_ALLOWLIST.
  */
-export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function GET(req: NextRequest) {
+  const user = await getRequestUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAdminUserEmail(user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

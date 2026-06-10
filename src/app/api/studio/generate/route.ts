@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { compressForAI } from "@/lib/ai/image";
 import { chatJSON } from "@/lib/ai/openai";
 import { detectFaceDetails } from "@/lib/ai/rekognition";
-import { getCanvasQuota } from "@/lib/entitlement";
+import { assertCanvasStudioAccess, studioAccessToResponse } from "@/lib/studio-access";
 import {
   MAKEUP_INTENSITIES,
   MAKEUP_STYLES,
@@ -196,8 +197,7 @@ export async function POST(request: NextRequest) {
   try {
     env.assertServer();
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json().catch(() => null) as
@@ -220,9 +220,9 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createSupabaseAdminClient();
-    const quota = await getCanvasQuota(user.id);
-    if (quota.remaining <= 0 && quota.tier !== "studio_pro") {
-      return NextResponse.json({ error: "Canvas quota exceeded" }, { status: 429 });
+    const access = await assertCanvasStudioAccess(admin, user.id);
+    if (!access.allowed) {
+      return NextResponse.json(studioAccessToResponse(access), { status: access.status });
     }
 
     const { data: canvas } = await admin

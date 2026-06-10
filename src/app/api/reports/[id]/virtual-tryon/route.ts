@@ -12,10 +12,12 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
+import { assertReportStudioAccess, studioAccessToResponse } from "@/lib/studio-access";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -34,8 +36,7 @@ export async function POST(
     const { id } = await params;
     if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const admin = createSupabaseAdminClient();
@@ -49,20 +50,9 @@ export async function POST(
     if (rowErr || !row) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (row.user_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // ── Entitlement check ─────────────────────────────────────────────────────
-    const { data: tierData } = await admin.rpc("get_user_plan_tier", { p_user: user.id });
-    const planTier = (tierData as string | null) ?? "free";
-
-    if (planTier === "studio_pro") {
-      const allowed = await admin.rpc("try_consume_generation", { p_user: user.id, p_cap: 150 });
-      if (!allowed.data) {
-        return NextResponse.json(
-          { error: "Monthly generation limit reached (150). Resets at the start of next billing period.", code: "QUOTA_EXCEEDED" },
-          { status: 429 },
-        );
-      }
-    } else if (!row.is_paid) {
-      return NextResponse.json({ error: "Payment required" }, { status: 402 });
+    const access = await assertReportStudioAccess(admin, user.id, !!row.is_paid, { paidOnly: true, reportId: id });
+    if (!access.allowed) {
+      return NextResponse.json(studioAccessToResponse(access), { status: access.status });
     }
 
     if (!env.fal?.isConfigured) {

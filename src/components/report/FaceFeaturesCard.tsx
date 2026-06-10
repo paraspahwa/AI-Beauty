@@ -159,14 +159,17 @@ function FeatureBox({
 // ── Main component ────────────────────────────────────────────────────────────
 interface Props {
   faceShape: FaceShapeResult;
-  features: FeatureBreakdown;
+  features?: FeatureBreakdown;
   blendedConfidence?: number;
   photoUrl?: string;
   faceLandmarks?: never;
+  /** When true, only face shape is shown (free preview). */
+  previewOnly?: boolean;
 }
 
-export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photoUrl }: Props) {
+export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photoUrl, previewOnly }: Props) {
   const displayConfidence = blendedConfidence ?? faceShape.confidence;
+  const showFeatures = !previewOnly && !!features;
 
   return (
     <div
@@ -200,7 +203,7 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
       </div>
 
       {/* ── 3-column body ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-8 px-4 sm:px-6 md:px-10 pb-10 items-center">
+      <div className={`grid gap-8 px-4 sm:px-6 md:px-10 pb-10 items-center ${showFeatures ? "grid-cols-1 md:grid-cols-[1fr_auto_1fr]" : "grid-cols-1 max-w-md mx-auto"}`}>
 
         {/* Left column: Face Shape · Eyes · Nose */}
         <div className="flex flex-col gap-4">
@@ -210,18 +213,26 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
             subtitle={faceShape.shape}
             notes={faceShape.traits.join(". ")}
           />
-          <FeatureBox
-            featureKey="eyes"
-            title="Eyes"
-            subtitle={features.eyes?.shape ?? "Almond Eyes"}
-            notes={features.eyes?.notes ?? "Almond-shaped. Medium size. Warm, slightly upturned"}
-          />
-          <FeatureBox
-            featureKey="nose"
-            title="Nose"
-            subtitle={features.nose?.shape ?? "Straight & Soft"}
-            notes={features.nose?.notes ?? "Straight bridge. Rounded tip. Proportional to face"}
-          />
+          {showFeatures && features ? (
+            <>
+              <FeatureBox
+                featureKey="eyes"
+                title="Eyes"
+                subtitle={features.eyes?.shape ?? "Almond Eyes"}
+                notes={features.eyes?.notes ?? "Almond-shaped. Medium size. Warm, slightly upturned"}
+              />
+              <FeatureBox
+                featureKey="nose"
+                title="Nose"
+                subtitle={features.nose?.shape ?? "Straight & Soft"}
+                notes={features.nose?.notes ?? "Straight bridge. Rounded tip. Proportional to face"}
+              />
+            </>
+          ) : previewOnly ? (
+            <p className="text-sm text-center px-2" style={{ color: "#6B5344" }}>
+              Unlock your full report to see detailed eyes, nose, lips, and cheek analysis.
+            </p>
+          ) : null}
         </div>
 
         {/* Center: Portrait photo + pointer lines */}
@@ -251,26 +262,28 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
         </div>
 
         {/* Right column: Eyebrows · Cheeks · Lips */}
-        <div className="flex flex-col gap-4">
-          <FeatureBox
-            featureKey="eyebrows"
-            title="Eyebrows"
-            subtitle={features.eyebrows?.shape ?? "Natural Arch"}
-            notes={features.eyebrows?.notes ?? "Soft natural arch. Medium thickness. Well-groomed shape"}
-          />
-          <FeatureBox
-            featureKey="cheeks"
-            title="Cheeks"
-            subtitle={features.cheeks?.shape ?? "Soft & Balanced"}
-            notes={features.cheeks?.notes ?? "Gently full. Subtle cheekbones. Balanced facial thirds"}
-          />
-          <FeatureBox
-            featureKey="lips"
-            title="Lips"
-            subtitle={features.lips?.shape ?? "Full & Natural"}
-            notes={features.lips?.notes ?? "Medium fullness. Defined Cupid's bow. Naturally pink"}
-          />
-        </div>
+        {showFeatures && features ? (
+          <div className="flex flex-col gap-4">
+            <FeatureBox
+              featureKey="eyebrows"
+              title="Eyebrows"
+              subtitle={features.eyebrows?.shape ?? "Natural Arch"}
+              notes={features.eyebrows?.notes ?? "Soft natural arch. Medium thickness. Well-groomed shape"}
+            />
+            <FeatureBox
+              featureKey="cheeks"
+              title="Cheeks"
+              subtitle={features.cheeks?.shape ?? "Soft & Balanced"}
+              notes={features.cheeks?.notes ?? "Gently full. Subtle cheekbones. Balanced facial thirds"}
+            />
+            <FeatureBox
+              featureKey="lips"
+              title="Lips"
+              subtitle={features.lips?.shape ?? "Full & Natural"}
+              notes={features.lips?.notes ?? "Medium fullness. Defined Cupid's bow. Naturally pink"}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* ── Confidence footer ─────────────────────────────────────────────────── */}

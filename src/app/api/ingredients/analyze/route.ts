@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { chatJSON } from "@/lib/ai/openai";
 import { env } from "@/lib/env";
 import { consumeIdentityWindow } from "@/lib/rate-limit";
@@ -44,10 +45,7 @@ type RequestBody = {
 export async function POST(req: NextRequest) {
   // Auth check — require a valid session
   env.assertServer();
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getRequestUser(req);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });

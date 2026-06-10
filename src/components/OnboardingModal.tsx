@@ -2,34 +2,16 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Eye, Lock, Sparkles, Shield, ArrowRight, X } from "lucide-react";
+import { Eye, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "renovaara_onboarded_v1";
 
 const STEPS = [
   {
-    icon: Sparkles,
-    title: "Welcome to Renovaara ✨",
-    body: "Your personal AI stylist — upload one selfie and get an instant face shape overview, completely free.",
-    accent: "#111827",
-  },
-  {
-    icon: Lock,
-    title: "What's free · what's paid",
-    body: null, // rendered as a custom free/paid grid
-    accent: "#A69CC4",
-  },
-  {
     icon: Eye,
-    title: "One clear selfie is all it takes",
-    body: "Front-facing, natural light, hair off your forehead. No filters needed. Results in ~30 seconds.",
-    accent: "#7DBEAA",
-  },
-  {
-    icon: Shield,
-    title: "Your photo is private",
-    body: "Photos are encrypted at rest. Only you can access your report. We never sell your data.",
+    title: "Try a look in seconds ✨",
+    body: "Upload one clear, front-facing selfie in natural light. Pick a preset or tap Surprise Me — your first try-on is free, no card required.",
     accent: "#111827",
   },
 ];
@@ -94,33 +76,9 @@ export function OnboardingModal({ onDone }: Props) {
             {current.title}
           </h2>
 
-          {/* Step 1 — free/paid grid instead of body text */}
-          {current.body === null ? (
-            <div className="mb-8 grid grid-cols-2 gap-2 text-left">
-              <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#6b7280" }}>Free</p>
-                {["Face shape analysis", "Starter style summary"].map((item) => (
-                  <div key={item} className="flex items-center gap-1.5 mb-1">
-                    <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: "#22c55e" }} />
-                    <span className="text-[11px]" style={{ color: "rgba(240,232,216,0.65)" }}>{item}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-xl p-3" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.18)" }}>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#111827" }}>Unlock — ₹299</p>
-                {["Skin routine", "Spectacles guide", "Hairstyle guide", "AI try-ons", "PDF + chat"].map((item) => (
-                  <div key={item} className="flex items-center gap-1.5 mb-1">
-                    <CheckCircle2 className="h-3 w-3 shrink-0" style={{ color: "#111827" }} />
-                    <span className="text-[11px]" style={{ color: "rgba(240,232,216,0.65)" }}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(240,232,216,0.65)" }}>
-              {current.body}
-            </p>
-          )}
+          <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(240,232,216,0.65)" }}>
+            {current.body}
+          </p>
 
           {/* Step dots */}
           <div className="mb-6 flex justify-center gap-2">

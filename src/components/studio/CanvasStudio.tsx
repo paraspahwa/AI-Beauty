@@ -2,6 +2,10 @@
 
 import * as React from "react";
 import { Check, History, Loader2, Palette, ScanFace, Shirt, Sparkles, Wand2 } from "lucide-react";
+import { track } from "@/lib/track";
+import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
+import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
+import { StyleMomentShare } from "@/components/StyleMomentShare";
 import { Button } from "@/components/ui/button";
 import type { StudioEntitlement, StudioOutfitResult } from "@/types/report";
 import { MAKEUP_STYLES, MAKEUP_STYLE_LABELS, MAKEUP_INTENSITIES, MAKEUP_INTENSITY_LABELS } from "@/lib/makeup-options";
@@ -58,7 +62,8 @@ export function CanvasStudio({
   detectedGender?: HairGender;
   initialSourceAssetId?: string | null;
 }) {
-  const [mode, setMode] = React.useState<"scan" | "makeup" | "hair" | "outfit">("scan");
+  const [mode, setMode] = React.useState<"scan" | "makeup" | "hair" | "outfit">("makeup");
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
   const [scanLoading, setScanLoading] = React.useState(false);
   const [generateLoading, setGenerateLoading] = React.useState(false);
   const [vaultLoading, setVaultLoading] = React.useState(false);
@@ -164,7 +169,13 @@ export function CanvasStudio({
       if (!res.ok) throw new Error(json.error || "Generation failed");
 
       setResult(json);
+      track("tryon", { source: "canvas_studio", mode });
       await loadVault();
+      void fetch("/api/studio/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "try_on" }),
+      });
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -187,8 +198,12 @@ export function CanvasStudio({
               <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: "rgba(17,24,39,0.10)", color: "#111827" }}>{selectedPalette.season}</span>
             )}
           </div>
-          <h2 className="font-sans text-3xl text-ink">Quick scan, try-on, wardrobe ideas.</h2>
-          <p className="max-w-2xl text-sm text-ink-stone">Use the quick scan to lock in palette guidance, then try makeup, hair, or outfit concepts. Reuse any previous look from your vault as the source image.</p>
+          <h2 className="font-sans text-3xl text-ink">Pick a look — one tap to try it on.</h2>
+          <p className="max-w-2xl text-sm text-ink-stone">Start with makeup or hair presets. Open advanced controls only when you want to fine-tune.</p>
+          <Button type="button" variant="accent" size="sm" onClick={() => { setMode("makeup"); setMakeupStyle("natural"); void generate(); }} disabled={generateLoading}>
+            <Sparkles className="h-4 w-4" />
+            Surprise Me
+          </Button>
         </div>
 
         <div className="rounded-2xl p-4" style={{ background: "rgba(17,24,39,0.04)", border: "1px solid rgba(17,24,39,0.10)" }}>
@@ -326,8 +341,15 @@ export function CanvasStudio({
           {result && (
             <div className="rounded-3xl p-5" style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(17,24,39,0.12)" }}>
               <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#9C7D5B" }}>Latest Result</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={result.hdUrl || result.lowResUrl} alt="Result" className="w-full rounded-2xl border" style={{ borderColor: "rgba(17,24,39,0.10)" }} />
+              <BeforeAfterReveal
+                beforeUrl={sourcePreviewUrl || photoUrl}
+                afterUrl={result.hdUrl || result.lowResUrl}
+                className="w-full max-w-md mx-auto"
+              />
+              <StyleMomentShare
+                beforeUrl={sourcePreviewUrl || photoUrl}
+                afterUrl={result.hdUrl || result.lowResUrl}
+              />
               {result.outfit && (
                 <div className="mt-4 space-y-3">
                   <p className="text-sm font-semibold text-ink">{result.outfit.summary}</p>

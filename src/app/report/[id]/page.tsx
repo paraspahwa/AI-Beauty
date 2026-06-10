@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { getStudioEntitlement } from "@/lib/entitlement";
+import {
+  enrichReportStudioEntitlement,
+  getStudioEntitlement,
+  redactColorAnalysisForPreview,
+} from "@/lib/entitlement";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
 import { ReportLayout } from "@/components/report/ReportLayout";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
@@ -11,8 +15,8 @@ import type { CompiledReport, ReportVisualAssets } from "@/types/report";
 export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-type ReportTab = "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
-const REPORT_TABS: readonly ReportTab[] = ["face", "skin", "glasses", "hair", "studio", "shop"] as const;
+type ReportTab = "about-you" | "your-look" | "try-shop" | "face" | "skin" | "glasses" | "hair" | "studio" | "shop";
+const REPORT_TABS: readonly ReportTab[] = ["about-you", "your-look", "try-shop", "face", "skin", "glasses", "hair", "studio", "shop"] as const;
 
 function parsePaywallPlan(value: string | string[] | undefined): "report" | "studio_pro" {
   const candidate = Array.isArray(value) ? value[0] : value;
@@ -169,9 +173,6 @@ export default async function ReportPage({
   const appReturnToUrl = parseAppReturnUrl(query.appReturnTo);
   const initialPaywallOpen = (Array.isArray(query.paywall) ? query.paywall[0] : query.paywall) === "open";
   const initialPaywallPlan = parsePaywallPlan(query.plan);
-  const initialTab: ReportTab = tabParam && REPORT_TABS.includes(tabParam as ReportTab)
-    ? (tabParam as ReportTab)
-    : "face";
   const initialSourceAssetId = sourceParam && UUID_RE.test(sourceParam) ? sourceParam : null;
 
   const supabase = await createSupabaseServerClient();
@@ -181,7 +182,7 @@ export default async function ReportPage({
   const admin = createSupabaseAdminClient();
 
   // Batch report fetch and entitlement lookup (store signing needs row.image_path)
-  const [{ data: row }, studioEntitlement] = await Promise.all([
+  const [{ data: row }, baseEntitlement] = await Promise.all([
     supabase
       .from("reports")
       .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, rekognition, summary, visual_assets, pipeline_meta, created_at")
@@ -203,8 +204,17 @@ export default async function ReportPage({
   }
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
-  // studio_pro users always get premium content access
-  const effectivePremium = hasPremium || studioEntitlement.tier === "studio_pro";
+  const effectivePremium = hasPremium || baseEntitlement.tier === "studio_pro";
+  const studioEntitlement = await enrichReportStudioEntitlement(
+    admin,
+    user.id,
+    id,
+    !!row.is_paid,
+    baseEntitlement,
+  );
+  const initialTab: ReportTab = tabParam && REPORT_TABS.includes(tabParam as ReportTab)
+    ? (tabParam as ReportTab)
+    : "try-shop";
 
   let visualAssets: Awaited<ReturnType<typeof resolveVisualAssets>> = undefined;
   try {
@@ -239,13 +249,19 @@ export default async function ReportPage({
     studioEntitlement,
     shareToken: (row as Record<string, unknown>).share_token as string | null ?? null,
     faceShape: row.face_shape ?? undefined,
-    colorAnalysis: row.color_analysis ?? undefined,
+    colorAnalysis: effectivePremium
+      ? row.color_analysis ?? undefined
+      : redactColorAnalysisForPreview(row.color_analysis),
     skinAnalysis: effectivePremium ? row.skin_analysis ?? undefined : undefined,
     features:     effectivePremium ? row.features      ?? undefined : undefined,
     glasses:      effectivePremium ? row.glasses       ?? undefined : undefined,
     hairstyle:    effectivePremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
-    summary:      effectivePremium ? row.summary       ?? undefined : undefined,
+    summary: effectivePremium
+      ? row.summary ?? undefined
+      : typeof row.summary === "string"
+        ? row.summary.slice(0, 280) + (row.summary.length > 280 ? "…" : "")
+        : undefined,
     pipelineMeta,
     createdAt:    row.created_at,
   };

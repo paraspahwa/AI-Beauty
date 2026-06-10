@@ -5,18 +5,15 @@
  * independent of report existence.
  */
 
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { getStudioEntitlement } from "@/lib/entitlement";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
 
-export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(req: NextRequest) {
+  const user = await getRequestUser(req);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

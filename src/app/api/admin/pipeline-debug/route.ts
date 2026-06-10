@@ -10,7 +10,8 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { isAdminUserEmail } from "@/lib/auth/access";
 import type { PipelineStageEvent } from "@/lib/ai/pipeline";
 import { env } from "@/lib/env";
@@ -45,8 +46,7 @@ function line(event: DebugEvent): Uint8Array {
 
 async function assertAdmin(req: NextRequest) {
   env.assertServer();
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getRequestUser(req);
   if (!user || !isAdminUserEmail(user.email)) return null;
   return user;
 }

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ImageUploader } from "@/components/ImageUploader";
-import { ArrowRight, CheckCircle2, Clock, FileText, Lock, ShieldCheck, Sparkles, Star, Zap } from "lucide-react";
+import { CheckCircle2, Clock, Lock, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { blurIn, cascadeContainer, fadeUp, springPop, staggerContainer } from "@/lib/animations";
 import { OnboardingGate } from "@/components/OnboardingModal";
 
@@ -66,97 +66,17 @@ export default function UploadPage() {
             </p>
           </motion.header>
 
-          {/* ── Product choice cards ── */}
-          <motion.div variants={fadeUp} className="mx-auto mb-8 max-w-2xl">
-            <p className="text-center text-[11px] uppercase tracking-widest font-semibold mb-4" style={{ color: "#9C7D5B" }}>
-              Choose your path
-            </p>
-            <div className="grid sm:grid-cols-2 gap-4">
-
-              {/* Card A — Blueprint Report */}
-              <button
-                onClick={() => router.replace("?intent=purchase", { scroll: false })}
-                className="group text-left rounded-2xl p-5 transition-all focus:outline-none"
-                style={{
-                  background: intent === "purchase" ? "rgba(17,24,39,0.08)" : "rgba(255,255,255,0.03)",
-                  border: intent === "purchase" ? "2px solid rgba(17,24,39,0.45)" : "2px solid rgba(255,255,255,0.07)",
-                  boxShadow: intent === "purchase" ? "0 0 0 4px rgba(17,24,39,0.08)" : undefined,
-                }}
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-3" style={{ background: "rgba(17,24,39,0.12)" }}>
-                  <FileText className="h-5 w-5" style={{ color: "#111827" }} />
-                </div>
-                <div className="flex items-start justify-between mb-1">
-                  <h3 className="font-bold text-ink text-base">Master Blueprint Report</h3>
-                  {intent === "purchase" && (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#111827" }} />
-                  )}
-                </div>
-                <p className="text-xs text-ink-stone leading-relaxed mb-3">
-                  One-time deep diagnostic. Face shape, skin routine, colour season, hairstyle guide &amp; spectacles — downloadable PDF.
-                </p>
-                <ul className="space-y-1.5 mb-4">
-                  {["Skin routine (AM + PM)", "Color season palette", "Hairstyle guide", "Spectacles recommendations", "PDF download + style chat"].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[11px]" style={{ color: "#9C7D5B" }}>
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(17,24,39,0.12)" }}>
-                  <span className="text-sm font-bold" style={{ color: "#111827" }}>One-time · ₹299</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#111827" }} />
-                </div>
-              </button>
-
-              {/* Card B — AI Studio Pro */}
-              <button
-                onClick={() => router.replace("?intent=studio", { scroll: false })}
-                className="group text-left rounded-2xl p-5 transition-all focus:outline-none relative"
-                style={{
-                  background: intent === "studio" ? "rgba(17,24,39,0.1)" : "rgba(255,255,255,0.03)",
-                  border: intent === "studio" ? "2px solid rgba(17,24,39,0.5)" : "2px solid rgba(255,255,255,0.07)",
-                  boxShadow: intent === "studio" ? "0 0 0 4px rgba(17,24,39,0.08)" : undefined,
-                }}
-              >
-                {/* Badge */}
-                <div className="absolute -top-3 right-4">
-                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: "#111827" }}>
-                    <Sparkles className="h-2.5 w-2.5" /> Best Value
-                  </span>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl mb-3" style={{ background: "rgba(17,24,39,0.12)" }}>
-                  <Zap className="h-5 w-5" style={{ color: "#111827" }} />
-                </div>
-                <div className="flex items-start justify-between mb-1">
-                  <h3 className="font-bold text-ink text-base">Full Interactive AI Studio</h3>
-                  {intent === "studio" && (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#111827" }} />
-                  )}
-                </div>
-                <p className="text-xs text-ink-stone leading-relaxed mb-3">
-                  Live virtual try-ons, hair &amp; makeup sandbox, wardrobe generation. 150 AI generations per month.
-                </p>
-                <ul className="space-y-1.5 mb-4">
-                  {["Everything in Blueprint Report", "AI hair & makeup try-ons", "Wardrobe & clothing swatches", "150 AI generations / month", "Cancel anytime"].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[11px]" style={{ color: "#9C7D5B" }}>
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(17,24,39,0.12)" }}>
-                  <span className="text-sm font-bold" style={{ color: "#111827" }}>Monthly · ₹999/mo</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#111827" }} />
-                </div>
-              </button>
-
-            </div>
-          </motion.div>
+          <motion.p variants={fadeUp} className="mx-auto mb-6 max-w-lg text-center text-sm text-ink-stone">
+            New here?{" "}
+            <button type="button" className="font-semibold text-ink underline" onClick={() => router.push("/studio")}>
+              Try a look free in Studio first
+            </button>
+            — then unlock your full report when you are ready.
+          </motion.p>
 
           {/* ── Upload zone with spinning ring ── */}
           <motion.div variants={fadeUp} className="upload-ring rounded-3xl">
-            <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
+            <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}?tab=try-shop`)} />
           </motion.div>
 
           {/* ── Trust badges ── */}

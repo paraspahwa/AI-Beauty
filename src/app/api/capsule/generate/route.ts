@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import OpenAI from "openai";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 import type { ColorAnalysisResult, SkinAnalysisResult, FaceShapeResult, HairstyleResult } from "@/types/report";
 
@@ -120,8 +121,7 @@ export async function POST(req: NextRequest) {
   try {
     env.assertServer();
 
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const admin = createSupabaseAdminClient();
@@ -287,11 +287,10 @@ export async function POST(req: NextRequest) {
 }
 
 // ── GET: return cached capsule ─────────────────────────────────────────────────
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     env.assertServer();
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const admin = createSupabaseAdminClient();

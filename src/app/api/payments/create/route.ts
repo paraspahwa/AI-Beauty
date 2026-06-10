@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getRazorpay } from "@/lib/payments/razorpay";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -40,9 +41,10 @@ function deriveServerCurrency(
 export async function POST(req: NextRequest) {
   try {
     env.assertServer();
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const admin = createSupabaseAdminClient();
 
     let body: z.infer<typeof Body>;
     try {
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Confirm the report belongs to this user
-    const { data: report } = await supabase
+    const { data: report } = await admin
       .from("reports")
       .select("id,is_paid")
       .eq("id", body.reportId)
@@ -81,7 +83,6 @@ export async function POST(req: NextRequest) {
     const amountMinor = currency === "USD"
       ? Math.round(env.razorpay.priceUSD * 100) // USD cents
       : Math.round(env.razorpay.priceINR * 100); // INR paise
-    const admin = createSupabaseAdminClient();
 
     // Idempotent reuse: if we already created an order for this report, return it.
     const { data: existingCreated, error: existingErr } = await admin

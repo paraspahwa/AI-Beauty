@@ -1,8 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { getStudioEntitlement } from "@/lib/entitlement";
+import { getRequestUser } from "@/lib/auth/request-user";
+import {
+  enrichReportStudioEntitlement,
+  getStudioEntitlement,
+  previewSummaryForUnpaid,
+  redactColorAnalysisForPreview,
+} from "@/lib/entitlement";
 import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
 import type { CompiledReport, ReportVisualAssets } from "@/types/report";
@@ -132,15 +138,15 @@ async function resolveVisualAssets(
  * GET /api/reports/[id]
  * Returns the compiled report. Locked sections are stripped if not paid.
  */
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, max-age=10" } });
 
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getRequestUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: row, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: row, error } = await admin
     .from("reports")
     .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, rekognition, summary, visual_assets, pipeline_meta, created_at")
     .eq("id", id)
@@ -151,15 +157,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, max-age=10" } });
   }
 
-  // Sign a short-lived URL for the original image
-  const admin = createSupabaseAdminClient();
   const { data: signed } = await admin.storage
     .from(env.supabase.bucket)
     .createSignedUrl(row.image_path, 60 * 30);
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
-  const studioEntitlement = await getStudioEntitlement(user.id);
-  const effectivePremium = hasPremium || studioEntitlement.tier === "studio_pro";
+  const baseEntitlement = await getStudioEntitlement(user.id);
+  const effectivePremium = hasPremium || baseEntitlement.tier === "studio_pro";
+  const studioEntitlement = await enrichReportStudioEntitlement(
+    admin,
+    user.id,
+    id,
+    !!row.is_paid,
+    baseEntitlement,
+  );
   const visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
 
   // Resolve pipeline_meta: prefer direct column, fall back to recommendations row
@@ -188,14 +199,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     studioEntitlement,
     shareToken: row.share_token ?? null,
     faceShape: row.face_shape ?? undefined,
-    colorAnalysis: row.color_analysis ?? undefined,
+    colorAnalysis: effectivePremium
+      ? row.color_analysis ?? undefined
+      : redactColorAnalysisForPreview(row.color_analysis),
     // Free preview shows ONLY face shape + color analysis
     skinAnalysis: effectivePremium ? row.skin_analysis ?? undefined : undefined,
     features:     effectivePremium ? row.features      ?? undefined : undefined,
     glasses:      effectivePremium ? row.glasses       ?? undefined : undefined,
     hairstyle:    effectivePremium ? row.hairstyle     ?? undefined : undefined,
     visualAssets,
-    summary:      effectivePremium ? row.summary       ?? undefined : undefined,
+    summary: effectivePremium
+      ? row.summary ?? undefined
+      : previewSummaryForUnpaid(row.summary),
     pipelineMeta,
     faceLandmarks: extractFaceLandmarks(row.rekognition) ?? undefined,
     createdAt:    row.created_at,

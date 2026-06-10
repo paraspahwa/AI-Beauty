@@ -35,7 +35,8 @@ export default function TabsLayout() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!isAuthed && pathname !== "/account") {
+    // My Looks vault requires auth; Try-On tab is guest-friendly
+    if (!isAuthed && (pathname === "/studio" || pathname.endsWith("/studio"))) {
       router.replace("/account");
     }
   }, [isAuthed, pathname, ready, router]);
@@ -58,9 +59,9 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: t.color.textFaint,
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "Home" }} />
-      <Tabs.Screen name="reports" options={{ title: "Reports" }} />
-      <Tabs.Screen name="studio" options={{ title: "Studio" }} />
+      <Tabs.Screen name="home" options={{ title: "Try-On" }} />
+      <Tabs.Screen name="reports" options={{ href: null }} />
+      <Tabs.Screen name="studio" options={{ title: "My Looks" }} />
       <Tabs.Screen name="account" options={{ title: "Account" }} />
     </Tabs>
   );

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
 import { DashboardTour } from "@/components/TourProvider";
+import { DashboardProgress } from "@/components/dashboard/DashboardProgress";
+import { parseOnboardingProgress } from "@/lib/progressive-unlock";
 import styles from "./dashboard.module.css";
 
 type ReportRow = {
@@ -54,10 +56,19 @@ export default async function DashboardPage({
     getStudioEntitlement(user.id),
   ]);
 
-  const prefs = prefsRow as { color_season?: string | null; face_shape?: string | null; prefs?: { palette?: string[] } | null } | null;
+  const prefs = prefsRow as {
+    color_season?: string | null;
+    face_shape?: string | null;
+    prefs?: { palette?: string[]; onboardingProgress?: unknown } | null;
+  } | null;
   const rows = (reports ?? []) as ReportRow[];
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
   const tier = entitlement.tier;
+  const onboardingProgress = parseOnboardingProgress(prefs?.prefs?.onboardingProgress);
+  const hasPaidReport = rows.some((report) => report.is_paid);
+  const showStyleDna =
+    Boolean(prefs?.color_season) &&
+    (onboardingProgress.analysisUnlocked || hasPaidReport || tier === "studio_pro");
   const latestReadyReport = rows.find((report) => report.status === "ready") ?? null;
   const params = searchParams ? await searchParams : {};
   const activeView = params.view === "history" ? "history" : "continue";
@@ -117,88 +128,48 @@ export default async function DashboardPage({
           </div>
         </div>
 
-      {/* Core next actions */}
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <div
-          className={`rounded-2xl p-5 ${styles.tileSurface}`}
-        >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink">Primary workspace</p>
-          <p className="mt-2 text-base font-semibold text-ink">
-            {latestReadyReport ? "Continue in AI Studio" : "Start in AI Studio"}
-          </p>
-          <p className="mt-1 text-xs text-ink-stone">
-            {latestReadyReport
-              ? "Jump back into try-ons, saved looks, and fast experiments from your latest analysis."
-              : "Start with one selfie, test looks quickly, and create a full report only when you need deeper guidance."}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild variant="accent" size="sm">
-              <Link href={latestReadyReport ? `/report/${latestReadyReport.id}?tab=studio` : "/studio"}>
-                <Sparkles className="h-4 w-4" />
-                {latestReadyReport ? "Continue Studio" : "Open Studio"}
+      <DashboardProgress remainingGens={entitlement.remainingGens} tier={tier} />
+
+      {/* Single continue card */}
+      <div className={`mb-6 rounded-2xl p-6 ${styles.tileSurface}`}>
+        <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink">Continue</p>
+        <p className="mt-2 text-xl font-semibold text-ink">
+          {latestReadyReport ? "Pick up where you left off" : "Try a look on your selfie"}
+        </p>
+        <p className="mt-2 text-sm text-ink-stone max-w-xl">
+          {latestReadyReport
+            ? `Your latest report is ready${latestReadyReport.face_shape?.shape ? ` — ${latestReadyReport.face_shape.shape} face shape` : ""}. Jump into try-ons or unlock deeper analysis.`
+            : "Start with Studio for instant makeup and hair try-ons. Unlock your full report when you want skin routine, hairstyle guide, and Style DNA."}
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Button asChild variant="accent" size="sm">
+            <Link href={latestReadyReport ? `/report/${latestReadyReport.id}?tab=try-shop` : "/studio"}>
+              <Sparkles className="h-4 w-4" />
+              {latestReadyReport ? "Continue try-ons" : "Try a Look Free"}
+            </Link>
+          </Button>
+          {latestReadyReport ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/report/${latestReadyReport.id}`}>
+                <FileText className="h-4 w-4" />
+                View report
               </Link>
             </Button>
+          ) : (
             <Button asChild variant="outline" size="sm">
               <Link href="/upload">
                 <FileText className="h-4 w-4" />
-                Create report
+                Full analysis
               </Link>
             </Button>
-          </div>
+          )}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/studio-vault">
+              <Images className="h-4 w-4" />
+              My Looks
+            </Link>
+          </Button>
         </div>
-
-        <div
-          className={`rounded-2xl p-5 ${styles.tileSurfaceAlt}`}
-          data-tour="style-chat"
-        >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold" style={{ color: "#7B6E9E" }}>Guided help</p>
-          <p className="mt-2 text-base font-semibold text-ink">Get deeper advice when you need it</p>
-          <p className="mt-1 text-xs text-ink-stone">
-            Use your full report for detailed reasoning, saved tips, and longer-term style guidance.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href={latestReadyReport ? `/report/${latestReadyReport.id}?chat=1` : "/upload"}>
-                <MessageCircle className="h-4 w-4" />
-                {latestReadyReport ? "Ask stylist" : "Create report first"}
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/style-dna">
-                <Dna className="h-4 w-4" />
-                Style DNA
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Secondary quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <Link
-          href="/dashboard/studio-vault"
-          className={`flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group ${styles.surfaceCard}`}
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(17,24,39,0.16)" }}>
-            <Images className="h-5 w-5 text-[#111827]" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">My Looks</p>
-            <p className="text-xs text-ink-stone">All report + studio creations in one place</p>
-          </div>
-        </Link>
-        <Link
-          href="/upload"
-          className={`flex items-center gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group ${styles.secondaryCard}`}
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full shrink-0" style={{ background: "rgba(17,24,39,0.16)" }}>
-            <FileText className="h-5 w-5 text-[#111827]" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-ink">Create Full Report</p>
-            <p className="text-xs text-ink-stone">Deeper analysis, recommendations, and guided chat</p>
-          </div>
-        </Link>
       </div>
 
       {tier !== "studio_pro" && (
@@ -218,7 +189,7 @@ export default async function DashboardPage({
       )}
 
       {/* Style DNA teaser — shown when prefs exist */}
-      {prefs?.color_season && (
+      {showStyleDna && (
         <Link
           href="/dashboard/style-dna"
           className="mb-6 flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"

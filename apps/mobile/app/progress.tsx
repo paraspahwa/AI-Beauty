@@ -90,7 +90,7 @@ export default function ProgressScreen() {
 
         <View style={styles.heroCard}>
           <Text style={styles.eyebrow}>✦ Your Journey</Text>
-          <Text style={styles.title}>Progress Tracker</Text>
+          <Text style={styles.title}>Your Style Journey</Text>
           <Text style={styles.subtitle}>
             How your style profile has evolved across {reports.length} completed {reports.length === 1 ? "analysis" : "analyses"}.
           </Text>

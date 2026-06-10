@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import styles from "./studio.module.css";
+import { GuestStudioTry } from "@/components/studio/GuestStudioTry";
+import { PRODUCT_COPY } from "@/lib/product-copy";
 
 /**
  * AI Beauty Studio Canvas
@@ -128,37 +130,37 @@ export default function StudioPage() {
     );
   }
 
-  // Not logged in
+  // Guest try-on — no auth required
   if (!user) {
     return (
       <main className={`min-h-screen ${styles.pageBase}`}>
         <div className="container max-w-6xl py-10 sm:py-16">
-          <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-6">
               <span className="section-label inline-flex">
                 <Sparkles className="mr-2 h-3.5 w-3.5" />
-                AI Studio Canvas
+                {PRODUCT_COPY.primaryCta}
               </span>
               <div className="space-y-4">
                 <h1 className="max-w-xl font-sans text-4xl leading-tight text-ink sm:text-5xl">
-                  A focused try-on workspace for makeup, hair, and outfits.
+                  See a new look on your face in seconds.
                 </h1>
                 <p className="max-w-2xl text-lg leading-relaxed text-ink-stone">
-                  Upload a photo once, then test looks without opening a full report. It is built for quick play, clean previews, and faster decisions.
+                  Upload a selfie, pick a preset or tap Surprise Me. Sign in later to save looks and unlock your full Style DNA.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button asChild variant="accent" size="lg">
-                  <Link href="/auth?redirect=/studio">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign In to Start
-                  </Link>
-                </Button>
                 <Button asChild variant="outline" size="lg">
                   <Link href="/upload">
-                    View Full Analysis
+                    {PRODUCT_COPY.secondaryCta}
                     <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="lg">
+                  <Link href="/auth?redirect=/studio">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign in to save
                   </Link>
                 </Button>
               </div>
@@ -181,23 +183,7 @@ export default function StudioPage() {
             </div>
 
             <div className={`rounded-[2rem] border p-5 sm:p-6 shadow-[0_24px_60px_rgba(17,24,39,0.10)] ${styles.surfaceCard}`}>
-              <div className={`rounded-3xl p-5 text-center ${styles.heroCard}`}>
-                <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ${styles.inkDark}`}>
-                  <Upload className="h-6 w-6 text-white" />
-                </div>
-                <h2 className="mt-4 font-sans text-2xl text-ink">Sign in to upload your photo</h2>
-                <p className="mt-2 text-sm leading-relaxed text-ink-stone">
-                  You will land directly in the Studio once you are authenticated.
-                </p>
-                <div className={`mt-5 rounded-2xl border px-4 py-3 text-left ${styles.softCard}`}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">Best for</p>
-                  <ul className="mt-3 space-y-2 text-sm text-ink-stone">
-                    <li>• Front-facing selfies for makeup and hair</li>
-                    <li>• Full-body photos for outfit try-ons</li>
-                    <li>• Clean, well-lit photos for sharper results</li>
-                  </ul>
-                </div>
-              </div>
+              <GuestStudioTry />
             </div>
           </div>
 
@@ -256,6 +242,18 @@ export default function StudioPage() {
                     />
                   </div>
                   <p className="mt-4 text-sm text-ink-stone">{selectedFile?.name}</p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {["Natural glow", "Evening glam", "New hair"].map((label) => (
+                      <span
+                        key={label}
+                        className="rounded-full px-3 py-1.5 text-xs font-medium"
+                        style={{ background: "rgba(17,24,39,0.08)", color: "#3D2B1F" }}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-center text-xs text-ink-stone">Quick presets ready — start try-on to explore</p>
                 </div>
               ) : (
                 <>

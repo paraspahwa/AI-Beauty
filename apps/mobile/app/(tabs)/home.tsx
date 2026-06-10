@@ -1,530 +1,285 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { analyzeSelfie, listReports, type AnalyzeIntent } from "@/lib/api";
-import { assertMobileEnv } from "@/lib/env";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
+import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
+import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
+import { guestGenerate, guestUpload } from "@/lib/api";
+import { getValidatedMobileApiBaseUrl } from "@/lib/env";
+import { PRODUCT_COPY } from "@/lib/product-copy";
+import { guestShare } from "@/lib/progressive-unlock";
+import type { UnlockTeaser } from "@/lib/progressive-unlock";
 import { mobileTheme as t } from "@/lib/theme";
 
-const INTENT_COPY: Record<AnalyzeIntent, { title: string; subtitle: string; bullets: string[]; price: string; cadence: string; badge?: string }> = {
-  report: {
-    title: "Master Blueprint Report",
-    subtitle: "One-time deep diagnostic with your complete beauty profile and downloadable report.",
-    bullets: ["Skin routine (AM + PM)", "Color season palette", "Hairstyle guide", "Spectacles recommendations", "PDF download + style chat"],
-    price: "\u20b9299",
-    cadence: "One-time",
-  },
-  studio_pro: {
-    title: "Full Interactive AI Studio",
-    subtitle: "Live try-ons, hair and makeup sandbox, plus premium report access and monthly generations.",
-    bullets: ["Everything in Blueprint Report", "Hair and makeup try-ons", "Wardrobe and swatches", "150 generations / month", "Cancel anytime"],
-    price: "\u20b9999/mo",
-    cadence: "Monthly",
-    badge: "Best value",
-  },
-};
-
-const TIPS = [
-  "Look straight into the camera and keep hair off your forehead",
-  "Use natural light and avoid heavy filters",
-  "Use one face per photo for strongest results",
+const PRESETS: TryNextPreset[] = [
+  { id: "natural", label: "Natural glow", mode: "makeup", variant: "natural" },
+  { id: "glam", label: "Evening glam", mode: "makeup", variant: "glamorous" },
+  { id: "hair", label: "New hair color", mode: "hair", variant: "hair" },
+  { id: "blonde", label: "Soft blonde", mode: "hair", variant: "blonde" },
 ];
+
+const FREE_TRYONS = PRODUCT_COPY.free.studioGensPerMonth;
 
 export default function HomeTabScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("Ready");
-  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
-  const [selectedIntent, setSelectedIntent] = useState<AnalyzeIntent>("report");
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [remaining, setRemaining] = useState(FREE_TRYONS);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingPreset, setPendingPreset] = useState<TryNextPreset | null>(null);
+  const [teaser, setTeaser] = useState<UnlockTeaser | null>(null);
 
-  const envOk = useMemo(() => {
-    try {
-      assertMobileEnv();
-      return true;
-    } catch {
-      return false;
+  async function pickImage(useCamera: boolean) {
+    const permission = useCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Allow photo access to upload a selfie.");
+      return;
     }
-  }, []);
 
-  async function openLatestReport() {
+    const result = useCamera
+      ? await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.9 })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, quality: 0.9 });
+
+    if (result.canceled || !result.assets.length) return;
+    await uploadPhoto(result.assets[0].uri, pendingPreset);
+  }
+
+  function startWithPreset(preset: TryNextPreset) {
+    setPendingPreset(preset);
+    void pickImage(false);
+  }
+
+  async function uploadPhoto(uri: string, presetAfter?: TryNextPreset | null) {
     try {
       setLoading(true);
-      const reports = await listReports(1);
-      if (!reports.length) {
-        Alert.alert("No reports yet", "Run your first analysis to create a report.");
-        return;
-      }
-      router.push({ pathname: "/report/[id]", params: { id: reports[0].id } });
+      setError(null);
+      const json = await guestUpload(uri);
+      setPhotoUrl(json.photoUrl);
+      setResultUrl(null);
+      setRemaining(json.remaining);
+      const nextPreset = presetAfter ?? pendingPreset;
+      setPendingPreset(null);
+      if (nextPreset) await generate(nextPreset);
     } catch (err) {
-      Alert.alert("Open latest report", String(err));
+      setError(String(err));
     } finally {
       setLoading(false);
     }
   }
 
-  async function pickAndAnalyze(intentOverride?: AnalyzeIntent) {
+  async function generate(preset: TryNextPreset) {
+    if (!photoUrl || remaining <= 0) return;
     try {
       setLoading(true);
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert("Permission needed", "Allow photo access to upload a selfie.");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        quality: 0.9,
+      setActivePreset(preset.id);
+      setError(null);
+      const json = await guestGenerate({
+        mode: preset.mode,
+        makeupStyle: preset.mode === "makeup" ? preset.variant : undefined,
+        hairVariant: preset.mode === "hair" ? preset.variant : undefined,
       });
-
-      if (result.canceled || result.assets.length === 0) {
-        setStatus("Image selection cancelled");
-        return;
+      setResultUrl(json.lowResUrl);
+      setRemaining(json.remaining);
+      if (json.teaser && json.teaser.type !== "none") {
+        setTeaser({
+          type: json.teaser.type as UnlockTeaser["type"],
+          message: json.teaser.message ?? "",
+          ctaLabel: json.teaser.ctaLabel ?? "Continue",
+          ctaHref: json.teaser.ctaHref ?? "/studio",
+        });
       }
-
-      const asset = result.assets[0];
-      setSelectedImageUri(asset.uri);
-      setStatus("Uploading selfie...");
-
-      const effectiveIntent = intentOverride ?? selectedIntent;
-      const response = await analyzeSelfie(asset.uri, effectiveIntent);
-      setStatus("Analysis started");
-      router.push({
-        pathname: "/analysis/[id]",
-        params: { id: response.reportId, imageUri: asset.uri, intent: effectiveIntent },
-      });
     } catch (err) {
-      Alert.alert("Analyze failed", String(err));
-      setStatus("Analyze failed");
+      setError(String(err));
     } finally {
       setLoading(false);
+      setActivePreset(null);
     }
   }
 
-  async function captureAndAnalyze(intentOverride?: AnalyzeIntent) {
-    try {
-      setLoading(true);
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert("Permission needed", "Allow camera access to capture a selfie.");
-        return;
-      }
+  function surpriseMe() {
+    const preset = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+    void generate(preset);
+  }
 
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        cameraType: ImagePicker.CameraType.front,
-        quality: 0.9,
-      });
-
-      if (result.canceled || result.assets.length === 0) {
-        setStatus("Camera capture cancelled");
-        return;
-      }
-
-      const asset = result.assets[0];
-      setSelectedImageUri(asset.uri);
-      setStatus("Uploading selfie...");
-
-      const effectiveIntent = intentOverride ?? selectedIntent;
-      const response = await analyzeSelfie(asset.uri, effectiveIntent);
-      setStatus("Analysis started");
-      router.push({
-        pathname: "/analysis/[id]",
-        params: { id: response.reportId, imageUri: asset.uri, intent: effectiveIntent },
-      });
-    } catch (err) {
-      Alert.alert("Analyze failed", String(err));
-      setStatus("Analyze failed");
-    } finally {
-      setLoading(false);
-    }
+  async function shareLook() {
+    if (!resultUrl || !photoUrl) return;
+    const { teaser: nextTeaser } = await guestShare();
+    if (nextTeaser.type !== "none") setTeaser(nextTeaser);
+    const base = getValidatedMobileApiBaseUrl();
+    await Share.share({
+      title: "My Renovaara look",
+      message: `Made with Renovaara — try your next look free: ${base}/studio`,
+      url: resultUrl,
+    });
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Renovaara Mobile</Text>
-          <Text style={styles.title}>Upload your selfie</Text>
-          <Text style={styles.subtitle}>Upload your selfie for a free face-shape overview, then unlock your complete skin routine, hairstyle guide, virtual try-ons, and more.</Text>
-          <View style={styles.heroMetaRow}>
-            <View style={styles.heroMetaPill}>
-              <Text style={styles.heroMetaLabel}>Fast result</Text>
-            </View>
-            <View style={styles.heroMetaPill}>
-              <Text style={styles.heroMetaLabel}>Private upload</Text>
-            </View>
-          </View>
-          <ActionButton
-            label="One-tap instant analysis"
-            disabled={loading || !envOk}
-            onPress={() => {
-              setSelectedIntent("report");
-              void pickAndAnalyze("report");
-            }}
-          />
-        </View>
+        <Text style={styles.eyebrow}>Try a look free</Text>
+        <Text style={styles.title}>See a new look on your face in seconds</Text>
+        <Text style={styles.subtitle}>
+          Upload a selfie, pick a preset or tap Surprise Me. No account needed for your first {FREE_TRYONS} try-ons.
+        </Text>
 
-        <View style={styles.intentSection}>
-          <Text style={styles.intentEyebrow}>Choose your path</Text>
-          <View style={styles.intentGrid}>
-            {(["report", "studio_pro"] as AnalyzeIntent[]).map((intent) => {
-              const active = selectedIntent === intent;
-              return (
-                <Pressable
-                  key={intent}
-                  onPress={() => setSelectedIntent(intent)}
-                  style={[styles.intentCard, active ? styles.intentCardActive : null]}
-                >
-                  {INTENT_COPY[intent].badge ? (
-                    <View style={[styles.intentBadge, active ? styles.intentBadgeActive : null]}>
-                      <Text style={styles.intentBadgeLabel}>{INTENT_COPY[intent].badge}</Text>
-                    </View>
-                  ) : null}
-                  <Text style={[styles.intentTitle, active ? styles.intentTitleActive : null]}>{INTENT_COPY[intent].title}</Text>
-                  <Text style={[styles.intentBody, active ? styles.intentBodyActive : null]}>{INTENT_COPY[intent].subtitle}</Text>
-                  <View style={styles.intentBulletList}>
-                    {INTENT_COPY[intent].bullets.map((item) => (
-                      <Text key={`${intent}-${item}`} style={[styles.intentBullet, active ? styles.intentBulletActive : null]}>• {item}</Text>
-                    ))}
-                  </View>
-                  <View style={styles.intentPriceRow}>
-                    <Text style={[styles.intentPrice, active ? styles.intentTitleActive : null]}>{INTENT_COPY[intent].cadence} · {INTENT_COPY[intent].price}</Text>
-                  </View>
+        {!photoUrl ? (
+          <>
+            <View style={styles.presetGrid}>
+              {PRESETS.map((preset) => (
+                <Pressable key={preset.id} style={styles.presetCard} onPress={() => startWithPreset(preset)}>
+                  <Text style={styles.presetLabel}>{preset.label}</Text>
                 </Pressable>
-              );
-            })}
-          </View>
-          <View style={styles.tipsCard}>
-            <Text style={styles.tipsTitle}>Photo tips</Text>
-            {TIPS.map((tip) => (
-              <Text key={tip} style={styles.tipsBody}>• {tip}</Text>
-            ))}
-          </View>
-        </View>
+              ))}
+            </View>
+            <Pressable style={styles.uploadCard} onPress={() => void pickImage(false)} disabled={loading}>
+              <Text style={styles.uploadTitle}>Upload a selfie</Text>
+              <Text style={styles.uploadHint}>{FREE_TRYONS} free try-ons · no card required</Text>
+              {loading ? <ActivityIndicator color={t.color.text} style={{ marginTop: 12 }} /> : null}
+            </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={() => void pickImage(true)}>
+              <Text style={styles.secondaryButtonLabel}>Take photo</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <View style={styles.toolbar}>
+              <Text style={styles.quota}>{remaining <= 0 ? "No free try-ons left" : `${remaining} free try-ons left`}</Text>
+              <Pressable onPress={() => { setPhotoUrl(null); setResultUrl(null); }}>
+                <Text style={styles.link}>Change photo</Text>
+              </Pressable>
+            </View>
 
-        {!envOk ? (
-          <Text style={styles.error}>Set EXPO_PUBLIC_API_BASE_URL, EXPO_PUBLIC_SUPABASE_URL, and EXPO_PUBLIC_SUPABASE_ANON_KEY.</Text>
-        ) : null}
+            {resultUrl ? (
+              <BeforeAfterCompare beforeUri={photoUrl} afterUri={resultUrl} />
+            ) : (
+              <Image source={{ uri: photoUrl }} style={styles.preview} />
+            )}
 
-        <ActionButton
-          label={`Capture selfie for ${selectedIntent === "studio_pro" ? "Studio Pro" : "Complete Analysis"}`}
-          disabled={loading || !envOk}
-          onPress={captureAndAnalyze}
-        />
-        <ActionButton
-          label={`Pick selfie for ${selectedIntent === "studio_pro" ? "Studio Pro" : "Complete Analysis"}`}
-          disabled={loading || !envOk}
-          onPress={pickAndAnalyze}
-        />
-        <ActionButton label="Open latest report" disabled={loading || !envOk} onPress={openLatestReport} variant="secondary" />
-        <View style={styles.quickLinksRow}>
-          <View style={styles.quickLinkItem}>
-            <ActionButton label="Open Style DNA" disabled={loading || !envOk} onPress={() => router.push("/style-dna")} variant="secondary" />
-          </View>
-          <View style={styles.quickLinkItem}>
-            <ActionButton label="Open Progress" disabled={loading || !envOk} onPress={() => router.push("/progress")} variant="secondary" />
-          </View>
-        </View>
+            <Pressable
+              style={[styles.primaryButton, (loading || remaining <= 0) ? styles.primaryButtonDisabled : null]}
+              onPress={() => void surpriseMe()}
+              disabled={loading || remaining <= 0}
+            >
+              <Text style={styles.primaryButtonLabel}>{loading ? "Creating…" : "Surprise Me"}</Text>
+            </Pressable>
 
-        <View style={styles.trustCard}>
-          <Text style={styles.trustTitle}>Why users finish here</Text>
-          <View style={styles.trustRow}>
-            <Text style={styles.trustItem}>Private photo handling</Text>
-            <Text style={styles.trustItem}>Results in about 60 seconds</Text>
-            <Text style={styles.trustItem}>Instant digital delivery</Text>
-          </View>
-        </View>
+            <TryTheseNext
+              presets={PRESETS}
+              onSelect={(p) => void generate(p)}
+              loading={loading}
+              disabled={remaining <= 0}
+              activeId={activePreset}
+            />
 
-        {selectedImageUri ? (
-          <View style={styles.previewBlock}>
-            <Text style={styles.previewLabel}>Selected selfie</Text>
-            <Image source={{ uri: selectedImageUri }} style={styles.previewImage} />
-          </View>
-        ) : null}
+            {resultUrl ? (
+              <>
+                <Pressable style={styles.secondaryButton} onPress={() => void shareLook()}>
+                  <Text style={styles.secondaryButtonLabel}>Share your look</Text>
+                </Pressable>
+                <UnlockTeaserBanner guest teaser={teaser} />
+              </>
+            ) : null}
 
-        <Text style={styles.status}>Status: {status}</Text>
+            {remaining <= 0 ? (
+              <View style={styles.signInCard}>
+                <Text style={styles.signInTitle}>Love your look? Save it to My Looks</Text>
+                <Pressable style={styles.primaryButton} onPress={() => router.push("/account")}>
+                  <Text style={styles.primaryButtonLabel}>Sign in free</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </>
+        )}
+
+        <Pressable
+          style={styles.linkRow}
+          onPress={() => void Linking.openURL(`${getValidatedMobileApiBaseUrl()}/upload`)}
+        >
+          <Text style={styles.link}>Unlock full analysis →</Text>
+        </Pressable>
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function ActionButton({
-  label,
-  onPress,
-  disabled,
-  variant = "primary",
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  variant?: "primary" | "secondary";
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={[
-        styles.button,
-        variant === "secondary" ? styles.buttonSecondary : null,
-        disabled ? styles.buttonDisabled : null,
-      ]}
-    >
-      <Text style={[styles.buttonLabel, variant === "secondary" ? styles.buttonLabelSecondary : null]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: t.color.bg,
-  },
-  container: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 28,
-  },
-  heroCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: t.color.brandRoseBorderSoft,
-    backgroundColor: t.color.surface,
-    padding: 16,
-    gap: 8,
-    shadowColor: "#111827",
-    shadowOpacity: 0.07,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 3,
-  },
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    color: t.color.brandRose,
-  },
-  heroMetaRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 2,
-  },
-  heroMetaPill: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    backgroundColor: t.color.surfaceMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  heroMetaLabel: {
-    color: t.color.textSoft,
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  intentSection: {
-    gap: 10,
-    marginBottom: 4,
-  },
-  intentEyebrow: {
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    color: t.color.brandRose,
-  },
-  intentGrid: {
-    gap: 10,
-  },
-  intentCard: {
-    borderRadius: 18,
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    padding: 16,
-    gap: 6,
-    shadowColor: "#111827",
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 1,
-  },
-  intentBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: t.color.borderStrong,
-    backgroundColor: t.color.surfaceMuted,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  intentBadgeActive: {
-    borderColor: t.color.surface,
-    backgroundColor: t.color.overlayDark08,
-  },
-  intentBadgeLabel: {
-    color: t.color.textSoft,
-    fontSize: 10,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  intentCardActive: {
-    backgroundColor: t.color.text,
-    borderColor: t.color.text,
-  },
-  intentTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: t.color.text,
-  },
-  intentTitleActive: {
-    color: t.color.textOnDark,
-  },
-  intentBody: {
-    color: t.color.textMuted,
-    lineHeight: 20,
-  },
-  intentBodyActive: {
-    color: t.color.textOnDark80,
-  },
-  intentBulletList: {
-    marginTop: 4,
-    gap: 3,
-  },
-  intentBullet: {
-    color: t.color.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  intentBulletActive: {
-    color: t.color.textOnDark75,
-  },
-  intentPriceRow: {
-    marginTop: 6,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: t.color.overlayDark08,
-  },
-  intentPrice: {
-    color: t.color.text,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  tipsCard: {
-    borderRadius: 16,
-    backgroundColor: t.color.brandRoseSurface,
-    borderWidth: 1,
-    borderColor: t.color.brandRoseBorder,
-    padding: 14,
-    gap: 4,
-  },
-  tipsTitle: {
-    color: t.color.text,
-    fontWeight: "700",
-  },
-  tipsBody: {
-    color: t.color.textMuted,
-    lineHeight: 20,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: t.color.text,
-    lineHeight: 36,
-  },
-  subtitle: {
-    color: t.color.textMuted,
-    lineHeight: 22,
-    marginBottom: 2,
-  },
-  error: {
-    marginBottom: 10,
-    color: t.color.danger,
-  },
-  button: {
-    borderRadius: 12,
-    backgroundColor: t.color.text,
-    paddingVertical: 13,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    shadowColor: "#111827",
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  buttonSecondary: {
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.borderStrong,
-  },
-  buttonDisabled: {
-    opacity: t.opacity.disabled,
-  },
-  buttonLabel: {
-    color: t.color.textOnDark,
-    fontWeight: "700",
-  },
-  buttonLabelSecondary: {
-    color: t.color.textSoft,
-  },
-  quickLinksRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 2,
-  },
-  quickLinkItem: {
-    flex: 1,
-  },
-  trustCard: {
-    marginTop: 6,
+  safe: { flex: 1, backgroundColor: t.color.bg },
+  container: { padding: 20, gap: 12, paddingBottom: 40 },
+  eyebrow: { fontSize: 12, fontWeight: "700", color: t.color.textMuted, textTransform: "uppercase", letterSpacing: 1 },
+  title: { fontSize: 28, fontWeight: "800", color: t.color.text, lineHeight: 34 },
+  subtitle: { fontSize: 15, color: t.color.textSoft, lineHeight: 22, marginBottom: 8 },
+  presetGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  presetCard: {
+    width: "48%",
     borderRadius: 16,
     borderWidth: 1,
+    borderStyle: "dashed",
     borderColor: t.color.border,
-    backgroundColor: t.color.surface,
-    padding: 12,
-    gap: 8,
-  },
-  trustTitle: {
-    color: t.color.text,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  trustRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  trustItem: {
-    color: t.color.textSoft,
-    fontSize: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    backgroundColor: t.color.surfaceMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  status: {
-    marginTop: 8,
-    color: t.color.textSoft,
-    fontSize: 12,
-  },
-  previewBlock: {
-    marginTop: 8,
-    gap: 8,
-  },
-  previewLabel: {
-    color: t.color.textSoft,
-    fontWeight: "600",
-  },
-  previewImage: {
-    width: 180,
-    height: 220,
-    borderRadius: 16,
     backgroundColor: t.color.surfaceSubtle,
+    padding: 14,
   },
+  presetLabel: { fontSize: 13, fontWeight: "600", color: t.color.text },
+  uploadCard: {
+    borderRadius: 24,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
+    padding: 28,
+    alignItems: "center",
+  },
+  uploadTitle: { fontSize: 16, fontWeight: "700", color: t.color.text },
+  uploadHint: { marginTop: 6, fontSize: 12, color: t.color.textMuted },
+  toolbar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  quota: { fontSize: 13, color: t.color.textSoft },
+  preview: { width: "100%", aspectRatio: 3 / 4, borderRadius: 24 },
+  primaryButton: {
+    marginTop: 8,
+    backgroundColor: t.color.text,
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  primaryButtonDisabled: { opacity: 0.5 },
+  primaryButtonLabel: { color: t.color.surface, fontWeight: "700", fontSize: 15 },
+  secondaryButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  secondaryButtonLabel: { color: t.color.text, fontWeight: "600" },
+  signInCard: {
+    marginTop: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    backgroundColor: t.color.surface,
+    padding: 16,
+    gap: 10,
+  },
+  signInTitle: { fontSize: 14, fontWeight: "700", color: t.color.text, textAlign: "center" },
+  linkRow: { marginTop: 8, alignItems: "center" },
+  link: { color: t.color.text, fontWeight: "600", textDecorationLine: "underline" },
+  error: { color: "#C06B3E", fontSize: 13 },
 });

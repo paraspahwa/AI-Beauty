@@ -5,7 +5,7 @@
     "titleAccent": "before you decide",
     "description": "Start in AI Studio with one selfie to try makeup, hair, and outfit ideas instantly. Generate your full beauty report only when you want deeper guidance.",
     "primaryCta": {
-      "label": "Open AI Studio",
+      "label": "Try a Look Free",
       "href": "/studio"
     },
     "secondaryCta": {
@@ -16,7 +16,7 @@
   "ctaBanner": {
     "title": "Start in Studio, unlock deeper analysis later",
     "description": "Use AI Studio for fast try-ons and save your best looks. When you want deeper guidance, generate your full Renovaara report from the same journey.",
-    "buttonLabel": "Start AI Studio",
+    "buttonLabel": "Try a Look Free",
     "buttonHref": "/studio"
   },
   "stats": [

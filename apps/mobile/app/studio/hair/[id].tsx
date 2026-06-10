@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
-import { generateHairColorPreview, generateHairTransferPreview } from "@/lib/api";
+import { generateHairColorPreview, generateHairTransferPreview, postStudioProgress } from "@/lib/api";
 import { clearStudioHistory, type StudioHistoryItem, loadStudioHistory, pushStudioHistoryItem, saveVisualForReport } from "@/lib/studio-history";
 import { mobileTheme as t } from "@/lib/theme";
 
@@ -129,14 +129,15 @@ export default function MobileHairStudioScreen() {
     }
   }
 
-  async function handleGenerateCustom() {
+  async function handleGenerateCustom(colorOverride?: HairColorOption) {
+    const color = colorOverride ?? selectedColor;
     try {
       if (!params.id) throw new Error("Missing report id");
       void Haptics.selectionAsync();
       setLoading(true);
       const result = await generateHairColorPreview(params.id, {
-        colorName: selectedColor.colorName,
-        colorHex: selectedColor.colorHex,
+        colorName: color.colorName,
+        colorHex: color.colorHex,
       });
       const generatedUrl = result.hdUrl ?? result.lowResUrl;
       setResultUrl(generatedUrl);
@@ -149,12 +150,13 @@ export default function MobileHairStudioScreen() {
           id: historyId,
           imageUrl: generatedUrl,
           createdAt,
-          label: selectedColor.label,
+          label: color.label,
         });
         setRecentLooks(next);
         setSelectedHistoryId(historyId);
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void postStudioProgress("try_on").catch(() => undefined);
     } catch (err) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Hair color preview", String(err));
@@ -196,6 +198,7 @@ export default function MobileHairStudioScreen() {
         setSelectedHistoryId(historyId);
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void postStudioProgress("try_on").catch(() => undefined);
     } catch (err) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Hair transfer", String(err));
@@ -292,6 +295,17 @@ export default function MobileHairStudioScreen() {
               </View>
             </View>
 
+            <Pressable
+              onPress={() => {
+                const option = HAIR_COLOR_OPTIONS[Math.floor(Math.random() * HAIR_COLOR_OPTIONS.length)];
+                setSelectedColor(option);
+                void handleGenerateCustom(option);
+              }}
+              disabled={loading}
+              style={[styles.generateButtonCompact, loading ? styles.generateButtonDisabled : null]}
+            >
+              <Text style={styles.generateButtonLabel}>Surprise Me</Text>
+            </Pressable>
             <Pressable onPress={() => void handleGenerateCustom()} disabled={loading} style={[styles.generateButton, loading ? styles.generateButtonDisabled : null]}>
               <Text style={styles.generateButtonLabel}>{loading ? "Generating..." : "Generate hair color preview"}</Text>
             </Pressable>

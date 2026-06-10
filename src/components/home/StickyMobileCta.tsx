@@ -32,9 +32,9 @@ export function StickyMobileCta() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Button asChild size="lg" variant="accent" className="w-full cta-shimmer">
-        <Link href="/upload" className="flex items-center justify-center gap-2">
+        <Link href="/studio" className="flex items-center justify-center gap-2">
           <Camera className="h-4 w-4" />
-          Start free analysis
+          Try a look free
           <ArrowRight className="h-4 w-4" />
         </Link>
       </Button>
