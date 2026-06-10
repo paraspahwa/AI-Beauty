@@ -450,6 +450,22 @@ export async function analyzeSelfie(
   imageUri: string,
   intent?: AnalyzeIntent,
 ): Promise<{ reportId: string; visualsPending: boolean }> {
+  return startAnalysisFromSelfie(imageUri, intent);
+}
+
+const ANALYZE_ACCEPT_TIMEOUT_MS = 120000;
+
+type AnalyzeStreamEvent =
+  | { type: "accepted"; reportId: string }
+  | { type: "cached"; reportId: string }
+  | { type: "completed"; reportId: string; visualsPending?: boolean }
+  | { type: "failed"; message: string };
+
+/** Starts analysis via SSE and returns as soon as the report id is accepted (pipeline continues server-side). */
+export async function startAnalysisFromSelfie(
+  imageUri: string,
+  intent?: AnalyzeIntent,
+): Promise<{ reportId: string; visualsPending: boolean; cached?: boolean }> {
   const form = new FormData();
   form.append("image", {
     uri: imageUri,
@@ -460,9 +476,101 @@ export async function analyzeSelfie(
     form.append("intent", intent);
   }
 
-  return fetchWithAuth<{ reportId: string; visualsPending: boolean }>("/api/analyze", {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) {
+    throw new Error("Sign in required for full analysis");
+  }
+
+  const apiBaseUrl = getValidatedMobileApiBaseUrl();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ANALYZE_ACCEPT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/analyze?stream=1`, {
+      method: "POST",
+      body: form,
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errText = sanitizeApiErrorText(await response.text());
+      throw new Error(`API ${response.status}: ${errText || "Analysis failed"}`);
+    }
+
+    if (!response.body?.getReader) {
+      return fetchWithAuth<{ reportId: string; visualsPending: boolean }>("/api/analyze", {
+        method: "POST",
+        body: form,
+      });
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const event = JSON.parse(line) as AnalyzeStreamEvent;
+        if (event.type === "accepted" || event.type === "cached") {
+          void reader.cancel().catch(() => undefined);
+          return {
+            reportId: event.reportId,
+            visualsPending: event.type === "accepted",
+            cached: event.type === "cached",
+          };
+        }
+        if (event.type === "completed") {
+          return {
+            reportId: event.reportId,
+            visualsPending: event.visualsPending ?? false,
+          };
+        }
+        if (event.type === "failed") {
+          throw new Error(event.message);
+        }
+      }
+    }
+
+    throw new Error("Analysis stream ended unexpectedly");
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Analysis request timed out. Please try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function createMomentShare(input: {
+  beforeUrl: string;
+  afterUrl: string;
+  caption?: string;
+  assetId?: string;
+}): Promise<{ shareUrl: string; ogImageUrl: string }> {
+  return fetchWithAuth<{ shareUrl: string; ogImageUrl: string }>("/api/studio/moment", {
     method: "POST",
-    body: form,
+    body: JSON.stringify(input),
+  });
+}
+
+export async function createGuestMomentShare(input: {
+  beforeUrl: string;
+  afterUrl: string;
+  caption?: string;
+}): Promise<{ shareUrl: string; ogImageUrl: string }> {
+  return fetchGuestApi<{ shareUrl: string; ogImageUrl: string }>("/api/studio/moment", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 

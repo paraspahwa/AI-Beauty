@@ -15,7 +15,7 @@ export const PRODUCT_COPY = {
   studioPro: {
     name: "Studio Pro",
     priceInr: 999,
-    tagline: "Unlimited try-ons and full reports",
+    tagline: "150 try-ons per month plus full reports",
     studioGensPerMonth: 150,
   },
   myLooks: "My Looks",

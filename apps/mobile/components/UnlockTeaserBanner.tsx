@@ -1,9 +1,31 @@
 import { useEffect, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { getStudioProgress, postStudioProgress } from "@/lib/api";
 import { guestDismissTeaser, getUnlockTeaser, readGuestProgress, type UnlockTeaser } from "@/lib/progressive-unlock";
 import { mobileTheme as t } from "@/lib/theme";
+
+function openTeaserHref(href: string, router: ReturnType<typeof useRouter>) {
+  if (href === "/upload" || href.startsWith("/upload?")) {
+    router.push("/upload");
+    return;
+  }
+  if (href === "/studio" || href.startsWith("/studio")) {
+    router.push("/(tabs)/home");
+    return;
+  }
+  const reportMatch = href.match(/^\/report\/([^/?]+)/);
+  if (reportMatch?.[1]) {
+    router.push({ pathname: "/report/[id]", params: { id: reportMatch[1] } });
+    return;
+  }
+  if (href.startsWith("/dashboard")) {
+    router.push("/progress");
+    return;
+  }
+  void Linking.openURL(`${getValidatedMobileApiBaseUrl()}${href}`);
+}
 
 export function UnlockTeaserBanner({
   guest = false,
@@ -12,6 +34,7 @@ export function UnlockTeaserBanner({
   guest?: boolean;
   teaser?: UnlockTeaser | null;
 }) {
+  const router = useRouter();
   const [teaser, setTeaser] = useState<UnlockTeaser>({ type: "none" });
   const [visible, setVisible] = useState(false);
 
@@ -69,12 +92,7 @@ export function UnlockTeaserBanner({
         <Text style={styles.dismissText}>×</Text>
       </Pressable>
       <Text style={styles.message}>{teaser.message}</Text>
-      <Pressable
-        onPress={() => {
-          const base = getValidatedMobileApiBaseUrl();
-          void Linking.openURL(`${base}${teaser.ctaHref}`);
-        }}
-      >
+      <Pressable onPress={() => openTeaserHref(teaser.ctaHref, router)}>
         <Text style={styles.cta}>{teaser.ctaLabel} →</Text>
       </Pressable>
     </View>

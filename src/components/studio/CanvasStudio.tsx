@@ -6,7 +6,9 @@ import { track } from "@/lib/track";
 import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
 import { StyleMomentShare } from "@/components/StyleMomentShare";
+import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
 import { Button } from "@/components/ui/button";
+import type { UnlockTeaser } from "@/lib/progressive-unlock";
 import type { StudioEntitlement, StudioOutfitResult } from "@/types/report";
 import { MAKEUP_STYLES, MAKEUP_STYLE_LABELS, MAKEUP_INTENSITIES, MAKEUP_INTENSITY_LABELS } from "@/lib/makeup-options";
 import { type HairGender, type HairStyleValue, getHairStyleOptionsForGender } from "@/lib/hair-options";
@@ -81,6 +83,7 @@ export function CanvasStudio({
   const [scanResult, setScanResult] = React.useState<ColorScanResult | null>(null);
   const [result, setResult] = React.useState<CanvasResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [unlockTeaser, setUnlockTeaser] = React.useState<UnlockTeaser | null>(null);
 
   const canGenerate =
     studioEntitlement == null
@@ -171,11 +174,21 @@ export function CanvasStudio({
       setResult(json);
       track("tryon", { source: "canvas_studio", mode });
       await loadVault();
-      void fetch("/api/studio/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "try_on" }),
-      });
+      try {
+        const progressRes = await fetch("/api/studio/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "try_on" }),
+        });
+        if (progressRes.ok) {
+          const progressJson = await progressRes.json() as { teaser?: UnlockTeaser };
+          if (progressJson.teaser && progressJson.teaser.type !== "none") {
+            setUnlockTeaser(progressJson.teaser);
+          }
+        }
+      } catch {
+        // non-blocking
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -349,6 +362,15 @@ export function CanvasStudio({
               <StyleMomentShare
                 beforeUrl={sourcePreviewUrl || photoUrl}
                 afterUrl={result.hdUrl || result.lowResUrl}
+                assetId={result.asset?.id}
+              />
+              <UnlockTeaserBanner
+                teaser={unlockTeaser}
+                hints={{
+                  season: scanResult?.season ?? selectedPalette?.season,
+                  faceShape: undefined,
+                }}
+                className="mt-4"
               />
               {result.outfit && (
                 <div className="mt-4 space-y-3">

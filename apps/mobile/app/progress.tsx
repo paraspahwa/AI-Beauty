@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchProgressReports, type MobileProgressReport } from "@/lib/api";
+import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
 import { PillButton } from "@/lib/ui/PillButton";
 import { mobileTheme as t } from "@/lib/theme";
 import { useRequireMobileSession } from "@/lib/use-mobile-session";
@@ -96,6 +97,8 @@ export default function ProgressScreen() {
           </Text>
         </View>
 
+        <UnlockTeaserBanner />
+
         {error ? (
           <View style={styles.card}>
             <Text style={styles.errorText}>{error}</Text>
@@ -107,7 +110,7 @@ export default function ProgressScreen() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>No completed analyses yet</Text>
             <Text style={styles.noteText}>Complete your first beauty analysis and return here to track how your profile evolves.</Text>
-            <PillButton label="Get my report" onPress={() => router.push("/home")} />
+            <PillButton label="Get my report" onPress={() => router.push("/upload")} />
           </View>
         ) : reports.length === 1 && firstReport ? (
           <View style={styles.card}>
@@ -117,7 +120,7 @@ export default function ProgressScreen() {
               {firstReport.faceShape?.shape ? <Text style={styles.singleTag}>{firstReport.faceShape.shape} face</Text> : null}
               {firstReport.skinAnalysis?.type ? <Text style={styles.singleTag}>{firstReport.skinAnalysis.type} skin</Text> : null}
             </View>
-            <PillButton label="Add another analysis" variant="outline" onPress={() => router.push("/home")} />
+            <PillButton label="Add another analysis" variant="outline" onPress={() => router.push("/upload")} />
           </View>
         ) : (
           <>

@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Linking,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -17,7 +16,8 @@ import {
 import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
 import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
-import { guestGenerate, guestUpload } from "@/lib/api";
+import { guestGenerate, guestUpload, createGuestMomentShare } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { PRODUCT_COPY } from "@/lib/product-copy";
 import { guestShare } from "@/lib/progressive-unlock";
@@ -122,12 +122,34 @@ export default function HomeTabScreen() {
     if (!resultUrl || !photoUrl) return;
     const { teaser: nextTeaser } = await guestShare();
     if (nextTeaser.type !== "none") setTeaser(nextTeaser);
-    const base = getValidatedMobileApiBaseUrl();
-    await Share.share({
-      title: "My Renovaara look",
-      message: `Made with Renovaara — try your next look free: ${base}/studio`,
-      url: resultUrl,
-    });
+    try {
+      const { shareUrl } = await createGuestMomentShare({
+        beforeUrl: photoUrl,
+        afterUrl: resultUrl,
+        caption: "Made with Renovaara",
+      });
+      await Share.share({
+        title: "My Renovaara look",
+        message: `Made with Renovaara — try your next look free`,
+        url: shareUrl,
+      });
+    } catch {
+      const base = getValidatedMobileApiBaseUrl();
+      await Share.share({
+        title: "My Renovaara look",
+        message: `Made with Renovaara — try your next look free: ${base}/studio`,
+        url: resultUrl,
+      });
+    }
+  }
+
+  async function openFullAnalysis() {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) {
+      router.push("/account");
+      return;
+    }
+    router.push("/upload");
   }
 
   return (
@@ -208,10 +230,7 @@ export default function HomeTabScreen() {
           </>
         )}
 
-        <Pressable
-          style={styles.linkRow}
-          onPress={() => void Linking.openURL(`${getValidatedMobileApiBaseUrl()}/upload`)}
-        >
+        <Pressable style={styles.linkRow} onPress={() => void openFullAnalysis()}>
           <Text style={styles.link}>Unlock full analysis →</Text>
         </Pressable>
 

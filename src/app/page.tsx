@@ -30,7 +30,7 @@ const FEATURES = [
     icon: Wand2,
     title: "AI Makeup Studio",
     description:
-      "Preview lip, eye, blush, and contour combinations on your own face before buying products.",
+      "Try makeup and hair on your own face free — 3 generations per month, no account required.",
   },
   {
     icon: Glasses,
@@ -161,7 +161,7 @@ const PLANS: {
     cta: "Try a look free",
     href: "/studio",
     featured: false,
-    items: ["3 free try-ons / month", "Face shape overview", "Starter style summary", "No card required"],
+    items: ["3 free try-ons / month", "Makeup & hair preview", "Face shape overview", "Progressive Style DNA teasers", "No card required"],
   },
   {
     name: "Full Report",
@@ -173,12 +173,13 @@ const PLANS: {
     featured: true,
     items: [
       "Everything in Free",
-      "AI Makeup Studio access",
-      "Virtual clothing try-on",
+      "5 bonus try-ons on your report",
+      "Full color season & skin analysis",
       "Spectacles and hairstyle guide",
       "Skin routine recommendations",
       "Style Guide — Do vs Avoid module",
       "AI style consultant chat",
+      "Clothing & outfit try-ons",
     ],
   },
   {
@@ -190,7 +191,7 @@ const PLANS: {
     featured: false,
     items: [
       "Everything in Full Report",
-      "Higher generation limits",
+      "150 AI generations / month",
       "Priority processing",
       "Continuous style tracking",
       "Unlimited consultant chat sessions",

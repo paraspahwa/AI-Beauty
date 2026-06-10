@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Image, Linking, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { BeforeAfterCompare } from "@/components/BeforeAfterCompare";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
-import { postStudioProgress } from "@/lib/api";
+import { createMomentShare, postStudioProgress } from "@/lib/api";
 import { createStudioCanvasShareLink, fetchStudioVault, generateStudioCanvas, revokeStudioCanvasShareLink, scanStudioCanvasColor, type MobileCanvasColorScan, type MobileCanvasGenerateResponse, type MobileCanvasGenerateMode, type MobileVaultAsset } from "@/lib/api";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { mobileTheme as t } from "@/lib/theme";
@@ -283,9 +283,22 @@ export default function CanvasStudioScreen() {
             <Pressable
               style={styles.secondaryButtonCompact}
               onPress={() => {
-                const url = result.hdUrl ?? result.lowResUrl;
-                if (url) void Share.share({ message: "My Renovaara look", url });
-                void postStudioProgress("share").catch(() => undefined);
+                const afterUrl = result.hdUrl ?? result.lowResUrl;
+                if (!afterUrl || !sourcePreviewUrl) return;
+                void (async () => {
+                  try {
+                    const { shareUrl } = await createMomentShare({
+                      beforeUrl: sourcePreviewUrl,
+                      afterUrl,
+                      assetId: result.asset?.id,
+                      caption: "Made with Renovaara",
+                    });
+                    await Share.share({ title: "My Renovaara look", message: "Made with Renovaara", url: shareUrl });
+                  } catch {
+                    await Share.share({ title: "My Renovaara look", url: afterUrl });
+                  }
+                  void postStudioProgress("share").catch(() => undefined);
+                })();
               }}
             >
               <Text style={styles.secondaryButtonCompactLabel}>Share moment</Text>
