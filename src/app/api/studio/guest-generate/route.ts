@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         input: {
           image_url: state.photoUrl,
           hair_color: hairParams.hair_color,
-          hair_style: hairParams.hair_style,
+          target_hairstyle: hairParams.target_hairstyle,
         },
       }) as FalImageOutput;
       resultUrl = extractFalImageUrl(result);
