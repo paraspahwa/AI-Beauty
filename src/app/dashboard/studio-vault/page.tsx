@@ -34,7 +34,7 @@ export default async function StudioVaultPage() {
     return {
       ...asset,
       imageUrl: data?.signedUrl ?? null,
-      meta: { ...meta, sourceImageUrl },
+      meta: { ...meta, sourceImageUrl: sourceImageUrl ?? undefined },
     };
   }));
 

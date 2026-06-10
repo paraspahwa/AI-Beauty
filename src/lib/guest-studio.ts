@@ -21,7 +21,7 @@ export interface GuestStudioState {
 }
 
 function signPayload(payload: string): string {
-  return createHmac("sha256", env.internalApiSecret).update(payload).digest("base64url");
+  return createHmac("sha256", env.internal.secret).update(payload).digest("base64url");
 }
 
 function parsePayloadObject(o: Record<string, unknown>): GuestStudioState | null {

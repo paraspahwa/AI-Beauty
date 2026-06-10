@@ -189,7 +189,7 @@ export default async function DashboardPage({
       )}
 
       {/* Style DNA teaser — shown when prefs exist */}
-      {showStyleDna && (
+      {showStyleDna && prefs && (
         <Link
           href="/dashboard/style-dna"
           className="mb-6 flex items-center justify-between gap-4 rounded-2xl px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg group"

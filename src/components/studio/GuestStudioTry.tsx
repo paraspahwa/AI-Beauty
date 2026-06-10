@@ -28,7 +28,7 @@ export function GuestStudioTry() {
   const [uploading, setUploading] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [remaining, setRemaining] = React.useState(PRODUCT_COPY.free.studioGensPerMonth);
+  const [remaining, setRemaining] = React.useState<number>(PRODUCT_COPY.free.studioGensPerMonth);
   const [teaser, setTeaser] = React.useState<UnlockTeaser | null>(null);
   const [showCoach, setShowCoach] = React.useState(false);
   const [pendingPreset, setPendingPreset] = React.useState<TryNextPreset | null>(null);
