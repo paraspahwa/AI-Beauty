@@ -22,6 +22,19 @@ export const maxDuration = 60;
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
+type FalImageOutput = {
+  data?: { image?: { url?: string }; images?: { url: string }[] };
+  image?: { url?: string };
+  images?: { url: string }[];
+};
+
+function extractFalImageUrl(result: FalImageOutput): string | undefined {
+  return result.data?.images?.[0]?.url
+    ?? result.data?.image?.url
+    ?? result.images?.[0]?.url
+    ?? result.image?.url;
+}
+
 export async function POST(request: NextRequest) {
   try {
     env.assertServer();
@@ -46,7 +59,6 @@ export async function POST(request: NextRequest) {
     const { data: imgData } = await admin.storage.from(env.supabase.bucket).download(state.selfiePath);
     if (!imgData) return NextResponse.json({ error: "Image unavailable" }, { status: 422 });
 
-    const buffer = Buffer.from(await imgData.arrayBuffer());
     const fal = createFalClient({ credentials: env.fal.apiKey });
 
     let resultUrl: string | undefined;
@@ -61,18 +73,18 @@ export async function POST(request: NextRequest) {
           makeup_style: style,
           intensity: "medium",
         },
-      }) as { data?: { image?: { url?: string } } };
-      resultUrl = result.data?.image?.url;
+      }) as FalImageOutput;
+      resultUrl = extractFalImageUrl(result);
     } else {
       const hairParams = resolveGuestHairParams(body.hairVariant);
       const result = await fal.run("fal-ai/image-apps-v2/hair-change", {
         input: {
           image_url: state.photoUrl,
           hair_color: hairParams.hair_color,
-          hairstyle: hairParams.hairstyle,
+          hair_style: hairParams.hair_style,
         },
-      }) as { data?: { image?: { url?: string } } };
-      resultUrl = result.data?.image?.url;
+      }) as FalImageOutput;
+      resultUrl = extractFalImageUrl(result);
     }
 
     if (!resultUrl) {

@@ -88,10 +88,8 @@ function getLockedCopy(intent: ReportIntent | null, title: string): string {
   return `${title} is available after unlock. Continue with the full report to see this section.`;
 }
 
-function getDefaultTab(report: MobileReport, intent: ReportIntent | null): ReportTab {
-  if (intent === "studio_pro" && report.isPaid) return "try-shop";
-  if (!report.isPaid) return "try-shop";
-  return "about-you";
+function getDefaultTab(_report: MobileReport, _intent: ReportIntent | null): ReportTab {
+  return "try-shop";
 }
 
 export default function ReportScreen() {

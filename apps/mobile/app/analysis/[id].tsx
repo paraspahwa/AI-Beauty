@@ -49,7 +49,7 @@ export default function AnalysisScreen() {
           return;
         }
 
-        router.replace({ pathname: "/report/[id]", params: { id: params.id, intent: params.intent } });
+        router.replace({ pathname: "/report/[id]", params: { id: params.id, intent: params.intent, tab: "try-shop" } });
       } catch (err) {
         if (cancelled) return;
         setError(String(err));

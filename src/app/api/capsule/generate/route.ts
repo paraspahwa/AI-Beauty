@@ -164,6 +164,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No color analysis found. Complete a report first." }, { status: 422 });
     }
 
+    if (!isPaid) {
+      return NextResponse.json(
+        { error: "Wardrobe capsule requires a paid report.", code: "PAYMENT_REQUIRED" },
+        { status: 402 },
+      );
+    }
+
     // Generate via OpenAI
     const openai = new OpenAI({ apiKey: env.openai.apiKey });
     const completion = await openai.chat.completions.create({
@@ -294,6 +301,22 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const admin = createSupabaseAdminClient();
+    const { data: paidReport } = await admin
+      .from("reports")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("is_paid", true)
+      .eq("status", "ready")
+      .limit(1)
+      .maybeSingle();
+
+    if (!paidReport) {
+      return NextResponse.json(
+        { error: "Wardrobe capsule requires a paid report.", code: "PAYMENT_REQUIRED" },
+        { status: 402 },
+      );
+    }
+
     const { data: prefsRow } = await admin
       .from("user_style_prefs")
       .select("prefs")
