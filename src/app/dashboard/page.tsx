@@ -10,8 +10,10 @@ import { DeleteReportButton } from "@/components/DeleteReportButton";
 import { DashboardTour } from "@/components/TourProvider";
 import { DashboardProgress } from "@/components/dashboard/DashboardProgress";
 import { StudioExperienceCompare } from "@/components/studio/StudioExperienceCompare";
+import { StudioProCheckoutLauncher } from "@/components/StudioProCheckoutDialog";
 import { parseOnboardingProgress } from "@/lib/progressive-unlock";
 import { STUDIO_EXPERIENCES } from "@/lib/product-copy";
+import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 import styles from "./dashboard.module.css";
 
 type ReportRow = {
@@ -88,6 +90,7 @@ export default async function DashboardPage({
 
   return (
     <main className={`min-h-screen ${styles.pageBase}`}>
+      <StudioProCheckoutLauncher />
       <div className="container max-w-5xl py-10 sm:py-16">
         <div className={`mb-10 rounded-[2rem] border p-5 sm:p-6 ${styles.heroCard}`}>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -199,7 +202,7 @@ export default async function DashboardPage({
               <p className="text-xs text-ink-stone">Upgrade only when you need higher monthly limits.</p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link href="/upload?intent=studio">Upgrade to Studio Pro</Link>
+              <Link href={STUDIO_PRO_CHECKOUT_PATH}>Upgrade to Studio Pro</Link>
             </Button>
           </div>
         </div>

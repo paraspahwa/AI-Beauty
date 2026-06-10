@@ -16,6 +16,7 @@ const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/ad
 //   /api/chat            → 30 req / 60 s per IP  (OpenAI chat — moderate cost)
 //   /api/reports (POST)  → 15 req / 60 s per IP  (Replicate image generation)
 const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
+  { prefix: "/api/studio",              max: 15 },
   { prefix: "/api/analyze",             max: 8  },
   { prefix: "/api/chat/visitor",        max: 10 }, // unauthenticated — stricter
   { prefix: "/api/chat",                max: 30 },
@@ -106,6 +107,11 @@ export async function middleware(request: NextRequest) {
     // If no identifiable IP (e.g. absent proxy headers), skip the in-process limiter
     // and fall through to the DB-layer burst/quota checks which are the hard gate.
     if (ip !== null && isRateLimited(ip, matchedRoute.prefix, matchedRoute.max)) {
+      // #region agent log
+      if (matchedRoute.prefix === "/api/studio") {
+        fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'middleware.ts:rateLimit',message:'studio rate limit hit',data:{prefix:matchedRoute.prefix,pathname},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+      }
+      // #endregion
       return NextResponse.json(
         { error: "Too many requests. Please slow down." },
         {

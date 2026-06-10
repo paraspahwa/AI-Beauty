@@ -9,6 +9,7 @@ import { AdvancedStudioPromo } from "@/components/studio/StudioExperienceCompare
 import { AIBeautyStudio } from "@/components/report/AIBeautyStudio";
 import { CanvasShareButton } from "@/components/studio/CanvasShareButton";
 import { STUDIO_EXPERIENCES } from "@/lib/product-copy";
+import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 import type { StudioEntitlement } from "@/types/report";
 import styles from "../studio.module.css";
 
@@ -136,7 +137,7 @@ export default async function StudioSessionPage({
             </p>
             {quota.remaining <= 0 && quota.tier !== "studio_pro" && (
               <p className="text-xs text-ink-stone">
-                <a href="/auth?plan=studio_pro" className="underline text-pink-600">
+                <a href={STUDIO_PRO_CHECKOUT_PATH} className="underline text-pink-600">
                   Upgrade for unlimited
                 </a>
               </p>

@@ -24,6 +24,7 @@ import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
 import { AiStoryPanels } from "@/components/home/AiStoryPanels";
 import styles from "./home.module.css";
+import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 
 const FEATURES = [
   {
@@ -187,7 +188,7 @@ const PLANS: {
     price: "₹999/mo",
     note: "Cancel anytime",
     cta: "Start Studio Pro — ₹999/mo",
-    href: "/studio",
+    href: STUDIO_PRO_CHECKOUT_PATH,
     featured: false,
     items: [
       "Everything in Full Report",

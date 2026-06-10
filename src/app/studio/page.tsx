@@ -12,6 +12,7 @@ import styles from "./studio.module.css";
 import { GuestStudioTry } from "@/components/studio/GuestStudioTry";
 import { StudioExperienceCompare } from "@/components/studio/StudioExperienceCompare";
 import { PRODUCT_COPY, STUDIO_EXPERIENCES } from "@/lib/product-copy";
+import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 
 /**
  * AI Beauty Studio Canvas
@@ -225,7 +226,7 @@ export default function StudioPage() {
             </p>
           </div>
           <p className={`text-sm ${styles.textMuted}`}>
-            3 free generations per month · <Link href="/auth?plan=studio_pro" className="underline hover:no-underline text-[#111827]">Upgrade to Studio Pro for unlimited</Link>
+            3 free generations per month · <Link href={STUDIO_PRO_CHECKOUT_PATH} className="underline hover:no-underline text-[#111827]">Upgrade to Studio Pro for unlimited</Link>
           </p>
         </div>
 

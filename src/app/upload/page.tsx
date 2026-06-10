@@ -2,10 +2,12 @@
 
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { CheckCircle2, Clock, Lock, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { blurIn, cascadeContainer, fadeUp, springPop, staggerContainer } from "@/lib/animations";
 import { OnboardingGate } from "@/components/OnboardingModal";
+import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 
 const TIPS = [
   "Look straight into the camera, hair off your forehead",
@@ -14,9 +16,22 @@ const TIPS = [
 ];
 
 export default function UploadPage() {
+  return (
+    <Suspense>
+      <UploadPageContent />
+    </Suspense>
+  );
+}
+
+function UploadPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const intent = searchParams.get("intent"); // "purchase" | "studio" | null
+  const intent = searchParams.get("intent");
+  useEffect(() => {
+    if (intent === "studio") {
+      router.replace(STUDIO_PRO_CHECKOUT_PATH);
+    }
+  }, [intent, router]);
 
   return (
     <OnboardingGate>
@@ -43,7 +58,7 @@ export default function UploadPage() {
                 style={{ background: "rgba(17,24,39,0.12)", border: "1px solid rgba(17,24,39,0.3)", color: "#111827" }}
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Starting Studio Pro — upload your selfie to begin
+                Redirecting to Studio Pro checkout…
               </motion.div>
             )}
             {/* Step badge */}

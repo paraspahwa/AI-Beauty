@@ -39,6 +39,7 @@ function shouldShowCta(reply: string): boolean {
 export function VisitorChatWidget() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const [hasOwnReport, setHasOwnReport] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([GREETING]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -53,8 +54,36 @@ export function VisitorChatWidget() {
   );
 
   React.useEffect(() => {
-    if (hideOnRoute && open) setOpen(false);
-  }, [hideOnRoute, open]);
+    if (hideOnRoute) {
+      setHasOwnReport(false);
+      return;
+    }
+    let cancelled = false;
+    void fetch("/api/reports/latest")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { report?: { id: string } | null } | null) => {
+        if (!cancelled) setHasOwnReport(!!data?.report?.id);
+      })
+      .catch(() => {
+        if (!cancelled) setHasOwnReport(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hideOnRoute, pathname]);
+
+  const hidden = hideOnRoute || hasOwnReport;
+
+  React.useEffect(() => {
+    if (hideOnRoute) return;
+    // #region agent log
+    fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'VisitorChatWidget.tsx',message:'aria visibility',data:{pathname,hideOnRoute,hasOwnReport,hidden},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+  }, [pathname, hideOnRoute, hasOwnReport, hidden]);
+
+  React.useEffect(() => {
+    if (hidden && open) setOpen(false);
+  }, [hidden, open]);
 
   // Scroll to bottom whenever messages change
   React.useEffect(() => {
@@ -122,7 +151,7 @@ export function VisitorChatWidget() {
     void sendMessage(input);
   }
 
-  if (hideOnRoute) return null;
+  if (hidden) return null;
 
   return (
     <>

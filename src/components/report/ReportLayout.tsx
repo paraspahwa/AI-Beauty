@@ -688,44 +688,80 @@ export function ReportLayout({
                   exit="exit"
                   className="space-y-8"
                 >
-                  <UnlockTeaserBanner
-                    hints={{
-                      season: report.colorAnalysis?.season,
-                      faceShape: report.faceShape?.shape,
-                    }}
-                  />
-                  <div
-                    className="rounded-2xl border px-4 py-3"
-                    style={{ background: "rgba(17,24,39,0.04)", borderColor: "rgba(17,24,39,0.10)" }}
-                  >
-                    <p className="text-sm text-ink-stone">
-                      {STUDIO_EXPERIENCES.reportTryOnStrip}{" "}
-                      <Link href="/studio" className="font-medium text-ink underline hover:no-underline">
-                        {STUDIO_EXPERIENCES.quickTry.name}
-                      </Link>
-                    </p>
-                  </div>
-                  <AIBeautyStudio
-                    reportId={report.id}
-                    photoUrl={report.imageUrl}
-                    isPaid={isPaid}
-                    detectedGender={report.detectedGender}
-                    faceShape={report.faceShape?.shape}
-                    studioEntitlement={report.studioEntitlement}
-                    colorAnalysis={report.colorAnalysis}
-                    initialSourceAssetId={initialStudioSourceAssetId}
-                    presetFirst
-                  />
-                  {isPaid ? (
+                  {isReadOnly && activeTab === "try-shop" && (() => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'ReportLayout.tsx:try-shop',message:'read-only share try-shop',data:{isReadOnly,isPaid},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+                    // #endregion
+                    return null;
+                  })()}
+                  {!isReadOnly && (
+                    <>
+                      <UnlockTeaserBanner
+                        hints={{
+                          season: report.colorAnalysis?.season,
+                          faceShape: report.faceShape?.shape,
+                        }}
+                      />
+                      <div
+                        className="rounded-2xl border px-4 py-3"
+                        style={{ background: "rgba(17,24,39,0.04)", borderColor: "rgba(17,24,39,0.10)" }}
+                      >
+                        <p className="text-sm text-ink-stone">
+                          {STUDIO_EXPERIENCES.reportTryOnStrip}{" "}
+                          <Link href="/studio" className="font-medium text-ink underline hover:no-underline">
+                            {STUDIO_EXPERIENCES.quickTry.name}
+                          </Link>
+                        </p>
+                      </div>
+                      <AIBeautyStudio
+                        reportId={report.id}
+                        photoUrl={report.imageUrl}
+                        isPaid={isPaid}
+                        detectedGender={report.detectedGender}
+                        faceShape={report.faceShape?.shape}
+                        studioEntitlement={report.studioEntitlement}
+                        colorAnalysis={report.colorAnalysis}
+                        initialSourceAssetId={initialStudioSourceAssetId}
+                        presetFirst
+                      />
+                    </>
+                  )}
+                  {isReadOnly && (
+                    <div
+                      className="rounded-3xl border px-6 py-8 text-center"
+                      style={{ background: "#FDFAF6", borderColor: "#E8DDD0" }}
+                    >
+                      <p className="text-base font-semibold text-ink">Try-on is available on your own report</p>
+                      <p className="mt-2 text-sm text-ink-stone">
+                        This shared preview shows analysis results only. Start your own {STUDIO_EXPERIENCES.quickTry.name} or get a full report to try looks on your selfie.
+                      </p>
+                      <div className="mt-5 flex flex-wrap justify-center gap-3">
+                        <Link
+                          href="/studio"
+                          className="inline-flex rounded-full bg-[#111827] px-5 py-2 text-sm font-semibold text-white"
+                        >
+                          {STUDIO_EXPERIENCES.quickTry.cta}
+                        </Link>
+                        <Link
+                          href="/upload"
+                          className="inline-flex rounded-full border px-5 py-2 text-sm font-semibold text-ink"
+                          style={{ borderColor: "#E8DDD0" }}
+                        >
+                          Get your own report
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                  {!isReadOnly && isPaid ? (
                     <ShoppingGuideCard report={report} />
-                  ) : (
+                  ) : !isReadOnly ? (
                     <Locked
                       reportId={report.id}
                       onUnlocked={refresh}
                       initialPaywallPlan={initialPaywallPlan}
                       title="Shop Your Look"
                     />
-                  )}
+                  ) : null}
                 </motion.div>
               )}
             </TabsContent>

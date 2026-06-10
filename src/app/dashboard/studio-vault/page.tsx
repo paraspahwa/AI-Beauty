@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { StudioVaultGallery } from "@/components/studio/StudioVaultGallery";
 import { PRODUCT_COPY } from "@/lib/product-copy";
+import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 
 export default async function StudioVaultPage() {
   const supabase = await createSupabaseServerClient();
@@ -61,7 +62,7 @@ export default async function StudioVaultPage() {
           Studio Pro subscribers get {PRODUCT_COPY.studioPro.studioGensPerMonth} AI generations per month. Free users get {PRODUCT_COPY.free.studioGensPerMonth} per month.
         </p>
         <Button asChild variant="accent" size="lg">
-          <Link href="/auth?plan=studio_pro">Upgrade to Studio Pro</Link>
+          <Link href={STUDIO_PRO_CHECKOUT_PATH}>Upgrade to Studio Pro</Link>
         </Button>
       </div>
     </main>
