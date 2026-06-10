@@ -1622,6 +1622,23 @@ export function AIBeautyStudio({
     [hairStyleOptions],
   );
 
+  const tryNextPresets: TryNextPreset[] = React.useMemo(() => {
+    if (mode === "hair") {
+      return HAIR_PRESETS.slice(0, 3).map((p) => ({
+        id: p.id,
+        label: p.label,
+        mode: "hair" as const,
+        variant: p.id,
+      }));
+    }
+    return MAKEUP_PRESETS.slice(0, 3).map((p) => ({
+      id: p.id,
+      label: p.label,
+      mode: "makeup" as const,
+      variant: p.id,
+    }));
+  }, [mode]);
+
   // ── Paywall (quota-aware for unpaid + paid report caps) ──
   const isStudioProTier = studioEntitlement?.tier === "studio_pro";
   const quotaRemaining = isStudioProTier
@@ -1735,23 +1752,6 @@ export function AIBeautyStudio({
       void generateMakeup();
     }
   }
-
-  const tryNextPresets: TryNextPreset[] = React.useMemo(() => {
-    if (mode === "hair") {
-      return HAIR_PRESETS.slice(0, 3).map((p) => ({
-        id: p.id,
-        label: p.label,
-        mode: "hair" as const,
-        variant: p.id,
-      }));
-    }
-    return MAKEUP_PRESETS.slice(0, 3).map((p) => ({
-      id: p.id,
-      label: p.label,
-      mode: "makeup" as const,
-      variant: p.id,
-    }));
-  }, [mode]);
 
   function applyOutfitPreset(preset: OutfitPreset) {
     setOutfitOccasion(preset.occasion);
