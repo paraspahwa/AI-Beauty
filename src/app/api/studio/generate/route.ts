@@ -15,6 +15,8 @@ import {
 import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
+import { extractFalImageUrl, errorMessageFromUnknown } from "@/lib/api-errors";
+import type { FalTargetHairstyle } from "@/lib/guest-hair-presets";
 import type { StudioOutfitResult } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -80,6 +82,34 @@ function parseHairColor(value: unknown): FalHairColor {
   }
 
   return "natural";
+}
+
+const FAL_TARGET_HAIRSTYLES = new Set<FalTargetHairstyle>([
+  "short_hair",
+  "medium_long_hair",
+  "long_hair",
+  "curly_hair",
+  "wavy_hair",
+  "high_ponytail",
+  "bun",
+  "bob_cut",
+  "pixie_cut",
+  "braids",
+  "straight_hair",
+  "afro",
+  "dreadlocks",
+  "buzz_cut",
+  "mohawk",
+  "bangs",
+  "side_part",
+  "middle_part",
+]);
+
+function toTargetHairstyle(style: string): FalTargetHairstyle | null {
+  if (!style || style === "No change") return null;
+  return FAL_TARGET_HAIRSTYLES.has(style as FalTargetHairstyle)
+    ? (style as FalTargetHairstyle)
+    : null;
 }
 
 function escapeXml(value: string) {
@@ -331,16 +361,28 @@ export async function POST(request: NextRequest) {
       const makeupIntensity: MakeupIntensityValue = parseMakeupIntensity(options.makeupIntensity);
       const { createFalClient } = await import("@fal-ai/client");
       const fal = createFalClient({ credentials: env.fal.apiKey });
-      const result = await fal.run("fal-ai/image-apps-v2/makeup-application", {
-        input: {
-          image_url: `data:image/jpeg;base64,${compressed.toString("base64")}`,
-          makeup_style: makeupStyle,
-          intensity: makeupIntensity,
-        },
-      }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
 
-      const resultUrl = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? "";
-      if (!resultUrl) return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
+      let resultUrl = "";
+      try {
+        const result = await fal.run("fal-ai/image-apps-v2/makeup-application", {
+          input: {
+            image_url: `data:image/jpeg;base64,${compressed.toString("base64")}`,
+            makeup_style: makeupStyle,
+            intensity: makeupIntensity,
+          },
+        });
+        resultUrl = extractFalImageUrl(result);
+      } catch (falErr) {
+        console.error("[studio/generate] FAL makeup error:", falErr);
+        return NextResponse.json(
+          { error: errorMessageFromUnknown(falErr, "Makeup generation failed. Please try again.") },
+          { status: 502 },
+        );
+      }
+
+      if (!resultUrl) {
+        return NextResponse.json({ error: "No output from makeup model" }, { status: 502 });
+      }
 
       let resultBuffer: Buffer;
       try {
@@ -349,16 +391,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Download failed" }, { status: 502 });
       }
 
-      const persisted = await persistImageResult({
-        admin,
-        userId: user.id,
-        canvasId: canvas.id,
-        tool: "makeup",
-        variant: `${makeupStyle}-${makeupIntensity}`.replace(/\s+/g, "-").toLowerCase(),
-        sourceAssetId: sourceResolved.sourceAssetId,
-        sourceImagePath: sourceResolved.sourceImagePath,
-        resultBuffer,
-      });
+      let persisted;
+      try {
+        persisted = await persistImageResult({
+          admin,
+          userId: user.id,
+          canvasId: canvas.id,
+          tool: "makeup",
+          variant: `${makeupStyle}-${makeupIntensity}`.replace(/\s+/g, "-").toLowerCase(),
+          sourceAssetId: sourceResolved.sourceAssetId,
+          sourceImagePath: sourceResolved.sourceImagePath,
+          resultBuffer,
+        });
+      } catch (persistErr) {
+        console.error("[studio/generate] persist makeup failed:", persistErr);
+        return NextResponse.json(
+          { error: errorMessageFromUnknown(persistErr, "Could not save generated look.") },
+          { status: 500 },
+        );
+      }
 
       return NextResponse.json(persisted);
     }
@@ -394,17 +445,33 @@ export async function POST(request: NextRequest) {
 
     const { createFalClient } = await import("@fal-ai/client");
     const fal = createFalClient({ credentials: env.fal.apiKey });
-    const falInput: any = {
+    const falInput: {
+      image_url: string;
+      target_hairstyle?: FalTargetHairstyle;
+      hair_color?: FalHairColor;
+    } = {
       image_url: `data:image/jpeg;base64,${compressed.toString("base64")}`,
     };
-    if (hairStyle !== "No change") falInput.hair_style = hairStyle;
-    if (hairColor !== "natural") falInput.hair_color = hairColor;
-    const result = await fal.run("fal-ai/image-apps-v2/hair-change", {
-      input: falInput,
-    }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
 
-    const resultUrl = result?.data?.images?.[0]?.url ?? result?.image?.url ?? result?.images?.[0]?.url ?? "";
-    if (!resultUrl) return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
+    const targetHairstyle = toTargetHairstyle(hairStyle);
+    if (targetHairstyle) falInput.target_hairstyle = targetHairstyle;
+    if (hairColor !== "natural") falInput.hair_color = hairColor;
+
+    let resultUrl = "";
+    try {
+      const result = await fal.run("fal-ai/image-apps-v2/hair-change", { input: falInput });
+      resultUrl = extractFalImageUrl(result);
+    } catch (falErr) {
+      console.error("[studio/generate] FAL hair error:", falErr);
+      return NextResponse.json(
+        { error: errorMessageFromUnknown(falErr, "Hair generation failed. Please try again.") },
+        { status: 502 },
+      );
+    }
+
+    if (!resultUrl) {
+      return NextResponse.json({ error: "No output from hair model" }, { status: 502 });
+    }
 
     let resultBuffer: Buffer;
     try {
@@ -413,20 +480,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Download failed" }, { status: 502 });
     }
 
-    const persisted = await persistImageResult({
-      admin,
-      userId: user.id,
-      canvasId: canvas.id,
-      tool: "hair",
-      variant: `${hairStyle}-${hairColor}`.replace(/\s+/g, "-").toLowerCase(),
-      sourceAssetId: sourceResolved.sourceAssetId,
-      sourceImagePath: sourceResolved.sourceImagePath,
-      resultBuffer,
-    });
+    let persisted;
+    try {
+      persisted = await persistImageResult({
+        admin,
+        userId: user.id,
+        canvasId: canvas.id,
+        tool: "hair",
+        variant: `${hairStyle}-${hairColor}`.replace(/\s+/g, "-").toLowerCase(),
+        sourceAssetId: sourceResolved.sourceAssetId,
+        sourceImagePath: sourceResolved.sourceImagePath,
+        resultBuffer,
+      });
+    } catch (persistErr) {
+      console.error("[studio/generate] persist hair failed:", persistErr);
+      return NextResponse.json(
+        { error: errorMessageFromUnknown(persistErr, "Could not save generated look.") },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json(persisted);
   } catch (err) {
     console.error("[studio/generate]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: errorMessageFromUnknown(err) }, { status: 500 });
   }
 }

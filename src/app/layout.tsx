@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VisitorChatWidget } from "@/components/VisitorChatWidget";
+import { GlobalReportChat } from "@/components/GlobalReportChat";
 import { GuestProgressMerge } from "@/components/GuestProgressMerge";
 
 const BASE_URL =
@@ -116,6 +117,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <GuestProgressMerge />
         <div id="main-content" className="flex-1">{children}</div>
         <VisitorChatWidget />
+        <GlobalReportChat />
         <Footer />
       </body>
     </html>

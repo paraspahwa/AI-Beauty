@@ -12,6 +12,7 @@ import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
 import { PRODUCT_COPY } from "@/lib/product-copy";
 import { guestShare, type UnlockTeaser } from "@/lib/progressive-unlock";
 import { track } from "@/lib/track";
+import { formatApiError, errorMessageFromUnknown } from "@/lib/api-errors";
 
 const COACH_MARK_KEY = "rv_studio_coach_seen";
 
@@ -59,7 +60,7 @@ export function GuestStudioTry() {
       form.append("file", file);
       const res = await fetch("/api/studio/guest-upload", { method: "POST", body: form });
       const json = await res.json() as { photoUrl?: string; error?: string; remaining?: number };
-      if (!res.ok) throw new Error(json.error ?? "Upload failed");
+      if (!res.ok) throw new Error(formatApiError(json.error, "Upload failed"));
       setPhotoUrl(json.photoUrl ?? null);
       setResultUrl(null);
       if (typeof json.remaining === "number") setRemaining(json.remaining);
@@ -71,7 +72,7 @@ export function GuestStudioTry() {
         void generate(preset);
       }
     } catch (e) {
-      setError((e as Error).message);
+      setError(errorMessageFromUnknown(e));
     } finally {
       setUploading(false);
     }
@@ -99,13 +100,13 @@ export function GuestStudioTry() {
         requiresAuth?: boolean;
         teaser?: UnlockTeaser;
       };
-      if (!res.ok) throw new Error(json.error ?? "Generation failed");
+      if (!res.ok) throw new Error(formatApiError(json.error, "Generation failed"));
       setResultUrl(json.lowResUrl ?? null);
       if (json.teaser && json.teaser.type !== "none") setTeaser(json.teaser);
       track("tryon", { guest: true });
       if (typeof json.remaining === "number") setRemaining(json.remaining);
     } catch (e) {
-      setError((e as Error).message);
+      setError(errorMessageFromUnknown(e));
     } finally {
       setGenerating(false);
     }

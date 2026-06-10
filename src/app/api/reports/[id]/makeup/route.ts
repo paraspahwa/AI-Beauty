@@ -22,6 +22,7 @@ import {
 import { insertGeneratedAsset, normalizeSourceAssetId, resolveSourceImagePath } from "@/lib/generated-assets";
 import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
 import { assertReportStudioAccess, studioAccessToResponse } from "@/lib/studio-access";
+import { extractFalImageUrl } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -139,11 +140,8 @@ export async function POST(
       intensity,
       // style_description is not part of the typed input; log it for debugging.
     },
-  }) as { data?: { images?: { url: string }[] }; image?: { url: string }; images?: { url: string }[] };
-  const resultUrl: string =
-    falResult?.data?.images?.[0]?.url ??
-    falResult?.image?.url ??
-    (falResult?.images as { url: string }[] | undefined)?.[0]?.url ?? "";
+  }) as Parameters<typeof extractFalImageUrl>[0];
+  const resultUrl = extractFalImageUrl(falResult);
   if (!resultUrl) {
     return NextResponse.json({ error: "No output from FAL" }, { status: 500 });
   }

@@ -16,24 +16,12 @@ import {
   nextProgressAfterTryOn,
   parseOnboardingProgress,
 } from "@/lib/progressive-unlock";
+import { extractFalImageUrl } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
-
-type FalImageOutput = {
-  data?: { image?: { url?: string }; images?: { url: string }[] };
-  image?: { url?: string };
-  images?: { url: string }[];
-};
-
-function extractFalImageUrl(result: FalImageOutput): string | undefined {
-  return result.data?.images?.[0]?.url
-    ?? result.data?.image?.url
-    ?? result.images?.[0]?.url
-    ?? result.image?.url;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,8 +61,8 @@ export async function POST(request: NextRequest) {
           makeup_style: style,
           intensity: "medium",
         },
-      }) as FalImageOutput;
-      resultUrl = extractFalImageUrl(result);
+      }) as Parameters<typeof extractFalImageUrl>[0];
+      resultUrl = extractFalImageUrl(result) || undefined;
     } else {
       const hairParams = resolveGuestHairParams(body.hairVariant);
       const result = await fal.run("fal-ai/image-apps-v2/hair-change", {
@@ -83,8 +71,8 @@ export async function POST(request: NextRequest) {
           hair_color: hairParams.hair_color,
           target_hairstyle: hairParams.target_hairstyle,
         },
-      }) as FalImageOutput;
-      resultUrl = extractFalImageUrl(result);
+      }) as Parameters<typeof extractFalImageUrl>[0];
+      resultUrl = extractFalImageUrl(result) || undefined;
     }
 
     if (!resultUrl) {

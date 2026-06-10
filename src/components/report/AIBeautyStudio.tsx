@@ -23,6 +23,7 @@ import {
   getHairStyleOptionsForGender,
 } from "@/lib/hair-options";
 import { track } from "@/lib/track";
+import { formatApiError } from "@/lib/api-errors";
 import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
 import { StyleMomentShare } from "@/components/StyleMomentShare";
@@ -1178,7 +1179,7 @@ export function AIBeautyStudio({
       if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
       const res  = await fetch(`/api/reports/${resolvedContextId}/virtual-tryon`, { method: "POST", body: form });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
-      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Generation failed");
+      if (!res.ok || !json.lowResUrl) throw new Error(formatApiError(json.error, "Generation failed"));
       updateBatchResult("clothing", idx, {
         hdUrl: json.hdUrl ?? null,
         lowResUrl: json.lowResUrl ?? null,
@@ -1238,7 +1239,7 @@ export function AIBeautyStudio({
             body: JSON.stringify({ ...controls, sourceAssetId }),
           });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
-      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Generation failed");
+      if (!res.ok || !json.lowResUrl) throw new Error(formatApiError(json.error, "Generation failed"));
       updateBatchResult("makeup", idx, {
         hdUrl: json.hdUrl ?? null,
         lowResUrl: json.lowResUrl ?? null,
@@ -1267,7 +1268,7 @@ export function AIBeautyStudio({
       if (sourceAssetId) form.append("sourceAssetId", sourceAssetId);
       const res = await fetch(`/api/reports/${resolvedContextId}/makeup-transfer`, { method: "POST", body: form });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; detectedLook?: string; asset?: { id: string; createdAt: string } };
-      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Transfer failed");
+      if (!res.ok || !json.lowResUrl) throw new Error(formatApiError(json.error, "Transfer failed"));
       updateBatchResult("makeup", idx, { hdUrl: json.hdUrl, lowResUrl: json.lowResUrl, assetId: json.asset?.id ?? null, status: json.hdUrl ? "done" : "loading" });
       setInspoDetectedLook(json.detectedLook ?? null);
       setHistory((h) => [{ url: json.hdUrl ?? json.lowResUrl!, assetId: json.asset?.id ?? null, createdAt: json.asset?.createdAt ?? null }, ...h].slice(0, 10));
@@ -1304,7 +1305,7 @@ export function AIBeautyStudio({
             }),
           });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
-      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Generation failed");
+      if (!res.ok || !json.lowResUrl) throw new Error(formatApiError(json.error, "Generation failed"));
       updateBatchResult("hair", idx, {
         hdUrl: json.hdUrl ?? null,
         lowResUrl: json.lowResUrl ?? null,
@@ -1346,7 +1347,7 @@ export function AIBeautyStudio({
         asset?: GeneratedAssetMeta | null;
       };
 
-      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "Transfer failed");
+      if (!res.ok || !json.lowResUrl) throw new Error(formatApiError(json.error, "Transfer failed"));
 
       updateBatchResult("hair", idx, {
         hdUrl: json.hdUrl ?? null,
@@ -1411,7 +1412,7 @@ export function AIBeautyStudio({
           error?: string;
         };
         if (!res.ok || !json.outfit || json.outfit.looks.length === 0) {
-          throw new Error(json.error ?? "Could not generate outfits");
+          throw new Error(formatApiError(json.error, "Could not generate outfits"));
         }
         setOutfitLooks(json.outfit.looks);
       } else {
@@ -1426,7 +1427,7 @@ export function AIBeautyStudio({
           error?: string;
         };
         if (!res.ok || !json.looks || json.looks.length === 0) {
-          throw new Error(json.error ?? "Could not generate outfits");
+          throw new Error(formatApiError(json.error, "Could not generate outfits"));
         }
         setOutfitLooks(json.looks);
         if (json.history) setOutfitHistory(json.history);
@@ -1462,7 +1463,7 @@ export function AIBeautyStudio({
         body: form,
       });
       const json = await res.json() as { hdUrl?: string; lowResUrl?: string; error?: string; asset?: GeneratedAssetMeta | null };
-      if (!res.ok || !json.lowResUrl) throw new Error(json.error ?? "AR try-on failed");
+      if (!res.ok || !json.lowResUrl) throw new Error(formatApiError(json.error, "AR try-on failed"));
 
       updateBatchResult("ar", idx, {
         hdUrl: json.hdUrl ?? null,

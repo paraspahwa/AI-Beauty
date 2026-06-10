@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, History, Loader2, Palette, ScanFace, Shirt, Sparkles, Wand2 } from "lucide-react";
 import { track } from "@/lib/track";
+import { formatApiError, errorMessageFromUnknown } from "@/lib/api-errors";
 import { BeforeAfterReveal } from "@/components/BeforeAfterReveal";
 import { TryTheseNext, type TryNextPreset } from "@/components/TryTheseNext";
 import { StyleMomentShare } from "@/components/StyleMomentShare";
@@ -125,13 +126,13 @@ export function CanvasStudio({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ canvasId }),
       });
-      const json = await res.json() as { analysis?: ColorScanResult; error?: string };
-      if (!res.ok || !json.analysis) throw new Error(json.error || "Quick scan failed");
+      const json = await res.json() as { analysis?: ColorScanResult; error?: unknown };
+      if (!res.ok || !json.analysis) throw new Error(formatApiError(json.error, "Quick scan failed"));
       setScanResult(json.analysis);
       setSelectedPalette(json.analysis);
       setMode("makeup");
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorMessageFromUnknown(err));
     } finally {
       setScanLoading(false);
     }
@@ -168,8 +169,9 @@ export function CanvasStudio({
         body: JSON.stringify(payload),
       });
 
-      const json = await res.json() as CanvasResult & { error?: string };
-      if (!res.ok) throw new Error(json.error || "Generation failed");
+      const json = await res.json() as CanvasResult & { error?: unknown };
+      if (!res.ok) throw new Error(formatApiError(json.error, "Generation failed"));
+      if (!json.lowResUrl && !json.hdUrl) throw new Error("Generation returned no image");
 
       setResult(json);
       track("tryon", { source: "canvas_studio", mode });
@@ -190,7 +192,7 @@ export function CanvasStudio({
         // non-blocking
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorMessageFromUnknown(err));
     } finally {
       setGenerateLoading(false);
     }
