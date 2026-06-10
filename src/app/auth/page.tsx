@@ -193,16 +193,6 @@ function AuthContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    const redirect = searchParams.get("redirect");
-    const plan = searchParams.get("plan");
-    if (redirect || plan) {
-      // #region agent log
-      fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'auth/page.tsx:mount',message:'resolved post-auth path',data:{nextPath,redirect,plan},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-    }
-  }, [searchParams, nextPath]);
-
-  useEffect(() => {
     if (cooldown <= 0) return;
     const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(id);
@@ -245,9 +235,6 @@ function AuthContent() {
         }
       } else {
         const safe = /^\/[^/]/.test(nextPath) ? nextPath : "/upload";
-        // #region agent log
-        fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'auth/page.tsx:signIn',message:'post-auth redirect',data:{nextPath:safe,plan:searchParams.get('plan')},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         window.location.href = safe;
       }
     } else {

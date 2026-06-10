@@ -39,7 +39,7 @@ function shouldShowCta(reply: string): boolean {
 export function VisitorChatWidget() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
-  const [hasOwnReport, setHasOwnReport] = React.useState(false);
+  const [hasOwnReport, setHasOwnReport] = React.useState<boolean | null>(null);
   const [messages, setMessages] = React.useState<Message[]>([GREETING]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -49,15 +49,19 @@ export function VisitorChatWidget() {
   // Keep Aria as a pre-sales assistant on marketing/auth flows only.
   // Product/report routes have their own in-context chat surfaces.
   const hideOnRoute = React.useMemo(
-    () => ["/report", "/dashboard", "/studio", "/success"].some((prefix) => pathname?.startsWith(prefix)),
+    () =>
+      ["/report", "/dashboard", "/studio", "/success", "/r/"].some((prefix) =>
+        pathname?.startsWith(prefix),
+      ),
     [pathname],
   );
 
   React.useEffect(() => {
     if (hideOnRoute) {
-      setHasOwnReport(false);
+      setHasOwnReport(null);
       return;
     }
+    setHasOwnReport(null);
     let cancelled = false;
     void fetch("/api/reports/latest")
       .then((res) => (res.ok ? res.json() : null))
@@ -72,14 +76,8 @@ export function VisitorChatWidget() {
     };
   }, [hideOnRoute, pathname]);
 
-  const hidden = hideOnRoute || hasOwnReport;
-
-  React.useEffect(() => {
-    if (hideOnRoute) return;
-    // #region agent log
-    fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'VisitorChatWidget.tsx',message:'aria visibility',data:{pathname,hideOnRoute,hasOwnReport,hidden},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-  }, [pathname, hideOnRoute, hasOwnReport, hidden]);
+  /** null = still checking; hide Aria until we know user has no ready report */
+  const hidden = hideOnRoute || hasOwnReport !== false;
 
   React.useEffect(() => {
     if (hidden && open) setOpen(false);

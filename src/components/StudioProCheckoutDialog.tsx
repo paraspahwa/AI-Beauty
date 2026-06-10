@@ -190,9 +190,6 @@ export function StudioProCheckoutLauncher() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") === "studio_pro") {
-      // #region agent log
-      fetch('http://127.0.0.1:7426/ingest/c98621ce-d232-4690-a505-eaf5b197033b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6b59e2'},body:JSON.stringify({sessionId:'6b59e2',location:'StudioProCheckoutDialog.tsx:launcher',message:'checkout dialog opening',data:{checkout:'studio_pro'},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       setOpen(true);
       params.delete("checkout");
       const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
