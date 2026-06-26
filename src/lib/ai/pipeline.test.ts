@@ -33,11 +33,13 @@ describe("pipeline confidence gating", () => {
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ summary: "ok" });
 
     await runAnalysisPipeline(Buffer.from("raw-image"));
 
-    expect(chatJSONMock).toHaveBeenCalledTimes(8);
+    expect(chatJSONMock).toHaveBeenCalledTimes(9);
 
     const glassesUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
     const hairstyleUserPrompt = chatJSONMock.mock.calls[6]?.[0]?.user;
@@ -49,6 +51,7 @@ describe("pipeline confidence gating", () => {
   it("uses detected face shape for styling prompts when confidence is high", async () => {
     chatJSONMock
       .mockResolvedValueOnce({ shape: "Round", traits: ["x", "y", "z"], confidence: 0.9 })
+      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})

@@ -69,12 +69,6 @@ export const env = {
     // One-time report unlock prices
     priceINR: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_INR ?? process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "299"),
     priceUSD: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_USD ?? process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "3.99"),
-    // Studio Pro subscription prices
-    priceStudioProINR: Number(process.env.NEXT_PUBLIC_PRICE_STUDIO_PRO_INR ?? "999"),
-    priceStudioProUSD: Number(process.env.NEXT_PUBLIC_PRICE_STUDIO_PRO_USD ?? "12.99"),
-    // Razorpay Plan IDs (created manually in Razorpay dashboard)
-    planIdStudioProINR: optional(process.env.RAZORPAY_PLAN_ID_STUDIO_PRO_INR),
-    planIdStudioProUSD: optional(process.env.RAZORPAY_PLAN_ID_STUDIO_PRO_USD),
     isConfigured:
       optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID).length > 0 &&
       optional(process.env.RAZORPAY_KEY_SECRET).length > 0 &&
@@ -82,7 +76,6 @@ export const env = {
   },
   flags: {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",
-    replicateColorSwatches: optional(process.env.ENABLE_REPLICATE_COLOR_SWATCHES, "false") === "true",
     paymentTestMode: bool(process.env.PAYMENT_TEST_MODE, false),
     paymentTestAllowInProd: bool(process.env.PAYMENT_TEST_ALLOW_IN_PROD, false),
   },
@@ -96,16 +89,7 @@ export const env = {
     secret: optional(process.env.INTERNAL_API_SECRET),
   },
   /**
-   * Affiliate programme identifiers.
-   *
-   * Amazon India Associates:
-   *   Register at https://associates.amazon.in → get your Associate Tag (e.g. "yoursite-21")
-   *   Set NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG=yoursite-21 in Vercel env vars
-   *
-   * Myntra (via affiliate networks):
-   *   Options: Admitad (admitad.com), VCommission (vcommission.com), or Cuelinks (cuelinks.com)
-   *   After approval, set NEXT_PUBLIC_MYNTRA_AFFILIATE_SID=<your tracking SID>
-   *   Update myntraUrl() in WardrobeCapsuleCard.tsx with the full deep-link pattern from your network.
+   * Affiliate programme identifiers (legacy — unused in report-only product).
    */
   affiliate: {
     amazonTag: optional(process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG, ""),
@@ -151,8 +135,7 @@ export const env = {
     required("NEXT_PUBLIC_SUPABASE_URL", this.supabase.url);
     required("SUPABASE_SERVICE_ROLE_KEY", this.supabase.serviceRoleKey);
     required("OPENAI_API_KEY", this.openai.apiKey);
-    // AWS keys are required for /api/analyze and canvas hair generation in /api/studio/generate
-    // when strict gender detection is enabled.
+    // AWS keys are required for /api/analyze when strict gender detection is enabled.
     if (process.env.NODE_ENV === "production" && this.flags.paymentTestAllowInProd) {
       console.error(
         "[env] DANGER: PAYMENT_TEST_ALLOW_IN_PROD=true in production — fake payments are enabled! " +

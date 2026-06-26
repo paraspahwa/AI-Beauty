@@ -23,11 +23,11 @@ export default function PrivacyPage() {
 
         <Section title="1. Who We Are">
           <p>
-            {APP_NAME} is an AI-powered personal styling platform operated by{" "}
+            {APP_NAME} is an AI-powered beauty analysis platform operated by{" "}
             <strong className="text-ink">{COMPANY}</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). We provide
-            face-shape analysis, colour-season profiling, virtual try-on, hairstyle
-            recommendations, spectacles guidance, and skin analysis through our web
-            application.
+            face-shape analysis, colour-season profiling, skin analysis, hairstyle
+            and hair-colour guidance, spectacles recommendations, style guidance, and
+            photorealistic preview image generation through our web application.
           </p>
           <p>
             Questions about this policy? Reach us at{" "}

@@ -10,7 +10,7 @@ const LAST_UPDATED = "1 July 2025";
 const CONTACT_EMAIL = "support@renovaara.in";
 const APP_NAME = "Renovaara";
 const COMPANY = "Renovaara (AI-Beauty)";
-const PRICE_INR = "₹399";
+const PRICE_INR = "₹299";
 const GOVERNING_LAW = "India";
 const JURISDICTION = "courts of India";
 
@@ -43,12 +43,13 @@ export default function TermsPage() {
             {APP_NAME} is an AI-powered personal styling platform that provides:
           </p>
           <ul>
-            <li>Face-shape classification and colour-season analysis</li>
-            <li>Virtual clothing and makeup try-on</li>
-            <li>Hairstyle and hair-colour recommendations</li>
-            <li>Spectacles fit and frame-colour guidance</li>
-            <li>Skin-type analysis and routine suggestions</li>
-            <li>Personalised wardrobe capsule and style profile</li>
+            <li>Face-shape classification and facial feature analysis</li>
+            <li>Skin-type analysis and AM/PM routine suggestions</li>
+            <li>Colour-season analysis and palette guidance</li>
+            <li>Hairstyle recommendations with preview images</li>
+            <li>Hair-colour shade guidance with preview images</li>
+            <li>Spectacles fit and frame-colour guidance with preview images</li>
+            <li>Personal style guide tailored to your profile</li>
           </ul>
           <p>
             A limited <strong>free preview</strong> (face-shape analysis) is available without

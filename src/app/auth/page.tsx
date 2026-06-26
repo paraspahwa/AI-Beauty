@@ -7,13 +7,18 @@ import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, Chev
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { resolvePostAuthPath } from "@/lib/studio-pro-paths";
 import { staggerContainer, fadeUp } from "@/lib/animations";
 
+function resolvePostAuthPath(searchParams: URLSearchParams): string {
+  const redirect = searchParams.get("redirect") ?? searchParams.get("next");
+  if (redirect && /^\/[^/]/.test(redirect)) return redirect;
+  return "/dashboard";
+}
+
 const FEATURES = [
-  { icon: Eye, text: "Instant color season analysis" },
-  { icon: Zap, text: "AI-powered face shape detection" },
-  { icon: Sparkles, text: "Personalized style recommendations" },
+  { icon: Eye, text: "Free face-shape preview" },
+  { icon: Zap, text: "AI-powered colour season analysis" },
+  { icon: Sparkles, text: "7-section personalised beauty report" },
   { icon: Shield, text: "Your photos stay private" },
 ];
 
@@ -365,7 +370,7 @@ function AuthContent() {
       <div className="space-y-8">
         <motion.div variants={fadeUp}>
           <h2 className="text-3xl font-sans leading-snug mb-4">Discover the colors and styles made for you</h2>
-          <p className="leading-relaxed" style={{ color: "rgba(17,24,39,0.8)" }}>One selfie is all it takes. Get your personalized color season, face shape analysis, and style guide in minutes.</p>
+          <p className="leading-relaxed" style={{ color: "rgba(17,24,39,0.8)" }}>One selfie is all it takes. Get your colour season, face shape analysis, and full 7-section beauty report in minutes.</p>
         </motion.div>
         <motion.ul variants={staggerContainer} className="space-y-4">
           {FEATURES.map((f) => (

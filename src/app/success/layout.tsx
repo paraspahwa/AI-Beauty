@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Payment Successful — Your Report Is Unlocked",
   description:
-    "Your full AI beauty report is now unlocked. Explore your colour season, face shape, skin routine, hairstyle guide, spectacles recommendations, and virtual try-on results.",
+    "Your full AI beauty report is now unlocked. Explore your colour season, face shape, skin routine, hairstyle guide, spectacles recommendations, style guide, and preview images.",
   openGraph: {
     title: "Your Renovaara Report Is Unlocked",
     description:
-      "Dive into your personalised AI beauty report — colour season, skin analysis, spectacles guide, hairstyle recommendations, and virtual try-on.",
+      "Dive into your personalised AI beauty report — colour season, skin analysis, spectacles guide, hairstyle recommendations, style guide, and preview images.",
     images: ["/og-image.png"],
   },
   robots: { index: false, follow: false },

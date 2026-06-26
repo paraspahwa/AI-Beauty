@@ -4,135 +4,17 @@ import { env } from "@/lib/env";
 import { hasPremiumAccess } from "@/lib/auth/access";
 import { getRequestUser } from "@/lib/auth/request-user";
 import {
-  enrichReportStudioEntitlement,
-  getStudioEntitlement,
   previewSummaryForUnpaid,
   redactColorAnalysisForPreview,
-} from "@/lib/entitlement";
+  resolveReportVisualAssets,
+} from "@/lib/report-access";
 import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
-import type { CompiledReport, ReportVisualAssets } from "@/types/report";
+import type { CompiledReport } from "@/types/report";
 
 export const runtime = "nodejs";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-
-function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
-  if (!value || typeof value !== "object") return undefined;
-  return value as ReportVisualAssets;
-}
-
-async function resolveVisualAssets(
-  row: Record<string, unknown>,
-  reportId: string,
-  admin: ReturnType<typeof createSupabaseAdminClient>,
-): Promise<ReportVisualAssets | undefined> {
-  const direct = parseVisualAssets(row.visual_assets);
-  let visualAssets = direct;
-
-  if (!visualAssets) {
-    const { data: rec } = await admin
-      .from("recommendations")
-      .select("data")
-      .eq("report_id", reportId)
-      .eq("category", "visual_assets")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    visualAssets = parseVisualAssets(rec?.data);
-  }
-
-  if (!visualAssets) return undefined;
-
-  // Guard against malformed JSONB where assets could be null/undefined
-  const safeAssets = visualAssets.assets ?? ({} as typeof visualAssets.assets);
-
-  const out: ReportVisualAssets = {
-    ...visualAssets,
-    assets: {
-      ...safeAssets,
-      landmarkOverlay: safeAssets.landmarkOverlay
-        ? { ...safeAssets.landmarkOverlay }
-        : undefined,
-      paletteBoard: safeAssets.paletteBoard
-        ? { ...safeAssets.paletteBoard }
-        : undefined,
-      glassesPreviews: safeAssets.glassesPreviews
-        ? [...safeAssets.glassesPreviews]
-        : undefined,
-      hairstylePreviews: safeAssets.hairstylePreviews
-        ? [...safeAssets.hairstylePreviews]
-        : undefined,
-      colorSwatchPreviews: safeAssets.colorSwatchPreviews
-        ? [...safeAssets.colorSwatchPreviews]
-        : undefined,
-      makeupPreviews: safeAssets.makeupPreviews
-        ? [...safeAssets.makeupPreviews]
-        : undefined,
-    },
-  };
-
-  if (out.assets.landmarkOverlay?.path && out.assets.landmarkOverlay.status === "ready") {
-    const { data } = await admin.storage.from(out.bucket).createSignedUrl(out.assets.landmarkOverlay.path, 60 * 30);
-    out.assets.landmarkOverlay.signedUrl = data?.signedUrl;
-  }
-
-  if (out.assets.paletteBoard?.path && out.assets.paletteBoard.status === "ready") {
-    const { data } = await admin.storage.from(out.bucket).createSignedUrl(out.assets.paletteBoard.path, 60 * 30);
-    out.assets.paletteBoard.signedUrl = data?.signedUrl;
-  }
-
-  if (out.assets.glassesPreviews) {
-    out.assets.glassesPreviews = await Promise.all(
-      out.assets.glassesPreviews.map(async (asset) => {
-        if (asset.path && asset.status === "ready") {
-          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
-          return { ...asset, signedUrl: data?.signedUrl };
-        }
-        return asset;
-      }),
-    );
-  }
-
-  if (out.assets.hairstylePreviews) {
-    out.assets.hairstylePreviews = await Promise.all(
-      out.assets.hairstylePreviews.map(async (asset) => {
-        if (asset.path && asset.status === "ready") {
-          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
-          return { ...asset, signedUrl: data?.signedUrl };
-        }
-        return asset;
-      }),
-    );
-  }
-
-  if (out.assets.colorSwatchPreviews) {
-    out.assets.colorSwatchPreviews = await Promise.all(
-      out.assets.colorSwatchPreviews.map(async (asset) => {
-        if (asset.path && asset.status === "ready") {
-          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
-          return { ...asset, signedUrl: data?.signedUrl };
-        }
-        return asset;
-      }),
-    );
-  }
-
-  if (out.assets.makeupPreviews) {
-    out.assets.makeupPreviews = await Promise.all(
-      out.assets.makeupPreviews.map(async (asset) => {
-        if (asset.path && asset.status === "ready") {
-          const { data } = await admin.storage.from(out.bucket).createSignedUrl(asset.path, 60 * 30);
-          return { ...asset, signedUrl: data?.signedUrl };
-        }
-        return asset;
-      }),
-    );
-  }
-
-  return out;
-}
 
 /**
  * GET /api/reports/[id]
@@ -140,7 +22,9 @@ async function resolveVisualAssets(
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, max-age=10" } });
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, max-age=10" } });
+  }
 
   const user = await getRequestUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -148,7 +32,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const admin = createSupabaseAdminClient();
   const { data: row, error } = await admin
     .from("reports")
-    .select("id, user_id, status, is_paid, image_path, share_token, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, rekognition, summary, visual_assets, pipeline_meta, created_at")
+    .select(
+      "id, user_id, status, is_paid, image_path, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, style_guide, rekognition, summary, visual_assets, pipeline_meta, created_at",
+    )
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -162,18 +48,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     .createSignedUrl(row.image_path, 60 * 30);
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
-  const baseEntitlement = await getStudioEntitlement(user.id);
-  const effectivePremium = hasPremium || baseEntitlement.tier === "studio_pro";
-  const studioEntitlement = await enrichReportStudioEntitlement(
-    admin,
-    user.id,
-    id,
-    !!row.is_paid,
-    baseEntitlement,
-  );
-  const visualAssets = await resolveVisualAssets(row as Record<string, unknown>, id, admin);
+  const visualAssets = await resolveReportVisualAssets(row as Record<string, unknown>, id, admin);
 
-  // Resolve pipeline_meta: prefer direct column, fall back to recommendations row
   let pipelineMeta = (row.pipeline_meta as CompiledReport["pipelineMeta"]) ?? undefined;
   if (!pipelineMeta) {
     const { data: metaRec } = await admin
@@ -194,26 +70,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     userId: row.user_id,
     imageUrl: signed?.signedUrl ?? "",
     status: row.status,
-    isPaid: effectivePremium,
+    isPaid: hasPremium,
     detectedGender: normalizeRekognitionGender(row.rekognition),
-    studioEntitlement,
-    shareToken: row.share_token ?? null,
     faceShape: row.face_shape ?? undefined,
-    colorAnalysis: effectivePremium
+    colorAnalysis: hasPremium
       ? row.color_analysis ?? undefined
       : redactColorAnalysisForPreview(row.color_analysis),
-    // Free preview shows ONLY face shape + color analysis
-    skinAnalysis: effectivePremium ? row.skin_analysis ?? undefined : undefined,
-    features:     effectivePremium ? row.features      ?? undefined : undefined,
-    glasses:      effectivePremium ? row.glasses       ?? undefined : undefined,
-    hairstyle:    effectivePremium ? row.hairstyle     ?? undefined : undefined,
+    skinAnalysis: hasPremium ? row.skin_analysis ?? undefined : undefined,
+    features: hasPremium ? row.features ?? undefined : undefined,
+    glasses: hasPremium ? row.glasses ?? undefined : undefined,
+    hairstyle: hasPremium ? row.hairstyle ?? undefined : undefined,
+    styleGuide: hasPremium ? row.style_guide ?? undefined : undefined,
     visualAssets,
-    summary: effectivePremium
-      ? row.summary ?? undefined
-      : previewSummaryForUnpaid(row.summary),
+    summary: hasPremium ? row.summary ?? undefined : previewSummaryForUnpaid(row.summary),
     pipelineMeta,
     faceLandmarks: extractFaceLandmarks(row.rekognition) ?? undefined,
-    createdAt:    row.created_at,
+    createdAt: row.created_at,
   };
 
   return NextResponse.json(report);

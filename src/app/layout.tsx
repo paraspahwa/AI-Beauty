@@ -3,9 +3,6 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { VisitorChatWidget } from "@/components/VisitorChatWidget";
-import { GlobalReportChat } from "@/components/GlobalReportChat";
-import { GuestProgressMerge } from "@/components/GuestProgressMerge";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
@@ -22,11 +19,9 @@ export const metadata: Metadata = {
     template: "%s | Renovaara",
   },
   description:
-    "Upload a selfie and get your full AI beauty report: virtual clothing try-on, makeup try-on, spectacles guide, hairstyle recommendations, and skin analysis — all personalised to you.",
+    "Upload a selfie and get your full AI beauty report: face shape, skin analysis, color season, hairstyle guide, spectacles guide, and personal style direction.",
   keywords: [
     "AI personal stylist",
-    "virtual try-on",
-    "makeup try-on",
     "face shape analysis",
     "hairstyle recommendations",
     "spectacles guide",
@@ -43,7 +38,7 @@ export const metadata: Metadata = {
     siteName: "Renovaara",
     title: "Renovaara — Your AI Personal Stylist",
     description:
-      "Upload a selfie. Try on clothes & makeup. Get your personalised spectacles, hairstyle & skin blueprint — all powered by AI.",
+      "Upload a selfie. Get your personalised spectacles, hairstyle, colour, skin, and style guide — all powered by AI.",
     images: [
       {
         url: "/1779024315.png",
@@ -57,7 +52,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Renovaara — Your AI Personal Stylist",
     description:
-      "Virtual try-on, makeup try-on, spectacles, hairstyle & skin analysis — all from one selfie.",
+      "Face shape, colour season, hairstyle, spectacles, skin analysis, and style guide — all from one selfie.",
     images: ["/1779024315.png"],
   },
   robots: {
@@ -92,7 +87,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               "applicationCategory": "LifestyleApplication",
               "operatingSystem": "Web",
               "url": BASE_URL,
-              "description": "AI-powered personal stylist: face shape analysis, colour season, virtual try-on, makeup studio, hairstyle guide, spectacles guide, and skin analysis \u2014 all from one selfie.",
+              "description": "AI-powered beauty analysis: face shape, colour season, hairstyle guide, spectacles guide, skin analysis, and personal style direction — all from one selfie.",
               "offers": [
                 { "@type": "Offer", "price": "0", "priceCurrency": "INR", "description": "Free preview \u2014 face shape analysis" },
                 { "@type": "Offer", "price": "399", "priceCurrency": "INR", "description": "Full AI beauty report" },
@@ -114,10 +109,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <Navbar />
-        <GuestProgressMerge />
         <div id="main-content" className="flex-1">{children}</div>
-        <VisitorChatWidget />
-        <GlobalReportChat />
         <Footer />
       </body>
     </html>

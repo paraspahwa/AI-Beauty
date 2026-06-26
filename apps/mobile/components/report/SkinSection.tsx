@@ -1,60 +1,29 @@
-import { Text } from "react-native";
-import { type MobileReport } from "@/lib/api";
-import { Card, EmptyCard, LockedSection, styles as primitiveStyles, type CheckoutFlow, type ReportIntent } from "./ReportPrimitives";
+import { StyleSheet, Text, View } from "react-native";
+import type { MobileSkinAnalysis } from "@/lib/api";
+import { mobileTheme as t } from "@/lib/theme";
 
-export function SkinSection({
-  report,
-  lockedBody,
-  preferredIntent,
-  unlocking,
-  awaitingBrowserCheckout,
-  checkoutFlow,
-  checkoutStatus,
-  onUnlock,
-  onStudioPro,
-  onRefresh,
-}: {
-  report: MobileReport;
-  lockedBody: string;
-  preferredIntent: ReportIntent | null;
-  unlocking: boolean;
-  awaitingBrowserCheckout: boolean;
-  checkoutFlow: CheckoutFlow | null;
-  checkoutStatus: string | null;
-  onUnlock: () => void;
-  onStudioPro: () => void;
-  onRefresh: () => void;
-}) {
-  if (!report.isPaid) {
-    return (
-      <LockedSection
-        title="Skin analysis"
-        body={lockedBody}
-        preferredIntent={preferredIntent}
-        unlocking={unlocking}
-        awaitingBrowserCheckout={awaitingBrowserCheckout}
-        checkoutFlow={checkoutFlow}
-        checkoutStatus={checkoutStatus}
-        onUnlock={onUnlock}
-        onStudioPro={onStudioPro}
-        onRefresh={onRefresh}
-      />
-    );
-  }
-
-  if (!report.skinAnalysis) {
-    return <EmptyCard text="Skin analysis is not available yet for this report." />;
-  }
-
+export function SkinSection({ data }: { data: MobileSkinAnalysis; imageUrl?: string }) {
   return (
-    <Card title="Skin analysis">
-      <Text style={primitiveStyles.bodyText}>Skin type: {report.skinAnalysis.type}</Text>
-      {report.skinAnalysis.concerns?.length ? (
-        <Text style={primitiveStyles.mutedText}>Concerns: {report.skinAnalysis.concerns.map((item) => item.label).join(", ")}</Text>
-      ) : null}
-      {report.skinAnalysis.zones?.length ? (
-        <Text style={primitiveStyles.mutedText}>Zones: {report.skinAnalysis.zones.map((item) => `${item.zone} (${item.observation})`).join(" • ")}</Text>
-      ) : null}
-    </Card>
+    <View style={styles.card}>
+      <Text style={styles.title}>Skin Analysis</Text>
+      <Text style={styles.primary}>{data.type}</Text>
+      {data.concerns?.map((c) => (
+        <Text key={c.label} style={styles.bullet}>• {c.label}</Text>
+      ))}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: t.color.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    padding: 16,
+    gap: 6,
+  },
+  title: { color: t.color.text, fontSize: 18, fontWeight: "700" },
+  primary: { color: t.color.text, fontSize: 16, fontWeight: "600" },
+  bullet: { color: t.color.textSoft, fontSize: 14, lineHeight: 20 },
+});

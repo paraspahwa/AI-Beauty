@@ -49,6 +49,26 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      { source: "/studio", destination: "/upload", permanent: true },
+      { source: "/studio/:path*", destination: "/upload", permanent: true },
+      { source: "/dashboard/studio-vault", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/studio-vault/:path*", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/style-dna", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/style-dna/:path*", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/wardrobe-capsule", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/wardrobe-capsule/:path*", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/progress", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/vault", destination: "/dashboard", permanent: true },
+      { source: "/report/:id/blueprint", destination: "/report/:id", permanent: true },
+      { source: "/r/:token", destination: "/", permanent: true },
+      { source: "/c/:token", destination: "/", permanent: true },
+      { source: "/m/:token", destination: "/", permanent: true },
+      { source: "/admin", destination: "/", permanent: true },
+      { source: "/admin/:path*", destination: "/", permanent: true },
+    ];
+  },
 };
 
 module.exports = nextConfig;

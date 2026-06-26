@@ -1,7 +1,7 @@
 # Renovaara — AI Agent Instructions
 
-**App:** Renovaara | AI-powered beauty analysis SaaS  
-**Stack:** Next.js 15 (App Router), React 19, TypeScript, Supabase, Tailwind CSS 3, Vitest  
+**App:** Renovaara | AI-powered beauty analysis SaaS (report-only)  
+**Stack:** Next.js 15 (App Router), React 19, TypeScript, Supabase, Tailwind CSS 3, Vitest, Expo mobile  
 **Deploy:** Vercel Pro (required — pipeline needs `maxDuration = 60`)
 
 ---
@@ -15,11 +15,11 @@ npm run typecheck    # tsc --noEmit (no build artifacts)
 npm run lint         # ESLint
 npm test             # Vitest single run
 npm run test:watch   # Vitest watch mode
-npm run eval         # Eval pipeline (calls real OpenAI — needs OPENAI_API_KEY)
-npm run eval:stage -- face_shape --runs 5  # Eval single stage
 ```
 
 > `npm run build` will fail without native binaries for `sharp`. Run `npm install --include=optional sharp` on Linux/Vercel.
+
+Mobile (`apps/mobile`): `npm run typecheck` after `npm install` in that directory.
 
 ---
 
@@ -27,28 +27,31 @@ npm run eval:stage -- face_shape --runs 5  # Eval single stage
 
 ```
 src/app/          — Next.js App Router (pages + API routes)
-src/components/   — React components (ui/ primitives + feature components)
-src/lib/          — All business logic (ai/, supabase/, payments/, auth/, utils)
+src/components/   — React components (ui/ primitives + report components)
+src/lib/          — Business logic (ai/, supabase/, payments/, auth/, utils)
 src/prompts/      — All AI prompt strings (index.ts)
 src/types/        — Shared domain types (report.ts)
 src/middleware.ts — Edge middleware: session refresh + in-process IP rate limiter
-supabase/migrations/ — 20 sequential SQL migrations (source of truth for schema)
-design-system/renovaara/MASTER.md — Design tokens and component specs
-docs/             — Architecture docs, roadmaps, operational runbooks
+supabase/migrations/ — Sequential SQL migrations (source of truth for schema)
+apps/mobile/      — Expo app mirroring report-only flow
 ```
+
+### Product flow
+
+`Upload → POST /api/analyze → unpaid preview → Razorpay one-time unlock → webhook → trigger-previews → 7-section paid report`
 
 ### API Routes
 | Route | Purpose |
 |---|---|
 | `POST /api/analyze` | Full AI pipeline (SSE stream, `maxDuration=60`) |
-| `POST /api/chat` | Streaming style consultant chat (`maxDuration=30`) |
 | `GET /api/reports/[id]` | Fetch compiled report |
 | `POST /api/payments/create` | Create Razorpay order |
-| `POST /api/payments/verify` | Verify checkout signature |
-| `POST /api/webhooks/razorpay` | Authoritative payment unlock source |
-| `POST /api/internal/trigger-visuals` | Fire-and-forget visual generation (`maxDuration=300`) |
-| `GET /api/og/[token]` | OG image via Puppeteer/Chromium |
-| `GET /api/admin/canary-stats` | Prompt A/B variant stats |
+| `POST /api/payments/verify` | Verify checkout signature (test mode only) |
+| `POST /api/webhooks/razorpay` | Authoritative payment unlock + trigger-previews |
+| `POST /api/internal/trigger-previews` | Paid preview batch: hairstyle, glasses, hair color |
+| `GET /api/reports/[id]/visuals` | Lazy regen `?type=hairstyle\|glasses\|hairColor&index=N` |
+| `POST /api/reports/[id]/hair-color` | On-demand hair colour try-on (paid) |
+| `GET /api/reports/[id]/pdf` | PDF export (paid) |
 
 ---
 
@@ -61,154 +64,111 @@ docs/             — Architecture docs, roadmaps, operational runbooks
 | `createSupabaseAdminClient()` | `lib/supabase/server.ts` | Webhooks/background jobs only — bypasses RLS |
 
 - `updateSession()` in `lib/supabase/middleware.ts` is called **only** from `src/middleware.ts`.
-- Multi-table writes always use **stored RPCs** (e.g. `complete_payment`, `upsert_style_prefs`, `try_consume_generation`) — never raw multi-table updates.
+- Multi-table writes use **stored RPCs** (`complete_webhook_payment`, `upsert_style_prefs`, `record_webhook_event`).
 
 ---
 
 ## AI Pipeline
 
-8-stage sequential pipeline in `src/lib/ai/pipeline.ts`:  
-`Rekognition → face shape → color → skin vision → skin routine → features → glasses → hairstyle → summary`
+9-stage sequential pipeline in `src/lib/ai/pipeline.ts`:  
+`Rekognition → face shape → color → skin vision → skin routine → features → glasses → hairstyle → style guide → summary`
 
 - All OpenAI calls go through `chatJSON<T>()` in `lib/ai/openai.ts`.
-- Always `response_format: { type: "json_object" }` — every prompt must instruct JSON output.
-- Images are pre-compressed to 512px max via `compressForAI()` in `lib/ai/image.ts`.
+- Always `response_format: { type: "json_object" }`.
+- Images pre-compressed to 512px max via `compressForAI()` in `lib/ai/image.ts`.
 - Model tiers: `env.openai.visionModel` (`gpt-4o`) and `env.openai.miniModel` (`gpt-4o-mini`).
-- **Do not change models to GPT-5*** — pipeline outputs are shaped for gpt-4o/gpt-4o-mini.
-- Retry logic: `withRetry()` in `lib/ai/resilience.ts`, 2 attempts, 250ms×attempt backoff.
-- Canary A/B system: `lib/ai/canary.ts` — variant IDs stored in `pipeline_meta.stages[].variantId`.
-- All AI output is validated by Zod schemas in `lib/ai/contracts.ts`; normalization functions safe-fallback on bad AI output.
+- **Do not change models to GPT-5*** — outputs are shaped for gpt-4o/gpt-4o-mini.
+- Retry: `withRetry()` in `lib/ai/resilience.ts`, 2 attempts.
+- Validation: Zod + normalization in `lib/ai/contracts.ts`.
 
-### Visual Asset Generation (fire-and-forget)
-- Hairstyle try-ons: FAL `fal-ai/image-apps-v2/hair-change` → Replicate Kontext (fallback) → SDXL (last resort)
-- Glasses: Replicate SDXL inpainting
-- Makeup (4 looks): FAL Flux Kontext Pro
-- Clothing swatches (12): Replicate Flux Kontext Pro at `megapixels: "0.25"`
-- **Replicate SDK**: always `useFileOutput: false` — `FileOutput` objects break URL validation
+### Preview generation (paid, fire-and-forget via `trigger-previews`)
+- Hairstyle previews (up to 5): `generateHairstylePreviews` / FAL + Replicate
+- Glasses previews (up to 3): `generateGlassesPreviews`
+- Hair colour previews (up to 5): `generateHairColorPreviews`
+- **Replicate SDK**: always `useFileOutput: false`
+
+### Paid report sections (web + mobile)
+1. Face — `faceShape` + `features`
+2. Skin — `skinAnalysis`
+3. Color — `colorAnalysis`
+4. Hairstyle — `hairstyle` + `hairstylePreviews`
+5. Hair colour — `hairstyle.colors` + `hairColorPreviews`
+6. Spectacles — `glasses` + `glassesPreviews`
+7. Style guide — `styleGuide` (pipeline JSON)
 
 ---
 
 ## Payment Flow — Critical Rules
 
-1. **Webhook is the authoritative unlock source.** `POST /api/payments/verify` does NOT set `is_paid`. Only `payment.captured` webhook event does (via `complete_webhook_payment` RPC).
-2. Signature verification uses `timingSafeEqual` — never use `===` for HMAC comparisons.
-3. Currency is derived from `CF-IPCountry` / `X-Vercel-IP-Country` server headers — never trust the client's currency hint.
+1. **Webhook is the authoritative unlock source.** `POST /api/payments/verify` does NOT set `is_paid` in production.
+2. Signature verification uses `timingSafeEqual`.
+3. Currency from `CF-IPCountry` / `X-Vercel-IP-Country` headers.
 4. `PAYMENT_TEST_ALLOW_IN_PROD` **must be `false`** in production.
-5. Webhook idempotency: `record_webhook_event(event_id)` RPC deduplicates by Razorpay event ID.
+5. Webhook idempotency: `record_webhook_event(event_id)` RPC.
 
 ---
 
 ## Report Type — Key Gotcha
 
-`SkinAnalysisResult.routine` is a **union type** for backward compatibility:
-- Old reports: `{ step: string; product: string }[]` (flat array)
-- New reports: `{ am: [...]; pm: [...] }` (split object)
+`SkinAnalysisResult.routine` is a **union type**:
+- Old: `{ step; product }[]`
+- New: `{ am: [...]; pm: [...] }`
 
-**Always check** `!Array.isArray(routine) && "am" in routine` before assuming AM/PM structure.
+**Always check** `!Array.isArray(routine) && "am" in routine` before assuming AM/PM.
 
-See full type definitions in `src/types/report.ts`.
+See `src/types/report.ts` and `StyleGuideResult`.
 
 ---
 
 ## Prompts
 
-All prompt strings live in `src/prompts/index.ts`.  
-Key builders: `buildColorAnalysisPrompt(opts?)`, `buildSkinRoutinePrompt()`, `buildFeaturesPrompt()`, `buildGlassesPrompt()`.  
-The canary variant `color_v1` is **weight 0 (disabled)**. The active variant (`color_v2_dominant`) uses a sentinel value `"__dominant_color_variant__"` that triggers `buildColorAnalysisPrompt()` dynamically instead of using the stored string.
-
----
-
-## Design System
-
-Full design tokens: [design-system/renovaara/MASTER.md](design-system/renovaara/MASTER.md)  
-Page-level overrides: `design-system/pages/[page-name].md` — **check these before applying Master rules**.
-
-**Color name gotcha — Tailwind aliases are semantically inverted:**
-| Tailwind name | Actual color | Canonical name |
-|---|---|---|
-| `terracotta` | Pink `#EC4899` | `chrome` |
-| `olive` | Violet `#8B5CF6` | `iris` |
-| `obsidian` | Soft pink bg `#FDF2F8` | `obsidian` |
-
-These legacy aliases remain for backward compatibility. New code should use `chrome`, `iris`, `obsidian`.
-
-UI primitives in `src/components/ui/` use Radix + `class-variance-authority` + `tailwind-merge`.
+All prompt strings: `src/prompts/index.ts`.  
+Key builders: `buildColorAnalysisPrompt()`, `buildSkinRoutinePrompt()`, `buildFeaturesPrompt()`, `buildGlassesPrompt()`, `buildStyleGuidePrompt()`.
 
 ---
 
 ## Environment Variables
 
-All env vars are centralized in `src/lib/env.ts` (server) and `src/lib/public-env.ts` (client-safe).
+Centralized in `src/lib/env.ts` (server) and `src/lib/public-env.ts` (client-safe).
 
-**Required server vars:**
-```
-SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, RAZORPAY_KEY_SECRET,
-RAZORPAY_WEBHOOK_SECRET, INTERNAL_API_SECRET (≥16 chars), ADMIN_EMAIL_ALLOWLIST
-```
+**Required server:** `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `INTERNAL_API_SECRET` (≥16 chars), `ADMIN_EMAIL_ALLOWLIST`
 
-**Required public vars:**
-```
-NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
-NEXT_PUBLIC_RAZORPAY_KEY_ID, NEXT_PUBLIC_APP_URL
-```
+**Required public:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `NEXT_PUBLIC_APP_URL`
 
-See [docs/pending-manual-tasks.md](docs/pending-manual-tasks.md) for env vars that must be set in Vercel dashboard.
+See [docs/pending-manual-tasks.md](docs/pending-manual-tasks.md).
 
 ---
 
 ## Database
 
-Schema source of truth: `supabase/migrations/` (20 migrations).  
-Key tables: `profiles`, `reports`, `payments`, `chat_messages`, `user_style_prefs`, `generated_assets`, `plans`, `subscriptions`, `usage_counters`, `webhook_events`, `image_hashes`.
+Schema: `supabase/migrations/` (25 migrations).  
+**Keep:** `profiles`, `reports`, `payments`, `webhook_events`, `user_style_prefs`, `recommendations`, `image_hashes`
 
-Key RPCs (always prefer these over raw multi-table writes):
-- `complete_webhook_payment` — atomic payment + report + profile unlock
-- `upsert_style_prefs` — personalization memory upsert
-- `try_consume_generation` — atomic quota check + increment
-- `get_studio_entitlement` — tier, remaining gens, cap, reset date
-- `record_webhook_event` — idempotency deduplication
-- `expire_stuck_reports` — pg_cron job every 10 min
+**Dropped in 0025 (report-only):** `chat_messages`, `studio_canvases`, `generated_assets`, `subscriptions`, `plans`, `usage_counters`
+
+Key RPCs: `complete_webhook_payment`, `upsert_style_prefs`, `record_webhook_event`, `try_consume_window` (analyze rate limits)
 
 ---
 
 ## Testing
 
 - Unit tests: `src/lib/ai/confidence.test.ts`, `contracts.test.ts`, `pipeline.test.ts`
-- Eval fixtures: `scripts/eval-fixtures/<stage>/<id>.json` (golden labels for prompt canaries)
-- Vitest config: `node` environment, `isolate: true`, `@` alias → `./src`
-- The eval pipeline (`npm run eval`) calls **real OpenAI** — never run in CI without API key management.
+- Vitest: `node` environment, `@` alias → `./src`
 
 ---
 
 ## Middleware
 
-`src/middleware.ts` does three things:
-1. **In-process rate limiting** (LRU, 4096 entries, resets on cold start — first-pass only):
-   - `/api/analyze` → 8 req/60s per IP
-   - `/api/chat` → 30 req/60s per IP
-2. **Auth protection**: `/upload`, `/report`, `/dashboard`, `/success`, `/admin` require Supabase session.
-3. **Session refresh** via `updateSession()` on every request.
+1. IP rate limits: `/api/analyze` (8/min), `/api/reports` (15/min), `/api/payments` (10/min)
+2. Auth: `/upload`, `/report`, `/dashboard`, `/success`
+3. Session refresh via `updateSession()`
 
-Hard quota gate for analysis: `DAILY_ANALYSIS_QUOTA = 10` per user in the route handler (not middleware).
+Hard quota: `DAILY_ANALYSIS_QUOTA = 10` per user in analyze route handler.
 
 ---
 
 ## Security Rules
 
-- `createSupabaseAdminClient()` bypasses RLS — always validate `user_id` ownership explicitly.
-- `selfies` storage bucket must remain **private**.
-- `INTERNAL_API_SECRET` must be ≥16 chars — `/api/internal/trigger-visuals` returns 503 otherwise.
-- Supabase `Site URL` must be set to the production domain in Dashboard → Auth → URL Configuration.
-
----
-
-## Docs
-
-| File | Purpose |
-|---|---|
-| [docs/pending-manual-tasks.md](docs/pending-manual-tasks.md) | Env vars, Razorpay plan IDs, and external accounts to set up |
-| [docs/optimisation-roadmap.md](docs/optimisation-roadmap.md) | Cost reduction plan ($1.20 → $0.15 per report) |
-| [docs/PRICING_STRATEGY.md](docs/PRICING_STRATEGY.md) | Pricing tiers and margin math |
-| [docs/success-plan.md](docs/success-plan.md) | Operational health, known gotchas, founder notes |
-| [docs/visual-analysis-roadmap.md](docs/visual-analysis-roadmap.md) | Visual asset generation improvements |
-| [docs/microservices-plan.md](docs/microservices-plan.md) | Future Kubernetes migration plan |
+- Admin client bypasses RLS — always validate `user_id` ownership.
+- `selfies` bucket must remain **private**.
+- `INTERNAL_API_SECRET` ≥16 chars — `/api/internal/trigger-previews` returns 503 otherwise.

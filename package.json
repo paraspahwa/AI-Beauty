@@ -9,9 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "eval": "tsx scripts/eval-pipeline.ts",
-    "eval:stage": "tsx scripts/eval-pipeline.ts --runs 3 --stage"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-rekognition": "^3.654.0",
@@ -26,8 +24,6 @@
     "@supabase/supabase-js": "^2.45.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "fast-xml-builder": "^1.2.0",
-    "fflate": "^0.8.3",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.451.0",
     "next": "15.5.18",

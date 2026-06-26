@@ -217,6 +217,26 @@ export const COMPILE_PROMPT = `Write a short (120-180 words) personalized intro 
 report given this JSON of analysis results. Warm, encouraging, second-person.
 Return JSON: { "summary": string }`;
 
+export function buildStyleGuidePrompt(
+  faceShape: string,
+  season: string,
+  undertone: string,
+): string {
+  return `Create a personalized style guide for a client with a ${faceShape} face and ${season} coloring (${undertone} undertone).
+Use the provided analysis JSON context. Be specific, practical, and luxury-consultant in tone.
+Return JSON:
+{
+  "primaryStyle": string,
+  "secondaryStyles": string[4],
+  "vibeTraits": string[4..6],
+  "wardrobeEssentials": string[6..10],
+  "silhouettes": string[4..6],
+  "colorDirection": { "neutrals": string[3..5], "accents": string[3..5] },
+  "styleNotes": string[4..6],
+  "identitySummary": string
+}`;
+}
+
 // ── Ingredient Analysis ────────────────────────────────────────────────────────
 
 /**

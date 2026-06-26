@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, Images, ChevronDown, Moon, Sun } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, ChevronDown, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -154,9 +154,6 @@ export function Navbar() {
                     <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
                       <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
                     </Link>
-                    <Link href="/dashboard/studio-vault" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
-                      <Images className="h-3.5 w-3.5" /> My Looks
-                    </Link>
                     <div className="border-t border-[#e5e7eb] mt-1 pt-1">
                       <button className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={handleSignOut}>
                         <LogOut className="h-3.5 w-3.5" /> Sign out
@@ -166,10 +163,13 @@ export function Navbar() {
                 )}
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link href="/upload">{PRODUCT_COPY.secondaryCta}</Link>
+                <Link href="/upload">
+                  <Camera className="h-3.5 w-3.5" />
+                  {PRODUCT_COPY.secondaryCta}
+                </Link>
               </Button>
               <Button asChild variant="accent" size="sm" className="group">
-                <Link href="/studio">
+                <Link href="/upload">
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>{PRODUCT_COPY.primaryCta}</span>
                 </Link>
@@ -181,9 +181,9 @@ export function Navbar() {
                 <Link href="/auth">Sign in</Link>
               </Button>
               <Button asChild variant="accent" size="sm" className="group">
-                <Link href="/studio">
+                <Link href="/upload">
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>{PRODUCT_COPY.primaryCta}</span>
+                  <span>Get started</span>
                 </Link>
               </Button>
             </>
@@ -246,19 +246,9 @@ export function Navbar() {
                         <LayoutDashboard className="h-4 w-4" /> Dashboard
                       </Link>
                     </Button>
-                    <Button asChild variant="outline" className="w-full">
-                      <Link href="/dashboard/studio-vault" onClick={() => setMenuOpen(false)}>
-                        <Images className="h-4 w-4" /> My Looks
-                      </Link>
-                    </Button>
                     <Button asChild variant="accent" className="w-full">
-                      <Link href="/studio" onClick={() => setMenuOpen(false)}>
-                        <Sparkles className="h-4 w-4" /> Open Studio
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
                       <Link href="/upload" onClick={() => setMenuOpen(false)}>
-                        <Camera className="h-4 w-4" /> Create report
+                        <Camera className="h-4 w-4" /> {PRODUCT_COPY.secondaryCta}
                       </Link>
                     </Button>
                     <Button variant="outline" className="w-full" onClick={handleSignOut}>
@@ -271,13 +261,8 @@ export function Navbar() {
                       <Link href="/auth" onClick={() => setMenuOpen(false)}>Sign in</Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">
-                      <Link href="/studio" onClick={() => setMenuOpen(false)}>
-                        <Sparkles className="h-4 w-4" /> Try AI Studio
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
                       <Link href="/upload" onClick={() => setMenuOpen(false)}>
-                        <Camera className="h-4 w-4" /> Create report
+                        <Sparkles className="h-4 w-4" /> {PRODUCT_COPY.primaryCta}
                       </Link>
                     </Button>
                   </>

@@ -10,8 +10,8 @@ const STORAGE_KEY = "renovaara_onboarded_v1";
 const STEPS = [
   {
     icon: Eye,
-    title: "Try a look in seconds ✨",
-    body: "Upload one clear, front-facing selfie in natural light. Pick a preset or tap Surprise Me — your first try-on is free, no card required.",
+    title: "Your beauty report starts here",
+    body: "Upload one clear, front-facing selfie in natural light. Analysis takes about 60 seconds — unlock the full 7-section report when you're ready.",
     accent: "#111827",
   },
 ];

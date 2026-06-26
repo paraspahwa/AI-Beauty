@@ -11,27 +11,6 @@ import { consumeIdentityWindow } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/**
- * Fire-and-forget: call the internal trigger-visuals endpoint so visual
- * generation starts immediately after the report is marked ready — before
- * the client even receives the response.
- */
-async function kickOffVisualsInBackground(
-  reportId: string,
-  appUrl: string,
-  internalSecret: string,
-): Promise<void> {
-  const url = `${appUrl}/api/internal/trigger-visuals`;
-  await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-internal-secret": internalSecret,
-    },
-    body: JSON.stringify({ reportId }),
-  });
-}
-
 /** Accepted MIME types for uploaded selfies. */
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MIN_IMAGE_DIMENSION = 256;
@@ -469,6 +448,7 @@ export async function POST(req: NextRequest) {
                 features: result.features,
                 glasses: result.glasses,
                 hairstyle: result.hairstyle,
+                style_guide: result.styleGuide,
                 summary: result.summary,
                 pipeline_meta: result.meta,
               };
@@ -511,6 +491,7 @@ export async function POST(req: NextRequest) {
                 { report_id: report.id, category: "color", title: result.colorAnalysis.season, description: result.colorAnalysis.description, data: result.colorAnalysis },
                 { report_id: report.id, category: "glasses", title: "Spectacles guide", data: result.glasses },
                 { report_id: report.id, category: "hair", title: "Hairstyle guide", data: result.hairstyle },
+                { report_id: report.id, category: "style", title: "Style guide", data: result.styleGuide },
               ]);
 
               persistStylePrefs(user.id, result.faceShape, result.colorAnalysis, result.skinAnalysis).catch(() => {
@@ -537,11 +518,7 @@ export async function POST(req: NextRequest) {
               return;
             }
 
-            kickOffVisualsInBackground(report.id, env.app.url, env.internal.secret).catch(() => {
-              // Failure is non-fatal — client will retrigger via polling
-            });
-
-            emit({ type: "completed", reportId: report.id, visualsPending: true });
+            emit({ type: "completed", reportId: report.id, visualsPending: false });
             controller.close();
           } catch (err) {
             console.error("[POST /api/analyze?stream=1]", err);
@@ -757,6 +734,7 @@ export async function POST(req: NextRequest) {
         features: result.features,
         glasses: result.glasses,
         hairstyle: result.hairstyle,
+        style_guide: result.styleGuide,
         summary: result.summary,
         pipeline_meta: result.meta,
       };
@@ -800,6 +778,7 @@ export async function POST(req: NextRequest) {
         { report_id: report.id, category: "color", title: result.colorAnalysis.season, description: result.colorAnalysis.description, data: result.colorAnalysis },
         { report_id: report.id, category: "glasses", title: "Spectacles guide", data: result.glasses },
         { report_id: report.id, category: "hair", title: "Hairstyle guide", data: result.hairstyle },
+        { report_id: report.id, category: "style", title: "Style guide", data: result.styleGuide },
       ]);
 
       // 4) Persist style prefs for memory loop (fire-and-forget — never blocks response)
@@ -819,15 +798,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Analysis failed. Please try again." }, { status: 500 });
     }
 
-    // Fire visual generation in the background — non-blocking.
-    // The client still polls, but images will be ready sooner because generation
-    // started ~60s earlier (during the text-analysis wait time).
-    kickOffVisualsInBackground(report.id, env.app.url, env.internal.secret).catch(() => {
-      // Failure is non-fatal — client will retrigger via polling
-    });
-
-    // visualsPending tells the client to immediately fire POST /api/reports/[id]/visuals
-    return NextResponse.json({ reportId: report.id, visualsPending: true });
+    return NextResponse.json({ reportId: report.id, visualsPending: false });
   } catch (err) {
     console.error("[POST /api/analyze]", err);
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });

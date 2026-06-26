@@ -105,17 +105,25 @@ export type MobilePipelineMeta = {
   stages: MobilePipelineStage[];
 };
 
+export type MobileStyleGuide = {
+  primaryStyle: string;
+  secondaryStyles: string[];
+  vibeTraits: string[];
+  wardrobeEssentials: string[];
+  silhouettes: string[];
+  colorDirection: { neutrals: string[]; accents: string[] };
+  styleNotes: string[];
+  identitySummary: string;
+};
+
 export type MobileVisualAssets = {
   version?: number;
   bucket?: string;
   basePath?: string;
   assets?: {
-    landmarkOverlay?: MobileVisualAsset;
-    paletteBoard?: MobileVisualAsset;
     glassesPreviews?: MobileVisualAsset[];
     hairstylePreviews?: MobileVisualAsset[];
-    colorSwatchPreviews?: MobileVisualAsset[];
-    makeupPreviews?: MobileVisualAsset[];
+    hairColorPreviews?: MobileVisualAsset[];
   };
   [key: string]: unknown;
 };
@@ -267,23 +275,22 @@ export type MobileReport = {
   isPaid: boolean;
   imageUrl: string;
   detectedGender?: "none" | "male" | "female";
-  shareToken?: string | null;
   summary?: string;
   createdAt: string;
-  studioEntitlement?: MobileStudioEntitlement;
   faceShape?: MobileFaceShape;
   colorAnalysis?: MobileColorAnalysis;
   skinAnalysis?: MobileSkinAnalysis;
   features?: MobileFeatures;
   glasses?: MobileGlasses;
   hairstyle?: MobileHairstyle;
+  styleGuide?: MobileStyleGuide;
   visualAssets?: MobileVisualAssets;
   pipelineMeta?: MobilePipelineMeta;
   faceLandmarks?: MobileFaceLandmarks;
   error?: string | null;
 };
 
-export type AnalyzeIntent = "report" | "studio_pro";
+export type AnalyzeIntent = "report";
 
 export type MobileReportListItem = {
   id: string;

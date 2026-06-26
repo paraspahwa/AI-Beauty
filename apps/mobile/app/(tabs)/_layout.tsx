@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
-import { Tabs, usePathname, useRouter } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { mobileTheme as t } from "@/lib/theme";
 import { supabase } from "@/lib/supabase";
 
 export default function TabsLayout() {
   const router = useRouter();
-  const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
@@ -15,9 +14,8 @@ export default function TabsLayout() {
     let mounted = true;
 
     void supabase.auth.getSession().then((response) => {
-      const { data } = response;
       if (!mounted) return;
-      setIsAuthed(Boolean(data.session?.user));
+      setIsAuthed(Boolean(response.data.session?.user));
       setReady(true);
     });
 
@@ -35,11 +33,10 @@ export default function TabsLayout() {
 
   useEffect(() => {
     if (!ready) return;
-    // My Looks vault requires auth; Try-On tab is guest-friendly
-    if (!isAuthed && (pathname === "/studio" || pathname.endsWith("/studio"))) {
+    if (!isAuthed) {
       router.replace("/account");
     }
-  }, [isAuthed, pathname, ready, router]);
+  }, [isAuthed, ready, router]);
 
   if (!ready) {
     return (
@@ -59,10 +56,10 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: t.color.textFaint,
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "Try-On" }} />
-      <Tabs.Screen name="reports" options={{ href: null }} />
-      <Tabs.Screen name="studio" options={{ title: "My Looks" }} />
+      <Tabs.Screen name="home" options={{ title: "Home" }} />
+      <Tabs.Screen name="reports" options={{ title: "Reports" }} />
       <Tabs.Screen name="account" options={{ title: "Account" }} />
+      <Tabs.Screen name="studio" options={{ href: null }} />
     </Tabs>
   );
 }

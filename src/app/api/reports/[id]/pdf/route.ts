@@ -10,6 +10,7 @@ import type {
   GlassesResult,
   HairstyleResult,
   SkinAnalysisResult,
+  StyleGuideResult,
 } from "@/types/report";
 
 export const runtime = "nodejs";
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const admin = createSupabaseAdminClient();
   const { data: row } = await admin
     .from("reports")
-    .select("id, user_id, status, is_paid, created_at, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, summary")
+    .select("id, user_id, status, is_paid, created_at, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, style_guide, summary")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -111,6 +112,7 @@ type ReportRow = {
   features?: FeatureBreakdown | null;
   glasses?: GlassesResult | null;
   hairstyle?: HairstyleResult | null;
+  style_guide?: StyleGuideResult | null;
   summary?: string | null;
 };
 
@@ -204,6 +206,20 @@ function renderHtml(r: ReportRow): string {
       ${h.lengths.length ? `<h3>Lengths</h3><ul>${h.lengths.map((l) => `<li><strong>${esc(l.name)}:</strong> ${esc(l.description)}</li>`).join("")}</ul>` : ""}
       ${h.colors.length ? `<h3>Hair Colours</h3><p>${h.colors.map((c) => swatch(c.hex, c.name)).join(" ")}</p>` : ""}
       ${h.avoid.length ? `<h3>Avoid</h3><ul>${h.avoid.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : ""}
+    `));
+  }
+
+  if (r.style_guide) {
+    const sg = r.style_guide;
+    parts.push(section("Style Guide", `
+      <p><strong>Primary style:</strong> ${esc(sg.primaryStyle)}</p>
+      ${sg.secondaryStyles.length ? `<p><strong>Secondary styles:</strong> ${sg.secondaryStyles.map((s) => pill(s, "#8B6F5E")).join(" ")}</p>` : ""}
+      ${sg.vibeTraits.length ? `<p><strong>Vibe:</strong> ${sg.vibeTraits.map((v) => pill(v, "#A89070")).join(" ")}</p>` : ""}
+      ${sg.wardrobeEssentials.length ? `<h3>Wardrobe essentials</h3><ul>${sg.wardrobeEssentials.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+      ${sg.silhouettes.length ? `<h3>Silhouettes</h3><ul>${sg.silhouettes.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
+      ${sg.colorDirection.neutrals.length || sg.colorDirection.accents.length ? `<p><strong>Colour direction:</strong> neutrals — ${sg.colorDirection.neutrals.map(esc).join(", ")}; accents — ${sg.colorDirection.accents.map(esc).join(", ")}</p>` : ""}
+      ${sg.styleNotes.length ? `<h3>Style notes</h3><ul>${sg.styleNotes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+      ${sg.identitySummary ? `<p class="summary">${esc(sg.identitySummary)}</p>` : ""}
     `));
   }
 

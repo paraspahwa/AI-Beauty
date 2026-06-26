@@ -2,17 +2,16 @@
 
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { CheckCircle2, Clock, Lock, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { blurIn, cascadeContainer, fadeUp, springPop, staggerContainer } from "@/lib/animations";
 import { OnboardingGate } from "@/components/OnboardingModal";
-import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 
 const TIPS = [
   "Look straight into the camera, hair off your forehead",
   "Use natural light — avoid heavy filters for accurate results",
-  "One face per photo · you'll upload garment photos inside the try-on tab",
+  "One face per photo for the most accurate analysis",
 ];
 
 export default function UploadPage() {
@@ -27,11 +26,6 @@ function UploadPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const intent = searchParams.get("intent");
-  useEffect(() => {
-    if (intent === "studio") {
-      router.replace(STUDIO_PRO_CHECKOUT_PATH);
-    }
-  }, [intent, router]);
 
   return (
     <OnboardingGate>
@@ -51,16 +45,6 @@ function UploadPageContent() {
                 You’re purchasing the Complete Analysis — upload your selfie to continue
               </motion.div>
             )}
-            {intent === "studio" && (
-              <motion.div
-                variants={fadeUp}
-                className="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
-                style={{ background: "rgba(17,24,39,0.12)", border: "1px solid rgba(17,24,39,0.3)", color: "#111827" }}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                Redirecting to Studio Pro checkout…
-              </motion.div>
-            )}
             {/* Step badge */}
             <motion.span
               variants={springPop}
@@ -76,22 +60,13 @@ function UploadPageContent() {
               <span className="gradient-text font-bold">selfie</span>
             </h1>
             <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
-              Upload your selfie for a free face shape overview — then unlock your complete skin
-              routine, hairstyle guide, virtual try-ons, and more.
+              Upload your selfie for a free face-shape preview — then unlock your complete skin
+              routine, colour guide, hairstyle previews, spectacles guide, and style direction.
             </p>
           </motion.header>
 
-          <motion.p variants={fadeUp} className="mx-auto mb-6 max-w-lg text-center text-sm text-ink-stone">
-            New here?{" "}
-            <button type="button" className="font-semibold text-ink underline" onClick={() => router.push("/studio")}>
-              Try a look free in Studio first
-            </button>
-            — then unlock your full report when you are ready.
-          </motion.p>
-
-          {/* ── Upload zone with spinning ring ── */}
           <motion.div variants={fadeUp} className="upload-ring rounded-3xl">
-            <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}?tab=try-shop`)} />
+            <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
           </motion.div>
 
           {/* ── Trust badges ── */}

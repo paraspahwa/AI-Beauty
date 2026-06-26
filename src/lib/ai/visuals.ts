@@ -2,8 +2,6 @@ import sharp from "sharp";
 import type { ColorAnalysisResult, GlassesResult, HairstyleResult, ReportVisualAssets } from "@/types/report";
 import { replicateHairPreviewBatch } from "./replicate-hair";
 import { replicateGlassesPreviewBatch } from "./replicate-glasses";
-import { replicateMakeupPreviewBatch } from "./replicate-makeup";
-import { MAKEUP_LOOKS } from "@/lib/makeup-looks";
 import { env } from "@/lib/env";
 
 type LandmarkPoint = {
@@ -167,29 +165,7 @@ export function createVisualAssetsSkeleton(userId: string, reportId: string, buc
     version: 1,
     bucket,
     basePath,
-    assets: {
-      landmarkOverlay: {
-        path: `${basePath}landmarks-overlay.png`,
-        status: "missing",
-        mime: "image/png",
-        error: null,
-      },
-      paletteBoard: {
-        path: `${basePath}palette-board.png`,
-        status: "missing",
-        mime: "image/png",
-        error: null,
-      },
-      // Makeup slots pre-declared so the shape is always complete.
-      // trigger-visuals overwrites these with slot-preserved values before generation.
-      makeupPreviews: MAKEUP_LOOKS.map((look) => ({
-        path: `${basePath}makeup-${look.index}.jpg`,
-        status: "missing" as const,
-        mime: "image/jpeg",
-        error: null,
-        styleName: look.label,
-      })),
-    },
+    assets: {},
   };
 }
 
@@ -270,41 +246,5 @@ export async function generateHairstylePreviews(
 
   console.warn("[visuals] Neither FAL_KEY nor REPLICATE_API_TOKEN configured — hairstyle previews skipped");
   return [];
-}
-
-/**
- * Generate 4 photorealistic makeup try-on previews using the user's seasonal
- * palette colors. Premium-only: call only when isPaid is confirmed.
- *
- * Looks generated:
- *   0 — Everyday Natural
- *   1 — Bold Lip
- *   2 — Smoky Eye
- *   3 — Full Glam
- *
- * Falls back to empty array when Replicate is not configured.
- */
-export async function generateMakeupPreviews(
-  selfieBuf: Buffer,
-  colorAnalysis: ColorAnalysisResult,
-  /** If provided, only generate previews for these slot indices. */
-  indicesToGenerate?: number[],
-): Promise<{ index: number; buffer: Buffer; label: string }[]> {
-  if (!env.replicate.isConfigured) {
-    console.warn("[visuals] Replicate not configured — makeup previews skipped");
-    return [];
-  }
-
-  const palette = colorAnalysis.palette ?? [];
-
-  return replicateMakeupPreviewBatch(
-    selfieBuf,
-    palette,
-    env.replicate.apiToken,
-    indicesToGenerate,
-  ).catch((err) => {
-    console.warn("[visuals] makeup Replicate batch failed:", (err as Error).message);
-    return [] as { index: number; buffer: Buffer; label: string }[];
-  });
 }
 

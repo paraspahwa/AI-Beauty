@@ -1,7 +1,0 @@
-{
-  "_comment": "Stub fixture for glasses — no image needed, prompt is text-only.",
-  "faceShape": "Oval",
-  "goldenLabel": {
-    "goals": "balance"
-  }
-}

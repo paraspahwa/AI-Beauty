@@ -1,23 +1,23 @@
 {
   "hero": {
-    "badge": "AI Personal Stylist",
-    "title": "Try your next look",
-    "titleAccent": "before you decide",
-    "description": "Start in AI Studio with one selfie to try makeup, hair, and outfit ideas instantly. Generate your full beauty report only when you want deeper guidance.",
+    "badge": "AI Beauty Report",
+    "title": "Your complete beauty profile",
+    "titleAccent": "from one selfie",
+    "description": "Upload a selfie for a free face-shape preview. Unlock once for skin, colour, hairstyle, spectacles, style guide, and photorealistic preview images.",
     "primaryCta": {
-      "label": "Try a Look Free",
-      "href": "/studio"
+      "label": "Start free analysis",
+      "href": "/upload"
     },
     "secondaryCta": {
-      "label": "Create full report",
-      "href": "/upload"
+      "label": "See what's included",
+      "href": "/#pricing"
     }
   },
   "ctaBanner": {
-    "title": "Start in Studio, unlock deeper analysis later",
-    "description": "Use AI Studio for fast try-ons and save your best looks. When you want deeper guidance, generate your full Renovaara report from the same journey.",
-    "buttonLabel": "Try a Look Free",
-    "buttonHref": "/studio"
+    "title": "Seven sections. One unlock.",
+    "description": "Face, skin, colour, hairstyle, hair colour, spectacles, and a personal style guide — plus preview images generated from your selfie after you unlock.",
+    "buttonLabel": "Create my report",
+    "buttonHref": "/upload"
   },
   "stats": [
     {
@@ -43,32 +43,32 @@
     "pairs": [
       {
         "id": "pair-1",
-        "title": "Face shape + hair direction",
-        "tag": "Profile refinement",
+        "title": "Face shape analysis",
+        "tag": "Free preview",
         "baseName": "sample-1",
         "beforeFile": "sample-1-before.jpg",
         "afterFile": "sample-1-after.jpg"
       },
       {
         "id": "pair-2",
-        "title": "Hair color switch",
-        "tag": "Color experimentation",
+        "title": "Hair colour preview",
+        "tag": "Paid report",
         "baseName": "sample-2",
         "beforeFile": "sample-2-before.jpg",
         "afterFile": "sample-2-after.jpg"
       },
       {
         "id": "pair-3",
-        "title": "Shape and balance update",
-        "tag": "Facial harmony",
+        "title": "Spectacles guide",
+        "tag": "Frame matching",
         "baseName": "sample-3",
         "beforeFile": "sample-3-before.jpg",
         "afterFile": "sample-3-after.jpg"
       },
       {
         "id": "pair-4",
-        "title": "Skin finish and glow",
-        "tag": "Skin finish comparison",
+        "title": "Skin analysis",
+        "tag": "Routine guidance",
         "baseName": "sample-4",
         "beforeFile": "sample-4-before.jpg",
         "afterFile": "sample-4-after.jpg"

@@ -8,14 +8,25 @@ import {
   normalizeGlasses,
   normalizeHairstyle,
   normalizeSkinAnalysis,
+  normalizeStyleGuide,
   normalizeSummary,
 } from "./contracts";
 import { GENERIC_FACE_SHAPE_LABEL, shouldUseShapeConditioning, blendConfidence } from "./confidence";
 import { PipelineStageError, classifyStageError, withRetry } from "./resilience";
-import { pickVariant } from "./canary";
 import { buildPersonalizedSystemBase } from "./memory";
 import { env } from "../env";
-import { SYSTEM_BASE, COMPILE_PROMPT, buildColorAnalysisPrompt, buildFeaturesPrompt, buildGlassesPrompt, SKIN_VISION_PROMPT, buildSkinRoutinePrompt } from "@/prompts";
+import {
+  SYSTEM_BASE,
+  COMPILE_PROMPT,
+  FACE_SHAPE_PROMPT,
+  buildColorAnalysisPrompt,
+  buildFeaturesPrompt,
+  buildGlassesPrompt,
+  buildStyleGuidePrompt,
+  SKIN_VISION_PROMPT,
+  buildSkinRoutinePrompt,
+  HAIRSTYLE_PROMPT,
+} from "@/prompts";
 import type {
   ColorAnalysisResult,
   FaceShapeResult,
@@ -23,6 +34,7 @@ import type {
   GlassesResult,
   HairstyleResult,
   SkinAnalysisResult,
+  StyleGuideResult,
 } from "@/types/report";
 
 export interface PipelineStageMeta {
@@ -56,6 +68,7 @@ export interface PipelineResult {
   features: FeatureBreakdown;
   glasses: GlassesResult;
   hairstyle: HairstyleResult;
+  styleGuide: StyleGuideResult;
   summary: string;
   meta: PipelineMeta;
 }
@@ -70,7 +83,8 @@ export interface PipelineResult {
  *  5. gpt-4o-mini  → eyes/nose/lips/cheeks (parallel-ready, single call here)
  *  6. gpt-4o-mini  → glasses (uses face shape)
  *  7. gpt-4o-mini  → hairstyle (uses face shape)
- *  8. gpt-4o-mini  → compile final summary
+ *  8. gpt-4o-mini  → style guide (text, uses prior stages)
+ *  9. gpt-4o-mini  → compile final summary
  *
  * @param rawImage - raw image buffer (JPEG/PNG/WEBP)
  * @param userId   - optional Supabase user id; when provided the pipeline
@@ -208,19 +222,17 @@ export async function runAnalysisPipeline(
   }
 
   // 2) Face shape — Mini Vision
-  const faceShapeVariant = pickVariant("face_shape");
   let faceShape = await runNormalizedStage(
     "face_shape",
     () =>
       chatJSON<unknown>({
         model: env.openai.miniModel,
         system: effectiveSystemBase,
-        user: faceShapeVariant.prompt as string,
+        user: FACE_SHAPE_PROMPT,
         imageBase64,
       }),
     normalizeFaceShape,
     { shape: "Soft Oval", traits: ["Balanced proportions", "Natural harmony", "Soft structural features"], confidence: 0.55 },
-    faceShapeVariant.id,
   );
 
   // P1-2: Blend GPT confidence with Rekognition detection confidence
@@ -230,17 +242,10 @@ export async function runAnalysisPipeline(
   faceShape = { ...faceShape, confidence: blendedConfidence };
 
   // 3) + 4a) Color & skin vision in parallel
-  const colorVariant = pickVariant("color_analysis");
-
-  // Build the color prompt: v2 (dominant-colour variant) gets pixel data injected;
-  // v1 gets the prompt without clothing colours for baseline comparison.
-  const colorPrompt =
-    colorVariant.id === "color_v2_dominant"
-      ? buildColorAnalysisPrompt({
-          clothingColors: clothingInfo.clothingColors,
-          clothingCoverage: clothingInfo.clothingCoverage,
-        })
-      : (colorVariant.prompt as string);
+  const colorPrompt = buildColorAnalysisPrompt({
+    clothingColors: clothingInfo.clothingColors,
+    clothingCoverage: clothingInfo.clothingCoverage,
+  });
 
   const [colorAnalysis, skinVisionResult] = await Promise.all([
     runNormalizedStage(
@@ -255,7 +260,6 @@ export async function runAnalysisPipeline(
         }),
       normalizeColorAnalysis,
       {},
-      colorVariant.id,
     ),
     // Phase 5: Vision-only skin stage — uses full gpt-4o for better texture accuracy,
     // and a face-cropped image at 900px so pores/tone are readable.
@@ -287,7 +291,6 @@ export async function runAnalysisPipeline(
 
   // Phase 4.4 + 4.1: Run skin routine (text, no image) in parallel with Features (vision).
   // Features runs before Glasses so eye/brow data can be injected into the Glasses prompt.
-  const featuresVariant = pickVariant("features");
   const [skinRoutineRaw, features] = await Promise.all([
     // Phase 5: Text-only AM/PM routine call — no image tokens, very cheap
     (async () => {
@@ -320,7 +323,6 @@ export async function runAnalysisPipeline(
         }),
       normalizeFeatures,
       {},
-      featuresVariant.id,
     ),
   ]);
 
@@ -368,8 +370,6 @@ export async function runAnalysisPipeline(
 
   // 6) Glasses, 7) Hairstyle in parallel.
   // Phase 4.3: Glasses now receives eye+brow features from stage 5 for personalized frame colors.
-  const glassesVariant = pickVariant("glasses");
-  const hairstyleVariant = pickVariant("hairstyle");
   const [glasses, hairstyle] = await Promise.all([
     runNormalizedStage(
       "glasses",
@@ -381,7 +381,6 @@ export async function runAnalysisPipeline(
         }),
       normalizeGlasses,
       {},
-      glassesVariant.id,
     ),
     runNormalizedStage(
       "hairstyle",
@@ -389,19 +388,34 @@ export async function runAnalysisPipeline(
         chatJSON<unknown>({
           model: env.openai.miniModel,
           system: effectiveSystemBase,
-          user: (hairstyleVariant.prompt as (s: string) => string)(shapeForStyling),
+          user: HAIRSTYLE_PROMPT(shapeForStyling),
         }),
       normalizeHairstyle,
       {},
-      hairstyleVariant.id,
     ),
   ]);
 
-  // 8) Compile summary (Mini, no image)
-  const summaryVariant = pickVariant("summary");
+  const styleGuide = await runNormalizedStage(
+    "style_guide",
+    () =>
+      chatJSON<unknown>({
+        model: env.openai.miniModel,
+        system: effectiveSystemBase,
+        user: `${buildStyleGuidePrompt(shapeForStyling, colorAnalysis.season, colorAnalysis.undertone)}\n\nAnalysis context:\n${JSON.stringify({
+          faceShape,
+          colorAnalysis,
+          features,
+          hairstyle,
+        })}`,
+      }),
+    normalizeStyleGuide,
+    {},
+  );
+
+  // 9) Compile summary (Mini, no image)
   let summary: string;
   const summaryT0 = Date.now();
-  onStage?.({ stage: "summary", status: "started", variantId: summaryVariant.id });
+  onStage?.({ stage: "summary", status: "started" });
   try {
     const compiledRaw = await withRetry(
       "summary",
@@ -409,26 +423,27 @@ export async function runAnalysisPipeline(
         chatJSON<unknown>({
           model: env.openai.miniModel,
           system: effectiveSystemBase,
-          user: `${summaryVariant.prompt}\n\nResults:\n${JSON.stringify({
+          user: `${COMPILE_PROMPT}\n\nResults:\n${JSON.stringify({
             faceShape,
             colorAnalysis,
             skinAnalysis,
             features,
             glasses,
             hairstyle,
+            styleGuide,
           })}`,
         }),
       2,
     );
     const durationMs = Date.now() - summaryT0;
-    stageMetas.push({ stage: "summary", durationMs, degraded: false, variantId: summaryVariant.id });
-    onStage?.({ stage: "summary", status: "completed", durationMs, degraded: false, variantId: summaryVariant.id });
+    stageMetas.push({ stage: "summary", durationMs, degraded: false });
+    onStage?.({ stage: "summary", status: "completed", durationMs, degraded: false });
     summary = normalizeSummary(compiledRaw);
   } catch (err) {
     const kind = classifyStageError(err);
     const durationMs = Date.now() - summaryT0;
-    stageMetas.push({ stage: "summary", durationMs, degraded: true, variantId: summaryVariant.id });
-    onStage?.({ stage: "summary", status: "completed", durationMs, degraded: true, variantId: summaryVariant.id });
+    stageMetas.push({ stage: "summary", durationMs, degraded: true });
+    onStage?.({ stage: "summary", status: "completed", durationMs, degraded: true });
     console.warn(`[pipeline:summary] degraded with fallback (${kind})`);
     summary = normalizeSummary({
       summary:
@@ -464,6 +479,7 @@ export async function runAnalysisPipeline(
     features,
     glasses,
     hairstyle,
+    styleGuide,
     summary,
     meta: {
       totalDurationMs,

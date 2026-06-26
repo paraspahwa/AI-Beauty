@@ -25,27 +25,27 @@ type StoryPanel = {
 
 const PANELS: StoryPanel[] = [
   {
-    id: "makeup",
-    title: "AI Makeup Studio",
-    subtitle: "Match shades to your undertone and facial harmony instantly.",
-    imageSrc: "/samples/sample-1-after.jpg",
-    imageAlt: "AI makeup try-on result preview",
+    id: "skin",
+    title: "Skin Analysis",
+    subtitle: "Personalised routine guidance based on your skin type and concerns.",
+    imageSrc: "/samples/sample-4-after.jpg",
+    imageAlt: "AI skin analysis preview",
     tintClass: "from-[#111827]/35 via-transparent to-black/55",
     chips: [
       {
-        label: "Peach Glow",
+        label: "Hydration focus",
         chipClass: "left-3 top-4",
         lineClass: "left-[114px] top-[44px] w-16 rotate-[24deg]",
         dotClass: "left-[172px] top-[74px]",
       },
       {
-        label: "Coral Lip Match",
+        label: "AM / PM routine",
         chipClass: "right-3 top-24",
         lineClass: "right-[114px] top-[126px] w-14 -rotate-[20deg]",
         dotClass: "right-[166px] top-[103px]",
       },
       {
-        label: "Champagne Highlight",
+        label: "Barrier support",
         chipClass: "right-3 bottom-20",
         lineClass: "right-[128px] bottom-[95px] w-12 rotate-[18deg]",
         dotClass: "right-[174px] bottom-[115px]",
@@ -73,7 +73,7 @@ const PANELS: StoryPanel[] = [
         dotClass: "left-[177px] top-[116px]",
       },
       {
-        label: "Try-On Complete",
+        label: "Preview ready",
         chipClass: "right-3 bottom-20",
         lineClass: "right-[116px] bottom-[98px] w-16 -rotate-[22deg]",
         dotClass: "right-[172px] bottom-[80px]",
@@ -215,7 +215,7 @@ export function AiStoryPanels() {
             See Your <span className="gradient-text">Style Intelligence</span> In Action
           </h2>
           <p className="mx-auto mt-3 max-w-3xl text-ink-stone">
-            One selfie turns into a complete styling narrative: makeup harmony, haircut confidence, and frame geometry tailored to you.
+            Seven personalised sections from one selfie — skin, colour, hairstyle, spectacles, and style guidance tailored to you.
           </p>
         </div>
 

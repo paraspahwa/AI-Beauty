@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import * as React from "react";
-import { Check, ExternalLink, ShoppingBag, X, Sun, Moon, AlertTriangle } from "lucide-react";
+import { Check, X, Sun, Moon, AlertTriangle } from "lucide-react";
 import type { SkinAnalysisResult, SkinConcern } from "@/types/report";
-import { getAffiliateProducts, getConcernIngredients, collectAsins } from "@/lib/affiliates";
 
 const ZONE_ANIMATION_CSS = `
 @keyframes skin-draw-zone {
@@ -227,32 +226,6 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
 
   const visibleSteps: FlatStep[] = amPm ? (activeTab === "am" ? amSteps : pmSteps) : amSteps;
 
-  // ── Amazon product images (PA-API) ─────────────────────────────────────────
-  const [productImages, setProductImages] = React.useState<Record<string, string | null>>({});
-  React.useEffect(() => {
-    // Collect all Amazon ASINs across both AM and PM steps
-    const allSteps = amPm ? [...amSteps, ...pmSteps] : amSteps;
-    const asins = collectAsins(
-      allSteps.flatMap((s) => getAffiliateProducts(s.step, skinType))
-    );
-    if (asins.length === 0) return;
-
-    let cancelled = false;
-    fetch("/api/affiliate/amazon-images", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ asins }),
-    })
-      .then((res) => res.ok ? res.json() : null)
-      .then((data: { images?: Record<string, string | null> } | null) => {
-        if (!cancelled && data?.images) setProductImages(data.images);
-      })
-      .catch(() => { /* silently ignore — fallback icon is shown */ });
-
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Concerns (handle both string[] and SkinConcern[])
   const rawConcerns = (data.concerns ?? []) as RawConcern[];
   const lowConfidence = (data.imageConfidence ?? 1) < 0.55;
@@ -378,9 +351,8 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                 <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "#9C7D5B" }}>Detected Concerns</p>
                 <div className="flex flex-wrap gap-2">
                   {rawConcerns.map((c, i) => {
-                    const sev     = getConcernSeverity(c);
-                    const style   = SEVERITY_STYLE[sev];
-                    const ingInfo = getConcernIngredients(getConcernLabel(c));
+                    const sev = getConcernSeverity(c);
+                    const style = SEVERITY_STYLE[sev];
                     return (
                       <div key={i} className="flex flex-col gap-0.5">
                         <span
@@ -390,11 +362,6 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                           {getConcernLabel(c)}
                           <span className="text-[9px] opacity-70 uppercase tracking-wide">{getConcernZone(c)}</span>
                         </span>
-                        {ingInfo && (
-                          <p className="text-[9px] pl-2" style={{ color: "#9C7D5B" }}>
-                            Look for: {ingInfo.ingredients.slice(0, 2).join(", ")}
-                          </p>
-                        )}
                       </div>
                     );
                   })}
@@ -431,68 +398,18 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                 </div>
 
                 <ol className="space-y-4">
-                  {visibleSteps.map((r: FlatStep, i: number) => {
-                    const products = getAffiliateProducts(r.step, skinType);
-                    return (
-                      <li key={`${activeTab}-${r.step}`}>
-                        <div className="flex items-start gap-3 text-sm mb-2">
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
-                          <div>
-                            <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
-                            <span style={{ color: "#9C7D5B" }}> — {r.product}</span>
-                          </div>
+                  {visibleSteps.map((r: FlatStep, i: number) => (
+                    <li key={`${activeTab}-${r.step}`}>
+                      <div className="flex items-start gap-3 text-sm">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
+                        <div>
+                          <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
+                          <span style={{ color: "#9C7D5B" }}> — {r.product}</span>
                         </div>
-
-                        {products.length > 0 && (
-                          <div className="ml-9 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {products.map((p) => (
-                              <a
-                                key={p.url}
-                                href={p.url}
-                                target="_blank"
-                                rel="noopener noreferrer sponsored"
-                                className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                style={{ background: "#F5EFE7", border: "1px solid #E8DDD0", textDecoration: "none" }}
-                              >
-                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
-                                  {p.asin && productImages[p.asin] ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      src={productImages[p.asin]!}
-                                      alt={p.name}
-                                      className="h-8 w-8 object-cover rounded-lg"
-                                    />
-                                  ) : (
-                                    <ShoppingBag className="h-4 w-4" />
-                                  )}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[11px] font-semibold truncate" style={{ color: "#3D2B1F" }}>{p.name}</p>
-                                  <div className="flex items-center gap-1.5 mt-0.5">
-                                    <span className="text-[10px]" style={{ color: "#9C7D5B" }}>{p.brand}</span>
-                                    {p.badge && (
-                                      <span className="text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full" style={{ background: "#EDE3D8", color: "#7B5E3A" }}>
-                                        {p.badge}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-end shrink-0">
-                                  <span className="text-[11px] font-bold" style={{ color: "#3D2B1F" }}>₹{p.priceINR}</span>
-                                  <ExternalLink className="h-3 w-3 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: "#9C7D5B" }} />
-                                </div>
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
+                      </div>
+                    </li>
+                  ))}
                 </ol>
-
-                <p className="mt-4 text-[9px] leading-relaxed" style={{ color: "#B8A898" }}>
-                  * Product links are affiliate links. We may earn a small commission if you purchase through these links — at no extra cost to you. Prices are approximate and may vary.
-                </p>
               </div>
             )}
         </div>

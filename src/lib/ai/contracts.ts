@@ -523,3 +523,67 @@ export function normalizeSummary(input: unknown): string {
   const summary = asString(obj.summary, "Your personalized style profile is ready.");
   return summary.slice(0, 1200);
 }
+
+const DEFAULT_STYLE_NAMES = [
+  "Classic Elegant",
+  "Quiet Luxury",
+  "Modern Minimalist",
+  "Feminine Chic",
+  "Refined Casual",
+];
+
+export function normalizeStyleGuide(input: unknown): import("@/types/report").StyleGuideResult {
+  const obj = asObject(input);
+  const colorDir = asObject(obj.colorDirection);
+  const neutrals = takeOrPad(
+    uniqueStrings(asArray(colorDir.neutrals).map((item) => asString(item, ""))),
+    4,
+    (i) => ["Cream", "Camel", "Warm Taupe", "Soft White"][i],
+  ).slice(0, 5);
+  const accents = takeOrPad(
+    uniqueStrings(asArray(colorDir.accents).map((item) => asString(item, ""))),
+    4,
+    (i) => ["Terracotta", "Olive", "Dusty Rose", "Honey Gold"][i],
+  ).slice(0, 5);
+
+  return {
+    primaryStyle: asString(obj.primaryStyle, DEFAULT_STYLE_NAMES[0]),
+    secondaryStyles: takeOrPad(
+      uniqueStrings(asArray(obj.secondaryStyles).map((item) => asString(item, ""))),
+      4,
+      (i) => DEFAULT_STYLE_NAMES[i + 1],
+    ).slice(0, 4),
+    vibeTraits: takeOrPad(
+      uniqueStrings(asArray(obj.vibeTraits).map((item) => asString(item, ""))),
+      5,
+      (i) => ["Sophisticated", "Refined", "Effortless", "Confident", "Timeless"][i],
+    ).slice(0, 6),
+    wardrobeEssentials: takeOrPad(
+      uniqueStrings(asArray(obj.wardrobeEssentials).map((item) => asString(item, ""))),
+      8,
+      (i) =>
+        ["Blazer", "Tailored Trousers", "Silk Top", "White Shirt", "Knitwear", "Trench Coat", "Midi Dress", "Timeless Handbag"][i],
+    ).slice(0, 10),
+    silhouettes: takeOrPad(
+      uniqueStrings(asArray(obj.silhouettes).map((item) => asString(item, ""))),
+      4,
+      (i) => ["Balanced Proportions", "Relaxed Tailoring", "Soft Draping", "Fitted Waist"][i],
+    ).slice(0, 6),
+    colorDirection: { neutrals, accents },
+    styleNotes: takeOrPad(
+      uniqueStrings(asArray(obj.styleNotes).map((item) => asString(item, ""))),
+      4,
+      (i) =>
+        [
+          "Favor quality fabrics with natural drape",
+          "Use structured outer layers for polish",
+          "Keep accessories refined and minimal",
+          "Build outfits around your seasonal palette",
+        ][i],
+    ).slice(0, 6),
+    identitySummary: asString(
+      obj.identitySummary,
+      "A refined, timeless style that balances elegance with everyday wearability.",
+    ).slice(0, 500),
+  };
+}

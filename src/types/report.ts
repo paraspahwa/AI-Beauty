@@ -2,23 +2,6 @@
 
 export type ReportStatus = "pending" | "processing" | "ready" | "failed";
 
-/** Mirror of src/lib/entitlement.ts — kept here for client-safe import from report types. */
-export type PlanTier = "free" | "report" | "studio_pro";
-
-export interface StudioEntitlement {
-  tier: PlanTier;
-  /** Monthly AI gens remaining. null for free/report (not metered at account level). */
-  remainingGens: number | null;
-  /** Monthly AI gens used this period. null for free/report. */
-  usedGens: number | null;
-  /** Hard cap for this tier. 150 for studio_pro, null otherwise. */
-  cap: number | null;
-  /** ISO date string of next period reset. null for free/report. */
-  periodResets: string | null;
-  /** Supabase UUID of the active subscription row. null if no subscription. */
-  subscriptionId: string | null;
-}
-
 export type ColorSeason =
   | "Spring"
   | "Summer"
@@ -111,6 +94,17 @@ export interface HairstyleResult {
   hairType?: string;
 }
 
+export interface StyleGuideResult {
+  primaryStyle: string;
+  secondaryStyles: string[];
+  vibeTraits: string[];
+  wardrobeEssentials: string[];
+  silhouettes: string[];
+  colorDirection: { neutrals: string[]; accents: string[] };
+  styleNotes: string[];
+  identitySummary: string;
+}
+
 export interface ReportVisualAsset {
   path: string;
   status: "ready" | "failed" | "missing" | "pending";
@@ -123,52 +117,14 @@ export interface ReportVisualAsset {
   styleName?: string;
 }
 
-/** Beauty Blueprint infographic section keys (one image per analysis). */
-export type AnalysisInfographicSectionId =
-  | "faceFeatures"
-  | "skin"
-  | "color"
-  | "hairstyle"
-  | "spectacles"
-  | "hairColor"
-  | "styleGuide";
-
-export interface AnalysisInfographics {
-  faceFeatures?: ReportVisualAsset;
-  skin?: ReportVisualAsset;
-  color?: ReportVisualAsset;
-  hairstyle?: ReportVisualAsset;
-  spectacles?: ReportVisualAsset;
-  hairColor?: ReportVisualAsset;
-  styleGuide?: ReportVisualAsset;
-}
-
 export interface ReportVisualAssets {
   version: number;
   bucket: string;
   basePath: string;
   assets: {
-    landmarkOverlay?: ReportVisualAsset;
-    paletteBoard?: ReportVisualAsset;
-    /** AI-generated luxury infographic boards (Beauty Blueprint). */
-    analysisInfographics?: AnalysisInfographics;
     glassesPreviews?: ReportVisualAsset[];
     hairstylePreviews?: ReportVisualAsset[];
-    /**
-     * AI-generated clothing colour previews.
-     * Indices 0-5  = bestColors[0-5]
-     * Indices 6-11 = avoidColors[0-5]
-     */
-    colorSwatchPreviews?: ReportVisualAsset[];
-    /**
-     * AI-generated makeup try-on previews (premium only).
-     * Index 0 — Everyday Natural
-     * Index 1 — Bold Lip
-     * Index 2 — Smoky Eye
-     * Index 3 — Full Glam
-     * Colors are derived from the user's seasonal palette.
-     */
-    makeupPreviews?: ReportVisualAsset[];
+    hairColorPreviews?: ReportVisualAsset[];
   };
 }
 
@@ -179,19 +135,6 @@ export interface PipelineMeta {
   gptRawConfidence: number;
   stages: { stage: string; durationMs: number; degraded: boolean }[];
 }
-
-export interface StudioOutfitResult {
-  occasion: string;
-  vibe: string;
-  looks: {
-    title: string;
-    pieces: string[];
-    notes: string;
-    palette?: { name: string; hex: string }[];
-  }[];
-  summary: string;
-}
-
 /** Auto-detected face landmark dot positions (0-1 fractions of image size). */
 export interface FaceLandmarks {
   faceShape: { x: number; y: number };
@@ -209,15 +152,13 @@ export interface CompiledReport {
   status: ReportStatus;
   isPaid: boolean;
   detectedGender?: "none" | "male" | "female";
-  /** Entitlement for AI Studio — governs generation gating and monthly quota. */
-  studioEntitlement?: StudioEntitlement;
-  shareToken?: string | null;
   faceShape?: FaceShapeResult;
   colorAnalysis?: ColorAnalysisResult;
   skinAnalysis?: SkinAnalysisResult;
   features?: FeatureBreakdown;
   glasses?: GlassesResult;
   hairstyle?: HairstyleResult;
+  styleGuide?: StyleGuideResult;
   visualAssets?: ReportVisualAssets;
   summary?: string;
   pipelineMeta?: PipelineMeta;

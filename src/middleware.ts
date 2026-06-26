@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /** Routes that require a valid Supabase session */
-const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/admin"];
+const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success"];
 
 // ── IP rate limiter for expensive API routes ──────────────────────────────────
 // Uses an in-process LRU window (edge-safe, no external store).
@@ -13,19 +13,11 @@ const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success", "/ad
 
 // Rate-limit expensive API routes:
 //   /api/analyze         → 8 req / 60 s per IP  (ML pipeline — very expensive)
-//   /api/chat            → 30 req / 60 s per IP  (OpenAI chat — moderate cost)
 //   /api/reports (POST)  → 15 req / 60 s per IP  (Replicate image generation)
 const RATE_LIMIT_ROUTES: Array<{ prefix: string; max: number }> = [
-  { prefix: "/api/studio",              max: 15 },
-  { prefix: "/api/analyze",             max: 8  },
-  { prefix: "/api/chat/visitor",        max: 10 }, // unauthenticated — stricter
-  { prefix: "/api/chat",                max: 30 },
-  { prefix: "/api/reports",             max: 15 },
-  { prefix: "/api/payments",            max: 10 },
-  { prefix: "/api/subscriptions",       max: 10 },
-  { prefix: "/api/capsule",             max: 15 },
-  { prefix: "/api/ingredients/compare",   max: 10 }, // comparison — two AI calls, budget carefully
-  { prefix: "/api/ingredients",            max: 20 }, // single ingredient analysis
+  { prefix: "/api/analyze",   max: 8 },
+  { prefix: "/api/reports",   max: 15 },
+  { prefix: "/api/payments",  max: 10 },
 ];
 const RATE_LIMIT_WINDOW_MS = 60_000;
 

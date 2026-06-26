@@ -1126,7 +1126,7 @@ export function ColorAnalysisCard({
 
         {/* Best Makeup */}
         <div className="flex flex-col items-center gap-3 py-6 px-5">
-          <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Best Makeup</p>
+          <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Makeup palette</p>
           <div className="flex gap-4 justify-center">
             {makeupColors.map((c, i) => (
               <div key={c.hex} className="flex flex-col items-center gap-1">

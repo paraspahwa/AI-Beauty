@@ -188,8 +188,8 @@ export function HairColorCard({ reportId }: Props) {
           <Sparkles className="h-4 w-4" style={{ color: "#3D2B1F" }} />
         </div>
         <div>
-          <h3 className="text-base font-semibold" style={{ color: "#3D2B1F" }}>Hair Try-On Studio</h3>
-          <p className="text-xs" style={{ color: "#9C7D5B" }}>Choose a style, pick a color, generate your preview</p>
+          <h3 className="text-base font-semibold" style={{ color: "#3D2B1F" }}>Hair Color Guide</h3>
+          <p className="text-xs" style={{ color: "#9C7D5B" }}>Recommended shades for your tone — generate a preview on demand</p>
         </div>
       </div>
 

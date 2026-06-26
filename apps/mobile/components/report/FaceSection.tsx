@@ -1,94 +1,49 @@
-import { View, Text } from "react-native";
-import { type MobileReport } from "@/lib/api";
-import { Card, EmptyCard, VisualAssetCard, styles as primitiveStyles, type PreviewItem } from "./ReportPrimitives";
+import { StyleSheet, Text, View } from "react-native";
+import type { MobileFaceShape, MobileFeatures } from "@/lib/api";
+import { mobileTheme as t } from "@/lib/theme";
 
 export function FaceSection({
-  report,
-  faceLandmarkLabels,
-  onPreview,
+  faceShape,
+  features,
   previewOnly = false,
 }: {
-  report: MobileReport;
-  faceLandmarkLabels: string[];
-  onPreview: (item: PreviewItem) => void;
+  faceShape?: MobileFaceShape;
+  features?: MobileFeatures;
   previewOnly?: boolean;
 }) {
+  if (!faceShape) return null;
   return (
-    <>
-      {report.faceShape ? (
-        <Card title="Face shape">
-          <Text style={primitiveStyles.bodyText}>{report.faceShape.shape}</Text>
-          <Text style={primitiveStyles.mutedText}>{report.faceShape.traits.join(", ")}</Text>
-        </Card>
+    <View style={styles.card}>
+      <Text style={styles.title}>Face Analysis</Text>
+      <Text style={styles.primary}>{faceShape.shape}</Text>
+      <Text style={styles.body}>{faceShape.traits.join(" · ")}</Text>
+      {!previewOnly && features ? (
+        <View style={styles.block}>
+          {(["eyes", "lips", "nose"] as const).map((key) =>
+            features[key] ? (
+              <Text key={key} style={styles.bullet}>
+                {key}: {features[key]!.shape}
+              </Text>
+            ) : null,
+          )}
+        </View>
       ) : null}
-
-      {report.colorAnalysis && !previewOnly ? (
-        <Card title="Color analysis">
-          <Text style={primitiveStyles.bodyText}>{report.colorAnalysis.season}</Text>
-          <Text style={primitiveStyles.mutedText}>Undertone: {report.colorAnalysis.undertone}</Text>
-          <Text style={primitiveStyles.mutedText}>{report.colorAnalysis.description}</Text>
-          {report.colorAnalysis.metals?.length ? (
-            <Text style={primitiveStyles.mutedText}>Best metals: {report.colorAnalysis.metals.join(", ")}</Text>
-          ) : null}
-          {report.colorAnalysis.palette?.length ? (
-            <View style={primitiveStyles.swatchRow}>
-              {report.colorAnalysis.palette.slice(0, 6).map((item) => (
-                <View key={`${item.name}-${item.hex}`} style={primitiveStyles.swatchCard}>
-                  <View style={[primitiveStyles.swatchCircle, { backgroundColor: item.hex }]} />
-                  <Text style={primitiveStyles.swatchLabel}>{item.name}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </Card>
-      ) : null}
-
-      {report.features ? (
-        <Card title="Feature breakdown">
-          {Object.entries(report.features).map(([key, value]) => {
-            if (!value || typeof value !== "object") return null;
-            const feature = value as { shape?: string; notes?: string };
-            return (
-              <View key={key} style={primitiveStyles.inlineSection}>
-                <Text style={primitiveStyles.bodyText}>{key.replace(/^./, (char) => char.toUpperCase())}: {feature.shape ?? ""}</Text>
-                {feature.notes ? <Text style={primitiveStyles.mutedText}>{feature.notes}</Text> : null}
-              </View>
-            );
-          })}
-        </Card>
-      ) : null}
-
-      {faceLandmarkLabels.length ? (
-        <Card title="Landmarks detected">
-          <View style={primitiveStyles.tagRow}>
-            {faceLandmarkLabels.map((label) => (
-              <View key={label} style={primitiveStyles.tag}>
-                <Text style={primitiveStyles.tagLabel}>{label}</Text>
-              </View>
-            ))}
-          </View>
-        </Card>
-      ) : null}
-
-      <VisualAssetCard
-        title="Face overlay"
-        asset={report.visualAssets?.assets?.landmarkOverlay}
-        emptyText="Landmark overlay will appear here when the visual asset is ready."
-        beforeImageUrl={report.imageUrl}
-        onPreview={onPreview}
-      />
-
-      <VisualAssetCard
-        title="Palette board"
-        asset={report.visualAssets?.assets?.paletteBoard}
-        emptyText="Palette board will appear here when your color visual is ready."
-        beforeImageUrl={report.imageUrl}
-        onPreview={onPreview}
-      />
-
-      {!report.visualAssets?.assets?.landmarkOverlay && !report.visualAssets?.assets?.paletteBoard ? (
-        <EmptyCard text="Additional report visuals are still processing or were not generated for this report." />
-      ) : null}
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: t.color.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: t.color.border,
+    padding: 16,
+    gap: 6,
+  },
+  title: { color: t.color.text, fontSize: 18, fontWeight: "700" },
+  primary: { color: t.color.text, fontSize: 16, fontWeight: "600" },
+  body: { color: t.color.textSoft, fontSize: 14, lineHeight: 20 },
+  block: { marginTop: 8, gap: 4 },
+  bullet: { color: t.color.textSoft, fontSize: 14, lineHeight: 20 },
+});

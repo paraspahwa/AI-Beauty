@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-import type { PlanTier } from "@/lib/entitlement";
+
+export type PlanTier = "free" | "report" | "studio_pro";
 
 type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
 

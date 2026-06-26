@@ -9,7 +9,7 @@ import {
   Scissors,
   ShieldCheck,
   Star,
-  Wand2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SampleShowcase } from "@/components/home/SampleShowcase";
@@ -24,57 +24,55 @@ import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
 import { AiStoryPanels } from "@/components/home/AiStoryPanels";
 import styles from "./home.module.css";
-import { STUDIO_PRO_CHECKOUT_PATH } from "@/lib/studio-pro-paths";
 
 const FEATURES = [
   {
-    icon: Wand2,
-    title: "AI Makeup Studio",
-    description:
-      "Try makeup and hair on your own face free — 3 generations per month, no account required.",
+    icon: Sparkles,
+    title: "Face & Feature Analysis",
+    description: "AI maps your face shape and key features to guide every recommendation.",
   },
   {
     icon: Glasses,
     title: "Spectacles Guide",
     description:
-      "Get frame shape, material, and color recommendations matched to your face shape and undertone.",
+      "Frame shape, material, and colour recommendations matched to your face and undertone.",
   },
   {
     icon: Scissors,
-    title: "Hairstyle and Color",
+    title: "Hairstyle & Hair Colour",
     description:
-      "Explore flattering cuts and color directions designed around your facial structure.",
+      "Flattering cuts, lengths, and colour directions with photorealistic preview images.",
   },
   {
     icon: Droplets,
     title: "Skin Routine",
     description:
-      "Receive concern-based AM and PM routine suggestions with ingredient guidance.",
+      "Concern-based AM and PM routine suggestions tailored to your skin type.",
   },
   {
     icon: BookOpen,
-    title: "Do vs Avoid Style Guide",
+    title: "Personal Style Guide",
     description:
-      "See what silhouettes, necklines, and bottoms to embrace or skip — backed by reference images for every rule.",
+      "Wardrobe direction, silhouettes, and colour accents aligned with your season and vibe.",
   },
 ];
 
 const STEPS = [
   {
-    title: "Try a look in Studio",
-    description: "Upload a selfie and preview makeup or hair instantly — no account required.",
+    title: "Upload a selfie",
+    description: "Use natural light and a clear front-facing photo for the best analysis.",
   },
   {
-    title: "Share your moment",
-    description: "Drag to compare before and after, then share your favourite look with friends.",
+    title: "Preview your face analysis",
+    description: "See your face shape and a teaser of your report before you unlock.",
   },
   {
-    title: "Unlock your Style DNA",
-    description: "Each try-on reveals more about your color season and face shape.",
+    title: "Unlock the full report",
+    description: "One-time payment unlocks all seven sections plus preview images and PDF.",
   },
   {
-    title: "Get your full report",
-    description: "When you're ready, unlock skin routine, hairstyle guide, and personalized shopping picks.",
+    title: "Keep it forever",
+    description: "Download your PDF and revisit your report anytime from your dashboard.",
   },
 ];
 
@@ -82,26 +80,26 @@ const TESTIMONIALS: TestimonialItem[] = [
   {
     id: "sarah",
     name: "Sarah K.",
-    tag: "Virtual Try-On",
-    quote: "I tested looks in minutes and finally picked colors that actually suit me.",
+    tag: "Colour Guide",
+    quote: "Finally understood my season — the palette section alone was worth it.",
   },
   {
     id: "priya",
     name: "Priya M.",
-    tag: "Makeup Studio",
-    quote: "The lip and blush previews looked surprisingly realistic and saved me money.",
+    tag: "Spectacles",
+    quote: "The frame recommendations actually suited my face. No more guesswork at the optician.",
   },
   {
     id: "emma",
     name: "Emma L.",
     tag: "Hair Guide",
-    quote: "I changed my haircut confidently because I could preview the shape beforehand.",
+    quote: "I changed my haircut confidently because the previews showed what would work.",
   },
   {
     id: "meera",
     name: "Meera R.",
     tag: "Skin Routine",
-    quote: "I stopped buying the wrong foundations. My routine is down to 6 products that actually work for my skin.",
+    quote: "My AM/PM routine is down to products that actually work for my skin type.",
   },
 ];
 
@@ -115,31 +113,24 @@ const FAQS: FAQItem[] = [
   {
     id: "privacy",
     question: "Is my photo private?",
-    answer: "Yes. Your image is processed securely and only accessible within your account workflows.",
+    answer: "Yes. Your image is processed securely and only accessible within your account.",
   },
   {
     id: "free-preview",
-    question: "What is included in free preview?",
+    question: "What is included in the free preview?",
     answer:
-      "Start in AI Studio with 3 free try-ons per month — no account required. You get face-shape insights and progressive unlock teasers; paid plans unlock your full beauty analysis and Style DNA.",
+      "You get face-shape analysis and a teaser of your report. Unlock once to access skin, colour, hairstyle, hair colour, spectacles, style guide, preview images, and PDF download.",
   },
   {
     id: "style-guide",
-    question: "What is the Do vs Avoid Style Guide?",
+    question: "What is the Style Guide section?",
     answer:
-      "The Style Guide is a visual education module showing which silhouettes, necklines, and bottoms flatter most body types — and which to skip. It lives on the homepage and in the Style Guide tab of every report, and it's free to browse.",
+      "A personalized wardrobe direction built from your face shape, colour season, and features — including silhouettes, essentials, and accent colours.",
   },
   {
-    id: "chat",
-    question: "Can I ask follow-up questions about my report?",
-    answer:
-      "Yes. Every report includes an AI style consultant chat. Ask anything about your color season, hairstyle, frames, skin routine, or what to wear for a specific occasion — your full report is already loaded as context.",
-  },
-  {
-    id: "visitor-chat",
-    question: "I have questions before signing up — can I get help?",
-    answer:
-      "Absolutely. Use the chat bubble in the bottom-right corner to talk to Aria, our pre-sales assistant. She can answer questions about features, pricing, privacy, and anything else about Renovaara.",
+    id: "payment",
+    question: "Is it a subscription?",
+    answer: "No. Renovaara is a one-time report unlock per analysis. Pay once, keep that report forever.",
   },
 ];
 
@@ -159,10 +150,10 @@ const PLANS: {
     name: "Free Preview",
     price: "₹0",
     note: "No card required",
-    cta: "Try a look free",
-    href: "/studio",
+    cta: "Start free analysis",
+    href: "/upload",
     featured: false,
-    items: ["3 free try-ons / month", "Makeup & hair preview", "Face shape overview", "Progressive Style DNA teasers", "No card required"],
+    items: ["Face shape analysis", "Report teaser", "No card required"],
   },
   {
     name: "Full Report",
@@ -173,29 +164,12 @@ const PLANS: {
     href: "/upload?intent=purchase",
     featured: true,
     items: [
-      "Everything in Free",
-      "5 bonus try-ons on your report",
-      "Full color season & skin analysis",
+      "All 7 report sections",
+      "Hairstyle, hair colour & glasses previews",
+      "Full colour season & skin analysis",
       "Spectacles and hairstyle guide",
-      "Skin routine recommendations",
-      "Style Guide — Do vs Avoid module",
-      "AI style consultant chat",
-      "Clothing & outfit try-ons",
-    ],
-  },
-  {
-    name: "Studio Pro",
-    price: "₹999/mo",
-    note: "Cancel anytime",
-    cta: "Start Studio Pro — ₹999/mo",
-    href: STUDIO_PRO_CHECKOUT_PATH,
-    featured: false,
-    items: [
-      "Everything in Full Report",
-      "150 AI generations / month",
-      "Priority processing",
-      "Continuous style tracking",
-      "Unlimited consultant chat sessions",
+      "Personal style guide",
+      "Downloadable PDF",
     ],
   },
 ];
@@ -240,7 +214,7 @@ export default function HomePage() {
               <div className={styles.heroMeta}>
                 <span className={styles.heroMetaItem}>Private uploads</span>
                 <span className={styles.heroMetaItem}>Fast AI guidance</span>
-                <span className={styles.heroMetaItem}>Studio and report in one flow</span>
+                <span className={styles.heroMetaItem}>Upload → analyze → unlock</span>
               </div>
             </section>
           </div>
@@ -396,9 +370,8 @@ export default function HomePage() {
 
       <SampleShowcase items={showcaseItems} tuning={HOME_CONTENT.showcase.tuning} />
 
-      {/* AI Makeup Studio spotlight — full-bleed with makeup flat lay background */}
+      {/* Report spotlight */}
       <section className="relative isolate overflow-hidden py-24 sm:py-32">
-        {/* Background image */}
         <Image
           src="/1779024298.png"
           alt=""
@@ -407,7 +380,6 @@ export default function HomePage() {
           className="object-cover object-center -z-20"
           sizes="100vw"
         />
-        {/* Dark overlay */}
         <div
           className={`pointer-events-none absolute inset-0 -z-10 ${styles.darkOverlay}`}
           aria-hidden
@@ -415,21 +387,21 @@ export default function HomePage() {
         <div className="container max-w-6xl text-center">
           <RevealSection>
             <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm">
-              AI Makeup Studio
+              Seven-section report
             </span>
             <h2 className="mt-5 text-3xl sm:text-5xl font-bold text-white leading-tight tracking-tight">
-              Stop buying the{" "}
+              Everything you need in{" "}
               <span className="bg-gradient-to-r from-pink-300 to-violet-300 bg-clip-text text-transparent">
-                wrong products
+                one unlock
               </span>
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-white/70 text-base sm:text-lg leading-relaxed">
-              Preview lip, eye, blush, and contour combinations on your own face before spending a rupee. The Makeup Studio lets you try hundreds of looks in seconds — matched to your undertone and features.
+              Skin, colour, hairstyle, hair colour, spectacles, and a personal style guide — with photorealistic preview images generated from your selfie.
             </p>
             <div className="mt-8">
               <Button asChild size="lg" variant="accent" className="group cta-shimmer">
-                <Link href="/studio">
-                  Try a Look Free
+                <Link href="/upload">
+                  Get My Report
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
                 </Link>
               </Button>
@@ -445,7 +417,7 @@ export default function HomePage() {
             <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Choose the depth that matches your beauty goals.</p>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
             {PLANS.map((plan) => (
               <article
                 key={plan.name}
@@ -532,7 +504,7 @@ export default function HomePage() {
             operatingSystem: "Web",
             url: "https://renovaara.in",
             description:
-              "AI-powered personal stylist: face shape, colour season, skin analysis, and virtual try-on for makeup, hairstyles, clothing, and spectacles — all from one selfie.",
+              "AI-powered beauty report: face shape, colour season, skin analysis, hairstyle guide, spectacles guide, style guide, and photorealistic preview images — all from one selfie.",
             offers: {
               "@type": "Offer",
               price: "0",
