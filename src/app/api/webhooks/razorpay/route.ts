@@ -155,6 +155,15 @@ export async function POST(req: NextRequest) {
           },
           body: JSON.stringify({ reportId: row.report_id }),
         }).catch((e) => console.error("[webhook/razorpay] trigger-visuals fire failed", e));
+
+        fetch(`${appUrl}/api/internal/trigger-infographics`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": internalSecret,
+          },
+          body: JSON.stringify({ reportId: row.report_id }),
+        }).catch((e) => console.error("[webhook/razorpay] trigger-infographics fire failed", e));
       }
     }
 

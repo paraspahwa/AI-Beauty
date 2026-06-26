@@ -463,6 +463,16 @@ export function ReportLayout({
               )}
             </div>
           )}
+          {!isReadOnly && (
+            <Link
+              href={`/report/${report.id}/blueprint`}
+              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:opacity-80"
+              style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", color: "#3D2B1F", boxShadow: "0 2px 8px rgba(61,43,31,0.08)" }}
+            >
+              <Sparkles className="h-4 w-4" style={{ color: "#9C7D5B" }} />
+              Beauty Blueprint
+            </Link>
+          )}
           {!isReadOnly && isPaid ? (
             <a
               href={`/api/reports/${report.id}/pdf`}

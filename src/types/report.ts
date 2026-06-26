@@ -123,6 +123,26 @@ export interface ReportVisualAsset {
   styleName?: string;
 }
 
+/** Beauty Blueprint infographic section keys (one image per analysis). */
+export type AnalysisInfographicSectionId =
+  | "faceFeatures"
+  | "skin"
+  | "color"
+  | "hairstyle"
+  | "spectacles"
+  | "hairColor"
+  | "styleGuide";
+
+export interface AnalysisInfographics {
+  faceFeatures?: ReportVisualAsset;
+  skin?: ReportVisualAsset;
+  color?: ReportVisualAsset;
+  hairstyle?: ReportVisualAsset;
+  spectacles?: ReportVisualAsset;
+  hairColor?: ReportVisualAsset;
+  styleGuide?: ReportVisualAsset;
+}
+
 export interface ReportVisualAssets {
   version: number;
   bucket: string;
@@ -130,6 +150,8 @@ export interface ReportVisualAssets {
   assets: {
     landmarkOverlay?: ReportVisualAsset;
     paletteBoard?: ReportVisualAsset;
+    /** AI-generated luxury infographic boards (Beauty Blueprint). */
+    analysisInfographics?: AnalysisInfographics;
     glassesPreviews?: ReportVisualAsset[];
     hairstylePreviews?: ReportVisualAsset[];
     /**
