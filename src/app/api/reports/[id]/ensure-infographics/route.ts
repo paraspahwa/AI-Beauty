@@ -3,15 +3,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isAdminUserEmail, hasPremiumAccess } from "@/lib/auth/access";
 import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
-import {
-  kickOffFaceFeaturesPreviewInBackground,
-  kickOffInfographicsInBackground,
-} from "@/lib/ai/kickoff-infographics";
-import {
-  previewNeedsGeneration,
-  sectionsNeedingGeneration,
-  type InfographicReportRow,
-} from "@/lib/ai/run-analysis-infographics";
+import { ensureReportInfographicsQueued } from "@/lib/ai/ensure-infographics";
+import type { InfographicReportRow } from "@/lib/ai/run-analysis-infographics";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -54,36 +47,19 @@ export async function POST(
 
     const reportRow = row as InfographicReportRow;
     const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
-    let queued = 0;
 
     // #region agent log
     fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',location:'ensure-infographics/route.ts:entry',message:'ensure-infographics decision',data:{reportId:id,dbIsPaid:!!row.is_paid,hasPremium,isAdmin:isAdminUserEmail(user.email),status:row.status},timestamp:Date.now(),hypothesisId:'H2-H5'})}).catch(()=>{});
     // #endregion
 
-    if (!hasPremium) {
-      if (previewNeedsGeneration(reportRow)) {
-        kickOffFaceFeaturesPreviewInBackground(id);
-        queued += 1;
-      }
-      // #region agent log
-      fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',runId:'post-fix',location:'ensure-infographics/route.ts:preview',message:'preview mode only',data:{reportId:id,queued,hasPremium},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
-      console.info(`[ensure-infographics] preview mode report=${id} queued=${queued}`);
-      return NextResponse.json({ ok: true, queued, mode: "preview" });
-    }
-
-    const sections = sectionsNeedingGeneration(reportRow);
-    if (sections.length > 0) {
-      kickOffInfographicsInBackground(id);
-      queued = sections.length;
-    }
+    const result = ensureReportInfographicsQueued(id, reportRow, hasPremium);
 
     // #region agent log
-    fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',runId:'post-fix',location:'ensure-infographics/route.ts:full',message:'full infographics queued',data:{reportId:id,queued,sections,hasPremium},timestamp:Date.now(),hypothesisId:'H2-H5'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',runId:'post-fix',location:'ensure-infographics/route.ts:result',message:'ensure-infographics result',data:{reportId:id,...result,hasPremium},timestamp:Date.now(),hypothesisId:'H2-H5'})}).catch(()=>{});
     // #endregion
-    console.info(`[ensure-infographics] full mode report=${id} queued=${queued} sections=${sections.join(",")}`);
+    console.info(`[ensure-infographics] report=${id} mode=${result.mode} queued=${result.queued}`, result.sections ?? "");
 
-    return NextResponse.json({ ok: true, queued, mode: "full", sections });
+    return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     console.error("[POST /api/reports/[id]/ensure-infographics]", err);
     return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });

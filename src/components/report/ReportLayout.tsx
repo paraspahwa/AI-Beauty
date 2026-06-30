@@ -75,15 +75,17 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
     return () => clearInterval(interval);
   }, [isProcessing, infographicPending, styleGuidePending, refresh]);
 
-  const ensureKickoffRef = React.useRef(false);
   React.useEffect(() => {
     if (isProcessing) return;
     const needsGeneration = infographicPending || (!isPaid && infographicAssetPending(faceInfographic));
-    if (!needsGeneration || ensureKickoffRef.current) return;
-    ensureKickoffRef.current = true;
-    void fetch(`/api/reports/${report.id}/ensure-infographics`, { method: "POST" }).catch(() => {
-      ensureKickoffRef.current = false;
-    });
+    if (!needsGeneration) return;
+
+    const kick = () => {
+      void fetch(`/api/reports/${report.id}/ensure-infographics`, { method: "POST" }).catch(() => {});
+    };
+    kick();
+    const retry = setInterval(kick, 30_000);
+    return () => clearInterval(retry);
   }, [isProcessing, infographicPending, isPaid, faceInfographic, report.id]);
 
   return (
