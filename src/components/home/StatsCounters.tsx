@@ -58,7 +58,7 @@ export function StatsCounters({ items, durationMs = 1200 }: StatsCountersProps) 
   return (
     <section className="container max-w-6xl py-8 sm:py-10">
       <motion.div
-        className="grid gap-3 rounded-3xl border border-terracotta/20 bg-white/70 p-4 shadow-card sm:grid-cols-3 sm:p-6"
+        className="grid gap-3 rounded-3xl border border-terracotta/20 bg-[var(--color-surface)]/80 p-4 shadow-card sm:grid-cols-3 sm:p-6"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}

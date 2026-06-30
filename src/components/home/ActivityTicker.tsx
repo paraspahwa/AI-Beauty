@@ -27,7 +27,7 @@ export function ActivityTicker() {
   const duplicated = [...PINGS, ...PINGS];
 
   return (
-    <div className="relative z-10 shrink-0 overflow-hidden border-b border-terracotta/15 bg-white/60 py-2 text-xs text-ink-stone backdrop-blur-sm">
+    <div className="relative z-10 shrink-0 overflow-hidden border-b border-terracotta/15 bg-[var(--color-surface)]/70 py-2 text-xs text-ink-stone backdrop-blur-sm">
       <div
         className="animate-marquee-left flex w-max gap-14 whitespace-nowrap"
         style={{ "--marquee-duration": "42s" } as React.CSSProperties}

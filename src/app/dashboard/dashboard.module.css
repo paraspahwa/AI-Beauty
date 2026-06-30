@@ -120,3 +120,63 @@
   background: rgba(251, 231, 242, 0.92);
   border: 1px solid rgba(17, 24, 39, 0.14);
 }
+
+:global(.dark) .pageBase {
+  background:
+    radial-gradient(circle at top left, rgba(139, 92, 246, 0.12), transparent 26%),
+    radial-gradient(circle at top right, rgba(236, 72, 153, 0.08), transparent 22%),
+    linear-gradient(180deg, #0b0f17 0%, #111827 100%);
+}
+
+:global(.dark) .heroCard,
+:global(.dark) .surfaceCard,
+:global(.dark) .secondaryCard {
+  background: rgba(17, 24, 39, 0.82);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .surfaceCardStrong,
+:global(.dark) .emptyState,
+:global(.dark) .reportCard,
+:global(.dark) .reportCardActive {
+  background: linear-gradient(145deg, rgba(17, 24, 39, 0.96), rgba(31, 41, 55, 0.92));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+:global(.dark) .tabActive {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--ink);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .tabInactive {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--ink-stone);
+}
+
+:global(.dark) .badgePro,
+:global(.dark) .badgeReport,
+:global(.dark) .badgeFree,
+:global(.dark) .tierPillFree,
+:global(.dark) .tierPillReport,
+:global(.dark) .tierPillPro {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+:global(.dark) .softSurface,
+:global(.dark) .softSurfaceAlt,
+:global(.dark) .tileSurface,
+:global(.dark) .tileSurfaceAlt {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .iconBubble {
+  background: rgba(31, 41, 55, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+}

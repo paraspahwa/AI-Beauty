@@ -6,14 +6,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
+  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)] disabled:opacity-40 disabled:pointer-events-none cursor-pointer",
   {
     variants: {
       variant: {
-        default: "bg-ink text-white hover:bg-[#1f2937]",
-        accent: "bg-ink text-white hover:bg-[#1f2937]",
-        outline: "border border-[#d1d5db] bg-white text-ink hover:bg-[#f9fafb]",
-        ghost: "text-ink hover:bg-[#f3f4f6]",
+        default: "bg-[var(--btn-bg)] text-[var(--btn-fg)] hover:bg-[var(--btn-hover)]",
+        accent: "bg-[var(--btn-bg)] text-[var(--btn-fg)] hover:bg-[var(--btn-hover)]",
+        outline:
+          "border border-[var(--color-border)] bg-[var(--color-surface)] text-ink hover:bg-[var(--surface-hover)]",
+        ghost: "text-ink hover:bg-[var(--surface-hover)]",
       },
       size: {
         sm: "h-9  px-4 text-sm",

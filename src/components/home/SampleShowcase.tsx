@@ -80,7 +80,7 @@ function BeforeAfterCard({ item, tuning }: { item: BeforeAfterItem; tuning: Show
 
   return (
     <motion.article
-      className={`${tuning.cardWidthClass} shrink-0 overflow-hidden rounded-3xl border border-terracotta/20 bg-white/85 shadow-card cursor-ew-resize select-none`}
+      className={`${tuning.cardWidthClass} shrink-0 overflow-hidden rounded-3xl border border-terracotta/20 bg-[var(--color-surface)]/90 shadow-card cursor-ew-resize select-none`}
       whileHover={{ y: -4, scale: 1.02 }}
       transition={{ type: "spring", stiffness: 280, damping: 20 }}
       onMouseMove={(e: ReactMouseEvent<HTMLElement>) => handleMove(e.clientX, e.currentTarget as HTMLElement)}

@@ -12,7 +12,21 @@
     --color-text: #111827;
     --color-surface: #ffffff;
     --color-border: #e5e7eb;
+    --color-border-hover: #d1d5db;
     --color-focus: #111827;
+
+    --ink: #111827;
+    --ink-stone: #374151;
+    --ink-mist: #6b7280;
+    --obsidian: #fffafc;
+    --surface-muted: #f3f4f6;
+    --surface-hover: #f9fafb;
+    --btn-bg: #111827;
+    --btn-fg: #ffffff;
+    --btn-hover: #1f2937;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --iris: #374151;
+    --iris-light: #9ca3af;
 
     --space-xs: 0.25rem;
     --space-sm: 0.5rem;
@@ -40,7 +54,31 @@
     --color-text: #f3f4f6;
     --color-surface: #111827;
     --color-border: #1f2937;
+    --color-border-hover: #374151;
     --color-focus: #f9fafb;
+
+    --ink: #f3f4f6;
+    --ink-stone: #d1d5db;
+    --ink-mist: #9ca3af;
+    --obsidian: #0b0f17;
+    --surface-muted: #1f2937;
+    --surface-hover: #374151;
+    --btn-bg: #f3f4f6;
+    --btn-fg: #111827;
+    --btn-hover: #e5e7eb;
+    --glass-bg: rgba(17, 24, 39, 0.88);
+    --iris: #d1d5db;
+    --iris-light: #9ca3af;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  html {
+    background-color: var(--color-background);
+    color: var(--color-text);
   }
 
   html,
@@ -105,7 +143,7 @@
   }
 
   .card-soft:hover {
-    border-color: #d1d5db;
+    border-color: var(--color-border-hover);
     box-shadow: var(--shadow-lg);
     transform: translateY(-2px);
   }
@@ -129,24 +167,24 @@
 
   .pill {
     @apply inline-flex items-center gap-1 rounded-full text-xs font-medium px-3 py-1.5;
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #e5e7eb;
+    background: var(--surface-muted);
+    color: var(--ink-stone);
+    border: 1px solid var(--color-border);
   }
 
   .divider-stars::before,
   .divider-stars::after {
     content: "✦";
     @apply mx-3 text-sm align-middle;
-    color: #9ca3af;
+    color: var(--ink-mist);
   }
 
   .gradient-text {
-    color: #111827;
+    color: var(--ink);
   }
 
   .glass {
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--glass-bg);
     border: 1px solid var(--color-border);
     backdrop-filter: blur(10px);
   }
@@ -154,7 +192,7 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
     --tw-ring-color: var(--color-focus);
-    --tw-ring-offset-color: #ffffff;
+    --tw-ring-offset-color: var(--color-background);
   }
 
   .chrome-border {
@@ -169,7 +207,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: #e5e7eb;
+    background: var(--color-border);
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -184,7 +222,7 @@
 
   .aurora-card {
     @apply rounded-3xl p-6 relative overflow-hidden;
-    background: #ffffff;
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-md);
   }
@@ -198,8 +236,8 @@
   }
 
   .surface-deep {
-    background: #ffffff;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    background: var(--color-surface);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text) 8%, transparent);
   }
 
   .upload-ring {
@@ -211,24 +249,24 @@
     position: absolute;
     inset: -1px;
     border-radius: inherit;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border);
     z-index: -1;
     opacity: 1;
   }
 
   .section-label {
     @apply inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold;
-    color: #6b7280;
+    color: var(--ink-mist);
   }
 
   .divider-fade {
     height: 1px;
-    background: #e5e7eb;
+    background: var(--color-border);
   }
 
   .stat-badge {
     @apply rounded-2xl px-4 py-2.5 text-center;
-    background: #ffffff;
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
   }
@@ -250,13 +288,13 @@
   }
 
   .prose-legal a {
-    color: #111827;
+    color: var(--ink);
     text-decoration-line: underline;
     text-underline-offset: 2px;
   }
 
   .prose-legal a:hover {
-    color: #374151;
+    color: var(--ink-stone);
   }
 
   .legal-table {
@@ -265,12 +303,12 @@
 
   .legal-table th {
     @apply text-left text-xs uppercase tracking-wider text-ink-stone font-semibold pb-2 border-b;
-    border-color: #e5e7eb;
+    border-color: var(--color-border);
   }
 
   .legal-table td {
     @apply py-2 pr-4 text-ink-stone border-b;
-    border-color: #f3f4f6;
+    border-color: var(--surface-muted);
   }
 
   .legal-table tr:last-child td {
@@ -294,11 +332,11 @@
   }
 
   .text-chrome {
-    color: #111827;
+    color: var(--ink);
   }
 
   .text-iris {
-    color: #374151;
+    color: var(--iris);
   }
 
   .marquee-mask {

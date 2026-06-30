@@ -15,9 +15,7 @@ const LEGAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer
-      className="mt-24 border-t border-[#e5e7eb] bg-white"
-    >
+    <footer className="mt-24 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="container max-w-6xl py-10 flex flex-col gap-8">
         {/* Top row — brand + nav */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -41,7 +39,7 @@ export function Footer() {
         </div>
 
         {/* Bottom row — legal links + copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e5e7eb] pt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--color-border)] pt-6">
           <nav className="flex items-center gap-5 text-xs text-ink-mist">
             {LEGAL_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="hover:text-ink transition-colors">

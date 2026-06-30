@@ -126,7 +126,7 @@ function PanelCard({ panel }: { panel: StoryPanel }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative min-w-[285px] snap-start overflow-hidden rounded-3xl border border-terracotta/20 bg-white shadow-xl shadow-terracotta/10 sm:min-w-0"
+      className="group relative min-w-[285px] snap-start overflow-hidden rounded-3xl border border-terracotta/20 bg-[var(--color-surface)] shadow-xl shadow-terracotta/10 sm:min-w-0"
     >
       <div className="relative h-[420px] w-full">
         <Image
@@ -208,7 +208,7 @@ export function AiStoryPanels() {
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="container max-w-6xl py-14 sm:py-16"
     >
-      <div className="rounded-[2rem] border border-terracotta/20 bg-[linear-gradient(165deg,rgba(255,246,250,0.95),rgba(255,255,255,0.94))] p-6 shadow-card sm:p-8">
+      <div className="rounded-[2rem] border border-terracotta/20 bg-[var(--color-surface)] p-6 shadow-card sm:p-8">
         <div className="text-center">
           <span className="section-label">AI Visual Story</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-5xl">

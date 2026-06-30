@@ -4,15 +4,14 @@ import { Sparkles, Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6" style={{ background: "linear-gradient(145deg, #fffafc 0%, #fffafc 50%, #fffafc 100%)" }}>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6 bg-[var(--color-background)]">
       <div className="max-w-md w-full text-center space-y-8">
-        {/* Decorative number */}
         <div className="relative">
-          <p className="font-sans text-[120px] leading-none select-none font-bold" style={{ color: "rgba(240,232,216,0.05)" }}>
+          <p className="font-sans text-[120px] leading-none select-none font-bold text-[var(--surface-muted)] opacity-40">
             404
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full text-obsidian shadow-glow" style={{ background: "#111827" }}>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-glow">
               <Sparkles className="h-10 w-10" />
             </div>
           </div>

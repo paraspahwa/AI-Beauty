@@ -15,7 +15,13 @@ export async function updateSession(
   const requireSession = options?.requireSession ?? false;
   let response = NextResponse.next({ request: { headers: request.headers } });
 
-  const supabase = createServerClient(env.supabase.url, env.supabase.anonKey, {
+  const supabaseUrl = env.supabase.url;
+  const supabaseAnonKey = env.supabase.anonKey;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { response, user: null };
+  }
+
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get: (name: string) => request.cookies.get(name)?.value,
       set: (name: string, value: string, options: CookieOptions) => {

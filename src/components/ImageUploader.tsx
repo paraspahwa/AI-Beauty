@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { Upload, ImageIcon, Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 import { SkinQuestionnaireModal, type SkinContext } from "@/components/SkinQuestionnaireModal";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export interface ImageUploaderProps {
   onUploaded: (reportId: string) => void;
@@ -50,6 +52,7 @@ type AnalyzeStreamEvent =
  * Posts the file as multipart/form-data to /api/analyze and reports progress.
  */
 export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
+  const router = useRouter();
   const [file, setFile] = React.useState<File | null>(null);
   const [preview, setPreview] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
@@ -120,6 +123,14 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
 
   async function handleSubmit() {
     if (!file) return;
+
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push(`/auth?redirect=${encodeURIComponent("/upload")}`);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setCurrentStage(null);
@@ -174,6 +185,10 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
 
       if (!res.ok || !res.body) {
         const body = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          router.push(`/auth?redirect=${encodeURIComponent("/upload")}`);
+          return;
+        }
         throw new Error(body?.error ?? `Upload failed (${res.status})`);
       }
 
@@ -207,6 +222,10 @@ export function ImageUploader({ onUploaded, className }: ImageUploaderProps) {
           }
 
           if (event.type === "failed") {
+            if (event.message === "Unauthorized") {
+              router.push(`/auth?redirect=${encodeURIComponent("/upload")}`);
+              return;
+            }
             throw new Error(event.message || "Analysis failed. Please try again.");
           }
 

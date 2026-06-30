@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ThemeScript } from "@/components/ThemeScript";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://renovaara.in";
@@ -75,8 +76,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <ThemeScript />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -101,10 +103,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-<body className="min-h-screen flex flex-col bg-obsidian text-ink antialiased overflow-x-hidden">
+<body className="min-h-screen flex flex-col antialiased overflow-x-hidden">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-ink focus:font-semibold focus:shadow-lg"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[var(--color-surface)] focus:text-ink focus:font-semibold focus:shadow-lg"
         >
           Skip to content
         </a>
