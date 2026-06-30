@@ -12,6 +12,12 @@ import type { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 const SIGNED_URL_TTL = 60 * 60;
 
+const BASE_REPORT_SELECT =
+  "id, status, is_paid, image_path, created_at, visual_assets, face_shape";
+
+const EXTENDED_REPORT_SELECT =
+  `${BASE_REPORT_SELECT}, body_image_path, is_style_guide_paid`;
+
 type ReportVaultRow = {
   id: string;
   status: string;
@@ -27,6 +33,49 @@ type ReportVaultRow = {
 function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
   if (!value || typeof value !== "object") return undefined;
   return value as ReportVisualAssets;
+}
+
+function isMissingColumnError(error: { message?: string; code?: string }): boolean {
+  const msg = error.message?.toLowerCase() ?? "";
+  return (
+    error.code === "42703" ||
+    msg.includes("is_style_guide_paid") ||
+    msg.includes("body_image_path") ||
+    msg.includes("does not exist")
+  );
+}
+
+/** Tolerates DBs where migration 0026 has not been applied yet. */
+async function fetchVaultReports(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+): Promise<ReportVaultRow[]> {
+  const runQuery = (select: string) =>
+    admin
+      .from("reports")
+      .select(select)
+      .eq("user_id", userId)
+      .eq("status", "ready")
+      .order("created_at", { ascending: false });
+
+  const extended = await runQuery(EXTENDED_REPORT_SELECT);
+  if (!extended.error) {
+    return (extended.data ?? []) as unknown as ReportVaultRow[];
+  }
+
+  if (!isMissingColumnError(extended.error)) {
+    throw extended.error;
+  }
+
+  const base = await runQuery(BASE_REPORT_SELECT);
+  if (base.error) throw base.error;
+
+  type BaseRow = Omit<ReportVaultRow, "is_style_guide_paid" | "body_image_path">;
+  return ((base.data ?? []) as unknown as BaseRow[]).map((row) => ({
+    ...row,
+    is_style_guide_paid: false,
+    body_image_path: null,
+  }));
 }
 
 async function signPath(
@@ -77,20 +126,11 @@ export async function compileVaultForUser(
   const appUrl = env.app.url.replace(/\/$/, "");
   const bucket = env.supabase.bucket;
 
-  const { data: reports, error } = await admin
-    .from("reports")
-    .select(
-      "id, status, is_paid, is_style_guide_paid, image_path, body_image_path, created_at, visual_assets, face_shape",
-    )
-    .eq("user_id", userId)
-    .eq("status", "ready")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
+  const reports = await fetchVaultReports(admin, userId);
 
   const items: VaultItem[] = [];
 
-  for (const row of (reports ?? []) as ReportVaultRow[]) {
+  for (const row of reports) {
     const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail });
     const hasStyleGuide = hasStyleGuideAccess({
       isStyleGuidePaid: !!row.is_style_guide_paid,

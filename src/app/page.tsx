@@ -20,6 +20,8 @@ import { ActivityTicker } from "@/components/home/ActivityTicker";
 import { HeroReportCard } from "@/components/home/HeroReportCard";
 import { StickyMobileCta } from "@/components/home/StickyMobileCta";
 import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
+import { getLandingPlans, fmtInr } from "@/lib/landing-pricing";
+import { publicEnv } from "@/lib/public-env";
 import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
 import { AiStoryPanels } from "@/components/home/AiStoryPanels";
@@ -41,19 +43,19 @@ const FEATURES = [
     icon: Scissors,
     title: "Hairstyle & Hair Colour",
     description:
-      "Flattering cuts, lengths, and colour directions with photorealistic preview images.",
+      "Flattering cuts, lengths, and colour directions in dedicated infographic guides.",
   },
   {
     icon: Droplets,
     title: "Skin Routine",
     description:
-      "Concern-based AM and PM routine suggestions tailored to your skin type.",
+      "Skin type and concern-based AM/PM routine in a polished analysis infographic.",
   },
   {
     icon: BookOpen,
-    title: "Personal Style Guide",
+    title: "Style Guide Add-on",
     description:
-      "Wardrobe direction, silhouettes, and colour accents aligned with your season and vibe.",
+      "Optional wardrobe infographic from a full-body photo — silhouettes, essentials, and accent colours.",
   },
 ];
 
@@ -67,8 +69,8 @@ const STEPS = [
     description: "See your face shape and a teaser of your report before you unlock.",
   },
   {
-    title: "Unlock the full report",
-    description: "One-time payment unlocks all seven sections plus preview images and PDF.",
+    title: "Unlock six infographics",
+    description: "One-time payment unlocks six analysis infographics plus a downloadable PDF.",
   },
   {
     title: "Keep it forever",
@@ -119,63 +121,28 @@ const FAQS: FAQItem[] = [
     id: "free-preview",
     question: "What is included in the free preview?",
     answer:
-      "You get face-shape analysis and a teaser of your report. Unlock once to access skin, colour, hairstyle, hair colour, spectacles, style guide, preview images, and PDF download.",
+      "You get a face-shape preview infographic and a teaser of your report. Unlock the Full Report for six analysis infographics (face features, skin, colour, hairstyle, spectacles, hair colour) and a PDF download.",
   },
   {
     id: "style-guide",
-    question: "What is the Style Guide section?",
+    question: "What is the Style Guide add-on?",
     answer:
-      "A personalized wardrobe direction built from your face shape, colour season, and features — including silhouettes, essentials, and accent colours.",
+      `After unlocking your Full Report, you can add a personal Style Guide for ${fmtInr(publicEnv.razorpay.styleGuidePriceINR)}. Upload a full-body photo and receive a wardrobe infographic plus a separate PDF — silhouettes, essentials, and colours matched to your season.`,
   },
   {
     id: "payment",
     question: "Is it a subscription?",
-    answer: "No. Renovaara is a one-time report unlock per analysis. Pay once, keep that report forever.",
+    answer:
+      "No. Renovaara uses one-time payments per report — Full Report unlock, and an optional Style Guide add-on. Pay once per analysis, keep that report forever.",
   },
 ];
 
 const STATS: StatItem[] = HOME_CONTENT.stats;
 
-const PLANS: {
-  name: string;
-  price: string;
-  originalPrice?: string;
-  note: string;
-  cta: string;
-  href: string;
-  featured: boolean;
-  items: string[];
-}[] = [
-  {
-    name: "Free Preview",
-    price: "₹0",
-    note: "No card required",
-    cta: "Start free analysis",
-    href: "/upload",
-    featured: false,
-    items: ["Face shape analysis", "Report teaser", "No card required"],
-  },
-  {
-    name: "Full Report",
-    price: "₹299",
-    originalPrice: "₹599",
-    note: "One-time payment",
-    cta: "Unlock Full Report — ₹299",
-    href: "/upload?intent=purchase",
-    featured: true,
-    items: [
-      "All 7 report sections",
-      "Hairstyle, hair colour & glasses previews",
-      "Full colour season & skin analysis",
-      "Spectacles and hairstyle guide",
-      "Personal style guide",
-      "Downloadable PDF",
-    ],
-  },
-];
-
 export default function HomePage() {
   const showcaseItems = toBeforeAfterItems();
+  const plans = getLandingPlans();
+  const reportPriceLabel = fmtInr(publicEnv.razorpay.priceINR);
 
   return (
     <main className="min-h-screen overflow-x-hidden">
@@ -387,7 +354,7 @@ export default function HomePage() {
         <div className="container max-w-6xl text-center">
           <RevealSection>
             <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm">
-              Seven-section report
+              Six analysis infographics
             </span>
             <h2 className="mt-5 text-3xl sm:text-5xl font-bold text-white leading-tight tracking-tight">
               Everything you need in{" "}
@@ -396,7 +363,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-white/70 text-base sm:text-lg leading-relaxed">
-              Skin, colour, hairstyle, hair colour, spectacles, and a personal style guide — with photorealistic preview images generated from your selfie.
+              Face features, skin, colour, hairstyle, spectacles, and hair colour — each delivered as a luxury infographic from your selfie, plus a PDF you can download and share.
             </p>
             <div className="mt-8">
               <Button asChild size="lg" variant="accent" className="group cta-shimmer">
@@ -414,14 +381,16 @@ export default function HomePage() {
         <RevealSection>
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl text-ink">Simple pricing</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Choose the depth that matches your beauty goals.</p>
+            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
+              Free preview, Full Report with six infographics, or add a Style Guide after unlock.
+            </p>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
-            {PLANS.map((plan) => (
+          <div className="mt-10 grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+            {plans.map((plan) => (
               <article
                 key={plan.name}
-                className={plan.featured ? "card-soft chrome-border relative md:scale-[1.05] z-10 shadow-2xl shadow-pink-200/60 ring-2 ring-pink-300/40" : "card-soft"}
+                className={plan.featured ? "card-soft chrome-border relative md:scale-[1.03] z-10 shadow-2xl shadow-pink-200/60 ring-2 ring-pink-300/40" : "card-soft"}
               >
                 {plan.featured ? (
                   <span className="pill absolute -top-3 left-1/2 -translate-x-1/2">
@@ -504,12 +473,12 @@ export default function HomePage() {
             operatingSystem: "Web",
             url: "https://renovaara.in",
             description:
-              "AI-powered beauty report: face shape, colour season, skin analysis, hairstyle guide, spectacles guide, style guide, and photorealistic preview images — all from one selfie.",
+              "AI-powered beauty report: face shape preview, six analysis infographics (skin, colour, hairstyle, spectacles, hair colour), PDF download, and optional Style Guide add-on — all from one selfie.",
             offers: {
               "@type": "Offer",
               price: "0",
               priceCurrency: "INR",
-              description: "Free preview — paid full report from Rs 299",
+              description: `Free preview — Full Report from ${reportPriceLabel}`,
             },
             aggregateRating: {
               "@type": "AggregateRating",

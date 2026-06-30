@@ -215,7 +215,7 @@ export function AiStoryPanels() {
             See Your <span className="gradient-text">Style Intelligence</span> In Action
           </h2>
           <p className="mx-auto mt-3 max-w-3xl text-ink-stone">
-            Seven personalised sections from one selfie — skin, colour, hairstyle, spectacles, and style guidance tailored to you.
+            Six personalised analysis infographics from one selfie — skin, colour, hairstyle, spectacles, and more. Style Guide available as an optional add-on.
           </p>
         </div>
 

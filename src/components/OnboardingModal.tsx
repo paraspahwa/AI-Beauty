@@ -11,7 +11,7 @@ const STEPS = [
   {
     icon: Eye,
     title: "Your beauty report starts here",
-    body: "Upload one clear, front-facing selfie in natural light. Analysis takes about 60 seconds — unlock the full 7-section report when you're ready.",
+    body: "Upload one clear, front-facing selfie in natural light. Analysis takes about 60 seconds — unlock six analysis infographics and a PDF when you're ready.",
     accent: "#111827",
   },
 ];

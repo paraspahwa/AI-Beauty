@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
-import { Lock, Sparkles, Check, Shield, Zap, Droplets, Glasses, Scissors, FileDown } from "lucide-react";
+import { Lock, Sparkles, Check, Shield, Zap, Droplets, Glasses, Scissors, FileDown, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,11 +50,12 @@ export interface PaywallProps {
 }
 
 const REPORT_PERKS = [
-  { icon: Droplets, text: "Full skin analysis + custom routine" },
-  { icon: Sparkles, text: "Personal color season + palette" },
-  { icon: Glasses, text: "Spectacles guide for your face shape" },
-  { icon: Scissors, text: "Hairstyle, length & colour guide" },
-  { icon: FileDown, text: "Downloadable PDF for stylists" },
+  { icon: Sparkles, text: "Face features infographic" },
+  { icon: Droplets, text: "Skin analysis infographic" },
+  { icon: Palette, text: "Colour season infographic" },
+  { icon: Scissors, text: "Hairstyle & hair colour infographics" },
+  { icon: Glasses, text: "Spectacles guide infographic" },
+  { icon: FileDown, text: "Downloadable analysis PDF" },
 ];
 
 const SOCIAL_PROOF = [

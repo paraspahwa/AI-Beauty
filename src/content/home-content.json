@@ -3,7 +3,7 @@
     "badge": "AI Beauty Report",
     "title": "Your complete beauty profile",
     "titleAccent": "from one selfie",
-    "description": "Upload a selfie for a free face-shape preview. Unlock once for skin, colour, hairstyle, spectacles, style guide, and photorealistic preview images.",
+    "description": "Upload a selfie for a free face-shape preview. Unlock once for six analysis infographics and a PDF. Add a personal Style Guide anytime as an optional add-on.",
     "primaryCta": {
       "label": "Start free analysis",
       "href": "/upload"
@@ -14,8 +14,8 @@
     }
   },
   "ctaBanner": {
-    "title": "Seven sections. One unlock.",
-    "description": "Face, skin, colour, hairstyle, hair colour, spectacles, and a personal style guide — plus preview images generated from your selfie after you unlock.",
+    "title": "Six infographics. One unlock.",
+    "description": "Face features, skin, colour, hairstyle, spectacles, and hair colour — each as a luxury infographic from your selfie, plus a downloadable analysis PDF.",
     "buttonLabel": "Create my report",
     "buttonHref": "/upload"
   },
