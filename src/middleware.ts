@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
-import { debugLog } from "@/lib/debug-log";
 
 /** Routes that require a valid Supabase session */
 const PROTECTED_PREFIXES = ["/report", "/dashboard", "/vault", "/success"];
@@ -143,17 +142,8 @@ export async function middleware(request: NextRequest) {
     const signIn = new URL("/auth", request.url);
     const redirectTarget = `${pathname}${request.nextUrl.search}`;
     signIn.searchParams.set("redirect", sanitizePostAuthPath(redirectTarget, "/upload"));
-    // #region agent log
-    debugLog("middleware.ts:protected", "auth redirect", { pathname, hasUser: false }, "H2");
-    // #endregion
     return NextResponse.redirect(signIn);
   }
-
-  // #region agent log
-  if (pathname === "/upload" || pathname.startsWith("/report/")) {
-    debugLog("middleware.ts:pass", "route allowed", { pathname, isProtected, hasUser: !!user }, "H3");
-  }
-  // #endregion
 
   return response;
 }

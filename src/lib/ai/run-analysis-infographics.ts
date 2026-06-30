@@ -7,6 +7,7 @@ import {
   setAnalysisInfographicAsset,
 } from "@/lib/ai/analysis-infographics";
 import { getBlueprintSection } from "@/lib/ai/infographic-sections";
+import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 import type {
   AnalysisInfographicSectionId,
   ColorAnalysisResult,
@@ -75,6 +76,9 @@ async function downloadSelfie(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   imagePath: string,
 ): Promise<Buffer> {
+  if (!isVaultStoragePath(imagePath)) {
+    throw new Error("Selfie image was removed");
+  }
   const { data: imgData, error: imgErr } = await admin.storage
     .from(env.supabase.bucket)
     .download(imagePath);
@@ -193,7 +197,28 @@ export async function runFaceFeaturesPreviewInfographic(
   return generateOneSection(admin, row, "faceFeaturesPreview", imageBuffer, opts?.force === true);
 }
 
-/** Paid-tier full face features infographic. */
+/** Paid-tier: generate exactly one section (used by per-section background jobs). */
+export async function runSinglePaidInfographic(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  row: InfographicReportRow,
+  section: AnalysisInfographicSectionId,
+  opts?: { force?: boolean },
+): Promise<InfographicSectionResult> {
+  if (!env.fal.isConfigured) {
+    throw new Error("FAL_KEY is not configured");
+  }
+  if (row.status !== "ready") {
+    throw new Error("Report is not ready yet");
+  }
+  if (!row.is_paid) {
+    throw new Error("Report must be unlocked");
+  }
+
+  const imageBuffer = await downloadSelfie(admin, row.image_path);
+  return generateOneSection(admin, row, section, imageBuffer, opts?.force === true);
+}
+
+/** Paid-tier: generate multiple sections in one invocation (tests / manual retry only). */
 export async function runAnalysisInfographics(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   row: InfographicReportRow,

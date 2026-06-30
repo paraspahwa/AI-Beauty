@@ -178,12 +178,26 @@ function isTrustedAnalyzeRequestOrigin(req: NextRequest): boolean {
   }
 
   const allowedOrigins = new Set<string>();
-  try {
-    allowedOrigins.add(new URL(env.app.url).origin);
-  } catch {
-    // Ignore malformed env in this check; request will fail later during assertServer.
+  const addOrigin = (value: string | undefined) => {
+    if (!value) return;
+    try {
+      allowedOrigins.add(new URL(value).origin);
+    } catch {
+      // ignore malformed URL
+    }
+  };
+
+  addOrigin(env.app.url);
+  addOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  if (process.env.VERCEL_URL) {
+    addOrigin(`https://${process.env.VERCEL_URL}`);
   }
-  allowedOrigins.add(req.nextUrl.origin);
+  addOrigin(req.nextUrl.origin);
+
+  if (process.env.NODE_ENV === "development") {
+    allowedOrigins.add("http://localhost:3000");
+    allowedOrigins.add("http://127.0.0.1:3000");
+  }
 
   const origin = req.headers.get("origin");
   if (origin) {

@@ -9,7 +9,6 @@ import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
 import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
-import { debugLog } from "@/lib/debug-log";
 
 function resolvePostAuthPath(searchParams: URLSearchParams): string {
   const redirect = searchParams.get("redirect") ?? searchParams.get("next");
@@ -203,9 +202,6 @@ function AuthContent() {
     void supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
       const target = resolvePostAuthPath(searchParams);
-      // #region agent log
-      debugLog("auth/page.tsx", "session exists, redirecting", { target }, "H5");
-      // #endregion
       window.location.replace(target);
     });
   }, [searchParams]);

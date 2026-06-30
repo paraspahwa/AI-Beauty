@@ -53,6 +53,8 @@ const nextConfig = {
     return [
       { source: "/studio", destination: "/upload", permanent: true },
       { source: "/studio/:path*", destination: "/upload", permanent: true },
+      { source: "/analysis", destination: "/upload", permanent: true },
+      { source: "/analysis/:path*", destination: "/upload", permanent: true },
       { source: "/dashboard/studio-vault", destination: "/dashboard", permanent: true },
       { source: "/dashboard/studio-vault/:path*", destination: "/dashboard", permanent: true },
       { source: "/dashboard/style-dna", destination: "/dashboard", permanent: true },

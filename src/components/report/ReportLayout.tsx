@@ -69,6 +69,17 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
     return () => clearInterval(interval);
   }, [isProcessing, infographicPending, styleGuidePending, refresh]);
 
+  const ensureKickoffRef = React.useRef(false);
+  React.useEffect(() => {
+    if (isProcessing) return;
+    const needsGeneration = infographicPending || (!isPaid && infographicAssetPending(faceInfographic));
+    if (!needsGeneration || ensureKickoffRef.current) return;
+    ensureKickoffRef.current = true;
+    void fetch(`/api/reports/${report.id}/ensure-infographics`, { method: "POST" }).catch(() => {
+      ensureKickoffRef.current = false;
+    });
+  }, [isProcessing, infographicPending, isPaid, faceInfographic, report.id]);
+
   return (
     <div className="min-h-app-viewport" style={{ background: "#F5F0EA" }}>
       <div className="page-bleed-x py-10 sm:py-14">

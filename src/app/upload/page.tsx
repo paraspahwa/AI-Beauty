@@ -60,8 +60,8 @@ function UploadPageContent() {
               <span className="gradient-text font-bold">selfie</span>
             </h1>
             <p className="mx-auto max-w-md text-base text-ink-stone leading-relaxed">
-              Upload your selfie for a free face-shape preview — then unlock your complete skin
-              routine, colour guide, hairstyle previews, spectacles guide, and style direction.
+              Upload your selfie for a free face-shape preview — then unlock six analysis infographics
+              and a PDF. Optional Style Guide add-on after unlock.
             </p>
           </motion.header>
 

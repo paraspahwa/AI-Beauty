@@ -1,5 +1,3 @@
-import { debugLog } from "@/lib/debug-log";
-
 /** Internal paths only — blocks open redirects and auth-loop targets. */
 const INTERNAL_PATH_RE = /^\/[^/]/;
 
@@ -15,9 +13,6 @@ export function sanitizePostAuthPath(
 
   const pathOnly = rawPath.split("?")[0] ?? rawPath;
   if (BLOCKED_PREFIXES.some((prefix) => pathOnly === prefix || pathOnly.startsWith(`${prefix}/`))) {
-    // #region agent log
-    debugLog("safe-redirect.ts", "blocked auth redirect", { pathOnly, fallback }, "H2");
-    // #endregion
     return fallback;
   }
 

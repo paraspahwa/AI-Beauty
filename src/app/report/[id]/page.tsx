@@ -33,10 +33,6 @@ export default async function ReportPage({
   const initialPaywallOpen = (Array.isArray(query.paywall) ? query.paywall[0] : query.paywall) === "open";
 
   if (!UUID_RE.test(id)) {
-    // #region agent log
-    const { debugLog } = await import("@/lib/debug-log");
-    debugLog("report/page.tsx", "invalid report id", { idLength: id.length }, "H1");
-    // #endregion
     notFound();
   }
 

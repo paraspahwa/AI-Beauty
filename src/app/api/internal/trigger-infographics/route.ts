@@ -3,7 +3,7 @@
  *
  * Background generation of analysis infographics.
  * mode=preview — face-shape-only (no payment required)
- * mode=full    — paid sections (face features full image)
+ * mode=full    — exactly ONE paid section per request (section required)
  */
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -12,8 +12,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import {
   previewNeedsGeneration,
-  runAnalysisInfographics,
   runFaceFeaturesPreviewInfographic,
+  runSinglePaidInfographic,
   sectionsNeedingGeneration,
   type InfographicReportRow,
 } from "@/lib/ai/run-analysis-infographics";
@@ -92,34 +92,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true, reason: "not_paid" });
     }
 
+    if (!section || !isAnalysisInfographicSectionId(section) || section === "faceFeaturesPreview") {
+      return NextResponse.json(
+        { error: "section is required for full mode (one section per job)" },
+        { status: 400 },
+      );
+    }
+
+    const paidSection = section as AnalysisInfographicSectionId;
     const toGenerate = sectionsNeedingGeneration(reportRow, force);
-    if (toGenerate.length === 0) {
-      return NextResponse.json({ ok: true, skipped: true, reason: "already_complete" });
+    if (!toGenerate.includes(paidSection)) {
+      return NextResponse.json({ ok: true, skipped: true, reason: "already_complete", section: paidSection });
     }
 
-    const singleSection =
-      section && isAnalysisInfographicSectionId(section)
-        ? (section as AnalysisInfographicSectionId)
-        : undefined;
-
-    const sections = singleSection
-      ? toGenerate.includes(singleSection)
-        ? [singleSection]
-        : []
-      : toGenerate;
-
-    if (sections.length === 0) {
-      return NextResponse.json({ ok: true, skipped: true, reason: "already_complete" });
+    const result = await runSinglePaidInfographic(admin, reportRow, paidSection, { force });
+    if (result.status === "failed") {
+      console.warn(`[trigger-infographics] report ${reportId} section ${paidSection} failed:`, result.error);
+    } else {
+      console.info(`[trigger-infographics] report ${reportId} section ${paidSection}`, result);
     }
 
-    const results = await runAnalysisInfographics(admin, reportRow, sections, { force });
-    for (const [section, result] of Object.entries(results)) {
-      if (result.status === "failed") {
-        console.warn(`[trigger-infographics] report ${reportId} section ${section} failed:`, result.error);
-      }
-    }
-    console.info(`[trigger-infographics] full report ${reportId}`, singleSection ?? "all", results);
-    return NextResponse.json({ ok: true, mode: "full", section: singleSection, results });
+    return NextResponse.json({ ok: true, mode: "full", section: paidSection, result });
   } catch (err) {
     console.error("[trigger-infographics]", err);
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });
