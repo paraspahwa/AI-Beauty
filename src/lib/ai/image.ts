@@ -144,3 +144,47 @@ export async function cropFaceForSkin(
     return null;
   }
 }
+
+/**
+ * Crop the face region for infographic generation (center portrait).
+ * Uses ~40% padding for forehead/hair context. Falls back to null on failure.
+ */
+export async function cropFaceForInfographic(
+  buffer: Buffer,
+  rekognitionResult: unknown,
+  maxEdge = 1024,
+): Promise<Buffer | null> {
+  if (!rekognitionResult || typeof rekognitionResult !== "object") return null;
+  const bb = (rekognitionResult as Record<string, unknown>).BoundingBox as
+    | Record<string, number>
+    | undefined;
+  if (!bb || typeof bb.Left !== "number") return null;
+
+  try {
+    const meta = await sharp(buffer).rotate().metadata();
+    const W = meta.width ?? 0;
+    const H = meta.height ?? 0;
+    if (!W || !H) return null;
+
+    const padX = bb.Width * W * 0.40;
+    const padY = bb.Height * H * 0.40;
+    const left = Math.max(0, Math.round(bb.Left * W - padX));
+    const top = Math.max(0, Math.round((bb.Top ?? 0) * H - padY));
+    const right = Math.min(W, Math.round((bb.Left + bb.Width) * W + padX));
+    const bottom = Math.min(H, Math.round(((bb.Top ?? 0) + (bb.Height ?? 0)) * H + padY));
+
+    const cropW = right - left;
+    const cropH = bottom - top;
+    if (cropW < 64 || cropH < 64) return null;
+
+    return sharp(buffer)
+      .rotate()
+      .extract({ left, top, width: cropW, height: cropH })
+      .resize({ width: maxEdge, height: maxEdge, fit: "inside", withoutEnlargement: true })
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+  } catch (err) {
+    console.warn("[cropFaceForInfographic] crop failed:", err);
+    return null;
+  }
+}

@@ -38,20 +38,29 @@ apps/mobile/      — Expo app mirroring report-only flow
 
 ### Product flow
 
-`Upload → POST /api/analyze → unpaid preview → Razorpay one-time unlock → webhook → trigger-previews → 7-section paid report`
+`Upload selfie → POST /api/analyze → face-shape infographic preview → Razorpay ₹299 unlock → webhook → kickOffInfographicsInBackground (6 parallel jobs) → paid report`
+
+`Style Guide add-on (optional): upload full-body → Razorpay ₹99 → webhook → trigger-style-guide → styleGuide infographic`
 
 ### API Routes
 | Route | Purpose |
 |---|---|
 | `POST /api/analyze` | Full AI pipeline (SSE stream, `maxDuration=60`) |
 | `GET /api/reports/[id]` | Fetch compiled report |
-| `POST /api/payments/create` | Create Razorpay order |
+| `POST /api/payments/create` | Create Razorpay order (`product`: `report_unlock` \| `style_guide_addon`) |
 | `POST /api/payments/verify` | Verify checkout signature (test mode only) |
-| `POST /api/webhooks/razorpay` | Authoritative payment unlock + trigger-previews |
-| `POST /api/internal/trigger-previews` | Paid preview batch: hairstyle, glasses, hair color |
-| `GET /api/reports/[id]/visuals` | Lazy regen `?type=hairstyle\|glasses\|hairColor&index=N` |
-| `POST /api/reports/[id]/hair-color` | On-demand hair colour try-on (paid) |
-| `GET /api/reports/[id]/pdf` | PDF export (paid) |
+| `POST /api/webhooks/razorpay` | Authoritative unlock; branches on `payments.product` |
+| `POST /api/reports/[id]/body-image` | Full-body upload for Style Guide add-on (requires main unlock) |
+| `POST /api/internal/trigger-infographics` | One section per request (`section` param); `maxDuration=300` |
+| `POST /api/internal/trigger-style-guide` | Style Guide infographic (`maxDuration=300`) |
+| `POST /api/reports/[id]/retry-infographic` | Re-fire failed paid infographic section |
+| `POST /api/reports/[id]/retry-style-guide` | Re-fire Style Guide infographic |
+| `POST /api/internal/trigger-previews` | Legacy hairstyle/glasses/hair-color previews |
+| `GET /api/vault` | User's uploads + analysis assets (signed URLs) for Vault page |
+| `GET /api/reports/[id]/pdf` | Analysis PDF — generated infographic images only (paid) |
+| `GET /api/reports/[id]/pdf/style-guide` | Style Guide PDF — separate add-on document |
+
+**Pages:** `/vault` — gallery of uploads, infographics, and PDFs with download + social share.
 
 ---
 
@@ -64,7 +73,7 @@ apps/mobile/      — Expo app mirroring report-only flow
 | `createSupabaseAdminClient()` | `lib/supabase/server.ts` | Webhooks/background jobs only — bypasses RLS |
 
 - `updateSession()` in `lib/supabase/middleware.ts` is called **only** from `src/middleware.ts`.
-- Multi-table writes use **stored RPCs** (`complete_webhook_payment`, `upsert_style_prefs`, `record_webhook_event`).
+- Multi-table writes use **stored RPCs** (`complete_webhook_payment`, `complete_style_guide_webhook_payment`, `upsert_style_prefs`, `record_webhook_event`).
 
 ---
 
@@ -81,27 +90,36 @@ apps/mobile/      — Expo app mirroring report-only flow
 - Retry: `withRetry()` in `lib/ai/resilience.ts`, 2 attempts.
 - Validation: Zod + normalization in `lib/ai/contracts.ts`.
 
+### Analysis infographics (fal `openai/gpt-image-2/edit`)
+- **Free preview** (after analyze): `faceFeaturesPreview` — face-shape-only
+- **Paid** (after unlock, **one parallel internal POST per section** via `kickOffInfographicsInBackground`): `faceFeatures`, `skin`, `color`, `hairstyle`, `spectacles`, `hairColor`
+- **Style Guide add-on** (separate ₹99 paywall, full-body image): `analysisInfographics.styleGuide` via `trigger-style-guide`
+- Prompts: `skin_v3`, `color_v3`, `hairstyle_v3`, `spectacles_v3`, `hair_color_v3`, `face_features_v3`, `style_guide_v2`
+- Input: face crop for face features; **full portrait** for skin/color/hairstyle/spectacles/hair color; **full-body** for style guide
+- UI: `AnalysisInfographicImage.tsx` — image only, no HTML layout cards
+
 ### Preview generation (paid, fire-and-forget via `trigger-previews`)
 - Hairstyle previews (up to 5): `generateHairstylePreviews` / FAL + Replicate
 - Glasses previews (up to 3): `generateGlassesPreviews`
 - Hair colour previews (up to 5): `generateHairColorPreviews`
 - **Replicate SDK**: always `useFileOutput: false`
 
-### Paid report sections (web + mobile)
-1. Face — `faceShape` + `features`
-2. Skin — `skinAnalysis`
-3. Color — `colorAnalysis`
-4. Hairstyle — `hairstyle` + `hairstylePreviews`
-5. Hair colour — `hairstyle.colors` + `hairColorPreviews`
-6. Spectacles — `glasses` + `glassesPreviews`
-7. Style guide — `styleGuide` (pipeline JSON)
+### Paid report sections (web)
+1. Face — `faceFeatures` infographic
+2. Skin — `skin` infographic
+3. Color — `color` infographic
+4. Hairstyle — `hairstyle` infographic
+5. Hair colour — `hairColor` infographic
+6. Spectacles — `spectacles` infographic
+7. Style guide — **add-on** (`styleGuide` infographic, ₹99, requires `body_image_path`)
 
 ---
 
 ## Payment Flow — Critical Rules
 
 1. **Webhook is the authoritative unlock source.** `POST /api/payments/verify` does NOT set `is_paid` in production.
-2. Signature verification uses `timingSafeEqual`.
+2. Two SKUs on `payments.product`: `report_unlock` (₹299) and `style_guide_addon` (₹99).
+3. Style Guide sets `reports.is_style_guide_paid` only — does not touch `is_paid`.
 3. Currency from `CF-IPCountry` / `X-Vercel-IP-Country` headers.
 4. `PAYMENT_TEST_ALLOW_IN_PROD` **must be `false`** in production.
 5. Webhook idempotency: `record_webhook_event(event_id)` RPC.
@@ -141,12 +159,12 @@ See [docs/pending-manual-tasks.md](docs/pending-manual-tasks.md).
 
 ## Database
 
-Schema: `supabase/migrations/` (25 migrations).  
+Schema: `supabase/migrations/` (26 migrations).  
 **Keep:** `profiles`, `reports`, `payments`, `webhook_events`, `user_style_prefs`, `recommendations`, `image_hashes`
 
 **Dropped in 0025 (report-only):** `chat_messages`, `studio_canvases`, `generated_assets`, `subscriptions`, `plans`, `usage_counters`
 
-Key RPCs: `complete_webhook_payment`, `upsert_style_prefs`, `record_webhook_event`, `try_consume_window` (analyze rate limits)
+Key RPCs: `complete_webhook_payment`, `complete_style_guide_webhook_payment`, `complete_style_guide_payment`, `upsert_style_prefs`, `record_webhook_event`, `try_consume_window` (analyze rate limits)
 
 ---
 
@@ -160,7 +178,7 @@ Key RPCs: `complete_webhook_payment`, `upsert_style_prefs`, `record_webhook_even
 ## Middleware
 
 1. IP rate limits: `/api/analyze` (8/min), `/api/reports` (15/min), `/api/payments` (10/min)
-2. Auth: `/upload`, `/report`, `/dashboard`, `/success`
+2. Auth: `/upload`, `/report`, `/dashboard`, `/vault`, `/success`
 3. Session refresh via `updateSession()`
 
 Hard quota: `DAILY_ANALYSIS_QUOTA = 10` per user in analyze route handler.

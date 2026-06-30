@@ -1,4 +1,5 @@
 import type { ColorAnalysisResult } from "@/types/report";
+import { signAnalysisInfographicAssets } from "@/lib/ai/analysis-infographics";
 
 export function redactColorAnalysisForPreview(
   color: ColorAnalysisResult | null | undefined,
@@ -46,10 +47,46 @@ async function signPreviewAssets(
   };
 }
 
+function filterInfographicsForAccess(
+  visualAssets: import("@/types/report").ReportVisualAssets,
+  hasPremium: boolean,
+  hasStyleGuide: boolean,
+): import("@/types/report").ReportVisualAssets {
+  const infographics = visualAssets.assets.analysisInfographics;
+  if (!infographics) return visualAssets;
+
+  const { faceFeaturesPreview: _preview, styleGuide: styleGuideAsset, ...rest } = infographics;
+
+  if (hasPremium) {
+    const paid: typeof infographics = { ...rest };
+    if (hasStyleGuide && styleGuideAsset) {
+      paid.styleGuide = styleGuideAsset;
+    }
+    return {
+      ...visualAssets,
+      assets: {
+        ...visualAssets.assets,
+        analysisInfographics: paid,
+      },
+    };
+  }
+
+  const preview = infographics.faceFeaturesPreview;
+  return {
+    ...visualAssets,
+    assets: {
+      ...visualAssets.assets,
+      analysisInfographics: preview ? { faceFeaturesPreview: preview } : {},
+    },
+  };
+}
+
 export async function resolveReportVisualAssets(
   row: Record<string, unknown>,
   reportId: string,
   admin: ReturnType<typeof import("@/lib/supabase/server").createSupabaseAdminClient>,
+  hasPremium = false,
+  hasStyleGuide = false,
 ): Promise<import("@/types/report").ReportVisualAssets | undefined> {
   const direct = row.visual_assets;
   let visualAssets =
@@ -70,5 +107,7 @@ export async function resolveReportVisualAssets(
   }
 
   if (!visualAssets) return undefined;
-  return signPreviewAssets(visualAssets, admin);
+  const signed = await signPreviewAssets(visualAssets, admin);
+  const withInfographics = await signAnalysisInfographicAssets(signed, admin);
+  return filterInfographicsForAccess(withInfographics, hasPremium, hasStyleGuide);
 }

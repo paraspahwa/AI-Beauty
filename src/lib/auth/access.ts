@@ -21,3 +21,11 @@ export function hasPremiumAccess(input: {
 }): boolean {
   return input.isPaid || isAdminUserEmail(input.userEmail);
 }
+
+/** Style Guide add-on access — separate from main report unlock. */
+export function hasStyleGuideAccess(input: {
+  isStyleGuidePaid: boolean;
+  userEmail: string | null | undefined;
+}): boolean {
+  return input.isStyleGuidePaid || isAdminUserEmail(input.userEmail);
+}

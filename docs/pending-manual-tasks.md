@@ -18,8 +18,10 @@ These require action outside the codebase. All code changes are already deployed
 2. **Verify live prices** — Set/verify in Vercel:
    - `NEXT_PUBLIC_PRICE_REPORT_INR` = `299`
    - `NEXT_PUBLIC_PRICE_REPORT_USD` = `3.99`
+   - `NEXT_PUBLIC_PRICE_STYLE_GUIDE_INR` = `99`
+   - `NEXT_PUBLIC_PRICE_STYLE_GUIDE_USD` = `0.99`
 
-3. **Apply migrations** — `supabase db push` (includes `0024_style_guide.sql`, `0025_report_only_cleanup.sql`)
+3. **Apply migrations** — `supabase db push` (includes `0026_style_guide_addon.sql`)
 
 ## 🟡 P2 — Do This Week
 

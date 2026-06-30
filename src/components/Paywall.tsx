@@ -232,7 +232,7 @@ export function Paywall({
                   </motion.div>
                   <motion.div variants={fadeUp}>
                     <DialogDescription className="text-center text-sm">
-                      One-time purchase — all seven sections, preview images, and PDF download.
+                      One-time purchase — six analysis infographics and PDF download. Style Guide available as add-on.
                     </DialogDescription>
                   </motion.div>
                 </DialogHeader>

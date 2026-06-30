@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /** Routes that require a valid Supabase session */
-const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/success"];
+const PROTECTED_PREFIXES = ["/upload", "/report", "/dashboard", "/vault", "/success"];
 
 // ── IP rate limiter for expensive API routes ──────────────────────────────────
 // Uses an in-process LRU window (edge-safe, no external store).

@@ -117,6 +117,30 @@ export interface ReportVisualAsset {
   styleName?: string;
 }
 
+/** Beauty Blueprint infographic section keys (one image per analysis). */
+export type AnalysisInfographicSectionId =
+  | "faceFeatures"
+  | "faceFeaturesPreview"
+  | "skin"
+  | "color"
+  | "hairstyle"
+  | "spectacles"
+  | "hairColor";
+
+export interface AnalysisInfographics {
+  faceFeatures?: ReportVisualAsset;
+  faceFeaturesPreview?: ReportVisualAsset;
+  skin?: ReportVisualAsset;
+  color?: ReportVisualAsset;
+  hairstyle?: ReportVisualAsset;
+  spectacles?: ReportVisualAsset;
+  hairColor?: ReportVisualAsset;
+  /** Style Guide add-on infographic — gated by isStyleGuidePaid, not main unlock. */
+  styleGuide?: ReportVisualAsset;
+}
+
+export type PaymentProduct = "report_unlock" | "style_guide_addon";
+
 export interface ReportVisualAssets {
   version: number;
   bucket: string;
@@ -125,6 +149,7 @@ export interface ReportVisualAssets {
     glassesPreviews?: ReportVisualAsset[];
     hairstylePreviews?: ReportVisualAsset[];
     hairColorPreviews?: ReportVisualAsset[];
+    analysisInfographics?: AnalysisInfographics;
   };
 }
 
@@ -151,6 +176,8 @@ export interface CompiledReport {
   imageUrl: string;
   status: ReportStatus;
   isPaid: boolean;
+  isStyleGuidePaid?: boolean;
+  bodyImageUploaded?: boolean;
   detectedGender?: "none" | "male" | "female";
   faceShape?: FaceShapeResult;
   colorAnalysis?: ColorAnalysisResult;

@@ -32,7 +32,8 @@
 | Plan | Price | Type | What's Included |
 |---|---|---|---|
 | **Free** | ₹0 | Always free | Face shape + colour intro (no AI studio) |
-| **Report** | ₹299 | One-time per report | Full analysis + PDF + 5 AI Studio gens |
+| **Report** | ₹299 | One-time per report | 6 analysis infographics + PDF |
+| **Style Guide** | ₹99 | One-time add-on per report | Full-body style infographic (requires main unlock + body upload) |
 | **Studio Pro** | ₹999/mo | Recurring subscription | Unlimited reports + 150 AI gens/month + priority |
 
 ### 🌍 International Pricing (USD)
@@ -40,7 +41,8 @@
 | Plan | Price | Type | What's Included |
 |---|---|---|---|
 | **Free** | $0 | Always free | Face shape + colour intro |
-| **Report** | $3.99 | One-time per report | Full analysis + PDF + 5 AI Studio gens |
+| **Report** | $3.99 | One-time per report | 6 analysis infographics + PDF |
+| **Style Guide** | $0.99 | One-time add-on per report | Full-body style infographic |
 | **Studio Pro** | $12.99/mo | Recurring subscription | Unlimited reports + 150 AI gens/month + priority |
 
 > **AI generation cap:** 150/month (soft limit — enforced server-side, not shown to users).

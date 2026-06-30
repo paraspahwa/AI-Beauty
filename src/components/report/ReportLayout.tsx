@@ -3,24 +3,29 @@
 import Link from "next/link";
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Download, Loader2, Lock, Sparkles } from "lucide-react";
-import { FaceFeaturesCard } from "./FaceFeaturesCard";
+import { Loader2, Lock, Sparkles } from "lucide-react";
+import { FaceFeaturesInfographic } from "./FaceFeaturesInfographic";
 import { FreePreviewTeaser } from "./FreePreviewTeaser";
-import { SkinAnalysisCard } from "./SkinAnalysisCard";
-import { ColorAnalysisCard } from "./ColorAnalysisCard";
-import { HairstyleCard } from "./HairstyleCard";
-import { SpectaclesCard } from "./SpectaclesCard";
-import { HairColorCard } from "./HairColorCard";
-import { StyleGuideCard } from "./StyleGuideCard";
+import { SkinInfographic } from "./SkinInfographic";
+import { ColorInfographic } from "./ColorInfographic";
+import { HairstyleInfographic } from "./HairstyleInfographic";
+import { SpectaclesInfographic } from "./SpectaclesInfographic";
+import { HairColorInfographic } from "./HairColorInfographic";
+import { StyleGuideSection } from "./StyleGuideSection";
+import { PdfDownloadShare } from "./PdfDownloadShare";
 import { publicEnv } from "@/lib/public-env";
 import { Paywall } from "@/components/Paywall";
 import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
-import type { CompiledReport } from "@/types/report";
+import type { CompiledReport, ReportVisualAsset } from "@/types/report";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
 interface Props {
   report: CompiledReport;
   initialPaywallOpen?: boolean;
+}
+
+function infographicAssetPending(asset?: ReportVisualAsset): boolean {
+  return !asset || asset.status === "pending";
 }
 
 export function ReportLayout({ report: initial, initialPaywallOpen = false }: Props) {
@@ -30,6 +35,25 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
 
   const isPaid = report.isPaid;
   const isProcessing = report.status === "processing" || report.status === "pending";
+  const infographics = report.visualAssets?.assets?.analysisInfographics;
+  const faceInfographic = isPaid
+    ? infographics?.faceFeatures
+    : infographics?.faceFeaturesPreview;
+  const hairstyleInfographic = infographics?.hairstyle;
+  const spectaclesInfographic = infographics?.spectacles;
+  const colorInfographic = infographics?.color;
+  const hairColorInfographic = infographics?.hairColor;
+  const skinInfographic = infographics?.skin;
+  const styleGuideInfographic = infographics?.styleGuide;
+  const infographicPending =
+    infographicAssetPending(faceInfographic) ||
+    (isPaid && !!report.skinAnalysis && infographicAssetPending(skinInfographic)) ||
+    (isPaid && !!report.colorAnalysis && infographicAssetPending(colorInfographic)) ||
+    (isPaid && !!report.hairstyle && infographicAssetPending(hairstyleInfographic)) ||
+    (isPaid && !!report.glasses && infographicAssetPending(spectaclesInfographic)) ||
+    (isPaid && !!report.hairstyle && !!report.colorAnalysis && infographicAssetPending(hairColorInfographic));
+  const styleGuidePending =
+    report.isStyleGuidePaid && infographicAssetPending(styleGuideInfographic);
   const headerTitle = report.colorAnalysis?.season
     ? `Your ${report.colorAnalysis.season} Beauty Profile`
     : "Personal Beauty Profile";
@@ -40,10 +64,10 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   }, [report.id]);
 
   React.useEffect(() => {
-    if (!isProcessing) return;
+    if (!isProcessing && !infographicPending && !styleGuidePending) return;
     const interval = setInterval(refresh, 4000);
     return () => clearInterval(interval);
-  }, [isProcessing, refresh]);
+  }, [isProcessing, infographicPending, styleGuidePending, refresh]);
 
   return (
     <div className="min-h-app-viewport" style={{ background: "#F5F0EA" }}>
@@ -68,14 +92,13 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
           )}
           <motion.div variants={fadeUp} className="mt-6 flex flex-wrap justify-center gap-3">
             {isPaid && publicEnv.flags.pdfEnabled ? (
-              <a
-                href={`/api/reports/${report.id}/pdf`}
-                download={`Renovaara-report-${report.id}.html`}
-                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white"
-                style={{ background: "#111827" }}
-              >
-                <Download className="h-4 w-4" /> Download PDF
-              </a>
+              <PdfDownloadShare
+                reportId={report.id}
+                variant="report"
+                reportUrl={`${publicEnv.app.url.replace(/\/$/, "")}/report/${report.id}`}
+                faceShape={report.faceShape?.shape}
+                disabled={infographicPending}
+              />
             ) : !isPaid ? (
               <Paywall
                 reportId={report.id}
@@ -100,13 +123,7 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
 
         <div className="space-y-8">
           {report.faceShape ? (
-            <FaceFeaturesCard
-              faceShape={report.faceShape}
-              features={report.features}
-              blendedConfidence={report.pipelineMeta?.blendedConfidence}
-              photoUrl={report.imageUrl}
-              previewOnly={!report.features}
-            />
+            <FaceFeaturesInfographic asset={faceInfographic} isPaid={isPaid} />
           ) : (
             <ProcessingCard />
           )}
@@ -126,39 +143,21 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
           {isPaid ? (
             <>
               {report.skinAnalysis && (
-                <SkinAnalysisCard data={report.skinAnalysis} photoUrl={report.imageUrl} />
+                <SkinInfographic asset={skinInfographic} />
               )}
               {report.colorAnalysis && (
-                <ColorAnalysisCard data={report.colorAnalysis} photoUrl={report.imageUrl} />
+                <ColorInfographic asset={colorInfographic} />
               )}
               {report.hairstyle && (
-                <HairstyleCard
-                  data={report.hairstyle}
-                  photoUrl={report.imageUrl}
-                  previewSlots={report.visualAssets?.assets?.hairstylePreviews}
-                  reportId={report.id}
-                  onRefresh={refresh}
-                  faceShape={report.faceShape?.shape}
-                  faceTraits={report.faceShape?.traits}
-                  stylingTips={report.hairstyle.stylingTips}
-                  hairType={report.hairstyle.hairType}
-                />
+                <HairstyleInfographic asset={hairstyleInfographic} />
               )}
-              {isPaid && report.id && (
-                <HairColorCard reportId={report.id} />
+              {report.hairstyle && report.colorAnalysis && (
+                <HairColorInfographic asset={hairColorInfographic} />
               )}
               {report.glasses && (
-                <SpectaclesCard
-                  data={report.glasses}
-                  photoUrl={report.imageUrl}
-                  previewSlots={report.visualAssets?.assets?.glassesPreviews}
-                  reportId={report.id}
-                  onRefresh={refresh}
-                  faceShape={report.faceShape?.shape}
-                  faceTraits={report.faceShape?.traits}
-                />
+                <SpectaclesInfographic asset={spectaclesInfographic} />
               )}
-              {report.styleGuide && <StyleGuideCard data={report.styleGuide} />}
+              <StyleGuideSection report={report} onRefresh={refresh} />
             </>
           ) : (
             <LockedSections reportId={report.id} onUnlocked={refresh} onOpenPaywall={() => setPaywallOpen(true)} />
@@ -212,7 +211,6 @@ function LockedSections({
     "Hairstyle Guide",
     "Hair Color Guide",
     "Spectacles Guide",
-    "Style Guide",
   ];
   return (
     <div className="space-y-4">

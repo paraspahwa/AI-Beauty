@@ -15,6 +15,8 @@ export const publicEnv = {
     keyId: optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
     priceINR: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_INR ?? process.env.NEXT_PUBLIC_PAID_PRICE_INR ?? "299"),
     priceUSD: Number(process.env.NEXT_PUBLIC_PRICE_REPORT_USD ?? process.env.NEXT_PUBLIC_PAID_PRICE_USD ?? "3.99"),
+    styleGuidePriceINR: Number(process.env.NEXT_PUBLIC_PRICE_STYLE_GUIDE_INR ?? "99"),
+    styleGuidePriceUSD: Number(process.env.NEXT_PUBLIC_PRICE_STYLE_GUIDE_USD ?? "0.99"),
   },
   flags: {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",

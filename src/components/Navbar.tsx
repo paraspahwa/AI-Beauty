@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, ChevronDown, Moon, Sun } from "lucide-react";
+import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, ChevronDown, Moon, Sun, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -154,6 +154,9 @@ export function Navbar() {
                     <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
                       <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
                     </Link>
+                    <Link href="/vault" className="flex items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={() => setDashOpen(false)}>
+                      <Archive className="h-3.5 w-3.5" /> Vault
+                    </Link>
                     <div className="border-t border-[#e5e7eb] mt-1 pt-1">
                       <button className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-stone hover:bg-[#f3f4f6] hover:text-ink transition-colors" onClick={handleSignOut}>
                         <LogOut className="h-3.5 w-3.5" /> Sign out
@@ -244,6 +247,11 @@ export function Navbar() {
                     <Button asChild variant="outline" className="w-full">
                       <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
                         <LayoutDashboard className="h-4 w-4" /> Dashboard
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/vault" onClick={() => setMenuOpen(false)}>
+                        <Archive className="h-4 w-4" /> Vault
                       </Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">

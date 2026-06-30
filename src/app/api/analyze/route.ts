@@ -497,6 +497,9 @@ export async function POST(req: NextRequest) {
               persistStylePrefs(user.id, result.faceShape, result.colorAnalysis, result.skinAnalysis).catch(() => {
                 // Already logged inside persistStylePrefs
               });
+
+              const { kickOffFaceFeaturesPreviewInBackground } = await import("@/lib/ai/kickoff-infographics");
+              kickOffFaceFeaturesPreviewInBackground(report.id);
             } catch (pipelineErr) {
               console.error("[analyze] pipeline failed:", pipelineErr);
               const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
@@ -785,6 +788,9 @@ export async function POST(req: NextRequest) {
       persistStylePrefs(user.id, result.faceShape, result.colorAnalysis, result.skinAnalysis).catch(() => {
         // Already logged inside persistStylePrefs
       });
+
+      const { kickOffFaceFeaturesPreviewInBackground } = await import("@/lib/ai/kickoff-infographics");
+      kickOffFaceFeaturesPreviewInBackground(report.id);
     } catch (pipelineErr) {
       console.error("[analyze] pipeline failed:", pipelineErr);
       const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };

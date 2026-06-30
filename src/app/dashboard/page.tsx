@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
-import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock } from "lucide-react";
+import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
@@ -52,12 +52,20 @@ export default async function DashboardPage() {
                 {rows.length} analysis{rows.length !== 1 ? "es" : ""} in your history. Upload a new selfie anytime.
               </p>
             </div>
-            <Button asChild variant="accent" size="sm">
-              <Link href="/upload">
-                <FileText className="h-4 w-4" />
-                New analysis
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/vault">
+                  <Archive className="h-4 w-4" />
+                  Vault
+                </Link>
+              </Button>
+              <Button asChild variant="accent" size="sm">
+                <Link href="/upload">
+                  <FileText className="h-4 w-4" />
+                  New analysis
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 
