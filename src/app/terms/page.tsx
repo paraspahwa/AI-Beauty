@@ -16,7 +16,7 @@ const JURISDICTION = "courts of India";
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen py-20 px-4">
+    <main className="min-h-app-viewport py-20 px-4">
       <article className="container max-w-3xl mx-auto prose-legal">
         {/* Header */}
         <div className="mb-12 text-center">

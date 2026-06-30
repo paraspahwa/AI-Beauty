@@ -11,6 +11,16 @@
   overflow: hidden;
 }
 
+@media (min-width: 1024px) {
+  .heroShell {
+    max-width: none;
+    width: 100%;
+    border-radius: 1.25rem;
+    border-color: rgba(17, 24, 39, 0.08);
+    box-shadow: 0 16px 48px rgba(17, 24, 39, 0.08);
+  }
+}
+
 .heroShell::before {
   content: "";
   position: absolute;

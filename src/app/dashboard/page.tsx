@@ -40,8 +40,9 @@ export default async function DashboardPage() {
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
 
   return (
-    <main className={`min-h-screen ${styles.pageBase}`}>
-      <div className="container max-w-5xl py-10 sm:py-16">
+    <main className={`min-h-app-viewport ${styles.pageBase}`}>
+      <div className="page-bleed-x py-10 sm:py-16">
+        <div className="mx-auto w-full max-w-7xl">
         <div className={`mb-10 rounded-[2rem] border p-5 sm:p-6 ${styles.heroCard}`}>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
@@ -116,6 +117,7 @@ export default async function DashboardPage() {
             })}
           </div>
         )}
+        </div>
       </div>
     </main>
   );

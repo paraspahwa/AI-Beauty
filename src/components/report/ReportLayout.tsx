@@ -46,8 +46,9 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   }, [isProcessing, refresh]);
 
   return (
-    <div className="min-h-screen" style={{ background: "#F5F0EA" }}>
-      <div className="container max-w-4xl py-10 sm:py-14">
+    <div className="min-h-app-viewport" style={{ background: "#F5F0EA" }}>
+      <div className="page-bleed-x py-10 sm:py-14">
+        <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
         <motion.header
           variants={staggerContainer}
           initial="hidden"
@@ -181,6 +182,7 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -29,8 +29,8 @@ function UploadPageContent() {
 
   return (
     <OnboardingGate>
-      <main className="container max-w-4xl py-12 sm:py-20 min-h-screen">
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+      <main className="page-bleed-x min-h-app-viewport flex flex-col py-8 sm:py-12">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="mx-auto w-full max-w-5xl flex flex-1 flex-col justify-center">
 
           {/* ── Hero header ── */}
           <motion.header variants={blurIn} className="mb-8 text-center">

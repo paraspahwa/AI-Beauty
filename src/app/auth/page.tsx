@@ -390,7 +390,7 @@ function AuthContent() {
   );
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] grid lg:grid-cols-2">
+    <div className="min-h-app-viewport grid lg:grid-cols-2">
       {BrandPanel}
 
       {/* Right: Auth Form */}

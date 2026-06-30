@@ -28,7 +28,7 @@ export function HeroReportCard() {
         <BeforeAfterReveal
           beforeUrl={heroSample.beforeSrc}
           afterUrl={heroSample.afterSrc}
-          className="mx-auto w-full max-w-md"
+          className="mx-auto w-full max-w-md lg:max-w-none"
         />
       </div>
       <p className="mt-4 text-center text-xs text-ink-mist">

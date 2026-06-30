@@ -179,10 +179,10 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden">
-      <ActivityTicker />
       {/* Hero section — full-width ambient glow wrapper */}
       {/* `isolate` creates a stacking context so negative z-indexes are scoped here, not falling behind the body background */}
-      <div className="relative isolate overflow-hidden">
+      <div className="relative isolate overflow-hidden min-h-app-viewport flex flex-col">
+        <ActivityTicker />
         {/* Hero background video */}
         <video
           autoPlay
@@ -204,10 +204,10 @@ export default function HomePage() {
           <div className={`glow-orb absolute -top-20 right-[-10%] h-[520px] w-[520px] opacity-35 ${styles.orbDarkSoft}`} />
           <div className={`glow-orb absolute bottom-0 left-1/2 -translate-x-1/2 h-96 w-[700px] opacity-30 ${styles.orbRose}`} />
         </div>
-        <div className="container max-w-7xl px-4 pb-8 pt-10 sm:px-6 sm:pb-10 sm:pt-14 lg:px-8 lg:pb-12">
-          <div className={`relative ${styles.heroShell}`}>
-            <section className={`${styles.heroInner} px-6 py-10 sm:px-10 sm:py-12 lg:px-12 lg:py-14`}>
-              <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+        <div className="page-bleed-x relative z-10 flex flex-1 flex-col pb-8 pt-4 sm:pb-10 sm:pt-6 lg:pb-12">
+          <div className={`relative flex flex-1 flex-col ${styles.heroShell}`}>
+            <section className={`${styles.heroInner} flex flex-1 flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-12`}>
+              <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-12 xl:gap-16">
                 <HeroText />
                 <HeroReportCard />
               </div>

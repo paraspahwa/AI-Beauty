@@ -43,15 +43,14 @@ function SuccessContent() {
   }, [countdown, router, reportHref]);
 
   return (
-    <div
-      className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6"
+    <div className="min-h-app-viewport flex items-center justify-center p-6"
       style={{ background: "linear-gradient(145deg, #fffafc 0%, #fffafc 50%, #fffafc 100%)" }}
     >
       <motion.div
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="relative max-w-lg w-full text-center"
+        className="relative max-w-lg lg:max-w-xl w-full text-center"
       >
         <motion.div variants={scaleIn} className="mx-auto mb-8">
           <div className="relative inline-block">
