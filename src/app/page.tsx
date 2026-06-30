@@ -2,81 +2,25 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  BookOpen,
   CheckCircle2,
-  Droplets,
-  Glasses,
-  Scissors,
   ShieldCheck,
-  Star,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SampleShowcase } from "@/components/home/SampleShowcase";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
-import { FAQAccordion, type FAQItem } from "@/components/home/FAQAccordion";
+import { FAQAccordion } from "@/components/home/FAQAccordion";
 import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
 import { ActivityTicker } from "@/components/home/ActivityTicker";
 import { HeroReportCard } from "@/components/home/HeroReportCard";
 import { StickyMobileCta } from "@/components/home/StickyMobileCta";
 import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
 import { getLandingPlans, fmtInr } from "@/lib/landing-pricing";
+import { LANDING_FEATURES, LANDING_STEPS, getLandingFaqs } from "@/lib/landing-content";
 import { publicEnv } from "@/lib/public-env";
 import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
 import { AiStoryPanels } from "@/components/home/AiStoryPanels";
 import styles from "./home.module.css";
-
-const FEATURES = [
-  {
-    icon: Sparkles,
-    title: "Face & Feature Analysis",
-    description: "AI maps your face shape and key features to guide every recommendation.",
-  },
-  {
-    icon: Glasses,
-    title: "Spectacles Guide",
-    description:
-      "Frame shape, material, and colour recommendations matched to your face and undertone.",
-  },
-  {
-    icon: Scissors,
-    title: "Hairstyle & Hair Colour",
-    description:
-      "Flattering cuts, lengths, and colour directions in dedicated infographic guides.",
-  },
-  {
-    icon: Droplets,
-    title: "Skin Routine",
-    description:
-      "Skin type and concern-based AM/PM routine in a polished analysis infographic.",
-  },
-  {
-    icon: BookOpen,
-    title: "Style Guide Add-on",
-    description:
-      "Optional wardrobe infographic from a full-body photo — silhouettes, essentials, and accent colours.",
-  },
-];
-
-const STEPS = [
-  {
-    title: "Upload a selfie",
-    description: "Use natural light and a clear front-facing photo for the best analysis.",
-  },
-  {
-    title: "Preview your face analysis",
-    description: "See your face shape and a teaser of your report before you unlock.",
-  },
-  {
-    title: "Unlock six infographics",
-    description: "One-time payment unlocks six analysis infographics plus a downloadable PDF.",
-  },
-  {
-    title: "Keep it forever",
-    description: "Download your PDF and revisit your report anytime from your dashboard.",
-  },
-];
 
 const TESTIMONIALS: TestimonialItem[] = [
   {
@@ -105,39 +49,9 @@ const TESTIMONIALS: TestimonialItem[] = [
   },
 ];
 
-const FAQS: FAQItem[] = [
-  {
-    id: "accuracy",
-    question: "How accurate is the analysis?",
-    answer:
-      "Results are strongest with a clear front-facing image in balanced light. The system evaluates multiple visual traits to produce personalized recommendations.",
-  },
-  {
-    id: "privacy",
-    question: "Is my photo private?",
-    answer: "Yes. Your image is processed securely and only accessible within your account.",
-  },
-  {
-    id: "free-preview",
-    question: "What is included in the free preview?",
-    answer:
-      "You get a face-shape preview infographic and a teaser of your report. Unlock the Full Report for six analysis infographics (face features, skin, colour, hairstyle, spectacles, hair colour) and a PDF download.",
-  },
-  {
-    id: "style-guide",
-    question: "What is the Style Guide add-on?",
-    answer:
-      `After unlocking your Full Report, you can add a personal Style Guide for ${fmtInr(publicEnv.razorpay.styleGuidePriceINR)}. Upload a full-body photo and receive a wardrobe infographic plus a separate PDF — silhouettes, essentials, and colours matched to your season.`,
-  },
-  {
-    id: "payment",
-    question: "Is it a subscription?",
-    answer:
-      "No. Renovaara uses one-time payments per report — Full Report unlock, and an optional Style Guide add-on. Pay once per analysis, keep that report forever.",
-  },
-];
-
 const STATS: StatItem[] = HOME_CONTENT.stats;
+
+const FAQS = getLandingFaqs();
 
 export default function HomePage() {
   const showcaseItems = toBeforeAfterItems();
@@ -196,10 +110,10 @@ export default function HomePage() {
         <RevealSection>
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl text-ink">How it works</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Four quick steps from upload to confidence.</p>
+            <p className="mx-auto mt-3 max-w-2xl text-ink-stone">Five steps from free preview to your complete beauty profile.</p>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, index) => (
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {LANDING_STEPS.map((step, index) => (
               <article key={step.title} className="card-soft">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/15 text-xs font-semibold text-terracotta">
                   {String(index + 1).padStart(2, "0")}
@@ -218,21 +132,16 @@ export default function HomePage() {
             <span className="section-label">Features</span>
             <h2 className="mt-3 text-4xl sm:text-5xl text-ink font-bold tracking-tight">Everything in one <span className="gradient-text">beauty workflow</span></h2>
             <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
-              Move from confusion to clarity with recommendations you can use immediately.
+              Six luxury analysis infographics from one selfie, plus an optional Style Guide add-on.
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[minmax(160px,auto)]">
-            {FEATURES.map(({ icon: Icon, title, description }, index) => {
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {LANDING_FEATURES.map(({ icon: Icon, title, description }, index) => {
               const isFeatured = index === 0;
-              const hasBeam = index === 1 || index === 2;
               const articleClass = isFeatured
-                ? "col-span-2 md:col-span-2 aurora-card chrome-border"
-                : hasBeam
-                ? "col-span-1 card-soft card-beam"
-                : index === 3 || index === 4
-                ? "col-span-1 md:col-span-2 card-soft"
-                : "col-span-1 card-soft";
+                ? "sm:col-span-2 lg:col-span-1 aurora-card chrome-border"
+                : "card-soft";
               return (
                 <article key={title} className={articleClass}>
                   <div className={`mb-4 inline-flex items-center justify-center rounded-xl bg-terracotta/15 text-terracotta ${isFeatured ? "h-12 w-12" : "h-10 w-10"}`}>
@@ -382,7 +291,7 @@ export default function HomePage() {
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl text-ink">Simple pricing</h2>
             <p className="mx-auto mt-3 max-w-2xl text-ink-stone">
-              Free preview, Full Report with six infographics, or add a Style Guide after unlock.
+              Free face-shape preview, Full Report with six infographics at {reportPriceLabel}, or add a Style Guide after unlock.
             </p>
           </div>
 
@@ -426,9 +335,14 @@ export default function HomePage() {
               </article>
             ))}
           </div>
-          <div className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-sage/10 px-6 py-3 text-sm text-ink-stone">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-sage" />
-            Secure checkout and instant report delivery
+          <div className="mt-8 flex flex-col items-center justify-center gap-2 rounded-2xl bg-sage/10 px-6 py-3 text-sm text-ink-stone text-center">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-sage" />
+              Secure checkout and instant infographic delivery
+            </div>
+            <p className="text-xs text-ink-mist">
+              Style Guide is purchased separately after Full Report unlock — not included in the main report price.
+            </p>
           </div>
         </RevealSection>
       </section>

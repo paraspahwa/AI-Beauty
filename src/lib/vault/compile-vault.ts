@@ -9,6 +9,7 @@ import {
 import type { AnalysisInfographics, ReportVisualAsset, ReportVisualAssets } from "@/types/report";
 import type { VaultItem, VaultResponse } from "@/types/vault";
 import type { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 
 const SIGNED_URL_TTL = 60 * 60;
 
@@ -139,7 +140,7 @@ export async function compileVaultForUser(
     const date = new Date(row.created_at).toISOString().slice(0, 10);
     const shape = row.face_shape?.shape;
 
-    if (row.image_path && row.image_path !== "pending") {
+    if (isVaultStoragePath(row.image_path)) {
       const signedUrl = await signPath(admin, bucket, row.image_path);
       if (signedUrl) {
         items.push({

@@ -98,7 +98,7 @@ export function VaultGallery() {
       {!loading && !error && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filtered.map((item) => (
-            <VaultAssetCard key={item.id} item={item} />
+            <VaultAssetCard key={item.id} item={item} onDeleted={load} />
           ))}
         </div>
       )}
@@ -106,7 +106,7 @@ export function VaultGallery() {
       {!loading && !error && (data?.counts.all ?? 0) > 0 && (
         <p className="mt-10 text-center text-xs text-ink-stone flex items-center justify-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5" />
-          Signed links refresh hourly — download to keep a permanent copy.
+          Signed links refresh hourly — download to keep a permanent copy. You can delete selfies and generated images anytime; your report text stays in your dashboard.
         </p>
       )}
     </div>

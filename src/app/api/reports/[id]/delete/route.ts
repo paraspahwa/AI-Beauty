@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
+import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -34,7 +35,7 @@ export async function DELETE(
   if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // Remove the original selfie
-  if (report.image_path && report.image_path !== "pending") {
+  if (isVaultStoragePath(report.image_path)) {
     await admin.storage.from(env.supabase.bucket).remove([report.image_path]).catch(() => {});
   }
 

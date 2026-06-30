@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess, hasStyleGuideAccess } from "@/lib/auth/access";
+import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 import {
   previewSummaryForUnpaid,
   redactColorAnalysisForPreview,
@@ -56,12 +57,16 @@ export default async function ReportPage({
 
   if (!row) notFound();
 
-  const { data: signed, error: signErr } = await admin.storage
-    .from(env.supabase.bucket)
-    .createSignedUrl(row.image_path, 60 * 30);
+  let imageUrl = "";
+  if (isVaultStoragePath(row.image_path)) {
+    const { data: signed, error: signErr } = await admin.storage
+      .from(env.supabase.bucket)
+      .createSignedUrl(row.image_path, 60 * 30);
 
-  if (signErr) {
-    console.warn("[report/page] Failed to generate signed URL for", row.image_path, signErr.message);
+    if (signErr) {
+      console.warn("[report/page] Failed to generate signed URL for", row.image_path, signErr.message);
+    }
+    imageUrl = signed?.signedUrl ?? "";
   }
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
@@ -101,7 +106,7 @@ export default async function ReportPage({
   const report: CompiledReport = {
     id: row.id,
     userId: row.user_id,
-    imageUrl: signed?.signedUrl ?? "",
+    imageUrl,
     status: row.status,
     isPaid: hasPremium,
     isStyleGuidePaid: hasStyleGuide,

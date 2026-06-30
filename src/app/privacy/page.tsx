@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { fmtInr } from "@/lib/landing-pricing";
+import { publicEnv } from "@/lib/public-env";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "How Renovaara collects, uses, and protects your personal data.",
 };
 
-const LAST_UPDATED = "1 July 2025";
+const LAST_UPDATED = "30 June 2026";
 const CONTACT_EMAIL = "privacy@renovaara.in";
 const APP_NAME = "Renovaara";
 const COMPANY = "Renovaara (AI-Beauty)";
 
 export default function PrivacyPage() {
+  const reportPrice = fmtInr(publicEnv.razorpay.priceINR);
+  const styleGuidePrice = fmtInr(publicEnv.razorpay.styleGuidePriceINR);
+
   return (
     <main className="min-h-app-viewport py-20 px-4">
       <article className="container max-w-3xl mx-auto prose-legal">
@@ -25,9 +30,9 @@ export default function PrivacyPage() {
           <p>
             {APP_NAME} is an AI-powered beauty analysis platform operated by{" "}
             <strong className="text-ink">{COMPANY}</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). We provide
-            face-shape analysis, colour-season profiling, skin analysis, hairstyle
-            and hair-colour guidance, spectacles recommendations, style guidance, and
-            photorealistic preview image generation through our web application.
+            face-shape analysis, six personalised analysis infographics (face features, skin, colour season,
+            hairstyle, spectacles, and hair colour), downloadable PDFs, and an optional Style Guide add-on
+            generated from a full-body photo.
           </p>
           <p>
             Questions about this policy? Reach us at{" "}
@@ -42,84 +47,89 @@ export default function PrivacyPage() {
           <SubHeading>2.1 Data you provide directly</SubHeading>
           <ul>
             <li>
-              <strong>Selfie / photo uploads</strong> — the image(s) you upload for analysis.
+              <strong>Selfie uploads</strong> — front-facing photo(s) you upload for face analysis and infographic
+              generation.
             </li>
             <li>
-              <strong>Account information</strong> — email address collected via Supabase Auth
-              (Google OAuth or magic link).
+              <strong>Full-body photos</strong> — optional image uploaded only if you purchase the Style Guide
+              add-on ({styleGuidePrice}).
             </li>
             <li>
-              <strong>Payment details</strong> — processed entirely by Razorpay. We never store
-              card numbers, CVVs, or bank credentials.
+              <strong>Account information</strong> — email address and/or phone number collected via Supabase Auth
+              (Google OAuth, magic link, or phone OTP).
+            </li>
+            <li>
+              <strong>Payment details</strong> — processed entirely by Razorpay. We never store card numbers, CVVs,
+              or bank credentials. We retain order IDs, amounts, and payment status for your account history.
             </li>
           </ul>
 
           <SubHeading>2.2 Data collected automatically</SubHeading>
           <ul>
             <li>
-              <strong>Usage data</strong> — pages visited, features used, session duration,
-              browser type, and device type (via Vercel Analytics / standard server logs).
+              <strong>Usage data</strong> — pages visited, features used, session duration, browser type, and
+              device type (via Vercel Analytics / standard server logs).
             </li>
             <li>
-              <strong>IP address</strong> — logged transiently for security and abuse prevention.
+              <strong>IP address</strong> — logged transiently for security, abuse prevention, and currency
+              detection at checkout.
             </li>
             <li>
-              <strong>Cookies</strong> — Supabase sets a session cookie for authentication. We do
-              not use third-party advertising cookies.
+              <strong>Cookies</strong> — Supabase sets a session cookie for authentication. We do not use
+              third-party advertising cookies.
             </li>
           </ul>
         </Section>
 
         <Section title="3. How We Use Your Data">
           <ul>
-            <li>Generate your personalised AI beauty report and style recommendations.</li>
+            <li>Generate your free face-shape preview and, after unlock, your six analysis infographics and PDF.</li>
+            <li>Generate your optional Style Guide infographic and PDF when you purchase that add-on.</li>
             <li>Authenticate your account and gate paid features.</li>
-            <li>Process and verify payments via Razorpay webhooks.</li>
-            <li>Send transactional emails (receipt and report-ready notifications) via
-              Resend.
-            </li>
+            <li>Process and verify payments via Razorpay webhooks (Full Report at {reportPrice}; Style Guide at {styleGuidePrice}).</li>
+            <li>Send transactional emails (receipt and report-ready notifications) via Resend.</li>
             <li>Detect and prevent abuse, fraud, and unauthorised access.</li>
-            <li>Improve our AI models and product experience using anonymised, aggregated
-              analytics.
-            </li>
+            <li>Improve our product experience using anonymised, aggregated analytics.</li>
           </ul>
           <p>
-            We do <strong>not</strong> sell, rent, or trade your personal data to third parties
-            for advertising purposes.
+            We do <strong>not</strong> sell, rent, or trade your personal data to third parties for advertising
+            purposes.
           </p>
         </Section>
 
-        <Section title="4. Facial Image Data">
+        <Section title="4. Image and Facial Data">
           <p>
-            Your uploaded photo is transmitted securely to OpenAI&apos;s API for analysis only. It
-            is <strong>not</strong> used to train OpenAI&apos;s models under our API agreement. After
-            analysis is complete, the image is retained in your account for 30 days so you can
-            re-access your report, then automatically deleted from storage.
+            Your selfie is transmitted securely to our AI pipeline for analysis. Under our API agreements, your
+            images are <strong>not</strong> used to train third-party foundation models. We use AWS Rekognition for
+            initial face detection and OpenAI for structured analysis; infographic and try-on visuals may be
+            generated via Replicate and FAL.
           </p>
           <p>
-            You may delete your report and associated images at any time from your dashboard.
-            Deletion is permanent and irreversible.
+            Selfies are stored in a private Supabase storage bucket accessible only to your account. Full-body
+            photos for the Style Guide add-on are stored separately and processed only when you purchase that
+            product.
+          </p>
+          <p>
+            You may delete your report and associated images at any time from your dashboard. Deletion is permanent
+            and irreversible.
           </p>
         </Section>
 
         <Section title="5. Legal Basis for Processing (GDPR / DPDP)">
           <ul>
             <li>
-              <strong>Contract</strong> — processing required to deliver the service you paid
-              for.
+              <strong>Contract</strong> — processing required to deliver the service you requested or paid for.
             </li>
             <li>
-              <strong>Legitimate interests</strong> — security, fraud prevention, and product
-              improvement.
+              <strong>Legitimate interests</strong> — security, fraud prevention, and product improvement.
             </li>
             <li>
-              <strong>Consent</strong> — for optional marketing emails, where you opt in
-              explicitly.
+              <strong>Consent</strong> — for optional marketing emails, where you opt in explicitly.
             </li>
           </ul>
           <p>
-            Indian users have rights under the <em>Digital Personal Data Protection Act, 2023</em>{" "}
-            (DPDP Act), including the right to access, correct, and erase your data.
+            Indian users have rights under the <em>Digital Personal Data Protection Act, 2023</em> (DPDP Act),
+            including the right to access, correct, and erase your data.
           </p>
         </Section>
 
@@ -136,13 +146,23 @@ export default function PrivacyPage() {
             <tbody>
               <tr>
                 <td>OpenAI</td>
-                <td>AI analysis</td>
-                <td>Photo, prompt</td>
+                <td>AI text/vision analysis</td>
+                <td>Photo, analysis prompts</td>
+              </tr>
+              <tr>
+                <td>AWS Rekognition</td>
+                <td>Face detection</td>
+                <td>Photo</td>
+              </tr>
+              <tr>
+                <td>Replicate / FAL</td>
+                <td>Infographic &amp; visual generation</td>
+                <td>Photo, generation prompts</td>
               </tr>
               <tr>
                 <td>Supabase</td>
-                <td>Auth &amp; database</td>
-                <td>Email, report data</td>
+                <td>Auth, database &amp; storage</td>
+                <td>Email, phone, report data, images</td>
               </tr>
               <tr>
                 <td>Razorpay</td>
@@ -166,16 +186,15 @@ export default function PrivacyPage() {
         <Section title="7. Data Retention">
           <ul>
             <li>
-              <strong>Photos</strong> — deleted 30 days after upload (or immediately on manual
-              deletion).
+              <strong>Selfies and full-body photos</strong> — retained while your report is active; deleted when you
+              delete the report or close your account.
             </li>
             <li>
-              <strong>Report data</strong> — retained while your account is active, deleted
-              within 30 days of account closure.
+              <strong>Report and infographic data</strong> — retained while your account is active, deleted within 30
+              days of account closure.
             </li>
             <li>
-              <strong>Payment records</strong> — retained for 7 years for tax and legal
-              compliance.
+              <strong>Payment records</strong> — retained for 7 years for tax and legal compliance.
             </li>
             <li>
               <strong>Auth logs</strong> — retained for 90 days.
@@ -185,25 +204,24 @@ export default function PrivacyPage() {
 
         <Section title="8. Security">
           <p>
-            All data is transmitted over TLS 1.2+. Supabase enforces Row-Level Security (RLS)
-            so each user can only access their own data. API keys and secrets are stored as
+            All data is transmitted over TLS 1.2+. Supabase enforces Row-Level Security (RLS) so each user can only
+            access their own data. The selfies storage bucket is private. API keys and secrets are stored as
             encrypted environment variables and never exposed client-side.
           </p>
         </Section>
 
         <Section title="9. Children's Privacy">
           <p>
-            {APP_NAME} is intended for users aged 13 and older. We do not knowingly collect
-            personal data from children under 13. If you believe a child has provided us data,
-            contact us immediately and we will delete it.
+            {APP_NAME} is intended for users aged 13 and older. We do not knowingly collect personal data from
+            children under 13. If you believe a child has provided us data, contact us immediately and we will
+            delete it.
           </p>
         </Section>
 
         <Section title="10. Your Rights">
           <p>
-            You may at any time: access the data we hold about you, correct inaccurate data,
-            request deletion of your account and all associated data, or withdraw consent for
-            optional communications.
+            You may at any time: access the data we hold about you, correct inaccurate data, request deletion of
+            your account and all associated data, or withdraw consent for optional communications.
           </p>
           <p>
             To exercise any right, email{" "}
@@ -216,9 +234,9 @@ export default function PrivacyPage() {
 
         <Section title="11. Changes to This Policy">
           <p>
-            We may update this policy from time to time. Material changes will be communicated
-            via email or an in-app banner at least 7 days before they take effect. Continued
-            use of the service after that date constitutes acceptance.
+            We may update this policy from time to time. Material changes will be communicated via email or an
+            in-app banner at least 7 days before they take effect. Continued use of the service after that date
+            constitutes acceptance.
           </p>
         </Section>
 
@@ -245,4 +263,3 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function SubHeading({ children }: { children: React.ReactNode }) {
   return <h3 className="font-semibold text-ink text-base mt-5 mb-2">{children}</h3>;
 }
-

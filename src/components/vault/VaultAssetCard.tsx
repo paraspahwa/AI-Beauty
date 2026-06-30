@@ -8,10 +8,10 @@ import {
   Share2,
   Copy,
   FileText,
-  Camera,
   ImageIcon,
   ExternalLink,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import type { VaultItem } from "@/types/vault";
 import {
@@ -30,12 +30,17 @@ import {
 
 interface Props {
   item: VaultItem;
+  onDeleted?: () => void;
 }
 
-export function VaultAssetCard({ item }: Props) {
+export function VaultAssetCard({ item, onDeleted }: Props) {
   const [shareOpen, setShareOpen] = React.useState(false);
-  const [busy, setBusy] = React.useState<"download" | "copy" | null>(null);
+  const [busy, setBusy] = React.useState<"download" | "copy" | "delete" | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = React.useState(false);
   const [feedback, setFeedback] = React.useState<string | null>(null);
+  const deleteTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const canDelete = item.kind === "upload" || item.kind === "analysis";
 
   const date = new Date(item.createdAt).toLocaleDateString("en-IN", {
     year: "numeric",
@@ -53,6 +58,48 @@ export function VaultAssetCard({ item }: Props) {
           ? "Style PDF"
           : "Analysis PDF"
         : "Analysis";
+
+  React.useEffect(() => {
+    return () => {
+      if (deleteTimeoutRef.current) clearTimeout(deleteTimeoutRef.current);
+    };
+  }, []);
+
+  async function handleDelete() {
+    if (!canDelete) return;
+
+    if (!deleteConfirm) {
+      setFeedback(null);
+      setDeleteConfirm(true);
+      deleteTimeoutRef.current = setTimeout(() => setDeleteConfirm(false), 5000);
+      return;
+    }
+
+    if (deleteTimeoutRef.current) {
+      clearTimeout(deleteTimeoutRef.current);
+      deleteTimeoutRef.current = null;
+    }
+
+    setBusy("delete");
+    setFeedback(null);
+    try {
+      const res = await fetch("/api/vault/items", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: item.id }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Delete failed");
+      }
+      onDeleted?.();
+    } catch (e) {
+      setFeedback((e as Error).message);
+    } finally {
+      setBusy(null);
+      setDeleteConfirm(false);
+    }
+  }
 
   async function handleDownload() {
     setBusy("download");
@@ -174,6 +221,27 @@ export function VaultAssetCard({ item }: Props) {
               <Share2 className="h-3.5 w-3.5" />
               Share
             </button>
+            {canDelete ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={busy === "delete"}
+                aria-label={deleteConfirm ? "Confirm delete" : "Delete from vault"}
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                style={{
+                  background: deleteConfirm ? "rgba(248,113,113,0.12)" : "rgba(17,24,39,0.04)",
+                  color: deleteConfirm ? "#DC2626" : "#6B5344",
+                  border: `1px solid ${deleteConfirm ? "rgba(248,113,113,0.35)" : "rgba(17,24,39,0.12)"}`,
+                }}
+              >
+                {busy === "delete" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+                {deleteConfirm ? "Confirm delete?" : "Delete"}
+              </button>
+            ) : null}
           </div>
 
           <Link

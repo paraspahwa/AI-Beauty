@@ -30,7 +30,7 @@ export default async function VaultPage() {
                 </span>
                 <h1 className="font-sans text-3xl sm:text-4xl text-ink mb-2">Your beauty archive</h1>
                 <p className="text-ink-stone max-w-2xl">
-                  Every photo you uploaded and every analysis we generated — download anytime or share straight to social media.
+                  Every photo you uploaded and every analysis we generated — download, share, or delete individual items anytime.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
