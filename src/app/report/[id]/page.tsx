@@ -10,6 +10,7 @@ import {
   resolveReportVisualAssets,
 } from "@/lib/report-access";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
+import { fetchOwnedReportRow } from "@/lib/reports/fetch-report-row";
 import { ReportLayout } from "@/components/report/ReportLayout";
 import type { CompiledReport } from "@/types/report";
 
@@ -41,15 +42,7 @@ export default async function ReportPage({
   if (!user) redirect(`/auth?redirect=/report/${id}`);
 
   const admin = createSupabaseAdminClient();
-
-  const { data: row } = await supabase
-    .from("reports")
-    .select(
-      "id, user_id, status, is_paid, is_style_guide_paid, body_image_path, image_path, face_shape, color_analysis, skin_analysis, features, glasses, hairstyle, style_guide, rekognition, summary, visual_assets, pipeline_meta, created_at",
-    )
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
+  const row = await fetchOwnedReportRow(admin, id, user.id);
 
   if (!row) notFound();
 
@@ -103,20 +96,20 @@ export default async function ReportPage({
     id: row.id,
     userId: row.user_id,
     imageUrl,
-    status: row.status,
+    status: row.status as CompiledReport["status"],
     isPaid: hasPremium,
     isStyleGuidePaid: hasStyleGuide,
     bodyImageUploaded: !!row.body_image_path,
     detectedGender: normalizeRekognitionGender(row.rekognition),
-    faceShape: row.face_shape ?? undefined,
+    faceShape: (row.face_shape as CompiledReport["faceShape"]) ?? undefined,
     colorAnalysis: hasPremium
-      ? row.color_analysis ?? undefined
-      : redactColorAnalysisForPreview(row.color_analysis),
-    skinAnalysis: hasPremium ? row.skin_analysis ?? undefined : undefined,
-    features: hasPremium ? row.features ?? undefined : undefined,
-    glasses: hasPremium ? row.glasses ?? undefined : undefined,
-    hairstyle: hasPremium ? row.hairstyle ?? undefined : undefined,
-    styleGuide: hasStyleGuide ? row.style_guide ?? undefined : undefined,
+      ? (row.color_analysis as CompiledReport["colorAnalysis"]) ?? undefined
+      : redactColorAnalysisForPreview(row.color_analysis as CompiledReport["colorAnalysis"]),
+    skinAnalysis: hasPremium ? (row.skin_analysis as CompiledReport["skinAnalysis"]) ?? undefined : undefined,
+    features: hasPremium ? (row.features as CompiledReport["features"]) ?? undefined : undefined,
+    glasses: hasPremium ? (row.glasses as CompiledReport["glasses"]) ?? undefined : undefined,
+    hairstyle: hasPremium ? (row.hairstyle as CompiledReport["hairstyle"]) ?? undefined : undefined,
+    styleGuide: hasStyleGuide ? (row.style_guide as CompiledReport["styleGuide"]) ?? undefined : undefined,
     visualAssets,
     summary: hasPremium ? row.summary ?? undefined : previewSummaryForUnpaid(row.summary),
     pipelineMeta,

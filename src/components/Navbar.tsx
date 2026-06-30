@@ -175,7 +175,7 @@ export function Navbar() {
                 </Link>
               </Button>
               <Button asChild variant="accent" size="sm" className="group">
-                <Link href="/upload">
+                <Link href="/report/latest">
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>{PRODUCT_COPY.primaryCta}</span>
                 </Link>
@@ -272,7 +272,7 @@ export function Navbar() {
                       <Link href="/auth" onClick={() => setMenuOpen(false)}>Sign in</Link>
                     </Button>
                     <Button asChild variant="accent" className="w-full">
-                      <Link href="/upload" onClick={() => setMenuOpen(false)}>
+                      <Link href="/report/latest" onClick={() => setMenuOpen(false)}>
                         <Sparkles className="h-4 w-4" /> {PRODUCT_COPY.primaryCta}
                       </Link>
                     </Button>

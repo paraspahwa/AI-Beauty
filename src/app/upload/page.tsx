@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { CheckCircle2, Clock, Lock, ShieldCheck, Sparkles, Star } from "lucide-react";
@@ -23,7 +23,6 @@ export default function UploadPage() {
 }
 
 function UploadPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const intent = searchParams.get("intent");
 
@@ -66,7 +65,11 @@ function UploadPageContent() {
           </motion.header>
 
           <motion.div variants={fadeUp} className="upload-ring rounded-3xl">
-            <ImageUploader onUploaded={(reportId) => router.push(`/report/${reportId}`)} />
+            <ImageUploader
+              onUploaded={(reportId) => {
+                window.location.assign(`/report/${reportId}`);
+              }}
+            />
           </motion.div>
 
           {/* ── Trust badges ── */}

@@ -51,7 +51,8 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: "/studio", destination: "/upload", permanent: true },
+      { source: "/reports", destination: "/dashboard", permanent: true },
+      { source: "/reports/:path*", destination: "/dashboard", permanent: true },
       { source: "/studio/:path*", destination: "/upload", permanent: true },
       { source: "/analysis", destination: "/upload", permanent: true },
       { source: "/analysis/:path*", destination: "/upload", permanent: true },
