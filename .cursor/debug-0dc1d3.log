@@ -1,0 +1,8 @@
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"safe-redirect.ts","message":"blocked auth redirect","data":{"pathOnly":"/auth","fallback":"/upload"},"timestamp":1782803485573}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"safe-redirect.ts","message":"blocked auth redirect","data":{"pathOnly":"/auth","fallback":"/upload"},"timestamp":1782803485628}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"safe-redirect.ts","message":"blocked auth redirect","data":{"pathOnly":"/auth/callback","fallback":"/upload"},"timestamp":1782803485630}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"safe-redirect.ts","message":"blocked auth redirect","data":{"pathOnly":"/auth","fallback":"/dashboard"},"timestamp":1782803485637}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H3","location":"middleware.ts:pass","message":"route allowed","data":{"pathname":"/upload","isProtected":false,"hasUser":false},"timestamp":1782803503165}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"middleware.ts:protected","message":"auth redirect","data":{"pathname":"/report/not-a-uuid","hasUser":false},"timestamp":1782803513949}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"middleware.ts:protected","message":"auth redirect","data":{"pathname":"/vault","hasUser":false},"timestamp":1782803514250}
+{"sessionId":"0dc1d3","runId":"pre-fix","hypothesisId":"H2","location":"safe-redirect.ts","message":"blocked auth redirect","data":{"pathOnly":"/auth","fallback":"/upload"},"timestamp":1782803566815}

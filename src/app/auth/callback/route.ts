@@ -10,10 +10,10 @@ const ALLOWED_OTP_TYPES = new Set<EmailOtpType>([
   "email_change",
 ]);
 
+import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
+
 function safeNextPath(rawPath: string | null): string {
-  const candidate = rawPath ?? "/upload";
-  // Guard against open redirect via paths like //evil.com (starts with / but is protocol-relative)
-  return /^\/[^/]/.test(candidate) ? candidate : "/upload";
+  return sanitizePostAuthPath(rawPath, "/upload");
 }
 
 /**

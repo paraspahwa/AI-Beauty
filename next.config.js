@@ -60,7 +60,7 @@ const nextConfig = {
       { source: "/dashboard/wardrobe-capsule", destination: "/dashboard", permanent: true },
       { source: "/dashboard/wardrobe-capsule/:path*", destination: "/dashboard", permanent: true },
       { source: "/dashboard/progress", destination: "/dashboard", permanent: true },
-      { source: "/dashboard/vault", destination: "/dashboard", permanent: true },
+      { source: "/dashboard/vault", destination: "/vault", permanent: true },
       { source: "/report/:id/blueprint", destination: "/report/:id", permanent: true },
       { source: "/r/:token", destination: "/", permanent: true },
       { source: "/c/:token", destination: "/", permanent: true },

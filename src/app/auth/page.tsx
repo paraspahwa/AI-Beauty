@@ -8,11 +8,12 @@ import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
+import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
+import { debugLog } from "@/lib/debug-log";
 
 function resolvePostAuthPath(searchParams: URLSearchParams): string {
   const redirect = searchParams.get("redirect") ?? searchParams.get("next");
-  if (redirect && /^\/[^/]/.test(redirect)) return redirect;
-  return "/dashboard";
+  return sanitizePostAuthPath(redirect, "/upload");
 }
 
 const FEATURES = [
@@ -195,6 +196,18 @@ function AuthContent() {
     if (searchParams.get("error") === "auth_failed") {
       setError("The sign-in link has expired or is invalid. Please request a new one.");
     }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      const target = resolvePostAuthPath(searchParams);
+      // #region agent log
+      debugLog("auth/page.tsx", "session exists, redirecting", { target }, "H5");
+      // #endregion
+      window.location.replace(target);
+    });
   }, [searchParams]);
 
   useEffect(() => {
