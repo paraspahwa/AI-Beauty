@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { hasPremiumAccess } from "@/lib/auth/access";
 import { generateAnalysisInfographic } from "@/lib/ai/generate-analysis-infographic";
 import {
   analysisInfographicStoragePath,
@@ -202,7 +203,7 @@ export async function runSinglePaidInfographic(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   row: InfographicReportRow,
   section: AnalysisInfographicSectionId,
-  opts?: { force?: boolean },
+  opts?: { force?: boolean; userEmail?: string | null },
 ): Promise<InfographicSectionResult> {
   if (!env.fal.isConfigured) {
     throw new Error("FAL_KEY is not configured");
@@ -210,7 +211,7 @@ export async function runSinglePaidInfographic(
   if (row.status !== "ready") {
     throw new Error("Report is not ready yet");
   }
-  if (!row.is_paid) {
+  if (!hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: opts?.userEmail })) {
     throw new Error("Report must be unlocked");
   }
 
@@ -223,7 +224,7 @@ export async function runAnalysisInfographics(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   row: InfographicReportRow,
   sections: AnalysisInfographicSectionId[],
-  opts?: { force?: boolean },
+  opts?: { force?: boolean; userEmail?: string | null },
 ): Promise<Record<string, InfographicSectionResult>> {
   if (!env.fal.isConfigured) {
     throw new Error("FAL_KEY is not configured");
@@ -231,7 +232,7 @@ export async function runAnalysisInfographics(
   if (row.status !== "ready") {
     throw new Error("Report is not ready yet");
   }
-  if (!row.is_paid) {
+  if (!hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: opts?.userEmail })) {
     throw new Error("Report must be unlocked");
   }
 

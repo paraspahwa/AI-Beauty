@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
-import { hasPremiumAccess, hasStyleGuideAccess } from "@/lib/auth/access";
+import { hasPremiumAccess, hasStyleGuideAccess, isAdminUserEmail } from "@/lib/auth/access";
 import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 import {
   previewSummaryForUnpaid,
@@ -59,6 +59,9 @@ export default async function ReportPage({
   }
 
   const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
+  // #region agent log
+  fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',location:'report/[id]/page.tsx:hasPremium',message:'report page access',data:{reportId:id,dbIsPaid:!!row.is_paid,hasPremium,isAdmin:isAdminUserEmail(user.email),allowlistCount:env.auth.adminEmailAllowlist.length,internalSecretOk:(env.internal.secret?.length??0)>=16,falConfigured:env.fal.isConfigured},timestamp:Date.now(),hypothesisId:'H1-H2'})}).catch(()=>{});
+  // #endregion
   const hasStyleGuide = hasStyleGuideAccess({
     isStyleGuidePaid: !!row.is_style_guide_paid,
     userEmail: user.email,

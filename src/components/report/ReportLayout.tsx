@@ -34,6 +34,12 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   const [paymentInitiated, setPaymentInitiated] = React.useState(false);
 
   const isPaid = report.isPaid;
+  // #region agent log
+  React.useEffect(() => {
+    const ig = report.visualAssets?.assets?.analysisInfographics;
+    fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',location:'ReportLayout.tsx:mount',message:'client report state',data:{reportId:report.id,isPaid,status:report.status,previewStatus:ig?.faceFeaturesPreview?.status,fullFaceStatus:ig?.faceFeatures?.status,skinStatus:ig?.skin?.status},timestamp:Date.now(),hypothesisId:'H1-H2'})}).catch(()=>{});
+  }, [report.id, isPaid, report.status, report.visualAssets]);
+  // #endregion
   const isProcessing = report.status === "processing" || report.status === "pending";
   const infographics = report.visualAssets?.assets?.analysisInfographics;
   const faceInfographic = isPaid

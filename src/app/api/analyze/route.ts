@@ -6,6 +6,7 @@ import { persistStylePrefs } from "@/lib/ai/memory";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
+import { isAdminUserEmail } from "@/lib/auth/access";
 import { consumeIdentityWindow } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -512,8 +513,12 @@ export async function POST(req: NextRequest) {
                 // Already logged inside persistStylePrefs
               });
 
-              const { kickOffFaceFeaturesPreviewInBackground } = await import("@/lib/ai/kickoff-infographics");
-              kickOffFaceFeaturesPreviewInBackground(report.id);
+              const { kickOffPostAnalysisInfographics } = await import("@/lib/ai/kickoff-infographics");
+              const adminKickoff = isAdminUserEmail(user.email);
+              kickOffPostAnalysisInfographics(report.id, user.email);
+              // #region agent log
+              fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',runId:'post-fix',location:'analyze/route.ts:sse-post-pipeline',message:'analysis complete kickoff',data:{reportId:report.id,isAdmin:adminKickoff,kickoff:adminKickoff?'full':'preview',allowlistCount:env.auth.adminEmailAllowlist.length},timestamp:Date.now(),hypothesisId:'H1-H5'})}).catch(()=>{});
+              // #endregion
             } catch (pipelineErr) {
               console.error("[analyze] pipeline failed:", pipelineErr);
               const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
@@ -803,8 +808,12 @@ export async function POST(req: NextRequest) {
         // Already logged inside persistStylePrefs
       });
 
-      const { kickOffFaceFeaturesPreviewInBackground } = await import("@/lib/ai/kickoff-infographics");
-      kickOffFaceFeaturesPreviewInBackground(report.id);
+      const { kickOffPostAnalysisInfographics } = await import("@/lib/ai/kickoff-infographics");
+      const adminKickoff = isAdminUserEmail(user.email);
+      kickOffPostAnalysisInfographics(report.id, user.email);
+      // #region agent log
+      fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',runId:'post-fix',location:'analyze/route.ts:post-pipeline',message:'analysis complete kickoff',data:{reportId:report.id,isAdmin:adminKickoff,kickoff:adminKickoff?'full':'preview',allowlistCount:env.auth.adminEmailAllowlist.length,internalSecretOk:(env.internal.secret?.length??0)>=16,falConfigured:env.fal.isConfigured},timestamp:Date.now(),hypothesisId:'H1-H5'})}).catch(()=>{});
+      // #endregion
     } catch (pipelineErr) {
       console.error("[analyze] pipeline failed:", pipelineErr);
       const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
