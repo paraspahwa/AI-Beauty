@@ -22,8 +22,13 @@ export function kickOffFaceFeaturesPreviewInBackground(reportId: string): void {
 }
 
 /** Paid unlock: one isolated background job per paid section (parallel). */
-export function kickOffInfographicsInBackground(reportId: string, force = false): void {
-  for (const section of getGeneratableSectionIds()) {
+export function kickOffInfographicsInBackground(
+  reportId: string,
+  opts?: { sections?: AnalysisInfographicSectionId[]; force?: boolean },
+): void {
+  const sections = opts?.sections ?? getGeneratableSectionIds();
+  const force = opts?.force ?? false;
+  for (const section of sections) {
     scheduleInternalPost("/api/internal/trigger-infographics", {
       reportId,
       mode: "full",

@@ -35,7 +35,7 @@ export function ensureReportInfographicsQueued(
 
   const sections = sectionsNeedingGeneration(row);
   if (sections.length > 0) {
-    kickOffInfographicsInBackground(reportId);
+    kickOffInfographicsInBackground(reportId, { sections });
     return { mode: "full", queued: sections.length, sections };
   }
 

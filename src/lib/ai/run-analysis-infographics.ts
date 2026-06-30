@@ -265,7 +265,9 @@ export function sectionsNeedingGeneration(
     if (sectionDataReady(section, row)) return false;
     const existing = getAnalysisInfographicAsset(visualAssets, section);
     if (force) return true;
-    return !existing || existing.status === "missing" || existing.status === "failed";
+    if (!existing || existing.status === "missing") return true;
+    // pending = in-flight; ready = done; failed = manual retry only (payment force)
+    return false;
   });
 }
 
@@ -274,5 +276,5 @@ export function previewNeedsGeneration(row: InfographicReportRow, force?: boolea
   const visualAssets = parseVisualAssets(row.visual_assets);
   const existing = getAnalysisInfographicAsset(visualAssets, "faceFeaturesPreview");
   if (force) return true;
-  return !existing || existing.status === "missing" || existing.status === "failed";
+  return !existing || existing.status === "missing";
 }

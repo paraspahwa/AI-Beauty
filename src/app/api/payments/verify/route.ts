@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           p_provider_signature: body.razorpay_signature,
         });
         if (rpcErr) throw rpcErr;
-        kickOffInfographicsInBackground(body.reportId, true);
+        kickOffInfographicsInBackground(body.reportId, { force: true });
       }
     }
 

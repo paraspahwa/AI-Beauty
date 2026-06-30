@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       if (product === PAYMENT_PRODUCTS.styleGuideAddon) {
         kickOffStyleGuideInfographicInBackground(row.report_id, true);
       } else {
-        kickOffInfographicsInBackground(row.report_id, true);
+        kickOffInfographicsInBackground(row.report_id, { force: true });
         scheduleInternalPost("/api/internal/trigger-previews", { reportId: row.report_id });
       }
     }
