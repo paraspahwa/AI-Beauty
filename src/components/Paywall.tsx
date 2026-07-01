@@ -196,7 +196,7 @@ export function Paywall({
               animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
               style={{
-                background: "linear-gradient(90deg,#C17A5F,#C8A96E,#C17A5F)",
+                background: "linear-gradient(90deg, var(--terracotta), var(--rose-gold), var(--terracotta))",
                 backgroundSize: "200% 100%",
               }}
             />
@@ -210,26 +210,16 @@ export function Paywall({
 
         <AnimatePresence>
           {open && (
-            <DialogContent
-              className="max-w-lg"
-              style={{
-                background: "linear-gradient(145deg,#fffafc,#fffafc)",
-                border: "1px solid rgba(17,24,39,0.18)",
-                boxShadow: "0 20px 50px rgba(17,24,39,0.14)",
-              }}
-            >
+            <DialogContent className="max-w-lg dossier-card border-terracotta/20 shadow-premium !p-6">
               <motion.div variants={staggerContainer} initial="hidden" animate="visible">
                 <DialogHeader>
                   <motion.div variants={fadeUp} className="mx-auto mb-3">
-                    <div
-                      className="flex h-14 w-14 items-center justify-center rounded-full text-obsidian shadow-glow mx-auto"
-                      style={{ background: "#111827" }}
-                    >
-                      <Lock className="h-7 w-7 text-white" />
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-espresso text-[var(--btn-fg)] shadow-glow cta-glow">
+                      <Lock className="h-7 w-7" />
                     </div>
                   </motion.div>
                   <motion.div variants={fadeUp}>
-                    <DialogTitle className="text-center text-2xl">Unlock Your Full Report</DialogTitle>
+                    <DialogTitle className="text-center font-display text-2xl">Unlock Your Full Report</DialogTitle>
                   </motion.div>
                   <motion.div variants={fadeUp}>
                     <DialogDescription className="text-center text-sm">
@@ -238,26 +228,19 @@ export function Paywall({
                   </motion.div>
                 </DialogHeader>
 
-                <motion.div
-                  variants={fadeUp}
-                  className="mt-5 rounded-2xl p-4"
-                  style={{
-                    background: "rgba(17,24,39,0.08)",
-                    border: "2px solid rgba(17,24,39,0.2)",
-                  }}
-                >
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="font-sans text-3xl leading-none" style={{ color: "#111827" }}>
+                <motion.div variants={fadeUp} className="mt-5 rounded-2xl border-2 border-terracotta/25 bg-blush/50 p-4">
+                  <div className="mb-3 flex items-baseline gap-2">
+                    <span className="font-display text-3xl leading-none text-terracotta">
                       {reportLabel}
                     </span>
-                    <span className="text-xs line-through" style={{ color: "#4A3A2A" }}>
+                    <span className="text-xs text-ink-mist line-through">
                       {reportStrike}
                     </span>
                   </div>
                   <ul className="space-y-1.5">
                     {REPORT_PERKS.map((p, i) => (
-                      <li key={i} className="flex items-center gap-2 text-[11px]" style={{ color: "#8A7A6A" }}>
-                        <p.icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#111827" }} />
+                      <li key={i} className="flex items-center gap-2 text-[11px] text-ink-stone">
+                        <p.icon className="h-3.5 w-3.5 shrink-0 text-terracotta" />
                         {p.text}
                       </li>
                     ))}
@@ -266,8 +249,7 @@ export function Paywall({
                     type="button"
                     onClick={startReportCheckout}
                     disabled={loading}
-                    className="mt-4 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                    style={{ background: "#111827" }}
+                    className="mt-4 w-full rounded-xl bg-espresso py-2.5 text-sm font-bold text-[var(--btn-fg)] transition-opacity hover:opacity-90 disabled:opacity-60 cta-shimmer"
                   >
                     {loading ? "Starting checkout…" : `Unlock — ${reportLabel}`}
                   </button>
@@ -277,25 +259,16 @@ export function Paywall({
                   <motion.p
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-3 text-center text-sm rounded-lg p-3"
-                    style={{
-                      color: "#F87171",
-                      background: "rgba(248,113,113,0.08)",
-                      border: "1px solid rgba(248,113,113,0.2)",
-                    }}
+                    className="error-banner mt-3 rounded-lg p-3 text-center text-sm"
                   >
                     {error}
                   </motion.p>
                 )}
 
-                <motion.div
-                  variants={fadeUp}
-                  className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs"
-                  style={{ color: "#5A4A3A" }}
-                >
+                <motion.div variants={fadeUp} className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-ink-stone">
                   {SOCIAL_PROOF.map((item, i) => (
                     <div key={i} className="flex items-center gap-1.5">
-                      <item.icon className="h-3.5 w-3.5" style={{ color: "#111827" }} />
+                      <item.icon className="h-3.5 w-3.5 text-sage" />
                       {item.text}
                     </div>
                   ))}
@@ -303,22 +276,14 @@ export function Paywall({
 
                 <motion.div variants={fadeUp} className="mt-3 flex flex-wrap items-center justify-center gap-2">
                   {TRUST_BADGES.map((badge, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
-                      style={{
-                        color: "#5A4A3A",
-                        background: "rgba(17,24,39,0.10)",
-                        border: "1px solid rgba(17,24,39,0.14)",
-                      }}
-                    >
+                    <div key={i} className="report-chip flex items-center gap-1.5">
                       <Shield className="h-3 w-3" />
                       {badge}
                     </div>
                   ))}
                 </motion.div>
 
-                <motion.p variants={fadeUp} className="mt-4 text-center text-[11px]" style={{ color: "#3A2A1A" }}>
+                <motion.p variants={fadeUp} className="mt-4 text-center text-[11px] text-ink-mist">
                   Secure checkout powered by Razorpay ·{" "}
                   <Link href="/upload" className="underline-offset-2 hover:underline">
                     New analysis

@@ -153,19 +153,19 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
       <article
         className="group flex flex-col overflow-hidden rounded-2xl transition-all hover:-translate-y-0.5"
         style={{
-          background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))",
-          border: "1px solid rgba(17,24,39,0.14)",
+          background: "var(--color-surface)",
+          border: "1px solid rgba(184,115,74,0.18)",
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
-        <div className="relative aspect-[4/5] bg-[#F5F0EA] overflow-hidden">
+        <div className="relative aspect-[4/5] bg-blush overflow-hidden">
           {item.kind === "pdf" ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <FileText className="h-14 w-14" style={{ color: "#9C7D5B" }} />
-              <p className="text-sm font-medium" style={{ color: "#3D2B1F" }}>
+              <FileText className="h-14 w-14" style={{ color: "var(--rose-gold)" }} />
+              <p className="text-sm font-medium" style={{ color: "var(--ink)" }}>
                 {item.pdfVariant === "styleGuide" ? "Style Guide PDF" : "Analysis PDF"}
               </p>
-              <p className="text-xs" style={{ color: "#6B5344" }}>
+              <p className="text-xs" style={{ color: "var(--ink-stone)" }}>
                 Generated infographic pages only
               </p>
             </div>
@@ -180,12 +180,11 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <ImageIcon className="h-10 w-10 text-[#C8B89A]" />
+              <ImageIcon className="h-10 w-10 text-rose-gold" />
             </div>
           )}
           <span
-            className="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide"
-            style={{ background: "rgba(17,24,39,0.85)", color: "#fff" }}
+            className="absolute left-3 top-3 rounded-full bg-espresso/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white"
           >
             {kindLabel}
           </span>
@@ -202,8 +201,7 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
               type="button"
               onClick={handleDownload}
               disabled={busy === "download"}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
-              style={{ background: "#111827" }}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-espresso px-3 py-2 text-xs font-semibold text-[var(--btn-fg)] disabled:opacity-60"
             >
               {busy === "download" ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -215,8 +213,7 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
             <button
               type="button"
               onClick={() => setShareOpen(true)}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold"
-              style={{ background: "rgba(17,24,39,0.08)", color: "#111827", border: "1px solid rgba(17,24,39,0.15)" }}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-terracotta/20 bg-terracotta/10 px-3 py-2 text-xs font-semibold text-terracotta"
             >
               <Share2 className="h-3.5 w-3.5" />
               Share
@@ -227,11 +224,11 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
                 onClick={handleDelete}
                 disabled={busy === "delete"}
                 aria-label={deleteConfirm ? "Confirm delete" : "Delete from vault"}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-60 border-[var(--color-border)] bg-blush/50 text-ink-stone data-[confirm]:border-red-300"
                 style={{
-                  background: deleteConfirm ? "rgba(248,113,113,0.12)" : "rgba(17,24,39,0.04)",
-                  color: deleteConfirm ? "#DC2626" : "#6B5344",
-                  border: `1px solid ${deleteConfirm ? "rgba(248,113,113,0.35)" : "rgba(17,24,39,0.12)"}`,
+                  background: deleteConfirm ? "rgba(248,113,113,0.12)" : undefined,
+                  color: deleteConfirm ? "#DC2626" : undefined,
+                  borderColor: deleteConfirm ? "rgba(248,113,113,0.35)" : undefined,
                 }}
               >
                 {busy === "delete" ? (
@@ -252,13 +249,13 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
           </Link>
 
           {feedback && (
-            <p className="text-[11px] text-center" style={{ color: "#6B5344" }}>{feedback}</p>
+            <p className="text-[11px] text-center" style={{ color: "var(--ink-stone)" }}>{feedback}</p>
           )}
         </div>
       </article>
 
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent className="max-w-md" style={{ background: "#FDFAF6" }}>
+        <DialogContent className="max-w-md bg-[var(--color-surface)]">
           <DialogHeader>
             <DialogTitle className="text-lg">Share {item.label}</DialogTitle>
           </DialogHeader>
@@ -268,8 +265,7 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
               <button
                 type="button"
                 onClick={handleNativeShare}
-                className="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 text-sm font-semibold text-white"
-                style={{ background: "#111827" }}
+                className="col-span-2 rounded-xl bg-espresso px-3 py-3 text-sm font-semibold text-[var(--btn-fg)] sm:col-span-3"
               >
                 <Share2 className="inline h-4 w-4 mr-2" />
                 Share via device…
@@ -278,7 +274,7 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
             <button
               type="button"
               onClick={handleCopyLink}
-              className="rounded-xl px-3 py-3 text-xs font-medium border border-[#E8DDD0] hover:bg-white transition-colors"
+              className="rounded-xl border border-[var(--color-border)] px-3 py-3 text-xs font-medium transition-colors hover:bg-blush/40"
             >
               <Copy className="inline h-3.5 w-3.5 mr-1" />
               Copy link
@@ -288,7 +284,7 @@ export function VaultAssetCard({ item, onDeleted }: Props) {
                 key={target.id}
                 type="button"
                 onClick={() => openSocial(target.id)}
-                className="rounded-xl px-3 py-3 text-xs font-medium border border-[#E8DDD0] hover:bg-white transition-colors text-left"
+                className="rounded-xl border border-[var(--color-border)] px-3 py-3 text-left text-xs font-medium transition-colors hover:bg-blush/40"
               >
                 {target.label}
               </button>

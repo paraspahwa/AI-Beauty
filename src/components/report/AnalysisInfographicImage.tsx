@@ -11,6 +11,8 @@ interface Props {
   aspectRatio?: string;
 }
 
+const frameStyle = { background: "var(--infographic-frame)" } as const;
+
 export function AnalysisInfographicImage({
   asset,
   title,
@@ -22,7 +24,7 @@ export function AnalysisInfographicImage({
 
   if (status === "ready" && imageUrl) {
     return (
-      <div className="rounded-3xl overflow-hidden" style={{ background: "#F7F2EC" }}>
+      <div className="overflow-hidden rounded-3xl border border-[var(--color-border)]" style={frameStyle}>
         <div className="relative w-full" style={{ aspectRatio }}>
           <Image
             src={imageUrl}
@@ -39,14 +41,11 @@ export function AnalysisInfographicImage({
 
   if (status === "failed") {
     return (
-      <div
-        className="rounded-3xl px-6 py-12 text-center"
-        style={{ background: "#F7F2EC", border: "1px solid #E4D8CC" }}
-      >
-        <p className="text-base font-medium" style={{ color: "#3D2B1F" }}>
+      <div className="report-surface-panel rounded-3xl px-6 py-12 text-center" style={frameStyle}>
+        <p className="text-base font-medium text-ink">
           We couldn&apos;t generate your {title.toLowerCase()}.
         </p>
-        <p className="mt-2 text-sm" style={{ color: "#6B5344" }}>
+        <p className="mt-2 text-sm text-ink-stone">
           {asset?.error ?? "Please refresh the page in a moment."}
         </p>
       </div>
@@ -55,14 +54,14 @@ export function AnalysisInfographicImage({
 
   return (
     <div
-      className="rounded-3xl flex flex-col items-center justify-center gap-4 px-6"
-      style={{ background: "#F7F2EC", aspectRatio, border: "1px solid #E4D8CC" }}
+      className="report-surface-panel flex flex-col items-center justify-center gap-4 rounded-3xl border border-[var(--color-border)] px-6"
+      style={{ ...frameStyle, aspectRatio }}
     >
-      <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#9C7D5B" }} />
-      <p className="text-base font-medium text-center" style={{ color: "#3D2B1F" }}>
+      <Loader2 className="h-8 w-8 animate-spin text-terracotta" />
+      <p className="text-center text-base font-medium text-ink">
         {loadingMessage}
       </p>
-      <p className="text-sm text-center max-w-sm" style={{ color: "#6B5344" }}>
+      <p className="max-w-sm text-center text-sm text-ink-stone">
         This usually takes under a minute. The page will update automatically.
       </p>
     </div>

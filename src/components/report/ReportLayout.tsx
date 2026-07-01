@@ -87,7 +87,7 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   }, [isProcessing, infographicPending, isPaid, faceInfographic, report.id]);
 
   return (
-    <div className="min-h-app-viewport" style={{ background: "#F5F0EA" }}>
+    <div className="min-h-app-viewport bg-[var(--color-background)]">
       <div className="page-bleed-x py-10 sm:py-14">
         <div className="mx-auto w-full max-w-4xl lg:max-w-5xl">
         <motion.header
@@ -96,14 +96,14 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
           animate="visible"
           className="mb-10 text-center"
         >
-          <motion.p variants={fadeUp} className="text-[10px] uppercase tracking-[0.35em] font-semibold mb-3" style={{ color: "#9C7D5B" }}>
-            ✦ Your Renovaara Report ✦
+          <motion.p variants={fadeUp} className="foil-label mb-3 justify-center">
+            Your Renovaara Report
           </motion.p>
-          <motion.h1 variants={fadeUp} className="text-3xl sm:text-4xl font-normal mb-3" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
+          <motion.h1 variants={fadeUp} className="font-display text-3xl text-ink sm:text-4xl mb-3">
             {headerTitle}
           </motion.h1>
           {report.summary && (
-            <motion.p variants={fadeUp} className="text-sm max-w-2xl mx-auto" style={{ color: "#6B5344" }}>
+            <motion.p variants={fadeUp} className="mx-auto max-w-2xl text-sm text-ink-stone">
               {report.summary}
             </motion.p>
           )}
@@ -132,9 +132,9 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
         </motion.header>
 
         {paymentInitiated && !isPaid && (
-          <div className="mb-8 flex flex-col items-center gap-3 rounded-2xl p-6 text-center" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.2)" }}>
-            <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#111827" }} />
-            <p className="text-base font-semibold" style={{ color: "#111827" }}>Payment received — unlocking your report…</p>
+          <div className="dossier-card mb-8 flex flex-col items-center gap-3 text-center !py-6">
+            <Loader2 className="h-7 w-7 animate-spin text-terracotta" />
+            <p className="text-base font-semibold text-ink">Payment received — unlocking your report…</p>
           </div>
         )}
 
@@ -182,17 +182,13 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
         </div>
 
         {!isPaid && !paymentInitiated && (
-          <div
-            className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-4 px-4 py-3 sm:px-6"
-            style={{ background: "#111827", boxShadow: "0 -4px 24px rgba(17,24,39,0.25)" }}
-          >
-            <p className="text-sm font-medium text-white">
+          <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-4 bg-espresso px-4 py-3 shadow-xl sm:px-6">
+            <p className="text-sm font-medium text-[var(--btn-fg)]">
               <span className="font-bold">Unlock your complete analysis</span>
             </p>
             <button
               onClick={() => setPaywallOpen(true)}
-              className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-bold"
-              style={{ color: "#111827" }}
+              className="shrink-0 rounded-full bg-terracotta px-4 py-1.5 text-sm font-bold text-[var(--btn-fg)]"
             >
               Unlock now →
             </button>
@@ -206,9 +202,9 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
 
 function ProcessingCard() {
   return (
-    <div className="rounded-3xl p-12 text-center" style={{ background: "#FDFAF6", border: "1px dashed #E8DDD0" }}>
-      <Sparkles className="h-10 w-10 mx-auto mb-3 animate-pulse" style={{ color: "#C8B89A" }} />
-      <p className="text-sm font-medium" style={{ color: "#3D2B1F" }}>Your analysis is on its way</p>
+    <div className="dossier-card rounded-3xl p-12 text-center border-dashed">
+      <Sparkles className="mx-auto mb-3 h-10 w-10 animate-pulse text-terracotta" />
+      <p className="text-sm font-medium text-ink">Your analysis is on its way</p>
     </div>
   );
 }
@@ -234,11 +230,10 @@ function LockedSections({
       {sections.map((title) => (
         <div
           key={title}
-          className="rounded-3xl p-8 text-center"
-          style={{ background: "linear-gradient(145deg, rgba(255,247,251,0.98), rgba(251,231,242,0.92))", border: "1px solid rgba(17,24,39,0.12)" }}
+          className="dossier-card rounded-3xl p-8 text-center"
         >
-          <Lock className="h-8 w-8 mx-auto mb-3" style={{ color: "#C8A96E" }} />
-          <p className="font-semibold text-ink mb-2">{title}</p>
+          <Lock className="mx-auto mb-3 h-8 w-8 text-rose-gold" />
+          <p className="font-display font-semibold text-ink mb-2">{title}</p>
           <p className="text-sm text-ink-stone mb-4">Unlock the full report to view this section.</p>
           <Paywall reportId={reportId} onUnlocked={onUnlocked} />
         </div>

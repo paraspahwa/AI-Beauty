@@ -113,8 +113,7 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
           type="button"
           disabled={disabled || busy}
           onClick={handleDownload}
-          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: "#111827" }}
+          className="inline-flex items-center gap-2 rounded-full bg-espresso px-5 py-2.5 text-sm font-semibold text-[var(--btn-fg)] disabled:opacity-60"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           {isStyleGuide ? "Download Style Guide PDF" : "Download Analysis PDF"}
@@ -123,8 +122,7 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
           type="button"
           disabled={disabled}
           onClick={() => setShareOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
-          style={{ background: "rgba(17,24,39,0.08)", color: "#111827", border: "1px solid rgba(17,24,39,0.15)" }}
+          className="inline-flex items-center gap-2 rounded-full border border-terracotta/20 bg-terracotta/10 px-5 py-2.5 text-sm font-semibold text-terracotta disabled:opacity-60"
         >
           <Share2 className="h-4 w-4" />
           Share
@@ -132,11 +130,11 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
       </div>
 
       {feedback && (
-        <p className="mt-2 text-xs" style={{ color: "#6B5344" }}>{feedback}</p>
+        <p className="mt-2 text-xs text-ink-stone">{feedback}</p>
       )}
 
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent className="max-w-md" style={{ background: "#FDFAF6" }}>
+        <DialogContent className="max-w-md bg-[var(--color-surface)]">
           <DialogHeader>
             <DialogTitle>{isStyleGuide ? "Share Style Guide" : "Share Analysis"}</DialogTitle>
           </DialogHeader>
@@ -145,8 +143,7 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
               <button
                 type="button"
                 onClick={handleNativeShare}
-                className="col-span-2 sm:col-span-3 rounded-xl px-3 py-3 text-sm font-semibold text-white"
-                style={{ background: "#111827" }}
+                className="col-span-2 rounded-xl bg-espresso px-3 py-3 text-sm font-semibold text-[var(--btn-fg)] sm:col-span-3"
               >
                 Share via device…
               </button>
@@ -154,7 +151,7 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
             <button
               type="button"
               onClick={handleCopyLink}
-              className="rounded-xl px-3 py-2 text-xs font-medium border border-[#E8DDD0]"
+              className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-medium hover:bg-blush/40 transition-colors"
             >
               Copy report link
             </button>
@@ -163,13 +160,13 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
                 key={target.id}
                 type="button"
                 onClick={() => openSocial(target.id)}
-                className="rounded-xl px-3 py-2 text-xs font-medium border border-[#E8DDD0] text-left"
+                className="rounded-xl border border-[var(--color-border)] px-3 py-2 text-left text-xs font-medium hover:bg-blush/40 transition-colors"
               >
                 {target.label}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-ink-stone text-center pt-2">
+          <p className="pt-2 text-center text-[11px] text-ink-stone">
             Download the PDF first to post on Instagram or TikTok.
           </p>
         </DialogContent>

@@ -117,7 +117,7 @@ export function StyleGuidePaywall({ reportId, onUnlocked }: Props) {
         order_id: orderId,
         name: "Renovaara",
         description: "Personal Style Guide",
-        theme: { color: "#C17A5F" },
+        theme: { color: "#B8734A" },
         handler: async (response: RazorpayPaymentResponse) => {
           const verify = await fetch("/api/payments/verify", {
             method: "POST",
@@ -157,32 +157,31 @@ export function StyleGuidePaywall({ reportId, onUnlocked }: Props) {
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-md" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+        <DialogContent className="max-w-md dossier-card border-terracotta/20 !p-6">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl" style={{ fontFamily: "Georgia, serif" }}>
+            <DialogTitle className="text-center font-display text-xl">
               Personal Style Guide
             </DialogTitle>
-            <DialogDescription className="text-center text-sm">
+            <DialogDescription className="text-center text-sm text-ink-stone">
               AI-generated style board from your full-body photo — wardrobe essentials, silhouettes, and outfit inspiration.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-2xl p-4 mt-2" style={{ background: "rgba(17,24,39,0.06)", border: "1px solid rgba(17,24,39,0.12)" }}>
-            <p className="text-3xl font-semibold mb-3" style={{ color: "#111827" }}>{priceLabel}</p>
-            <ul className="space-y-2 text-sm" style={{ color: "#6B5344" }}>
+          <div className="mt-2 rounded-2xl border border-terracotta/20 bg-blush/40 p-4">
+            <p className="mb-3 font-display text-3xl text-terracotta">{priceLabel}</p>
+            <ul className="space-y-2 text-sm text-ink-stone">
               <li className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 shrink-0" /> Full-body style infographic
+                <Sparkles className="h-4 w-4 shrink-0 text-terracotta" /> Full-body style infographic
               </li>
               <li className="flex items-center gap-2">
-                <Shield className="h-4 w-4 shrink-0" /> One-time add-on purchase
+                <Shield className="h-4 w-4 shrink-0 text-sage" /> One-time add-on purchase
               </li>
             </ul>
             <button
               type="button"
               onClick={startCheckout}
               disabled={loading}
-              className="mt-4 w-full rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-60"
-              style={{ background: "#111827" }}
+              className="mt-4 w-full rounded-xl bg-espresso py-2.5 text-sm font-bold text-[var(--btn-fg)] disabled:opacity-60 cta-shimmer"
             >
               {loading ? "Starting checkout…" : `Pay ${priceLabel}`}
             </button>

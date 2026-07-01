@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Image from "next/image";
 import { Loader2, Sparkles, RefreshCw, ChevronDown } from "lucide-react";
 
-/* ─── FAL hair_style enum values (fal-ai/image-apps-v2/hair-change) ──────── */
+/* --- FAL hair_style enum values (fal-ai/image-apps-v2/hair-change) -------- */
 const HAIR_STYLES = [
   { value: "No change",        label: "No change (color only)" },
   { value: "short_hair",       label: "Short Hair" },
@@ -22,7 +22,7 @@ const HAIR_STYLES = [
 
 type HairStyleValue = (typeof HAIR_STYLES)[number]["value"];
 
-/* ─── FAL hair_color enum values ─────────────────────────────────────────── */
+/* --- FAL hair_color enum values ------------------------------------------- */
 const HAIR_COLOR_OPTIONS = [
   { group: "Natural", value: "natural",        label: "Natural",         hex: "#6B3A2A" },
   { group: "Natural", value: "black",           label: "Black",           hex: "#0a0a0a" },
@@ -48,7 +48,7 @@ type HairColorValue = (typeof HAIR_COLOR_OPTIONS)[number]["value"];
 
 interface Props { reportId: string }
 
-/* ─── Generic dropdown ───────────────────────────────────────────────────── */
+/* --- Generic dropdown ----------------------------------------------------- */
 function Dropdown<T extends string>({
   label, value, options, onChange,
 }: {
@@ -73,14 +73,14 @@ function Dropdown<T extends string>({
 
   return (
     <div ref={ref} className="relative" style={{ userSelect: "none" }}>
-      <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "#9C7D5B" }}>
+      <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "var(--rose-gold)" }}>
         {label}
       </p>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex items-center justify-between w-full rounded-xl px-3.5 py-2.5 text-sm font-medium"
-        style={{ background: "#F5EFE7", border: "1.5px solid #E0CEBC", color: "#3D2B1F", minWidth: 200 }}
+        style={{ background: "var(--infographic-frame)", border: "1.5px solid var(--color-border)", color: "var(--ink)", minWidth: 200 }}
       >
         <span className="flex items-center gap-2">
           {selected?.hex && (
@@ -90,14 +90,14 @@ function Dropdown<T extends string>({
           {selected?.label ?? value}
         </span>
         <ChevronDown className="h-4 w-4 ml-2 shrink-0 transition-transform"
-          style={{ color: "#9C7D5B", transform: open ? "rotate(180deg)" : undefined }} />
+          style={{ color: "var(--rose-gold)", transform: open ? "rotate(180deg)" : undefined }} />
       </button>
       {open && (
         <div className="absolute left-0 top-full mt-1 z-50 rounded-xl overflow-y-auto"
           style={{
             background: "#fffafc",
             border: "1px solid rgba(17,24,39,0.25)",
-            boxShadow: "0 8px 24px rgba(17,24,39,0.14)",
+            boxShadow: "0 8px 24px rgba(184,115,74,0.18)",
             minWidth: 230, maxHeight: 320,
           }}
         >
@@ -140,7 +140,7 @@ function DropdownItem({
   );
 }
 
-/* ─── Main ───────────────────────────────────────────────────────────────── */
+/* --- Main ----------------------------------------------------------------- */
 export function HairColorCard({ reportId }: Props) {
   const [selectedStyle, setSelectedStyle] = React.useState<HairStyleValue>("No change");
   const [selectedColor, setSelectedColor] = React.useState<HairColorValue>("natural");
@@ -180,16 +180,15 @@ export function HairColorCard({ reportId }: Props) {
       : `Try ${styleLabel} + ${currentColor?.label ?? selectedColor}`;
 
   return (
-    <div className="overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", borderRadius: 12, marginTop: 24 }}>
+    <div className="overflow-hidden" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 12, marginTop: 24 }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: "1px solid #F0E8DC" }}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: "#111827" }}>
-          <Sparkles className="h-4 w-4" style={{ color: "#3D2B1F" }} />
+      <div className="flex items-center gap-3 px-6 py-4" style={{ borderBottom: "1px solid var(--color-border)" }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-espresso">
+          <Sparkles className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 className="text-base font-semibold" style={{ color: "#3D2B1F" }}>Hair Color Guide</h3>
-          <p className="text-xs" style={{ color: "#9C7D5B" }}>Recommended shades for your tone — generate a preview on demand</p>
+          <h3 className="text-base font-semibold" style={{ color: "var(--ink)" }}>Hair Color Guide</h3>
+          <p className="text-xs" style={{ color: "var(--rose-gold)" }}>Recommended shades for your tone ? generate a preview on demand</p>
         </div>
       </div>
 
@@ -218,7 +217,7 @@ export function HairColorCard({ reportId }: Props) {
 
           {/* Quick-select swatch strip */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2.5" style={{ color: "#9C7D5B" }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2.5" style={{ color: "var(--rose-gold)" }}>
               Quick-select color
             </p>
             <div className="flex flex-wrap gap-2">
@@ -229,12 +228,12 @@ export function HairColorCard({ reportId }: Props) {
                   <div className="h-8 w-8 rounded-full transition-all"
                     style={{
                       backgroundColor: c.hex,
-                      border: selectedColor === c.value ? "3px solid #111827" : "2px solid rgba(0,0,0,0.12)",
-                      boxShadow: selectedColor === c.value ? "0 0 0 2px #FDFAF6, 0 0 0 4px #111827" : "0 1px 3px rgba(0,0,0,0.15)",
+                      border: selectedColor === c.value ? "3px solid var(--espresso)" : "2px solid rgba(0,0,0,0.12)",
+                      boxShadow: selectedColor === c.value ? "0 0 0 2px var(--color-surface), 0 0 0 4px var(--espresso)" : "0 1px 3px rgba(0,0,0,0.15)",
                     }}
                   />
                   <span className="text-[7px] text-center max-w-[32px] leading-tight"
-                    style={{ color: selectedColor === c.value ? "#111827" : "#B8A898" }}>
+                    style={{ color: selectedColor === c.value ? "var(--ink)" : "#B8A898" }}>
                     {c.label.split(" ")[0]}
                   </span>
                 </button>
@@ -244,8 +243,7 @@ export function HairColorCard({ reportId }: Props) {
 
           {/* Generate button */}
           <button type="button" onClick={generate} disabled={loading}
-            className="self-start flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: "#111827", color: "#3D2B1F", boxShadow: "0 2px 12px rgba(17,24,39,0.35)" }}
+            className="self-start flex items-center gap-2 rounded-full bg-btn-bg px-6 py-3 text-sm font-semibold text-btn-fg transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {btnLabel}
@@ -259,7 +257,7 @@ export function HairColorCard({ reportId }: Props) {
           {generatedUrl ? (
             <>
               <div className="relative w-full overflow-hidden"
-                style={{ borderRadius: 10, aspectRatio: "3/4", border: "1.5px solid #E8DDD0" }}>
+                style={{ borderRadius: 10, aspectRatio: "3/4", border: "1.5px solid var(--color-border)" }}>
                 <Image src={generatedUrl} alt="Hair try-on" fill unoptimized
                   className="object-cover" style={{ objectPosition: "top center" }} />
                 {currentColor && (
@@ -268,34 +266,34 @@ export function HairColorCard({ reportId }: Props) {
                     <div className="h-3 w-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: currentColor.hex, border: "1px solid rgba(255,255,255,0.4)" }} />
                     <span className="text-[10px] font-semibold text-white">
-                      {!isColorOnly ? `${styleLabel} · ` : ""}{currentColor.label}
+                      {!isColorOnly ? `${styleLabel} ? ` : ""}{currentColor.label}
                     </span>
                   </div>
                 )}
               </div>
               <button type="button" onClick={generate} disabled={loading}
                 className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:opacity-40"
-                style={{ color: "#9C7D5B" }}>
+                style={{ color: "var(--rose-gold)" }}>
                 <RefreshCw className="h-3.5 w-3.5" /> Regenerate
               </button>
             </>
           ) : loading ? (
             <div className="w-full flex flex-col items-center justify-center gap-3"
-              style={{ borderRadius: 10, aspectRatio: "3/4", background: "#F5EFE7", border: "1.5px solid #E8DDD0" }}>
+              style={{ borderRadius: 10, aspectRatio: "3/4", background: "var(--infographic-frame)", border: "1.5px solid var(--color-border)" }}>
               {currentColor && (
                 <div className="h-14 w-14 rounded-full animate-pulse"
                   style={{ backgroundColor: currentColor.hex, opacity: 0.7 }} />
               )}
-              <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#111827" }} />
-              <p className="text-xs text-center px-4" style={{ color: "#9C7D5B" }}>
+              <Loader2 className="h-6 w-6 animate-spin text-terracotta" />
+              <p className="text-xs text-center px-4" style={{ color: "var(--rose-gold)" }}>
                 {!isColorOnly ? `Changing to ${styleLabel}...` : `Applying ${currentColor?.label}...`}
                 <br /><span className="text-[10px]" style={{ color: "#B8A898" }}>~20-40 seconds</span>
               </p>
             </div>
           ) : (
             <div className="w-full flex flex-col items-center justify-center gap-3"
-              style={{ borderRadius: 10, aspectRatio: "3/4", background: "#F5EFE7", border: "1.5px dashed #E8DDD0" }}>
-              <div className="h-14 w-14 rounded-full" style={{ background: "#E8DDD0" }} />
+              style={{ borderRadius: 10, aspectRatio: "3/4", background: "var(--infographic-frame)", border: "1.5px dashed var(--color-border)" }}>
+              <div className="h-14 w-14 rounded-full" style={{ background: "var(--color-border)" }} />
               <p className="text-xs text-center px-4" style={{ color: "#B8A898" }}>
                 Choose a style &amp; color<br />then click Generate
               </p>

@@ -74,19 +74,13 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
 
   if (isPaid && asset?.status === "failed") {
     return (
-      <section
-        className="rounded-3xl p-6 sm:p-8 text-center"
-        style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}
-      >
-        <p className="text-sm font-medium mb-2" style={{ color: "#3D2B1F" }}>
-          Style Guide generation failed
-        </p>
-        <p className="text-xs mb-4" style={{ color: "#6B5344" }}>{asset.error ?? "Please try again."}</p>
+      <section className="report-surface-panel rounded-3xl p-6 text-center sm:p-8">
+        <p className="mb-2 text-sm font-medium text-ink">Style Guide generation failed</p>
+        <p className="mb-4 text-xs text-ink-stone">{asset.error ?? "Please try again."}</p>
         <button
           type="button"
           onClick={handleRetry}
-          className="rounded-full px-5 py-2 text-sm font-semibold text-white"
-          style={{ background: "#111827" }}
+          className="rounded-full bg-espresso px-5 py-2 text-sm font-semibold text-[var(--btn-fg)]"
         >
           Retry generation
         </button>
@@ -97,18 +91,14 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
   if (isPaid || paymentInitiated) {
     return (
       <section>
-        <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9C7D5B" }}>
-          Style Guide
-        </p>
-        <h2 className="text-2xl font-normal mb-4" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
-          Your Personal Style Board
-        </h2>
+        <p className="foil-label mb-2 border-none p-0">Style Guide</p>
+        <h2 className="font-display mb-4 text-2xl text-ink">Your Personal Style Board</h2>
         <div
-          className="rounded-3xl flex flex-col items-center justify-center gap-4 px-6 py-16"
-          style={{ background: "#F7F2EC", border: "1px solid #E4D8CC", aspectRatio: "3/4" }}
+          className="report-surface-panel flex flex-col items-center justify-center gap-4 rounded-3xl px-6 py-16"
+          style={{ background: "var(--infographic-frame)", aspectRatio: "3/4" }}
         >
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#9C7D5B" }} />
-          <p className="text-base font-medium text-center" style={{ color: "#3D2B1F" }}>
+          <Loader2 className="h-8 w-8 animate-spin text-terracotta" />
+          <p className="text-center text-base font-medium text-ink">
             {paymentInitiated && !isPaid
               ? "Payment received — starting your Style Guide…"
               : "Generating your personal style guide…"}
@@ -120,17 +110,10 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
 
   if (bodyUploaded) {
     return (
-      <section
-        className="rounded-3xl p-6 sm:p-8"
-        style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}
-      >
-        <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9C7D5B" }}>
-          Style Guide Add-on
-        </p>
-        <h2 className="text-2xl font-normal mb-3" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
-          Your full-body style board
-        </h2>
-        <p className="text-sm mb-6" style={{ color: "#6B5344" }}>
+      <section className="report-surface-panel rounded-3xl p-6 sm:p-8">
+        <p className="foil-label mb-2 border-none p-0">Style Guide Add-on</p>
+        <h2 className="font-display mb-3 text-2xl text-ink">Your full-body style board</h2>
+        <p className="mb-6 text-sm text-ink-stone">
           Full-body photo uploaded. Unlock your AI-generated style infographic with wardrobe essentials,
           flattering silhouettes, and outfit inspiration tailored to you.
         </p>
@@ -146,24 +129,17 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
   }
 
   return (
-    <section
-      className="rounded-3xl p-6 sm:p-8"
-      style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}
-    >
-      <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9C7D5B" }}>
-        Style Guide Add-on
-      </p>
-      <h2 className="text-2xl font-normal mb-3" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
-        Upload a full-body photo
-      </h2>
-      <p className="text-sm mb-4" style={{ color: "#6B5344" }}>
+    <section className="report-surface-panel rounded-3xl p-6 sm:p-8">
+      <p className="foil-label mb-2 border-none p-0">Style Guide Add-on</p>
+      <h2 className="font-display mb-3 text-2xl text-ink">Upload a full-body photo</h2>
+      <p className="mb-4 text-sm text-ink-stone">
         Your Style Guide uses a full-body photo to create a personalised fashion infographic —
         separate from your face selfie analysis.
       </p>
-      <ul className="text-sm space-y-1 mb-6" style={{ color: "#6B5344" }}>
-        <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0" /> Head-to-toe visible, good lighting</li>
-        <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0" /> Fitted or semi-fitted clothing works best</li>
-        <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0" /> Stand naturally, face the camera</li>
+      <ul className="mb-6 space-y-1 text-sm text-ink-stone">
+        <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0 text-terracotta" /> Head-to-toe visible, good lighting</li>
+        <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0 text-terracotta" /> Fitted or semi-fitted clothing works best</li>
+        <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0 text-terracotta" /> Stand naturally, face the camera</li>
       </ul>
 
       <input
@@ -181,8 +157,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
         type="button"
         disabled={uploading}
         onClick={() => fileRef.current?.click()}
-        className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
-        style={{ background: "#111827" }}
+        className="inline-flex items-center gap-2 rounded-full bg-espresso px-6 py-3 text-sm font-semibold text-[var(--btn-fg)] disabled:opacity-60"
       >
         {uploading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -193,7 +168,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
       </button>
 
       {uploadError && (
-        <p className="mt-3 text-sm text-red-500">{uploadError}</p>
+        <p className="mt-3 text-sm text-red-600">{uploadError}</p>
       )}
     </section>
   );

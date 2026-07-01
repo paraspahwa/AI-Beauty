@@ -82,7 +82,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
         >
           {/* Header */}
           <motion.div variants={fadeUp} className="mb-12">
-            <h2 className="text-3xl sm:text-4xl text-white mb-3">
+            <h2 className="font-display text-3xl sm:text-4xl text-white mb-3">
               Analyzing your beauty profile
             </h2>
             {showSpinner ? (
@@ -118,16 +118,16 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
                   }`}
                   style={{
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(17,24,39,0.18), rgba(17,24,39,0.14))"
+                      ? "linear-gradient(145deg, rgba(184,115,74,0.22), rgba(184,115,74,0.12))"
                       : isComplete
-                      ? "rgba(17,24,39,0.15)"
+                      ? "rgba(184,115,74,0.14)"
                       : "rgba(255,255,255,0.06)",
                     border: isActive
-                      ? "1px solid rgba(17,24,39,0.3)"
+                      ? "1px solid rgba(184,115,74,0.45)"
                       : isComplete
-                      ? "1px solid rgba(17,24,39,0.20)"
+                      ? "1px solid rgba(184,115,74,0.28)"
                       : "1px solid rgba(255,255,255,0.08)",
-                    boxShadow: isActive ? "0 10px 24px rgba(17,24,39,0.16)" : "none",
+                    boxShadow: isActive ? "0 10px 24px rgba(184,115,74,0.2)" : "none",
                   }}
                 >
                   {/* Icon */}
@@ -137,12 +137,12 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
                     }`}
                     style={{
                       background: isComplete
-                        ? "rgba(17,24,39,0.8)"
+                        ? "rgba(184,115,74,0.85)"
                         : isActive
-                        ? "#111827"
-                        : "rgba(17,24,39,0.12)",
-                      color: isComplete || isActive ? "#FFFFFF" : "rgba(17,24,39,0.45)",
-                      boxShadow: isActive ? "0 0 20px rgba(17,24,39,0.3)" : "none",
+                        ? "var(--terracotta)"
+                        : "rgba(184,115,74,0.15)",
+                      color: isComplete || isActive ? "#FFFFFF" : "rgba(201,168,124,0.7)",
+                      boxShadow: isActive ? "0 0 20px rgba(184,115,74,0.35)" : "none",
                     }}
                   >
                     {isComplete ? (
@@ -187,7 +187,7 @@ export function AnalysisLoading({ currentStep = 0, progress = 0, remainingSecond
             className="rounded-2xl p-6 backdrop-blur-sm"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
           >
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#111827" }}>
+            <p className="foil-label mb-2 text-rose-gold">
               Did you know?
             </p>
             <motion.p

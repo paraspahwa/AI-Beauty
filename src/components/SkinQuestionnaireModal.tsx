@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export interface SkinContext {
   selfReportedFeeling?: string;
@@ -42,25 +43,11 @@ const AGE_RANGES = [
   { value: "50+",     label: "50+"    },
 ];
 
-const CHIP_BASE: React.CSSProperties = {
-  padding: "6px 14px",
-  borderRadius: 999,
-  fontSize: 12,
-  fontWeight: 600,
-  cursor: "pointer",
-  border: "1px solid rgba(17,24,39,0.25)",
-  background: "rgba(17,24,39,0.06)",
-  color: "rgba(255,255,255,0.7)",
-  transition: "all 0.15s",
-  userSelect: "none",
-};
+const CHIP_BASE =
+  "rounded-full border border-terracotta/25 bg-blush px-3.5 py-1.5 text-xs font-semibold text-ink-stone transition-all hover:border-terracotta/40";
 
-const CHIP_ACTIVE: React.CSSProperties = {
-  ...CHIP_BASE,
-  background: "rgba(17,24,39,0.18)",
-  border: "1px solid rgba(17,24,39,0.7)",
-  color: "#fffafc",
-};
+const CHIP_ACTIVE =
+  "rounded-full border border-terracotta bg-terracotta/15 px-3.5 py-1.5 text-xs font-semibold text-ink transition-all";
 
 function Chip({
   label,
@@ -72,7 +59,7 @@ function Chip({
   onClick: () => void;
 }) {
   return (
-    <button type="button" style={active ? CHIP_ACTIVE : CHIP_BASE} onClick={onClick}>
+    <button type="button" className={active ? CHIP_ACTIVE : CHIP_BASE} onClick={onClick}>
       {label}
     </button>
   );
@@ -91,15 +78,10 @@ function Question({
 }) {
   return (
     <div className="mb-5">
-      <p
-        className="text-[10px] uppercase tracking-[0.2em] mb-1"
-        style={{ color: "#111827" }}
-      >
+      <p className="foil-label mb-1">
         {number} of {total}
       </p>
-      <p className="text-sm font-medium mb-3" style={{ color: "rgba(255,255,255,0.85)" }}>
-        {question}
-      </p>
+      <p className="mb-3 text-sm font-medium text-ink">{question}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -127,7 +109,7 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ background: "rgba(5,5,10,0.75)", backdropFilter: "blur(8px)" }}
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
           onClick={(e) => { if (e.target === e.currentTarget) onSkip(); }}
         >
           <motion.div
@@ -136,35 +118,23 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
             animate={{ opacity: 1, scale: 1,    y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: "spring", stiffness: 300, damping: 26 }}
-            className="relative w-full max-w-sm rounded-3xl p-6"
-            style={{
-              background: "linear-gradient(145deg,#13131e,#1b1b2a)",
-              border: "1px solid rgba(17,24,39,0.2)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
-            }}
+            className="relative w-full max-w-sm rounded-3xl border border-terracotta/20 bg-[var(--color-surface)] p-6 shadow-premium"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
+            <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" style={{ color: "#111827" }} />
-                <p
-                  className="text-xs font-bold uppercase tracking-[0.2em]"
-                  style={{ color: "#111827" }}
-                >
-                  Personalize Your Analysis
-                </p>
+                <Sparkles className="h-4 w-4 text-terracotta" />
+                <p className="foil-label">Personalize Your Analysis</p>
               </div>
               <button
                 type="button"
                 onClick={onSkip}
-                style={{ color: "rgba(255,255,255,0.35)" }}
-                className="hover:opacity-70 transition-opacity"
+                aria-label="Close"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-blush text-ink-mist transition-opacity hover:opacity-80"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Questions */}
             <Question number={1} total={3} question="How does your skin feel by midday?">
               {FEELINGS.map((f) => (
                 <Chip
@@ -198,35 +168,21 @@ export function SkinQuestionnaireModal({ open, onComplete, onSkip }: Props) {
               ))}
             </Question>
 
-            {/* Actions */}
-            <div className="flex items-center justify-between mt-6">
+            <div className="mt-6 flex items-center justify-between">
               <button
                 type="button"
                 onClick={onSkip}
-                className="text-xs hover:opacity-70 transition-opacity"
-                style={{ color: "rgba(255,255,255,0.35)" }}
+                className="text-xs text-ink-mist transition-opacity hover:opacity-70"
               >
                 Skip
               </button>
-              <button
-                type="button"
-                onClick={handleDone}
-                className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90"
-                style={{
-                  background: "#111827",
-                  color: "#111827",
-                }}
-              >
+              <Button variant="accent" size="sm" onClick={handleDone}>
                 Continue
                 <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             </div>
 
-            {/* Fine print */}
-            <p
-              className="mt-4 text-center text-[9px] leading-relaxed"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-            >
+            <p className="mt-4 text-center text-[9px] leading-relaxed text-ink-mist">
               Optional — your answers help personalize your skincare routine.
               They are never stored or shared.
             </p>

@@ -30,7 +30,7 @@ const PANELS: StoryPanel[] = [
     subtitle: "Personalised routine guidance based on your skin type and concerns.",
     imageSrc: "/samples/sample-4-after.jpg",
     imageAlt: "AI skin analysis preview",
-    tintClass: "from-[#111827]/35 via-transparent to-black/55",
+    tintClass: "from-espresso/35 via-transparent to-black/55",
     chips: [
       {
         label: "Hydration focus",
@@ -86,7 +86,7 @@ const PANELS: StoryPanel[] = [
     subtitle: "Frames and tones chosen for your features and undertone.",
     imageSrc: "/samples/sample-3-after.jpg",
     imageAlt: "AI spectacles recommendation preview",
-    tintClass: "from-[#111827]/28 via-transparent to-black/55",
+    tintClass: "from-espresso/28 via-transparent to-black/55",
     chips: [
       {
         label: "Geometric Frames",

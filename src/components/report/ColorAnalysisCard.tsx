@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Image from "next/image";
 import { Check, X, Loader2, Sparkles } from "lucide-react";
 import type { ColorAnalysisResult } from "@/types/report";
 
-/* ─── helpers ──────────────────────────────────────────────────────────── */
+/* --- helpers ------------------------------------------------------------ */
 /** Lighten a hex color by mixing with white */
 function lightenHex(hex: string, pct: number): string {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -16,7 +16,7 @@ function lightenHex(hex: string, pct: number): string {
   return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
 }
 
-/* ─── Characteristic icons ─────────────────────────────────────────────── */
+/* --- Characteristic icons ----------------------------------------------- */
 function IconSun() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-10 w-10">
@@ -50,7 +50,7 @@ function IconHalfCircle() {
   );
 }
 
-/* ─── Metal ring icon ──────────────────────────────────────────────────── */
+/* --- Metal ring icon ---------------------------------------------------- */
 function MetalRing({ gradient }: { gradient: string }) {
   return (
     <svg viewBox="0 0 56 56" className="h-16 w-16 drop-shadow-md">
@@ -70,7 +70,7 @@ function MetalRing({ gradient }: { gradient: string }) {
   );
 }
 
-/* ─── Print swatch (circular patterned) ────────────────────────────────── */
+/* --- Print swatch (circular patterned) ---------------------------------- */
 function PrintSwatch({ bg, pat, label }: { bg: string; pat: string; label: string }) {
   return (
     <div className="flex flex-col items-center gap-2">
@@ -90,12 +90,12 @@ function PrintSwatch({ bg, pat, label }: { bg: string; pat: string; label: strin
         ))}
         <circle cx="28" cy="28" r="26" fill="none" stroke="#fff" strokeWidth="1.5" />
       </svg>
-      <span className="text-[10px] text-center leading-tight max-w-[52px]" style={{ color: "#6B5344" }}>{label}</span>
+      <span className="text-[10px] text-center leading-tight max-w-[52px]" style={{ color: "var(--ink-stone)" }}>{label}</span>
     </div>
   );
 }
 
-/* ─── Makeup icons ─────────────────────────────────────────────────────── */
+/* --- Makeup icons ------------------------------------------------------- */
 function MakeupBlush({ hex }: { hex: string }) {
   return (
     <svg viewBox="0 0 56 56" className="h-16 w-16 drop-shadow-md">
@@ -126,7 +126,7 @@ function MakeupLip({ hex }: { hex: string }) {
   );
 }
 
-/* ─── Data types (defined before SEASON_PRESETS for co-location) ────────── */
+/* --- Data types (defined before SEASON_PRESETS for co-location) ---------- */
 type Swatch = { name: string; hex: string };
 type PrintStyle = { label: string; bg: string; pat: string };
 
@@ -141,7 +141,7 @@ type SeasonPreset = {
   makeup: Swatch[];        // 3 makeup items
 };
 
-/* ─── Canonical season preset table ────────────────────────────────────── */
+/* --- Canonical season preset table -------------------------------------- */
 const SEASON_PRESETS: Record<string, SeasonPreset> = {
   "Soft Autumn": {
     characteristics: ["Warm", "Muted", "Soft"],
@@ -716,7 +716,7 @@ const SEASON_PRESETS: Record<string, SeasonPreset> = {
   },
 };
 
-/** Normalize raw season string → canonical preset key */
+/** Normalize raw season string ? canonical preset key */
 function normalizeSeasonKey(season: string): string {
   const s = season.trim();
   if (SEASON_PRESETS[s]) return s;
@@ -733,14 +733,14 @@ function normalizeSeasonKey(season: string): string {
   return partial ?? "Soft Autumn"; // safe fallback
 }
 
-/* ─── Comparison photo card ─────────────────────────────────────────────── */
+/* --- Comparison photo card ----------------------------------------------- */
 /**
  * Comparison thumbnail.
  * Priority:
- *   1. aiPreviewUrl — real Replicate SDXL inpainted photo (best quality)
+ *   1. aiPreviewUrl � real Replicate SDXL inpainted photo (best quality)
  *   2. Solid colour block fallback
  *
- * Shows a "✨ Preview" button on hover when no preview exists and onGenerate is provided.
+ * Shows a "? Preview" button on hover when no preview exists and onGenerate is provided.
  */
 function ColorSwatch({
   hex,
@@ -757,7 +757,7 @@ function ColorSwatch({
 }) {
   // After 3 minutes stop spinning and fall back to color circle
   const [timedOut, setTimedOut] = React.useState(false);
-  // Countdown timer — starts at 25s (expected generation time) and counts down
+  // Countdown timer � starts at 25s (expected generation time) and counts down
   const [secondsLeft, setSecondsLeft] = React.useState(25);
   React.useEffect(() => {
     if (!generating) { setSecondsLeft(25); setTimedOut(false); return; }
@@ -776,7 +776,7 @@ function ColorSwatch({
   return (
     <div
       className="flex flex-col overflow-hidden group"
-      style={{ border: "1.5px solid #E8DDD0", borderRadius: 10, background: "#fff" }}
+      style={{ border: "1.5px solid var(--color-border)", borderRadius: 10, background: "var(--color-surface)" }}
     >
       <div
         className="relative w-full"
@@ -792,7 +792,7 @@ function ColorSwatch({
             style={{ objectPosition: "top center" }}
           />
         ) : showSkeleton ? (
-          /* Skeleton — only shown while actively waiting for AI preview */
+          /* Skeleton � only shown while actively waiting for AI preview */
           <div
             className="absolute inset-0 flex flex-col items-center justify-center gap-1 animate-pulse"
             style={{ backgroundColor: hex, opacity: 0.85 }}
@@ -808,7 +808,7 @@ function ColorSwatch({
           />
         )}
 
-        {/* ✨ Generate Preview button — shown on hover when no preview exists */}
+        {/* ? Generate Preview button � shown on hover when no preview exists */}
         {showButton && (
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ background: "rgba(0,0,0,0.28)" }}>
             <button
@@ -839,7 +839,7 @@ function ColorSwatch({
   );
 }
 
-/* ─── Main component ────────────────────────────────────────────────────── */
+/* --- Main component ------------------------------------------------------ */
 export function ColorAnalysisCard({
   data,
   photoUrl,
@@ -889,7 +889,7 @@ export function ColorAnalysisCard({
   const makeupColors = preset.makeup;
 
   const pill = "px-5 py-1 rounded-full text-[10px] uppercase tracking-[0.16em] font-semibold inline-block";
-  const pillStyle = { background: "#F0E8DC", color: "#9C7D5B", border: "1px solid #E8DDD0" };
+  const pillStyle = { background: "var(--color-border)", color: "var(--rose-gold)", border: "1px solid var(--color-border)" };
   const sectionTitle = "text-[11px] uppercase tracking-[0.16em] font-bold";
 
   const metalGradients: Record<string, [string, string]> = {
@@ -911,17 +911,17 @@ export function ColorAnalysisCard({
   }
 
   return (
-    <div className="overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0", borderRadius: 12 }}>
+    <div className="overflow-hidden" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 12 }}>
 
-      {/* ── Top half: photo LEFT + info RIGHT ─────────────────────────────── */}
+      {/* -- Top half: photo LEFT + info RIGHT ------------------------------- */}
       <div className="flex flex-col md:flex-row">
 
-        {/* Photo — fills left half, same height as info panel */}
+        {/* Photo � fills left half, same height as info panel */}
         <div
           className="relative flex-shrink-0 w-full md:w-[53%]"
           style={{
             aspectRatio: "0.785 / 1",
-            background: "#EDE3D8",
+            background: "var(--report-photo-bg)",
           }}
         >
           {photoUrl ? (
@@ -934,19 +934,19 @@ export function ColorAnalysisCard({
               style={{ objectPosition: "top center" }}
             />
           ) : (
-            <div className="flex h-full items-center justify-center" style={{ color: "#9C7D5B" }}>No photo</div>
+            <div className="flex h-full items-center justify-center" style={{ color: "var(--rose-gold)" }}>No photo</div>
           )}
         </div>
 
         {/* Info panel */}
         <div
           className="flex flex-col justify-center gap-6 px-8 py-8 flex-1"
-          style={{ background: "#FDFAF6" }}
+          style={{ background: "var(--color-surface)" }}
         >
           {/* Big heading */}
           <h2
             className="text-right text-[2rem] font-black uppercase tracking-[0.16em] leading-none"
-            style={{ color: "#3D2B1F" }}
+            style={{ color: "var(--ink)" }}
           >
             Color Analysis
           </h2>
@@ -956,7 +956,7 @@ export function ColorAnalysisCard({
             <span className={pill} style={pillStyle}>Season</span>
             <p
               className="text-[1.9rem] font-black uppercase tracking-[0.07em] text-center leading-tight"
-              style={{ color: "#3D2B1F" }}
+              style={{ color: "var(--ink)" }}
             >
               {data.season}
             </p>
@@ -968,7 +968,7 @@ export function ColorAnalysisCard({
               <span
                 key={c.hex}
                 className="h-14 w-14 rounded-full"
-                style={{ backgroundColor: c.hex, border: "3px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.15)", display: "inline-block" }}
+                style={{ backgroundColor: c.hex, border: "3px solid var(--report-swatch-ring)", boxShadow: "0 1px 4px rgba(0,0,0,0.15)", display: "inline-block" }}
                 title={c.name}
               />
             ))}
@@ -980,8 +980,8 @@ export function ColorAnalysisCard({
             <div className="flex gap-10 justify-center mt-1">
               {characteristics.map((c) => (
                 <div key={c.label} className="flex flex-col items-center gap-1">
-                  <span style={{ color: "#9C7D5B" }}>{c.icon}</span>
-                  <span className="text-[12px]" style={{ color: "#6B5344" }}>{c.label}</span>
+                  <span style={{ color: "var(--rose-gold)" }}>{c.icon}</span>
+                  <span className="text-[12px]" style={{ color: "var(--ink-stone)" }}>{c.label}</span>
                 </div>
               ))}
             </div>
@@ -995,7 +995,7 @@ export function ColorAnalysisCard({
                 <span
                   key={n.hex}
                   className="h-11 w-11 rounded-full"
-                  style={{ backgroundColor: n.hex, border: "2px solid #fff", boxShadow: "0 1px 3px rgba(0,0,0,0.12)", display: "inline-block" }}
+                  style={{ backgroundColor: n.hex, border: "2px solid var(--report-swatch-ring)", boxShadow: "0 1px 3px rgba(0,0,0,0.12)", display: "inline-block" }}
                   title={n.name}
                 />
               ))}
@@ -1017,33 +1017,33 @@ export function ColorAnalysisCard({
             >
               <span
                 className="h-5 w-5 shrink-0 rounded-full"
-                style={{ backgroundColor: data.clothingObservation.hex, border: "2px solid #fff", display: "inline-block" }}
+                style={{ backgroundColor: data.clothingObservation.hex, border: "2px solid var(--report-swatch-ring)", display: "inline-block" }}
               />
-              <p className="text-[10px] leading-snug" style={{ color: "#3D2B1F" }}>
+              <p className="text-[10px] leading-snug" style={{ color: "var(--ink)" }}>
                 <span className="font-semibold">{data.clothingObservation.color}</span>
                 {data.clothingObservation.effect === "flattering"
-                  ? " — flattering for your palette"
+                  ? " � flattering for your palette"
                   : data.clothingObservation.effect === "clashing"
-                  ? " — clashes with your coloring"
-                  : " — neutral for your season"}
+                  ? " � clashes with your coloring"
+                  : " � neutral for your season"}
               </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── COLOR COMPARISON divider ─────────────────────────────────────── */}
+      {/* -- COLOR COMPARISON divider --------------------------------------- */}
       <div
         className="flex items-center justify-center gap-3 py-3 px-6"
-        style={{ background: "#F5EFE7", borderTop: "1px solid #E8DDD0", borderBottom: "1px solid #E8DDD0" }}
+        style={{ background: "var(--infographic-frame)", borderTop: "1px solid var(--color-border)", borderBottom: "1px solid var(--color-border)" }}
       >
-        <span style={{ color: "#C8A96E", fontSize: 12 }}>✦</span>
-        <p className={sectionTitle} style={{ color: "#9C7D5B", letterSpacing: "0.22em" }}>Color Comparison</p>
-        <span style={{ color: "#C8A96E", fontSize: 12 }}>✦</span>
+        <span style={{ color: "var(--rose-gold)", fontSize: 12 }}>?</span>
+        <p className={sectionTitle} style={{ color: "var(--rose-gold)", letterSpacing: "0.22em" }}>Color Comparison</p>
+        <span style={{ color: "var(--rose-gold)", fontSize: 12 }}>?</span>
       </div>
 
-      {/* ── Best Colors ──────────────────────────────────────────────────── */}
-      <div className="px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #E8DDD0" }}>
+      {/* -- Best Colors ---------------------------------------------------- */}
+      <div className="px-4 pt-4 pb-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center gap-2 mb-2.5">
           <span
             className="flex h-5 w-5 items-center justify-center rounded-full"
@@ -1051,7 +1051,7 @@ export function ColorAnalysisCard({
           >
             <Check className="h-3 w-3 text-white" />
           </span>
-          <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Best Colors</p>
+          <p className={sectionTitle} style={{ color: "var(--ink)" }}>Best Colors</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {bestSix.map((c, i) => (
@@ -1067,8 +1067,8 @@ export function ColorAnalysisCard({
         </div>
       </div>
 
-      {/* ── Less Flattering ──────────────────────────────────────────────── */}
-      <div className="px-4 pt-3 pb-4" style={{ borderBottom: "1px solid #E8DDD0" }}>
+      {/* -- Less Flattering ------------------------------------------------ */}
+      <div className="px-4 pt-3 pb-4" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center gap-2 mb-2.5">
           <span
             className="flex h-5 w-5 items-center justify-center rounded-full"
@@ -1076,7 +1076,7 @@ export function ColorAnalysisCard({
           >
             <X className="h-3 w-3 text-white" />
           </span>
-          <p className={sectionTitle} style={{ color: "#3D2B1F" }}>Less Flattering</p>
+          <p className={sectionTitle} style={{ color: "var(--ink)" }}>Less Flattering</p>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {avoidSix.map((c, i) => (
@@ -1092,7 +1092,7 @@ export function ColorAnalysisCard({
         </div>
       </div>
 
-      {/* ── Bottom 3-col: Metals | Prints | Makeup ───────────────────────── */}
+      {/* -- Bottom 3-col: Metals | Prints | Makeup ------------------------- */}
       <div
         className="grid grid-cols-1 sm:grid-cols-3"
         style={{ borderTop: "none" }}
@@ -1100,14 +1100,14 @@ export function ColorAnalysisCard({
         {/* Best Metals */}
         <div
           className="flex flex-col items-center gap-3 py-6 px-5"
-          style={{ borderRight: "1px solid #E8DDD0" }}
+          style={{ borderRight: "1px solid var(--color-border)" }}
         >
-          <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Best Metals</p>
+          <p className={sectionTitle} style={{ color: "var(--rose-gold)" }}>Best Metals</p>
           <div className="flex gap-6 justify-center">
             {preset.metals.slice(0, 2).map((metal) => (
               <div key={metal} className="flex flex-col items-center gap-1.5">
                 <MetalRing gradient={metalGrad(metal)} />
-                <span className="text-[11px] font-medium" style={{ color: "#3D2B1F" }}>{metal}</span>
+                <span className="text-[11px] font-medium" style={{ color: "var(--ink)" }}>{metal}</span>
               </div>
             ))}
           </div>
@@ -1116,9 +1116,9 @@ export function ColorAnalysisCard({
         {/* Best Prints */}
         <div
           className="flex flex-col items-center gap-3 py-6 px-5"
-          style={{ borderRight: "1px solid #E8DDD0" }}
+          style={{ borderRight: "1px solid var(--color-border)" }}
         >
-          <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Best Prints</p>
+          <p className={sectionTitle} style={{ color: "var(--rose-gold)" }}>Best Prints</p>
           <div className="flex gap-3 justify-center">
             {preset.prints.map((p) => <PrintSwatch key={p.label} {...p} />)}
           </div>
@@ -1126,7 +1126,7 @@ export function ColorAnalysisCard({
 
         {/* Best Makeup */}
         <div className="flex flex-col items-center gap-3 py-6 px-5">
-          <p className={sectionTitle} style={{ color: "#9C7D5B" }}>Makeup palette</p>
+          <p className={sectionTitle} style={{ color: "var(--rose-gold)" }}>Makeup palette</p>
           <div className="flex gap-4 justify-center">
             {makeupColors.map((c, i) => (
               <div key={c.hex} className="flex flex-col items-center gap-1">
@@ -1135,7 +1135,7 @@ export function ColorAnalysisCard({
                   : <MakeupLip hex={c.hex} />}
                 <span
                   className="text-[9px] text-center leading-tight max-w-[54px] whitespace-pre-line"
-                  style={{ color: "#6B5344" }}
+                  style={{ color: "var(--ink-stone)" }}
                 >
                   {c.name}
                 </span>

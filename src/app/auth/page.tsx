@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Mail, CheckCircle2, ArrowRight, Shield, Zap, Eye, Phone, ChevronLeft, Lock, EyeOff } from "lucide-react";
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient, isSupabaseBrowserConfigured } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
 import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
 
@@ -30,13 +30,9 @@ export default function AuthPage() {
   );
 }
 
-/** Shared input style */
-const inputStyle: React.CSSProperties = {
-  background: "rgba(251,231,242,0.92)",
-  border: "1px solid rgba(17,24,39,0.18)",
-  color: "#111827",
-  boxShadow: "inset 0 1px 0 rgba(17,24,39,0.10)",
-};
+/** Shared input class */
+const inputClassName =
+  "auth-input w-full rounded-xl text-sm placeholder:text-ink-mist focus:outline-none focus:ring-2 focus:ring-terracotta/30 transition-all";
 
 const OTP_LENGTH = 6;
 
@@ -152,11 +148,10 @@ function OtpBoxes({
           onKeyDown={(e) => handleKey(i, e)}
           onPaste={handlePaste}
           disabled={disabled}
-          className="w-11 text-center text-xl font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
+          className={`${inputClassName} text-center text-xl font-semibold`}
           style={{
-            ...inputStyle,
             height: "3.25rem",
-            borderColor: value[i] ? "rgba(17,24,39,0.6)" : "rgba(17,24,39,0.18)",
+            borderColor: value[i] ? "var(--terracotta)" : undefined,
           }}
         />
       ))}
@@ -190,6 +185,7 @@ function AuthContent() {
   const searchParams = useSearchParams();
   const nextPath = resolvePostAuthPath(searchParams);
   const phoneCountryLabel = useMemo(() => `${phoneCountry.iso} ${phoneCountry.dial}`, [phoneCountry]);
+  const supabaseConfigured = isSupabaseBrowserConfigured();
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -198,13 +194,17 @@ function AuthContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (!supabaseConfigured) return;
+
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
     void supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
       const target = resolvePostAuthPath(searchParams);
       window.location.replace(target);
     });
-  }, [searchParams]);
+  }, [searchParams, supabaseConfigured]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -230,10 +230,15 @@ function AuthContent() {
   // ── Email + password ─────────────────────────────────────────────────────
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!supabaseConfigured) {
+      setError("Auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
 
     if (emailMode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -277,10 +282,15 @@ function AuthContent() {
   // ── Email magic link (secondary / fallback) ───────────────────────────────
   async function handleMagicLink() {
     if (!email || cooldown > 0) return;
+    if (!supabaseConfigured) {
+      setError("Auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -307,6 +317,10 @@ function AuthContent() {
   async function handlePhoneSend(e: React.FormEvent) {
     e.preventDefault();
     if (cooldown > 0) return;
+    if (!supabaseConfigured) {
+      setError("Auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -318,6 +332,10 @@ function AuthContent() {
     }
 
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
 
     setLoading(false);
@@ -335,12 +353,20 @@ function AuthContent() {
   async function handleOtpVerify(e: React.FormEvent) {
     e.preventDefault();
     if (otp.length < OTP_LENGTH) return;
+    if (!supabaseConfigured) {
+      setError("Auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
     const e164 = sentE164 || toE164(phone, phoneCountry.dial);
 
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.verifyOtp({
       phone: e164,
       token: otp,
@@ -363,36 +389,35 @@ function AuthContent() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="hidden lg:flex flex-col justify-between p-12 text-ink relative overflow-hidden"
-      style={{ background: "linear-gradient(145deg, #fffafc 0%, #fffafc 45%, #fffafc 100%)" }}
+      className="auth-panel-brand hidden lg:flex flex-col justify-between p-12 text-ink relative overflow-hidden"
     >
-      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-2xl pointer-events-none" style={{ background: "rgba(17,24,39,0.12)" }} />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(17,24,39,0.10)" }} />
+      <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-terracotta/10 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-rose-gold/10 blur-3xl" />
       <motion.div variants={fadeUp}>
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.2)", backdropFilter: "blur(8px)" }}>
-            <Sparkles className="h-4 w-4" style={{ color: "#111827" }} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-espresso">
+            <Sparkles className="h-4 w-4 text-[var(--btn-fg)]" />
           </div>
-          <span className="font-sans text-xl" style={{ color: "#111827" }}>Renovaara</span>
+          <span className="font-display text-xl text-ink">Renovaara</span>
         </div>
       </motion.div>
       <div className="space-y-8">
         <motion.div variants={fadeUp}>
-          <h2 className="text-3xl font-sans leading-snug mb-4">Discover the colors and styles made for you</h2>
-          <p className="leading-relaxed" style={{ color: "rgba(17,24,39,0.8)" }}>One selfie is all it takes. Get your colour season, face-shape preview, and six analysis infographics in minutes.</p>
+          <h2 className="font-display text-3xl leading-snug mb-4">Discover the colours and styles made for you</h2>
+          <p className="text-ink-stone leading-relaxed">One selfie is all it takes. Get your colour season, face-shape preview, and six analysis infographics in minutes.</p>
         </motion.div>
         <motion.ul variants={staggerContainer} className="space-y-4">
           {FEATURES.map((f) => (
             <motion.li key={f.text} variants={fadeUp} className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.15)" }}>
-                <f.icon className="h-4 w-4" style={{ color: "#111827" }} />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-terracotta/15">
+                <f.icon className="h-4 w-4 text-terracotta" />
               </div>
-              <span className="text-sm" style={{ color: "rgba(17,24,39,0.9)" }}>{f.text}</span>
+              <span className="text-sm text-ink-stone">{f.text}</span>
             </motion.li>
           ))}
         </motion.ul>
       </div>
-      <motion.div variants={fadeUp} className="text-sm" style={{ color: "rgba(17,24,39,0.85)" }}>
+      <motion.div variants={fadeUp} className="text-sm text-ink-mist">
         Trusted by 50,000+ style enthusiasts
       </motion.div>
     </motion.div>
@@ -407,16 +432,14 @@ function AuthContent() {
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="flex items-center justify-center p-6 sm:p-12"
-        style={{ background: "#fffafc" }}
+        className="flex items-center justify-center bg-[var(--color-background)] p-6 sm:p-12"
       >
         <div className="w-full max-w-md space-y-8">
-          {/* Mobile logo */}
           <motion.div variants={fadeUp} className="flex items-center gap-2 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full text-obsidian" style={{ background: "#111827" }}>
-              <Sparkles className="h-4 w-4" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-espresso">
+              <Sparkles className="h-4 w-4 text-[var(--btn-fg)]" />
             </div>
-            <span className="font-sans text-xl text-ink">Renovaara</span>
+            <span className="font-display text-xl text-ink">Renovaara</span>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -424,10 +447,10 @@ function AuthContent() {
             {/* ── MAGIC LINK SENT ───────────────────────────────────────── */}
             {tab === "email" && emailSent ? (
               <motion.div key="email-sent" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.15)" }}>
-                  <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sage/15">
+                  <CheckCircle2 className="h-8 w-8 text-sage" />
                 </div>
-                <h1 className="font-sans text-2xl text-ink">Check your inbox</h1>
+                <h1 className="font-display text-2xl text-ink">Check your inbox</h1>
                 <p className="text-ink-stone leading-relaxed">
                   We sent a magic link to <span className="font-medium text-ink">{email}</span>. Click it to sign in.
                 </p>
@@ -445,10 +468,10 @@ function AuthContent() {
 
             ) : tab === "email" && signupDone ? (
               <motion.div key="signup-done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(17,24,39,0.15)" }}>
-                  <CheckCircle2 className="h-8 w-8" style={{ color: "#7B6E9E" }} />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sage/15">
+                  <CheckCircle2 className="h-8 w-8 text-sage" />
                 </div>
-                <h1 className="font-sans text-2xl text-ink">Confirm your email</h1>
+                <h1 className="font-display text-2xl text-ink">Confirm your email</h1>
                 <p className="text-ink-stone leading-relaxed">
                   We sent a confirmation link to <span className="font-medium text-ink">{email}</span>. Click it to activate your account, then come back and sign in.
                 </p>
@@ -468,7 +491,7 @@ function AuthContent() {
                   <button onClick={() => { setOtpSent(false); setOtp(""); setError(null); }} className="flex items-center gap-1 text-sm text-ink-mist hover:text-ink transition-colors mb-6">
                     <ChevronLeft className="h-4 w-4" /> Back
                   </button>
-                  <h1 className="font-sans text-3xl text-ink mb-2">Enter the code</h1>
+                  <h1 className="font-display text-3xl text-ink mb-2">Enter the code</h1>
                   <p className="text-ink-stone text-sm">
                     We sent a {OTP_LENGTH}-digit code to <span className="font-medium text-ink">{sentE164 || phone}</span>
                   </p>
@@ -478,7 +501,7 @@ function AuthContent() {
                   <OtpBoxes value={otp} onChange={setOtp} disabled={loading} />
 
                   {error && (
-                    <p className="text-sm rounded-lg px-3 py-2 text-center" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>
+                    <p className="error-banner text-sm rounded-lg px-3 py-2 text-center">{error}</p>
                   )}
 
                   <Button type="submit" variant="accent" size="lg" disabled={loading || otp.length < OTP_LENGTH} className="w-full">
@@ -512,23 +535,28 @@ function AuthContent() {
 
               /* ── MAIN FORM ────────────────────────────────────────────────── */
               <motion.div key="main-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                {!supabaseConfigured && (
+                  <div className="rounded-xl border border-terracotta/25 bg-terracotta/10 px-4 py-3 text-sm text-ink-stone">
+                    <p className="font-medium text-ink">Local dev: auth not configured</p>
+                    <p className="mt-1 text-xs leading-relaxed">
+                      Add <code className="text-rose-gold">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
+                      <code className="text-rose-gold">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to{" "}
+                      <code className="text-rose-gold">.env.local</code> to enable sign-in.
+                    </p>
+                  </div>
+                )}
                 <div>
-                  <h1 className="font-sans text-3xl text-ink mb-2">Sign in to Renovaara</h1>
+                  <h1 className="font-display text-3xl text-ink mb-2">Sign in to Renovaara</h1>
                   <p className="text-ink-stone text-sm">No password needed — choose how you want to sign in.</p>
                 </div>
 
                 {/* Tab switcher */}
-                <div className="flex rounded-xl p-1 gap-1" style={{ background: "rgba(251,231,242,0.92)", border: "1px solid rgba(17,24,39,0.14)" }}>
+                <div className="flex gap-1 rounded-xl border border-[var(--color-border)] bg-blush/50 p-1">
                   {(["email", "phone"] as const).map((t) => (
                     <button
                       key={t}
                       onClick={() => switchTab(t)}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all"
-                      style={tab === t ? {
-                        background: "linear-gradient(135deg, rgba(17,24,39,0.25), rgba(232,201,144,0.15))",
-                        color: "#111827",
-                        boxShadow: "0 1px 0 rgba(17,24,39,0.10)",
-                      } : { color: "rgba(17,24,39,0.75)" }}
+                      className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${tab === t ? "auth-tab-active" : "auth-tab-inactive"}`}
                     >
                       {t === "email" ? <Mail className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
                       {t === "email" ? "Email" : "Phone"}
@@ -538,13 +566,12 @@ function AuthContent() {
 
                 {/* Sign in / Sign up toggle (email tab only) */}
                 {tab === "email" && (
-                  <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid rgba(17,24,39,0.14)" }}>
+                  <div className="flex overflow-hidden rounded-lg border border-[var(--color-border)]">
                     {(["signin", "signup"] as const).map((m) => (
                       <button
                         key={m}
                         onClick={() => { setEmailMode(m); setError(null); }}
-                        className="flex-1 py-2 text-xs font-medium transition-all"
-                        style={emailMode === m ? { background: "rgba(17,24,39,0.15)", color: "#111827" } : { color: "rgba(17,24,39,0.75)" }}
+                        className={`flex-1 py-2 text-xs font-medium transition-all ${emailMode === m ? "auth-tab-active" : "auth-tab-inactive"}`}
                       >
                         {m === "signin" ? "Sign in" : "Create account"}
                       </button>
@@ -568,8 +595,7 @@ function AuthContent() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
                             required
-                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
-                            style={inputStyle}
+                            className={`${inputClassName} pl-10 pr-4 py-3`}
                           />
                         </div>
                       </div>
@@ -585,8 +611,7 @@ function AuthContent() {
                             placeholder={emailMode === "signup" ? "Min 6 characters" : "Your password"}
                             required
                             minLength={6}
-                            className="w-full rounded-xl pl-10 pr-10 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
-                            style={inputStyle}
+                            className={`${inputClassName} pl-10 pr-10 py-3`}
                           />
                           <button
                             type="button"
@@ -598,8 +623,8 @@ function AuthContent() {
                           </button>
                         </div>
                       </div>
-                      {error && <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>}
-                      <Button type="submit" variant="accent" size="lg" disabled={loading || !email || !password} className="w-full group">
+                      {error && <p className="error-banner text-sm rounded-lg px-3 py-2">{error}</p>}
+                      <Button type="submit" variant="accent" size="lg" disabled={loading || !email || !password || !supabaseConfigured} className="w-full group">
                         {loading ? (
                           <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />{emailMode === "signin" ? "Signing in…" : "Creating account…"}</span>
                         ) : (
@@ -615,7 +640,7 @@ function AuthContent() {
                         <button
                           type="button"
                           onClick={handleMagicLink}
-                          disabled={!email || loading || cooldown > 0}
+                          disabled={!email || loading || cooldown > 0 || !supabaseConfigured}
                           className="underline hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {cooldown > 0 ? `Send magic link (${cooldown}s)` : "Send me a magic link"}
@@ -637,8 +662,8 @@ function AuthContent() {
                               const selected = COUNTRY_OPTIONS.find((c) => c.iso === e.target.value);
                               if (selected) setPhoneCountry(selected);
                             }}
-                            className="rounded-xl px-3 text-sm focus:outline-none focus:ring-2"
-                            style={{ ...inputStyle, minWidth: "7.25rem" }}
+                            className={`${inputClassName} px-3`}
+                            style={{ minWidth: "7.25rem" }}
                           >
                             {COUNTRY_OPTIONS.map((c) => (
                               <option key={c.iso} value={c.iso}>
@@ -655,15 +680,14 @@ function AuthContent() {
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="98765 43210"
                             required
-                            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-pink-400/60 transition-all"
-                            style={inputStyle}
+                            className={`${inputClassName} pl-10 pr-4 py-3`}
                           />
                           </div>
                         </div>
                         <p className="text-xs text-ink-mist">Detected country: {phoneCountryLabel}. You can change it from the dropdown.</p>
                       </div>
-                      {error && <p className="text-sm rounded-lg px-3 py-2" style={{ color: "#F87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)" }}>{error}</p>}
-                      <Button type="submit" variant="accent" size="lg" disabled={loading || !phone || cooldown > 0} className="w-full group">
+                      {error && <p className="error-banner text-sm rounded-lg px-3 py-2">{error}</p>}
+                      <Button type="submit" variant="accent" size="lg" disabled={loading || !phone || cooldown > 0 || !supabaseConfigured} className="w-full group">
                         {loading ? (
                           <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Sending code…</span>
                         ) : cooldown > 0 ? (
@@ -684,7 +708,7 @@ function AuthContent() {
                     <Link href="/privacy" className="underline hover:text-ink transition-colors">Privacy Policy</Link>.
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-ink-mist">
-                    <Shield className="h-3.5 w-3.5" style={{ color: "#7B6E9E" }} />
+                    <Shield className="h-3.5 w-3.5 text-sage" />
                     No password. No spam. Cancel anytime.
                   </div>
                 </div>

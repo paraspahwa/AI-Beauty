@@ -21,8 +21,9 @@ export default function PrivacyPage() {
     <main className="min-h-app-viewport py-20 px-4">
       <article className="container max-w-3xl mx-auto prose-legal">
         {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="font-sans text-4xl text-ink mb-3">Privacy Policy</h1>
+        <div className="legal-page-header">
+          <span className="foil-label mb-4 inline-flex">Legal</span>
+          <h1 className="legal-page-title">Privacy Policy</h1>
           <p className="text-sm text-ink-stone">Last updated: {LAST_UPDATED}</p>
         </div>
 
@@ -36,7 +37,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Questions about this policy? Reach us at{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-terracotta hover:underline">
               {CONTACT_EMAIL}
             </a>
             .
@@ -225,7 +226,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             To exercise any right, email{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-chrome-gold hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-terracotta hover:underline">
               {CONTACT_EMAIL}
             </a>{" "}
             with the subject line &ldquo;Data Request&rdquo;. We will respond within 30 days.
@@ -241,7 +242,7 @@ export default function PrivacyPage() {
         </Section>
 
         {/* Footer nav */}
-        <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap gap-4 text-sm text-ink-stone">
+        <div className="mt-16 flex flex-wrap gap-4 border-t border-terracotta/15 pt-8 text-sm text-ink-stone">
           <Link href="/terms" className="hover:text-ink transition-colors">Terms of Service</Link>
           <Link href="/" className="hover:text-ink transition-colors">← Back to Home</Link>
         </div>
@@ -254,7 +255,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-10">
-      <h2 className="font-sans text-2xl text-ink mb-4">{title}</h2>
+      <h2 className="font-display text-2xl text-ink mb-4">{title}</h2>
       <div className="space-y-3 text-ink-stone leading-relaxed text-[15px]">{children}</div>
     </section>
   );

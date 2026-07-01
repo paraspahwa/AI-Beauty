@@ -29,8 +29,8 @@ const SHAPE_ACCENT: Record<string, { bg: string; text: string; border: string }>
   circle:    { bg: "#fffafc", text: "#B45309", border: "#F59E0B" },
   square:    { bg: "#DBEAFE", text: "#1D4ED8", border: "#60A5FA" },
   rectangle: { bg: "#DBEAFE", text: "#1D4ED8", border: "#60A5FA" },
-  heart:     { bg: "#fffafc", text: "#111827", border: "#111827" },
-  diamond:   { bg: "#F3E8FF", text: "#111827", border: "#C084FC" },
+  heart:     { bg: "#fffafc", text: "#B8734A", border: "#B8734A" },
+  diamond:   { bg: "#F3E8FF", text: "#2c1810", border: "#C084FC" },
   oblong:    { bg: "#D1FAE5", text: "#065F46", border: "#34D399" },
 };
 function shapeAccent(shape?: string) {
@@ -92,7 +92,7 @@ function IconSun() {
 }
 function IconHeart() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" style={{ color: "#C8A96E" }}>
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" style={{ color: "var(--rose-gold)" }}>
       <path d="M12 21C12 21 3 14 3 8a4 4 0 0 1 7-2.65A4 4 0 0 1 21 8c0 6-9 13-9 13z" />
     </svg>
   );
@@ -104,7 +104,7 @@ function IconHeart() {
 function FrameIllustration({ style, size = 48, animate = false, delay = 0 }: { style: string; size?: number; animate?: boolean; delay?: number }) {
   const s    = style.toLowerCase();
   const h    = Math.round(size * 0.44);
-  const col  = "#3D2B1F";
+  const col  = "#2c1810";
   const sw   = size < 44 ? 1.6 : 2;
 
   const vb = "0 0 64 28";
@@ -207,10 +207,10 @@ function FitGuideIllustration() {
   return (
     <svg viewBox="0 0 100 110" fill="none" className="h-28 w-auto mx-auto">
       {/* ── face outline ── */}
-      <ellipse cx="50" cy="48" rx="28" ry="35" stroke="#C8B89A" strokeWidth="1.2" strokeDasharray="3 2" />
+      <ellipse cx="50" cy="48" rx="28" ry="35" stroke="var(--report-placeholder-dash)" strokeWidth="1.2" strokeDasharray="3 2" />
       {/* ── neck ── */}
-      <line x1="42" y1="82" x2="40" y2="96" stroke="#C8B89A" strokeWidth="1.2" />
-      <line x1="58" y1="82" x2="60" y2="96" stroke="#C8B89A" strokeWidth="1.2" />
+      <line x1="42" y1="82" x2="40" y2="96" stroke="var(--report-placeholder-dash)" strokeWidth="1.2" />
+      <line x1="58" y1="82" x2="60" y2="96" stroke="var(--report-placeholder-dash)" strokeWidth="1.2" />
 
       {/* ── eyebrows ── */}
       <path d="M32 38 Q38 34 44 38" stroke="#9C7D5B" strokeWidth="1.4" strokeLinecap="round" fill="none" />
@@ -218,25 +218,25 @@ function FitGuideIllustration() {
 
       {/* ── frame: rectangular lenses + bridge + temples ── */}
       {/* left lens */}
-      <rect x="22" y="41" width="22" height="14" rx="2.5" stroke="#3D2B1F" strokeWidth="2" />
+      <rect x="22" y="41" width="22" height="14" rx="2.5" stroke="#2c1810" strokeWidth="2" />
       {/* right lens */}
-      <rect x="56" y="41" width="22" height="14" rx="2.5" stroke="#3D2B1F" strokeWidth="2" />
+      <rect x="56" y="41" width="22" height="14" rx="2.5" stroke="#2c1810" strokeWidth="2" />
       {/* bridge */}
-      <line x1="44" y1="48" x2="56" y2="48" stroke="#3D2B1F" strokeWidth="1.5" />
+      <line x1="44" y1="48" x2="56" y2="48" stroke="#2c1810" strokeWidth="1.5" />
       {/* left temple — follows face curve */}
-      <line x1="22" y1="48" x2="12" y2="48" stroke="#3D2B1F" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="22" y1="48" x2="12" y2="48" stroke="#2c1810" strokeWidth="1.8" strokeLinecap="round" />
       {/* right temple */}
-      <line x1="78" y1="48" x2="88" y2="48" stroke="#3D2B1F" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="78" y1="48" x2="88" y2="48" stroke="#2c1810" strokeWidth="1.8" strokeLinecap="round" />
 
       {/* ── annotation: top of frame follows brows ── */}
-      <line x1="22" y1="41" x2="22" y2="36" stroke="#C8A96E" strokeWidth="0.8" strokeDasharray="2 1" />
-      <line x1="78" y1="41" x2="78" y2="36" stroke="#C8A96E" strokeWidth="0.8" strokeDasharray="2 1" />
-      <line x1="22" y1="36" x2="78" y2="36" stroke="#C8A96E" strokeWidth="0.8" />
-      <text x="50" y="33" textAnchor="middle" fontSize="5" fill="#C8A96E" fontWeight="600">frame width</text>
+      <line x1="22" y1="41" x2="22" y2="36" stroke="#c9a87c" strokeWidth="0.8" strokeDasharray="2 1" />
+      <line x1="78" y1="41" x2="78" y2="36" stroke="#c9a87c" strokeWidth="0.8" strokeDasharray="2 1" />
+      <line x1="22" y1="36" x2="78" y2="36" stroke="#c9a87c" strokeWidth="0.8" />
+      <text x="50" y="33" textAnchor="middle" fontSize="5" fill="#c9a87c" fontWeight="600">frame width</text>
 
       {/* ── annotation: bridge sits on nose ── */}
-      <line x1="50" y1="55" x2="50" y2="62" stroke="#C8A96E" strokeWidth="0.8" strokeDasharray="2 1" />
-      <text x="50" y="67" textAnchor="middle" fontSize="5" fill="#C8A96E" fontWeight="600">bridge</text>
+      <line x1="50" y1="55" x2="50" y2="62" stroke="#c9a87c" strokeWidth="0.8" strokeDasharray="2 1" />
+      <text x="50" y="67" textAnchor="middle" fontSize="5" fill="#c9a87c" fontWeight="600">bridge</text>
 
       {/* ── annotation: temples align with ears ── */}
       <text x="50" y="105" textAnchor="middle" fontSize="5" fill="#9C7D5B">temples align with ears</text>
@@ -273,8 +273,8 @@ export function SpectaclesCard({
 
   const goalIcons = [Scale, IconFaceWithGlasses, Eye];
   const sectionTitle = "text-[10px] uppercase tracking-[0.18em] font-semibold text-center";
-  const warmBrown = { color: "#9C7D5B" };
-  const bg = { background: "#FDFAF6", border: "1px solid #E8DDD0" };
+  const warmBrown = { color: "var(--rose-gold)" };
+  const bg = { background: "var(--color-surface)", border: "1px solid var(--color-border)" };
 
   const quickTips = [
     { icon: <IconSun />, text: "Consider anti-reflective & UV protection" },
@@ -296,24 +296,24 @@ export function SpectaclesCard({
     <div className="rounded-3xl overflow-hidden" style={bg}>
 
       {/* ── Header ── */}
-      <div className="text-center pt-8 pb-4 px-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
+      <div className="text-center pt-8 pb-4 px-6" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center justify-center gap-3 mb-1">
-          <span style={{ color: "#C8A96E", fontSize: 16 }}>✦</span>
-          <h2 className="text-3xl font-sans" style={{ color: "#3D2B1F" }}>Spectacles Guide</h2>
-          <span style={{ color: "#C8A96E", fontSize: 16 }}>✦</span>
+          <span style={{ color: "var(--rose-gold)", fontSize: 16 }}>✦</span>
+          <h2 className="text-3xl font-sans" style={{ color: "var(--ink)" }}>Spectacles Guide</h2>
+          <span style={{ color: "var(--rose-gold)", fontSize: 16 }}>✦</span>
         </div>
-        <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: "#9C7D5B" }}>
+        <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: "var(--rose-gold)" }}>
           Find Frames That Flatter You
         </p>
       </div>
 
       {/* ── Hero 3-col ── */}
-      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_200px]" style={{ borderBottom: "1px solid #E8DDD0" }}>
+      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_200px]" style={{ borderBottom: "1px solid var(--color-border)" }}>
 
         {/* Left: Your Face Shape */}
-        <div className="p-5 flex flex-col gap-3" style={{ borderRight: "1px solid #E8DDD0" }}>
-          <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>
+        <div className="p-5 flex flex-col gap-3" style={{ borderRight: "1px solid var(--color-border)" }}>
+          <div className="rounded-2xl p-4" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--rose-gold)" }}>
               Your Face Shape
             </p>
             {/* Shape-specific accent badge */}
@@ -323,13 +323,13 @@ export function SpectaclesCard({
             >
               <IconFaceOutline shape={faceShape} />
             </div>
-            <p className="font-sans text-lg text-center mt-1 mb-3 font-semibold" style={{ color: accent.text }}>
+            <p className="font-display text-lg text-center mt-1 mb-3 font-semibold" style={{ color: accent.text }}>
               {faceShape ?? "Oval"}
             </p>
             <ul className="space-y-1.5">
               {(faceTraits ?? ["Balanced proportions", "Gentle curves", "Slightly narrower chin"]).slice(0, 3).map((t, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-xs" style={{ color: "#6B5344" }}>
-                  <span className="mt-0.5 shrink-0" style={{ color: "#9C7D5B" }}>•</span>
+                <li key={i} className="flex items-start gap-1.5 text-xs" style={{ color: "var(--ink-stone)" }}>
+                  <span className="mt-0.5 shrink-0" style={{ color: "var(--rose-gold)" }}>•</span>
                   {t}
                 </li>
               ))}
@@ -338,7 +338,7 @@ export function SpectaclesCard({
         </div>
 
         {/* Centre: photo */}
-        <div className="flex items-center justify-center p-4 min-h-[280px]" style={{ background: "#F5EFE7" }}>
+        <div className="flex items-center justify-center p-4 min-h-[280px]" style={{ background: "var(--infographic-frame)" }}>
           {firstReadyUrl || photoUrl ? (
             <div className="relative rounded-2xl overflow-hidden" style={{ maxWidth: 280, width: "100%" }}>
               <Image
@@ -375,25 +375,25 @@ export function SpectaclesCard({
             </div>
           ) : (
             <div className="flex items-center justify-center rounded-2xl" style={{
-              width: 220, height: 280, background: "#EDE3D8", border: "2px dashed #C8B89A",
+              width: 220, height: 280, background: "var(--report-photo-bg)", border: "2px dashed var(--report-placeholder-dash)",
             }}>
-              <span style={{ color: "#9C7D5B", fontSize: 36 }}>👤</span>
+              <span style={{ color: "var(--rose-gold)", fontSize: 36 }}>👤</span>
             </div>
           )}
         </div>
 
         {/* Right: Frame Goals */}
-        <div className="p-5 flex flex-col gap-3" style={{ borderLeft: "1px solid #E8DDD0" }}>
-          <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>
+        <div className="p-5 flex flex-col gap-3" style={{ borderLeft: "1px solid var(--color-border)" }}>
+          <div className="rounded-2xl p-4" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--rose-gold)" }}>
               Frame Goals
             </p>
             <ul className="space-y-3">
               {data.goals.slice(0, 3).map((g, i) => {
                 const Icon = goalIcons[i % goalIcons.length];
                 return (
-                  <li key={g} className="flex items-start gap-3 text-xs" style={{ color: "#6B5344" }}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+                  <li key={g} className="flex items-start gap-3 text-xs" style={{ color: "var(--ink-stone)" }}>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>
                       {typeof Icon === "function" && Icon.toString().includes("svg") ? <Icon /> : <Icon className="h-4 w-4" />}
                     </span>
                     {g}
@@ -406,31 +406,31 @@ export function SpectaclesCard({
       </div>
 
       {/* ── Try-On: Flattering Styles ── */}
-      <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
+      <div className="px-6 py-6" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center justify-center gap-3 mb-5">
-          <span style={{ color: "#C8A96E" }}>✦</span>
+          <span style={{ color: "var(--rose-gold)" }}>✦</span>
           <p className={sectionTitle} style={warmBrown}>Try-On: Flattering Styles</p>
-          <span style={{ color: "#C8A96E" }}>✦</span>
+          <span style={{ color: "var(--rose-gold)" }}>✦</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {data.recommended.slice(0, 5).map((r, i) => {
             return (
-            <div key={r.style} className="flex flex-col rounded-2xl overflow-hidden" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
+            <div key={r.style} className="flex flex-col rounded-2xl overflow-hidden" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
               {/* Style name header */}
-              <div className="text-center py-2 px-1" style={{ borderBottom: "1px solid #E8DDD0" }}>
-                <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#3D2B1F" }}>{r.style}</p>
+              <div className="text-center py-2 px-1" style={{ borderBottom: "1px solid var(--color-border)" }}>
+                <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "var(--ink)" }}>{r.style}</p>
               </div>
               {/* Photo or frame illustration or generate button */}
-              <div className="flex items-center justify-center" style={{ aspectRatio: "3/4", background: "#EDE3D8", position: "relative" }}>
+              <div className="flex items-center justify-center" style={{ aspectRatio: "3/4", background: "var(--report-photo-bg)", position: "relative" }}>
                     {/* SVG frame illustration — text-first, no AI preview generation */}
                     <div className="flex flex-col items-center gap-2 p-3">
                       <FrameIllustration style={r.style} size={56} animate delay={i * 0.08} />
-                      <span style={{ color: "#9C7D5B", fontSize: 11, textAlign: "center" }}>{r.style}</span>
+                      <span style={{ color: "var(--rose-gold)", fontSize: 11, textAlign: "center" }}>{r.style}</span>
                     </div>
                   </div>
               {/* Reason + heart */}
               <div className="p-2 text-center">
-                <p className="text-[10px] leading-tight mb-1" style={{ color: "#6B5344" }}>{r.reason}</p>
+                <p className="text-[10px] leading-tight mb-1" style={{ color: "var(--ink-stone)" }}>{r.reason}</p>
                 <IconHeart />
               </div>
             </div>
@@ -440,38 +440,38 @@ export function SpectaclesCard({
       </div>
 
       {/* ── Frame Recommendations ── */}
-      <div className="px-6 py-4" style={{ borderBottom: "1px solid #E8DDD0" }}>
+      <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div className="flex items-center justify-center gap-3 mb-4">
-          <span style={{ color: "#C8A96E" }}>✦</span>
+          <span style={{ color: "var(--rose-gold)" }}>✦</span>
           <p className={sectionTitle} style={warmBrown}>Frame Recommendations</p>
-          <span style={{ color: "#C8A96E" }}>✦</span>
+          <span style={{ color: "var(--rose-gold)" }}>✦</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Good Choices */}
-          <div className="rounded-2xl p-5" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
+          <div className="rounded-2xl p-5" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "#7BA05B" }}>
                 <Check className="h-3.5 w-3.5 text-white" />
               </span>
-              <p className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: "#3D2B1F" }}>Good Choices</p>
+              <p className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--ink)" }}>Good Choices</p>
             </div>
             {/* Frame icon row */}
             <div className="flex gap-3 mb-4 flex-wrap">
               {data.recommended.slice(0, 5).map((r) => (
                 <div key={r.style} className="flex flex-col items-center gap-1">
-                  <div className="rounded-lg p-2" style={{ background: "#EDE3D8" }}>
+                  <div className="rounded-lg p-2" style={{ background: "var(--report-photo-bg)" }}>
                     <FrameIllustration style={r.style} size={40} />
                   </div>
-                  <span className="text-[9px]" style={{ color: "#9C7D5B" }}>{r.style}</span>
+                  <span className="text-[9px]" style={{ color: "var(--rose-gold)" }}>{r.style}</span>
                 </div>
               ))}
             </div>
             {/* Fit tips as checklist */}
             <ul className="space-y-2">
               {data.fitTips.slice(0, 4).map((t) => (
-                <li key={t} className="flex items-start gap-2 text-xs" style={{ color: "#6B5344" }}>
+                <li key={t} className="flex items-start gap-2 text-xs" style={{ color: "var(--ink-stone)" }}>
                   <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "#7BA05B" }} /> {t}
                 </li>
               ))}
@@ -479,18 +479,18 @@ export function SpectaclesCard({
           </div>
 
           {/* Avoid These */}
-          <div className="rounded-2xl p-5" style={{ background: "#FDF5F0", border: "1px solid #F0D8CC" }}>
+          <div className="rounded-2xl p-5" style={{ background: "var(--report-accent-panel)", border: "1px solid var(--color-border)" }}>
             <div className="flex items-center gap-2 mb-3">
               <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "#C06B3E" }}>
                 <X className="h-3.5 w-3.5 text-white" />
               </span>
-              <p className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: "#3D2B1F" }}>Avoid These</p>
+              <p className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: "var(--ink)" }}>Avoid These</p>
             </div>
             {/* Avoid frame icon row */}
             <div className="flex gap-3 mb-4 flex-wrap">
               {data.avoid.slice(0, 4).map((r) => (
                 <div key={r.style} className="flex flex-col items-center gap-1">
-                  <div className="rounded-lg p-2" style={{ background: "#F5E8E0" }}>
+                  <div className="rounded-lg p-2" style={{ background: "var(--report-accent-panel-inner)" }}>
                     <FrameIllustration style={r.style} size={40} />
                   </div>
                   <span className="text-[9px]" style={{ color: "#C06B3E" }}>{r.style}</span>
@@ -499,7 +499,7 @@ export function SpectaclesCard({
             </div>
             <ul className="space-y-2">
               {data.avoid.map((r) => (
-                <li key={r.style} className="flex items-start gap-2 text-xs" style={{ color: "#6B5344" }}>
+                <li key={r.style} className="flex items-start gap-2 text-xs" style={{ color: "var(--ink-stone)" }}>
                   <X className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "#C06B3E" }} />
                   <span>{r.reason}</span>
                 </li>
@@ -510,7 +510,7 @@ export function SpectaclesCard({
       </div>
 
       {/* ── Bottom 3-col: Colors | Fit Guide | Quick Tips ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderTop: "1px solid #E8DDD0" } as React.CSSProperties}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderTop: "1px solid var(--color-border)" } as React.CSSProperties}>
 
         {/* Best Colors & Finishes */}
         <div className="p-5 flex flex-col gap-3">
@@ -518,23 +518,23 @@ export function SpectaclesCard({
           <div className="flex gap-3 flex-wrap">
             {data.colors.map((c) => (
               <div key={c.hex} className="flex flex-col items-center gap-1.5">
-                <span className="h-12 w-12 rounded-full shadow-md" style={{ backgroundColor: c.hex, border: "2px solid #fff" }} />
-                <span className="text-[10px] text-center" style={{ color: "#6B5344" }}>{c.name}</span>
+                <span className="h-12 w-12 rounded-full shadow-md" style={{ backgroundColor: c.hex, border: "2px solid var(--report-swatch-ring)" }} />
+                <span className="text-[10px] text-center" style={{ color: "var(--ink-stone)" }}>{c.name}</span>
               </div>
             ))}
           </div>
-          <p className="text-[10px] italic" style={{ color: "#9C7D5B" }}>
+          <p className="text-[10px] italic" style={{ color: "var(--rose-gold)" }}>
             Warm, natural tones complement your coloring beautifully.
           </p>
         </div>
 
         {/* Fit Guide */}
-        <div className="p-5 flex flex-col items-center gap-3" style={{ borderLeft: "1px solid #E8DDD0", borderRight: "1px solid #E8DDD0" }}>
+        <div className="p-5 flex flex-col items-center gap-3" style={{ borderLeft: "1px solid var(--color-border)", borderRight: "1px solid var(--color-border)" }}>
           <p className={sectionTitle} style={warmBrown}>Fit Guide</p>
           <FitGuideIllustration />
           <ul className="space-y-2 w-full">
             {fitPoints.map((pt) => (
-              <li key={pt} className="flex items-start gap-2 text-xs" style={{ color: "#6B5344" }}>
+              <li key={pt} className="flex items-start gap-2 text-xs" style={{ color: "var(--ink-stone)" }}>
                 <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "#7BA05B" }} /> {pt}
               </li>
             ))}
@@ -546,8 +546,8 @@ export function SpectaclesCard({
           <p className={sectionTitle} style={warmBrown}>Quick Tips</p>
           <ul className="space-y-4">
             {quickTips.map((qt, i) => (
-              <li key={i} className="flex items-start gap-3 text-xs" style={{ color: "#6B5344" }}>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+              <li key={i} className="flex items-start gap-3 text-xs" style={{ color: "var(--ink-stone)" }}>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>
                   {qt.icon}
                 </span>
                 {qt.text}

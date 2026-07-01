@@ -12,7 +12,7 @@ const STEPS = [
     icon: Eye,
     title: "Your beauty report starts here",
     body: "Upload one clear, front-facing selfie in natural light. Analysis takes about 60 seconds — unlock six analysis infographics and a PDF when you're ready.",
-    accent: "#111827",
+    accent: "#B8734A",
   },
 ];
 
@@ -47,19 +47,13 @@ export function OnboardingModal({ onDone }: Props) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.97 }}
           transition={{ duration: 0.25 }}
-          className="relative w-full max-w-sm rounded-3xl p-8 text-center"
-          style={{
-            background: "linear-gradient(160deg, #0E0E18 0%, #16162A 100%)",
-            border: "1px solid rgba(17,24,39,0.18)",
-            boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
-          }}
+          className="relative w-full max-w-sm rounded-3xl border border-terracotta/20 bg-[var(--color-surface)] p-8 text-center shadow-premium"
         >
           {/* Dismiss */}
           <button
             onClick={onDone}
             aria-label="Skip onboarding"
-            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-            style={{ background: "rgba(17,24,39,0.14)", color: "rgba(17,24,39,0.5)" }}
+            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-blush text-ink-mist transition-opacity hover:opacity-80"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -72,11 +66,11 @@ export function OnboardingModal({ onDone }: Props) {
             <Icon className="h-8 w-8" style={{ color: current.accent }} />
           </div>
 
-          <h2 className="mb-3 font-sans text-2xl" style={{ color: "#fffafc" }}>
+          <h2 className="mb-3 font-display text-2xl text-ink">
             {current.title}
           </h2>
 
-          <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(240,232,216,0.65)" }}>
+          <p className="mb-8 text-sm leading-relaxed text-ink-stone">
             {current.body}
           </p>
 
@@ -90,7 +84,7 @@ export function OnboardingModal({ onDone }: Props) {
                 className="h-1.5 rounded-full transition-all"
                 style={{
                   width: i === step ? "2rem" : "0.5rem",
-                  background: i === step ? current.accent : "rgba(255,255,255,0.2)",
+                  background: i === step ? current.accent : "var(--color-border)",
                 }}
               />
             ))}

@@ -67,7 +67,7 @@ export function VaultGallery() {
 
       {loading && (
         <div className={`flex flex-col items-center justify-center py-24 rounded-3xl ${styles.emptyState}`}>
-          <Loader2 className="h-10 w-10 animate-spin mb-4" style={{ color: "#9C7D5B" }} />
+          <Loader2 className="mb-4 h-10 w-10 animate-spin text-terracotta" />
           <p className="text-sm text-ink-stone">Loading your vault…</p>
         </div>
       )}
@@ -81,8 +81,8 @@ export function VaultGallery() {
 
       {!loading && !error && filtered.length === 0 && (
         <div className={`text-center py-24 rounded-3xl ${styles.emptyState}`}>
-          <Archive className="h-12 w-12 mx-auto mb-4 text-[rgba(17,24,39,0.3)]" />
-          <h2 className="font-sans text-2xl text-ink mb-2">Your vault is empty</h2>
+          <Archive className="mx-auto mb-4 h-12 w-12 text-terracotta/40" />
+          <h2 className="font-display text-2xl text-ink mb-2">Your vault is empty</h2>
           <p className="text-ink-stone mb-6 max-w-md mx-auto">
             Upload a selfie to generate analyses. Your photos and infographic results will appear here for download and sharing.
           </p>

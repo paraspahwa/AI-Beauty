@@ -20,12 +20,12 @@ export function DoAvoidGuidanceCard({ block, location = "homepage" }: DoAvoidGui
   }
 
   return (
-    <section className="rounded-2xl border bg-white/90 shadow-card p-4 sm:p-6 mb-6">
+    <section className="report-surface-card mb-6 p-4 sm:p-6">
       <button
         onClick={handleExpand}
         className="w-full text-left flex items-center justify-between gap-2 mb-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta rounded-lg"
       >
-        <h3 className="text-lg font-bold capitalize">{block.category}</h3>
+        <h3 className="font-display text-lg capitalize text-ink">{block.category}</h3>
         <span className="text-ink-stone text-sm select-none">{expanded ? "▲" : "▼"}</span>
       </button>
 
@@ -83,8 +83,7 @@ export function DoAvoidGuidanceCard({ block, location = "homepage" }: DoAvoidGui
         <div className="mt-5 text-center">
           <button
             onClick={handleExpand}
-            className="rounded-full px-5 py-2 text-sm font-semibold shadow-sm transition-opacity hover:opacity-80"
-            style={{ background: "#111827", color: "#fff" }}
+            className="rounded-full bg-espresso px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-80"
           >
             {expanded ? "Show less" : block.cta}
           </button>

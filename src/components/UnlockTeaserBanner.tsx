@@ -19,21 +19,12 @@ export function UnlockTeaserBanner({ hints, className = "" }: Props) {
       : "Unlock your complete beauty report — skin, color, hair, spectacles, and style guide.";
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-2xl border p-4 ${className}`}
-      style={{
-        background: "linear-gradient(135deg, rgba(253,250,246,0.98), rgba(251,231,242,0.92))",
-        borderColor: "rgba(17,24,39,0.12)",
-      }}
-    >
+    <div className={`dossier-card relative overflow-hidden !p-4 ${className}`}>
       <div className="flex items-start gap-3">
-        <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-          style={{ background: "rgba(17,24,39,0.08)" }}
-        >
-          <Sparkles className="h-4 w-4" style={{ color: "#111827" }} />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-terracotta/12">
+          <Sparkles className="h-4 w-4 text-terracotta" />
         </div>
-        <p className="text-sm leading-relaxed" style={{ color: "#3D2B1F" }}>
+        <p className="text-sm leading-relaxed text-ink-stone">
           {message}
         </p>
       </div>

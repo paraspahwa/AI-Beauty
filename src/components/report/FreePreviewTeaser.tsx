@@ -5,7 +5,6 @@ import type { ColorAnalysisResult } from "@/types/report";
 interface Props {
   colorAnalysis?: ColorAnalysisResult;
   summary?: string;
-  /** When true, mask full season reveal for progressive unlock. */
   teaserOnly?: boolean;
 }
 
@@ -13,37 +12,31 @@ export function FreePreviewTeaser({ colorAnalysis, summary, teaserOnly = true }:
   if (!colorAnalysis && !summary) return null;
 
   return (
-    <div className="mt-6 rounded-3xl p-6" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+    <div className="report-surface-panel mt-6 rounded-3xl p-6">
       {colorAnalysis ? (
         <div className="mb-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9C7D5B" }}>
-            Your color season preview
-          </p>
+          <p className="foil-label mb-2 border-none p-0">Your color season preview</p>
           {teaserOnly ? (
             <>
-              <h3 className="text-2xl font-normal" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
+              <h3 className="font-display text-2xl text-ink">
                 ? season — try a look to reveal
               </h3>
-              <p className="text-sm mt-2" style={{ color: "#6B5344" }}>
+              <p className="mt-2 text-sm text-ink-stone">
                 Your undertone and palette unlock as you explore looks in Try &amp; Shop.
               </p>
             </>
           ) : (
             <>
-              <h3 className="text-2xl font-normal" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
+              <h3 className="font-display text-2xl text-ink">
                 {colorAnalysis.season}
               </h3>
-              <p className="text-sm mt-1" style={{ color: "#6B5344" }}>
+              <p className="mt-1 text-sm text-ink-stone">
                 Undertone: {colorAnalysis.undertone}
               </p>
               {colorAnalysis.palette?.length ? (
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {colorAnalysis.palette.slice(0, 4).map((c) => (
-                    <span
-                      key={c.hex}
-                      className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs"
-                      style={{ background: "rgba(17,24,39,0.06)", color: "#3D2B1F" }}
-                    >
+                    <span key={c.hex} className="report-chip inline-flex items-center gap-2">
                       <span className="h-3 w-3 rounded-full border border-black/10" style={{ background: c.hex }} />
                       {c.name}
                     </span>
@@ -55,7 +48,7 @@ export function FreePreviewTeaser({ colorAnalysis, summary, teaserOnly = true }:
         </div>
       ) : null}
       {summary ? (
-        <p className="text-sm leading-relaxed line-clamp-3" style={{ color: "#6B5344" }}>
+        <p className="line-clamp-3 text-sm leading-relaxed text-ink-stone">
           {summary}
         </p>
       ) : null}

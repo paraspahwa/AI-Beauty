@@ -10,6 +10,9 @@ export const publicEnv = {
   supabase: {
     url: optional(process.env.NEXT_PUBLIC_SUPABASE_URL),
     anonKey: optional(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    isConfigured:
+      Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+      Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
   },
   razorpay: {
     keyId: optional(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),

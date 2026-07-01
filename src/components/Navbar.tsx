@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Menu, X, Camera, LayoutDashboard, LogOut, ChevronDown, Moon, Sun, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient, isSupabaseBrowserConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { PRODUCT_COPY } from "@/lib/product-copy";
 
@@ -26,6 +26,7 @@ export function Navbar() {
   const [user, setUser] = React.useState<User | null>(null);
   const [dashOpen, setDashOpen] = React.useState(false);
   const [theme, setTheme] = React.useState<"light" | "dark">("light");
+  const [themeMounted, setThemeMounted] = React.useState(false);
   const dashRef = React.useRef<HTMLDivElement>(null);
   const isHome = pathname === "/";
 
@@ -39,7 +40,11 @@ export function Navbar() {
 
   // Sync auth state
   React.useEffect(() => {
+    if (!isSupabaseBrowserConfigured()) return;
+
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -53,6 +58,7 @@ export function Navbar() {
     const stored = (localStorage.getItem("renovaara_theme") as "light" | "dark" | null) ?? "light";
     setTheme(stored);
     root.classList.toggle("dark", stored === "dark");
+    setThemeMounted(true);
   }, []);
 
   // Close dashboard dropdown on outside click
@@ -68,6 +74,7 @@ export function Navbar() {
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
     await supabase.auth.signOut();
     setUser(null);
     setMenuOpen(false);
@@ -134,9 +141,9 @@ export function Navbar() {
 
         {/* Right side CTA */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
-          <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="Toggle dark mode">
-            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-            {theme === "dark" ? "Light" : "Dark"}
+          <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="Toggle dark mode" suppressHydrationWarning>
+            {themeMounted && theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            <span suppressHydrationWarning>{themeMounted ? (theme === "dark" ? "Light" : "Dark") : "Theme"}</span>
           </Button>
           {user ? (
             <>
@@ -244,7 +251,8 @@ export function Navbar() {
                 ))}
               <div className="pt-3 flex flex-col gap-2 border-t border-[var(--color-border)]">
                 <Button variant="outline" className="w-full" onClick={toggleTheme}>
-                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {theme === "dark" ? "Light mode" : "Dark mode"}
+                  {themeMounted && theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}{" "}
+                  <span suppressHydrationWarning>{themeMounted ? (theme === "dark" ? "Light mode" : "Dark mode") : "Theme"}</span>
                 </Button>
                 {user ? (
                   <>

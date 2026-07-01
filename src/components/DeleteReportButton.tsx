@@ -11,7 +11,6 @@ export function DeleteReportButton({ reportId }: { reportId: string }) {
   const [error, setError] = React.useState<string | null>(null);
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clear error after 4 s automatically
   React.useEffect(() => {
     if (!error) return;
     const t = setTimeout(() => setError(null), 4000);
@@ -22,12 +21,10 @@ export function DeleteReportButton({ reportId }: { reportId: string }) {
     if (!confirmed) {
       setError(null);
       setConfirmed(true);
-      // Auto-reset confirmation state after 5 s if user doesn't click again
       timeoutRef.current = setTimeout(() => setConfirmed(false), 5000);
       return;
     }
 
-    // User confirmed — cancel the auto-reset timer
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -52,14 +49,7 @@ export function DeleteReportButton({ reportId }: { reportId: string }) {
 
   if (error) {
     return (
-      <span
-        className="shrink-0 flex items-center gap-1 rounded-lg px-2 py-1 text-xs"
-        style={{
-          background: "rgba(248,113,113,0.12)",
-          border: "1px solid rgba(248,113,113,0.3)",
-          color: "#F87171",
-        }}
-      >
+      <span className="error-banner flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs">
         {error}
       </span>
     );
@@ -70,12 +60,11 @@ export function DeleteReportButton({ reportId }: { reportId: string }) {
       onClick={handleDelete}
       disabled={pending}
       aria-label={confirmed ? "Confirm deletion" : "Delete report"}
-      className="shrink-0 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all hover:opacity-90 disabled:opacity-40"
-      style={{
-        background: confirmed ? "rgba(248,113,113,0.15)" : "rgba(17,24,39,0.10)",
-        border: `1px solid ${confirmed ? "rgba(248,113,113,0.4)" : "rgba(17,24,39,0.18)"}`,
-        color: confirmed ? "#F87171" : "rgba(17,24,39,0.45)",
-      }}
+      className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all hover:opacity-90 disabled:opacity-40 ${
+        confirmed
+          ? "border-red-300 bg-red-50 text-red-600"
+          : "border-[var(--color-border)] bg-blush/40 text-ink-mist hover:text-ink-stone"
+      }`}
     >
       {pending ? (
         <Loader2 className="h-4 w-4 animate-spin" />

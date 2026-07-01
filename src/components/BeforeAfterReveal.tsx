@@ -103,7 +103,7 @@ export function BeforeAfterReveal({
         aria-valuemax={100}
         aria-valuenow={Math.round(position)}
         tabIndex={0}
-        className="relative overflow-hidden rounded-2xl select-none touch-none outline-none focus-visible:ring-2 focus-visible:ring-[#111827]/30"
+        className="relative overflow-hidden rounded-2xl select-none touch-none outline-none focus-visible:ring-2 focus-visible:ring-terracotta/30"
         style={{ aspectRatio: "3/4", boxShadow: "0 6px 32px rgba(61,43,31,0.15)" }}
         onPointerDown={(e) => {
           dragging.current = true;
@@ -127,7 +127,7 @@ export function BeforeAfterReveal({
             className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full"
             style={{ background: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}
           >
-            <span className="text-xs font-bold" style={{ color: "#3D2B1F" }}>⇔</span>
+            <span className="text-xs font-bold" style={{ color: "var(--ink)" }}>⇔</span>
           </div>
         </div>
         <span className="absolute left-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider" style={{ background: "rgba(0,0,0,0.5)", color: "#fff" }}>
@@ -138,7 +138,7 @@ export function BeforeAfterReveal({
         </span>
       </div>
       {hintVisible ? (
-        <p className="mt-2 text-center text-xs" style={{ color: "#9C7D5B" }}>
+        <p className="mt-2 text-center text-xs" style={{ color: "var(--rose-gold)" }}>
           Drag to compare
         </p>
       ) : null}

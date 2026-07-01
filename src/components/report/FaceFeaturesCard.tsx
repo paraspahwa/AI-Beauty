@@ -1,13 +1,13 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import type { FaceShapeResult, FeatureBreakdown } from "@/types/report";
 
-// ── Confidence badge ──────────────────────────────────────────────────────────
+// -- Confidence badge ----------------------------------------------------------
 function ConfidenceBadge({ confidence }: { confidence: number }) {
   const pct    = Math.round(confidence * 100);
   const bg     = pct >= 80 ? "rgba(123,210,158,0.12)" : pct >= 65 ? "rgba(17,24,39,0.12)" : "rgba(248,113,113,0.10)";
-  const color  = pct >= 80 ? "#5AB882"                 : pct >= 65 ? "#111827"                : "#F87171";
+  const color  = pct >= 80 ? "#5AB882" : pct >= 65 ? "var(--espresso)" : "#F87171";
   const border = pct >= 80 ? "rgba(90,184,130,0.30)"   : pct >= 65 ? "rgba(17,24,39,0.30)" : "rgba(248,113,113,0.30)";
   const label  = pct >= 80 ? "High confidence"         : pct >= 65 ? "Good confidence"        : "Low confidence";
   return (
@@ -15,12 +15,12 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
       className="inline-flex items-center gap-1.5 text-[13px] px-5 py-2 rounded-full font-medium"
       style={{ background: bg, color, border: `1px solid ${border}` }}
     >
-      {label} · {pct}%
+      {label} � {pct}%
     </span>
   );
 }
 
-// ── Icons — thin, elegant line art exactly matching reference ─────────────────
+// -- Icons � thin, elegant line art exactly matching reference -----------------
 function IconFace() {
   return (
     <svg viewBox="0 0 36 44" fill="none" stroke="currentColor" strokeWidth="1.3" className="h-9 w-8">
@@ -82,7 +82,7 @@ const FEATURE_ICONS: Record<string, React.ReactNode> = {
   lips:      <IconLips />,
 };
 
-// ── Feature box ───────────────────────────────────────────────────────────────
+// -- Feature box ---------------------------------------------------------------
 function FeatureBox({
   featureKey,
   title,
@@ -94,7 +94,7 @@ function FeatureBox({
   subtitle: string;
   notes: string;
 }) {
-  // Split on period or semicolon — commas inside notes stay intact
+  // Split on period or semicolon � commas inside notes stay intact
   const bullets = notes
     .split(/[.;]/)
     .map((s) => s.trim())
@@ -105,31 +105,29 @@ function FeatureBox({
     <div
       className="rounded-2xl p-4 flex flex-col gap-2.5"
       style={{
-        background: "#FFFFFF",
-        border: "1px solid rgba(200,185,168,0.35)",
-        boxShadow: "0 1px 4px rgba(61,43,31,0.04)",
+        background: "var(--color-surface)",
+        border: "1px solid var(--color-border)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
       {/* Icon + label row */}
       <div className="flex items-center gap-3">
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-          style={{ background: "#F2EAE0", color: "#9C7D5B" }}
+          className="report-icon-circle flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
         >
           {FEATURE_ICONS[featureKey] ?? <IconFace />}
         </span>
         <div>
-          {/* ALL CAPS label — small, tracked */}
+          {/* ALL CAPS label � small, tracked */}
           <p
-            className="text-[10.5px] uppercase tracking-[0.20em] font-bold leading-none"
-            style={{ color: "#5C3D2E" }}
+            className="text-[10.5px] uppercase tracking-[0.20em] font-bold leading-none text-rose-gold"
           >
             {title}
           </p>
-          {/* Subtitle — large regular-weight serif */}
+          {/* Subtitle � large regular-weight serif */}
           <p
             className="text-[18px] font-normal leading-snug mt-[3px]"
-            style={{ color: "#2C1A10", fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            style={{ color: "var(--ink)", fontFamily: "'Georgia', 'Times New Roman', serif" }}
           >
             {subtitle}
           </p>
@@ -142,11 +140,11 @@ function FeatureBox({
           <li
             key={i}
             className="flex items-start gap-2 text-[13px] leading-snug"
-            style={{ color: "#3D2B1F" }}
+            style={{ color: "var(--ink)" }}
           >
             <span
               className="mt-[6px] shrink-0 rounded-full"
-              style={{ height: 5, width: 5, background: "#3D2B1F" }}
+              style={{ height: 5, width: 5, background: "var(--ink)" }}
             />
             {b}
           </li>
@@ -156,7 +154,7 @@ function FeatureBox({
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// -- Main component ------------------------------------------------------------
 interface Props {
   faceShape: FaceShapeResult;
   features?: FeatureBreakdown;
@@ -174,16 +172,16 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
   return (
     <div
       className="rounded-3xl"
-      style={{ background: "#F7F2EC" }}
+      style={{ background: "var(--infographic-frame)" }}
     >
-      {/* ── Title section ────────────────────────────────────────────────────── */}
+      {/* -- Title section ------------------------------------------------------ */}
       <div className="text-center pt-10 pb-4 px-6">
         <div className="flex items-center justify-center gap-4">
-          <span style={{ color: "#C8A96E", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
+          <span style={{ color: "var(--rose-gold)", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
           <h2
             className="text-[26px] sm:text-[36px] md:text-[46px] leading-tight"
             style={{
-              color: "#2C1A10",
+              color: "var(--ink)",
               fontFamily: "'Georgia', 'Times New Roman', serif",
               fontWeight: 400,
               letterSpacing: "-0.01em",
@@ -191,21 +189,21 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
           >
             Face Features Analysis
           </h2>
-          <span style={{ color: "#C8A96E", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
+          <span style={{ color: "var(--rose-gold)", fontSize: 20, lineHeight: 1 }}>&#10022;</span>
         </div>
 
-        {/* Divider: line · dot · line */}
+        {/* Divider: line � dot � line */}
         <div className="flex items-center justify-center mt-4 gap-3">
-          <div className="h-px flex-1 max-w-[80px]" style={{ background: "#D9CFC4" }} />
-          <div className="h-[5px] w-[5px] rounded-full" style={{ background: "#C8A96E" }} />
-          <div className="h-px flex-1 max-w-[80px]" style={{ background: "#D9CFC4" }} />
+          <div className="h-px flex-1 max-w-[80px] bg-[var(--color-border)]" />
+          <div className="h-[5px] w-[5px] rounded-full bg-rose-gold" />
+          <div className="h-px flex-1 max-w-[80px] bg-[var(--color-border)]" />
         </div>
       </div>
 
-      {/* ── 3-column body ─────────────────────────────────────────────────────── */}
+      {/* -- 3-column body ------------------------------------------------------- */}
       <div className={`grid gap-8 px-4 sm:px-6 md:px-10 pb-10 items-center ${showFeatures ? "grid-cols-1 md:grid-cols-[1fr_auto_1fr]" : "grid-cols-1 max-w-md mx-auto"}`}>
 
-        {/* Left column: Face Shape · Eyes · Nose */}
+        {/* Left column: Face Shape � Eyes � Nose */}
         <div className="flex flex-col gap-4">
           <FeatureBox
             featureKey="faceShape"
@@ -229,7 +227,7 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
               />
             </>
           ) : previewOnly ? (
-            <p className="text-sm text-center px-2" style={{ color: "#6B5344" }}>
+            <p className="text-sm text-center px-2" style={{ color: "var(--ink-stone)" }}>
               Unlock your full report to see detailed eyes, nose, lips, and cheek analysis.
             </p>
           ) : null}
@@ -256,12 +254,12 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
           ) : (
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(160deg,#DFD0BE,#C8B09A)" }}
+              style={{ background: "linear-gradient(160deg, var(--report-photo-bg), var(--report-placeholder-dash))" }}
             />
           )}
         </div>
 
-        {/* Right column: Eyebrows · Cheeks · Lips */}
+        {/* Right column: Eyebrows � Cheeks � Lips */}
         {showFeatures && features ? (
           <div className="flex flex-col gap-4">
             <FeatureBox
@@ -286,10 +284,10 @@ export function FaceFeaturesCard({ faceShape, features, blendedConfidence, photo
         ) : null}
       </div>
 
-      {/* ── Confidence footer ─────────────────────────────────────────────────── */}
+      {/* -- Confidence footer --------------------------------------------------- */}
       <div
         className="flex items-center justify-center px-6 py-5"
-        style={{ borderTop: "1px solid #E4D8CC" }}
+        style={{ borderTop: "1px solid var(--color-border)" }}
       >
         <ConfidenceBadge confidence={displayConfidence} />
       </div>

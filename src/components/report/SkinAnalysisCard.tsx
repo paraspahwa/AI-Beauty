@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import * as React from "react";
@@ -20,8 +20,8 @@ const ZONE_ANIMATION_CSS = `
 const ZC = {
   forehead:   { stroke: "#F59E0B", fill: "rgba(245,158,11,0.10)",  delay: "0s"    },
   noseStrip:  { stroke: "#F59E0B", fill: "rgba(245,158,11,0.07)",  delay: "0.12s" },
-  leftCheek:  { stroke: "#111827", fill: "rgba(244,114,182,0.10)", delay: "0.28s" },
-  rightCheek: { stroke: "#111827", fill: "rgba(244,114,182,0.10)", delay: "0.44s" },
+  leftCheek:  { stroke: "#E879A9", fill: "rgba(244,114,182,0.10)", delay: "0.28s" },
+  rightCheek: { stroke: "#E879A9", fill: "rgba(244,114,182,0.10)", delay: "0.44s" },
   chin:       { stroke: "#FB923C", fill: "rgba(251,146,60,0.10)",  delay: "0.60s" },
 } as const;
 
@@ -88,7 +88,7 @@ function IconLightweight() {
 
 function OilLevel({ level }: { level: number }) {
   return (
-    <div className="flex gap-0.5" style={{ color: "#9C7D5B" }}>
+    <div className="flex gap-0.5" style={{ color: "var(--rose-gold)" }}>
       {[0, 1, 2].map((i) => <IconDrop key={i} filled={i < level} />)}
     </div>
   );
@@ -112,8 +112,8 @@ const BEST_MATCH_BENEFITS: Record<string, { icon: React.ReactNode; label: string
 
 const ZONE_ROWS = [
   { key: "T-Zone",  label: "T-ZONE",  icon: <IconDrop filled />,        thumbPosition: "50% 18%", zoneColor: "#F59E0B" },
-  { key: "Cheeks",  label: "CHEEKS",  icon: <IconDrop filled={false} />, thumbPosition: "50% 50%", zoneColor: "#111827" },
-  { key: "Pores",   label: "PORES",   icon: <IconPores />,               thumbPosition: "50% 42%", zoneColor: "#9C7D5B" },
+  { key: "Cheeks",  label: "CHEEKS",  icon: <IconDrop filled={false} />, thumbPosition: "50% 50%", zoneColor: "#E879A9" },
+  { key: "Pores",   label: "PORES",   icon: <IconPores />,               thumbPosition: "50% 42%", zoneColor: "var(--rose-gold)" },
   { key: "Texture", label: "TEXTURE", icon: <IconWave />,                thumbPosition: "50% 35%", zoneColor: "#FB923C" },
 ] as const;
 
@@ -176,7 +176,7 @@ function ZoneThumb({ photoUrl, thumbPosition, zoneColor, label }: { photoUrl?: s
   );
 }
 
-// ── Runtime helpers for backward-compat (old reports have string[] concerns + flat routine) ──
+// -- Runtime helpers for backward-compat (old reports have string[] concerns + flat routine) --
 
 type RawConcern = SkinConcern | string;
 
@@ -206,7 +206,7 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
   const skinType  = data.type;
   const compTypes = Array.from(new Set(["Oily", "Dry", skinType, "Sensitive"])).slice(0, 4);
   const sectionTitle = "text-[10px] uppercase tracking-[0.18em] font-semibold text-center";
-  const warmBrown    = { color: "#9C7D5B" };
+  const warmBrown    = { color: "var(--rose-gold)" };
 
   const zoneMap  = Object.fromEntries(data.zones.map((z) => [z.zone, z.observation]));
   const zoneRows = ZONE_ROWS.map((r) => {
@@ -233,10 +233,10 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: ZONE_ANIMATION_CSS }} />
-      <div className="rounded-3xl overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+      <div className="rounded-3xl overflow-hidden" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
 
-        <div className="grid grid-cols-1 md:grid-cols-2" style={{ borderBottom: "1px solid #E8DDD0" }}>
-          <div className="relative min-h-[320px] md:min-h-[460px]" style={{ background: "#EDE3D8" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ borderBottom: "1px solid var(--color-border)" }}>
+          <div className="relative min-h-[320px] md:min-h-[460px]" style={{ background: "var(--report-photo-bg)" }}>
             {photoUrl ? (
               <>
                 <Image src={photoUrl} alt="Skin analysis photo" fill unoptimized className="object-cover object-top" />
@@ -250,41 +250,41 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                 </div>
               </>
             ) : (
-              <div className="flex h-full items-center justify-center" style={{ color: "#9C7D5B" }}>No photo</div>
+              <div className="flex h-full items-center justify-center" style={{ color: "var(--rose-gold)" }}>No photo</div>
             )}
           </div>
 
-          <div className="flex flex-col justify-center gap-0 divide-y" style={{ borderLeft: "1px solid #E8DDD0" }}>
+          <div className="flex flex-col justify-center gap-0 divide-y" style={{ borderLeft: "1px solid var(--color-border)" }}>
             <div className="px-8 py-5">
-              <h2 className="text-2xl font-black uppercase tracking-[0.12em] text-right" style={{ color: "#3D2B1F" }}>Skin Analysis</h2>
+              <h2 className="text-2xl font-black uppercase tracking-[0.12em] text-right" style={{ color: "var(--ink)" }}>Skin Analysis</h2>
             </div>
             {zoneRows.map((z) => (
-              <div key={z.key} className="flex items-center gap-5 px-6 py-4" style={{ borderColor: "#E8DDD0" }}>
+              <div key={z.key} className="flex items-center gap-5 px-6 py-4" style={{ borderColor: "var(--color-border)" }}>
                 <ZoneThumb photoUrl={photoUrl} thumbPosition={z.thumbPosition} zoneColor={z.zoneColor} label={z.label} />
                 <div className="flex-1">
                   <p className="text-[11px] uppercase tracking-[0.18em] font-bold mb-0.5" style={{ color: z.zoneColor }}>{z.label}</p>
-                  <p className="text-sm" style={{ color: "#6B5344" }}>{z.observation}</p>
-                  {(z.key === "T-Zone" || z.key === "Cheeks") ? <OilLevel level={z.oilLevel} /> : <div className="mt-1" style={{ color: "#9C7D5B" }}>{z.icon}</div>}
+                  <p className="text-sm" style={{ color: "var(--ink-stone)" }}>{z.observation}</p>
+                  {(z.key === "T-Zone" || z.key === "Cheeks") ? <OilLevel level={z.oilLevel} /> : <div className="mt-1" style={{ color: "var(--rose-gold)" }}>{z.icon}</div>}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        <div className="px-6 py-6" style={{ borderBottom: "1px solid var(--color-border)" }}>
           <div className="flex items-center justify-center gap-3 mb-5">
-            <span style={{ color: "#C8A96E", fontSize: 14 }}>&#10022;</span>
+            <span style={{ color: "var(--rose-gold)", fontSize: 14 }}>&#10022;</span>
             <p className={sectionTitle} style={warmBrown}>Skin Type Comparison</p>
-            <span style={{ color: "#C8A96E", fontSize: 14 }}>&#10022;</span>
+            <span style={{ color: "var(--rose-gold)", fontSize: 14 }}>&#10022;</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {compTypes.map((type) => {
               const isMatch = type === skinType;
               const traits  = SKIN_TYPE_TRAITS[type] ?? SKIN_TYPE_TRAITS["Combination"];
               return (
-                <div key={type} className="flex flex-col rounded-2xl overflow-hidden" style={{ border: isMatch ? "2px solid #9C7D5B" : "1px solid #E8DDD0", background: isMatch ? "#F5EFE7" : "#FDFAF6" }}>
-                  <div className="flex items-center justify-between px-3 py-2" style={{ background: isMatch ? "#EDE3D8" : "#F5EFE7", borderBottom: "1px solid #E8DDD0" }}>
-                    <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: "#3D2B1F" }}>{type}</p>
+                <div key={type} className="flex flex-col rounded-2xl overflow-hidden" style={{ border: isMatch ? "2px solid var(--rose-gold)" : "1px solid var(--color-border)", background: isMatch ? "var(--infographic-frame)" : "var(--color-surface)" }}>
+                  <div className="flex items-center justify-between px-3 py-2" style={{ background: isMatch ? "var(--report-photo-bg)" : "var(--infographic-frame)", borderBottom: "1px solid var(--color-border)" }}>
+                    <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: "var(--ink)" }}>{type}</p>
                     <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: isMatch ? "#7BA05B" : "#C06B3E" }}>
                       {isMatch ? <Check className="h-3 w-3 text-white" /> : <X className="h-3 w-3 text-white" />}
                     </span>
@@ -300,11 +300,11 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                     )}
                     {isMatch && <ZoneOverlay small={true} />}
                   </div>
-                  <div className="flex justify-around px-2 py-3" style={{ borderTop: "1px solid #E8DDD0" }}>
+                  <div className="flex justify-around px-2 py-3" style={{ borderTop: "1px solid var(--color-border)" }}>
                     {traits.map((t, i) => (
                       <div key={i} className="flex flex-col items-center gap-1 text-center">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{t.icon}</span>
-                        <span className="text-[9px] leading-tight max-w-[40px]" style={{ color: "#6B5344" }}>{t.label}</span>
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>{t.icon}</span>
+                        <span className="text-[9px] leading-tight max-w-[40px]" style={{ color: "var(--ink-stone)" }}>{t.label}</span>
                       </div>
                     ))}
                   </div>
@@ -316,20 +316,20 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
 
         <div className="px-6 py-6">
           <div className="flex items-center justify-center gap-3 mb-4">
-              <span style={{ color: "#C8A96E" }}>&#10022;</span>
+              <span style={{ color: "var(--rose-gold)" }}>&#10022;</span>
               <p className={sectionTitle} style={warmBrown}>Best Match</p>
-              <span style={{ color: "#C8A96E" }}>&#10022;</span>
+              <span style={{ color: "var(--rose-gold)" }}>&#10022;</span>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-5">
-              <div className="flex items-center gap-3 px-6 py-4 rounded-2xl min-w-[220px] justify-center" style={{ background: "#8B7D6B", color: "#fff" }}>
+              <div className="flex items-center gap-3 px-6 py-4 rounded-2xl min-w-[220px] justify-center" style={{ background: "var(--report-brown-banner)", color: "#fff" }}>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(255,255,255,0.2)" }}><IconDrop filled /></span>
                 <p className="text-base font-black uppercase tracking-widest">{skinType} Skin</p>
               </div>
               <div className="flex gap-6 justify-center flex-wrap">
                 {benefits.map((b, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 text-center">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B", border: "1px solid #E8DDD0" }}>{b.icon}</span>
-                    <span className="text-xs leading-tight max-w-[64px]" style={{ color: "#6B5344" }}>{b.label}</span>
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)", border: "1px solid var(--color-border)" }}>{b.icon}</span>
+                    <span className="text-xs leading-tight max-w-[64px]" style={{ color: "var(--ink-stone)" }}>{b.label}</span>
                   </div>
                 ))}
               </div>
@@ -340,7 +340,7 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
               <div className="mt-4 flex items-start gap-2 rounded-xl px-4 py-3" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#FBBF24" }} />
                 <p className="text-[11px] leading-relaxed" style={{ color: "#B8A780" }}>
-                  Image quality limited the skin read. Results are estimated — for best accuracy upload a clear, well-lit, unfiltered selfie.
+                  Image quality limited the skin read. Results are estimated ? for best accuracy upload a clear, well-lit, unfiltered selfie.
                 </p>
               </div>
             )}
@@ -348,7 +348,7 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
             {/* Concerns with severity badges */}
             {rawConcerns.length > 0 && (
               <div className="mt-5">
-                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "#9C7D5B" }}>Detected Concerns</p>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "var(--rose-gold)" }}>Detected Concerns</p>
                 <div className="flex flex-wrap gap-2">
                   {rawConcerns.map((c, i) => {
                     const sev = getConcernSeverity(c);
@@ -369,15 +369,15 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
               </div>
             )}
 
-            {/* Routine — AM/PM tabs (new) or flat list (legacy) */}
+            {/* Routine ? AM/PM tabs (new) or flat list (legacy) */}
             {(amPm ? (amSteps.length > 0 || pmSteps.length > 0) : (data.routine as {step:string;product:string}[]).length > 0) && (
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#9C7D5B" }}>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "var(--rose-gold)" }}>
                     {amPm ? "Daily Routine" : "Recommended Routine"}
                   </p>
                   {amPm && (
-                    <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid #E8DDD0" }}>
+                    <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
                       {(["am", "pm"] as const).map((tab) => (
                         <button
                           key={tab}
@@ -385,8 +385,8 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                           onClick={() => setActiveTab(tab)}
                           className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all"
                           style={{
-                            background: activeTab === tab ? "#EDE3D8" : "transparent",
-                            color:      activeTab === tab ? "#3D2B1F" : "#9C7D5B",
+                            background: activeTab === tab ? "var(--report-photo-bg)" : "transparent",
+                            color:      activeTab === tab ? "var(--ink)" : "var(--rose-gold)",
                           }}
                         >
                           {tab === "am" ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
@@ -401,10 +401,10 @@ export function SkinAnalysisCard({ data, photoUrl }: { data: SkinAnalysisResult;
                   {visibleSteps.map((r: FlatStep, i: number) => (
                     <li key={`${activeTab}-${r.step}`}>
                       <div className="flex items-start gap-3 text-sm">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{i + 1}</span>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>{i + 1}</span>
                         <div>
-                          <span className="font-medium" style={{ color: "#3D2B1F" }}>{r.step}</span>
-                          <span style={{ color: "#9C7D5B" }}> — {r.product}</span>
+                          <span className="font-medium" style={{ color: "var(--ink)" }}>{r.step}</span>
+                          <span style={{ color: "var(--rose-gold)" }}> ? {r.product}</span>
                         </div>
                       </div>
                     </li>

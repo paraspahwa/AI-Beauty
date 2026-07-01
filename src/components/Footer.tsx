@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Sparkles } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "How it works", href: "/#how" },
+  { label: "Report", href: "/#samples" },
   { label: "Pricing", href: "/#pricing" },
   { label: "Get started", href: "/upload" },
 ];
@@ -15,34 +15,31 @@ const LEGAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
-      <div className="container max-w-6xl py-10 flex flex-col gap-8">
-        {/* Top row — brand + nav */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <Link href="/" className="flex items-center group">
-            <Image
-              src="/1779024315.png"
-              alt="Renovaara"
-              width={180}
-              height={101}
-              className="h-10 w-auto transition-opacity group-hover:opacity-80"
-            />
+    <footer className="mt-24 border-t border-terracotta/15 bg-[var(--color-surface)]">
+      <div className="container flex max-w-6xl flex-col gap-8 py-10">
+        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          <Link href="/" className="group flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-espresso">
+              <Sparkles className="h-4 w-4 text-[var(--btn-fg)]" />
+            </div>
+            <span className="font-display text-lg text-ink transition-opacity group-hover:opacity-80">
+              Renovaara
+            </span>
           </Link>
 
-          <nav className="flex items-center gap-6 text-sm text-ink-stone">
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-ink-stone">
             {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-ink transition-colors">
+              <Link key={l.href} href={l.href} className="transition-colors hover:text-terracotta">
                 {l.label}
               </Link>
             ))}
           </nav>
         </div>
 
-        {/* Bottom row — legal links + copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[var(--color-border)] pt-6">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-terracotta/10 pt-6 sm:flex-row">
           <nav className="flex items-center gap-5 text-xs text-ink-mist">
             {LEGAL_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-ink transition-colors">
+              <Link key={l.href} href={l.href} className="transition-colors hover:text-terracotta">
                 {l.label}
               </Link>
             ))}

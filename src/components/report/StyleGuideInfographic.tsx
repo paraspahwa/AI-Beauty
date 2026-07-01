@@ -10,10 +10,8 @@ interface Props {
 export function StyleGuideInfographic({ asset }: Props) {
   return (
     <section>
-      <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#9C7D5B" }}>
-        Style Guide
-      </p>
-      <h2 className="text-2xl font-normal mb-4" style={{ color: "#2C1A10", fontFamily: "Georgia, serif" }}>
+      <p className="foil-label mb-2">Style Guide</p>
+      <h2 className="mb-4 font-display text-2xl text-ink">
         Your Personal Style Board
       </h2>
       <AnalysisInfographicImage

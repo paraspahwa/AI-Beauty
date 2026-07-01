@@ -43,7 +43,7 @@ function SampleCard({ item }: { item: ReportSampleItem }) {
       </div>
       <div
         className="relative mt-4 overflow-hidden rounded-2xl"
-        style={{ background: "var(--infographic-frame, #F7F2EC)", aspectRatio: "3/4" }}
+        style={{ background: "var(--infographic-frame)", aspectRatio: "3/4" }}
       >
         <Image
           src={src}

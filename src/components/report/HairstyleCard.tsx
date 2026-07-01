@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import type { HairstyleResult } from "@/types/report";
 
-// ── Animation CSS ────────────────────────────────────────────────────────────
+// -- Animation CSS ------------------------------------------------------------
 const HAIR_CSS = `
 /* Filled hair silhouette fade-in */
 @keyframes hair-fill-in {
@@ -41,8 +41,8 @@ const HAIR_CSS = `
 
 /* Length diagram: recommended line gentle glow-pulse after draw */
 @keyframes length-glow {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 0px #C8A96E); }
-  50%       { opacity: 0.82; filter: drop-shadow(0 0 3px #C8A96E); }
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 0px #c9a87c); }
+  50%       { opacity: 0.82; filter: drop-shadow(0 0 3px #c9a87c); }
 }
 .length-rec-glow {
   animation: length-line-draw 0.7s 0.3s cubic-bezier(0.4,0,0.2,1) forwards,
@@ -64,7 +64,7 @@ const HAIR_CSS = `
 }
 `;
 
-// ── Inline icons ─────────────────────────────────────────────────────────────
+// -- Inline icons -------------------------------------------------------------
 function IconWave() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
@@ -143,7 +143,7 @@ function IconSpray() {
   );
 }
 
-// ── Colour helpers ───────────────────────────────────────────────────────────
+// -- Colour helpers -----------------------------------------------------------
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace("#", "");
   if (h.length !== 6) return `rgba(28,14,4,${alpha})`;
@@ -153,7 +153,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ── Per-style accent colour for card header band ──────────────────────────────
+// -- Per-style accent colour for card header band ------------------------------
 function styleAccentFromStyle(name: string): { band: string; text: string } {
   const s = name.toLowerCase();
   if (s.includes("long") || s.includes("layer"))           return { band: "#F0E6D3", text: "#8B5A2B" };
@@ -165,12 +165,12 @@ function styleAccentFromStyle(name: string): { band: string; text: string } {
   if (s.includes("pixie") || s.includes("short"))          return { band: "#E8F5F5", text: "#2B7B8B" };
   if (s.includes("straight") || s.includes("sleek"))       return { band: "#F5F0E8", text: "#8B7A2B" };
   if (s.includes("textured") || s.includes("shag"))        return { band: "#EFF5E8", text: "#4A8B2B" };
-  return { band: "#F5EFE7", text: "#9C7D5B" };
+  return { band: "var(--infographic-frame)", text: "#9C7D5B" };
 }
 
-// ── Per-style hairstyle SVG overlay ─────────────────────────────────────────
-// viewBox 0 0 100 140 — head oval: cx=50 cy=38 rx=18 ry=22
-// Crown y≈16, Chin y≈60, Ears x≈32/68 y≈38
+// -- Per-style hairstyle SVG overlay -----------------------------------------
+// viewBox 0 0 100 140 � head oval: cx=50 cy=38 rx=18 ry=22
+// Crown y�16, Chin y�60, Ears x�32/68 y�38
 // Each style uses FILLED semi-transparent dark shapes so cards look visually distinct.
 function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: string; animate?: boolean; delay?: number; hairColor?: string }) {
   const s = style.toLowerCase();
@@ -185,7 +185,7 @@ function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: 
   let shapes: React.ReactNode;
 
   if (s.includes("long layer") || (s.includes("long") && !s.includes("bob"))) {
-    // Long layers — wide flowing mass past the frame bottom
+    // Long layers � wide flowing mass past the frame bottom
     shapes = (
       <>
         <path d="M34 22 C18 32 8 62 6 95 C4 122 8 140 8 140 L28 140 C26 120 22 98 24 76 C26 56 30 38 36 26 Z"
@@ -256,7 +256,7 @@ function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: 
       </>
     );
   } else if (s.includes("curl") || s.includes("coil") || s.includes("afro")) {
-    // Afro/Curly — large halo volume extending well beyond the head oval
+    // Afro/Curly � large halo volume extending well beyond the head oval
     shapes = (
       <>
         <path d="M50 2 C18 0 2 18 2 40 C2 60 14 70 22 68 C16 80 10 96 12 124 L30 128 C26 106 28 88 30 72 L30 68 C20 60 14 52 14 40 C14 22 28 12 50 10 C72 12 86 22 86 40 C86 52 80 60 70 68 L70 72 C72 88 74 106 70 128 L88 124 C90 96 84 80 78 68 C86 70 98 60 98 40 C98 18 82 0 50 2 Z"
@@ -269,7 +269,7 @@ function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: 
       </>
     );
   } else if (s.includes("pixie") || s.includes("short")) {
-    // Pixie — tight to skull, ends just below ears
+    // Pixie � tight to skull, ends just below ears
     shapes = (
       <>
         <path d="M34 28 C22 36 20 48 22 60 L78 60 C80 48 78 36 66 28 C60 22 40 22 34 28 Z"
@@ -282,7 +282,7 @@ function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: 
       </>
     );
   } else if (s.includes("straight") || s.includes("sleek")) {
-    // Sleek straight — smooth parallel mass, wide gloss stripe
+    // Sleek straight � smooth parallel mass, wide gloss stripe
     shapes = (
       <>
         <path d="M34 22 C18 36 16 62 14 92 C12 118 16 134 16 140 L30 140 C28 132 24 112 26 88 C28 62 30 40 36 28 Z"
@@ -290,13 +290,13 @@ function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: 
         <path d="M66 22 C82 36 84 62 86 92 C88 118 84 134 84 140 L70 140 C72 132 76 112 74 88 C72 62 70 40 64 28 Z"
           fill={fill} className={fillCls} style={fillSty} />
         <path d="M34 22 C40 12 60 12 66 22 C60 17 40 17 34 22 Z" fill={fill} className={fillCls} style={fillSty} />
-        {/* Wide glossy highlight stripe — key visual for sleek */}
+        {/* Wide glossy highlight stripe � key visual for sleek */}
         <path d="M40 18 L30 140" stroke="rgba(255,230,180,0.50)" strokeWidth="5" strokeLinecap="round" />
         <path d="M44 17 L34 140" stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeLinecap="round" />
       </>
     );
   } else if (s.includes("textured") || s.includes("shag")) {
-    // Shag — layered jagged edges with notched sheen
+    // Shag � layered jagged edges with notched sheen
     shapes = (
       <>
         <path d="M34 24 C14 38 10 68 10 96 C10 118 14 134 14 140 L28 140 C26 130 22 114 22 94 C22 70 24 46 32 30 Z"
@@ -337,7 +337,7 @@ function HairOverlay({ style, animate = false, delay = 0, hairColor }: { style: 
   );
 }
 
-// ── Hair texture inference ──────────────────────────────────────────────────
+// -- Hair texture inference --------------------------------------------------
 function textureFromStyle(name: string): { label: string; color: string; bg: string } {
   const s = name.toLowerCase();
   if (s.includes("straight") || s.includes("sleek") || s.includes("pixie") ||
@@ -345,11 +345,11 @@ function textureFromStyle(name: string): { label: string; color: string; bg: str
     return { label: "Straight", color: "#1D4ED8", bg: "#DBEAFE" };
   if (s.includes("curl") || s.includes("coil") || s.includes("afro") ||
       s.includes("wave") || s.includes("wavy"))
-    return { label: "Curly/Wavy", color: "#111827", bg: "#F3E8FF" };
+    return { label: "Curly/Wavy", color: "#2c1810", bg: "#F3E8FF" };
   return { label: "Wavy", color: "#B45309", bg: "#fffafc" };
 }
 
-// ── Maintenance level inference ───────────────────────────────────────────────
+// -- Maintenance level inference -----------------------------------------------
 function maintenanceFromStyle(name: string): { level: 1 | 2 | 3; label: string } {
   const s = name.toLowerCase();
   if (s.includes("pixie") || s.includes("short") || s.includes("bob") || s.includes("sleek"))
@@ -366,12 +366,12 @@ const MAINTENANCE_COLORS: Record<1 | 2 | 3, { filled: string; empty: string }> =
   3: { filled: "#C06B3E", empty: "#FDE8DC" },
 };
 
-// ── Length diagram ────────────────────────────────────────────────────────────
+// -- Length diagram ------------------------------------------------------------
 
 
 const HAIR_BENEFITS = ["Adds Volume", "Enhances Texture", "Frames Face Beautifully"];
 
-// ── Main card ─────────────────────────────────────────────────────────────────
+// -- Main card -----------------------------------------------------------------
 type PreviewSlot = { status: string; signedUrl?: string; styleName?: string };
 
 export function HairstyleCard({
@@ -400,7 +400,7 @@ export function HairstyleCard({
   stylingTips?: string[];
   hairType?: string;
 }) {
-  // No auto-generation — previews are generated on-demand via AI Beauty Studio
+  // No auto-generation � previews are generated on-demand via AI Beauty Studio
   const primaryHairColor  = data.colors[0]?.hex;
   const resolvedHairType  = hairType ?? data.hairType ?? "Wavy / Curly";
   const resolvedFaceShape = faceShape ?? "Oval";
@@ -433,33 +433,33 @@ export function HairstyleCard({
   ];
 
   const sectionTitle = "text-[10px] uppercase tracking-[0.18em] font-semibold text-center mb-4";
-  const sT = { color: "#9C7D5B" };
+  const sT = { color: "var(--rose-gold)" };
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: HAIR_CSS }} />
-      <div className="rounded-3xl overflow-hidden" style={{ background: "#FDFAF6", border: "1px solid #E8DDD0" }}>
+      <div className="rounded-3xl overflow-hidden" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
 
-        {/* ── Header ── */}
-        <div className="text-center pt-8 pb-4 px-6" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        {/* -- Header -- */}
+        <div className="text-center pt-8 pb-4 px-6" style={{ borderBottom: "1px solid var(--color-border)" }}>
           <div className="flex items-center justify-center gap-3 mb-1">
-            <span style={{ color: "#C8A96E", fontSize: 18 }}>&#10022;</span>
-            <h2 className="text-3xl font-sans" style={{ color: "#3D2B1F" }}>Hairstyle Analysis</h2>
-            <span style={{ color: "#C8A96E", fontSize: 18 }}>&#10022;</span>
+            <span style={{ color: "var(--rose-gold)", fontSize: 18 }}>&#10022;</span>
+            <h2 className="text-3xl font-sans" style={{ color: "var(--ink)" }}>Hairstyle Analysis</h2>
+            <span style={{ color: "var(--rose-gold)", fontSize: 18 }}>&#10022;</span>
           </div>
-          <p className="text-sm" style={{ color: "#9C7D5B" }}>Find Styles That Flatter You</p>
+          <p className="text-sm" style={{ color: "var(--rose-gold)" }}>Find Styles That Flatter You</p>
         </div>
 
-        {/* ── Hero 3-col ── */}
-        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_220px]" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        {/* -- Hero 3-col -- */}
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_220px]" style={{ borderBottom: "1px solid var(--color-border)" }}>
 
           {/* Left */}
-          <div className="p-5 space-y-4" style={{ borderRight: "1px solid #E8DDD0" }}>
+          <div className="p-5 space-y-4" style={{ borderRight: "1px solid var(--color-border)" }}>
             {/* Face shape */}
-            <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "#9C7D5B" }}>Face Shape</p>
-              <p className="font-sans text-base mb-3" style={{ color: "#3D2B1F" }}>{resolvedFaceShape}</p>
-              {/* Face outline with hair — matches reference illustration */}
+            <div className="rounded-2xl p-4" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--rose-gold)" }}>Face Shape</p>
+              <p className="font-display text-base mb-3" style={{ color: "var(--ink)" }}>{resolvedFaceShape}</p>
+              {/* Face outline with hair � matches reference illustration */}
               <svg viewBox="0 0 48 60" fill="none" className="h-14 w-10 mx-auto mb-3">
                 {/* hair top */}
                 <path d="M10 22 C8 14 10 6 24 5 C38 6 40 14 38 22" fill="#9C7D5B" opacity="0.55" />
@@ -473,19 +473,19 @@ export function HairstyleCard({
               </svg>
               <ul className="space-y-1.5">
                 {resolvedTraits.map((t, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs" style={{ color: "#6B5344" }}>
+                  <li key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--ink-stone)" }}>
                     <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "#7BA05B" }} />{t}
                   </li>
                 ))}
               </ul>
             </div>
             {/* Hair Goals */}
-            <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>Hair Goals</p>
+            <div className="rounded-2xl p-4" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--rose-gold)" }}>Hair Goals</p>
               <ul className="space-y-3">
                 {hairGoals.map((g) => (
-                  <li key={g.label} className="flex items-center gap-3 text-xs" style={{ color: "#6B5344" }}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>{g.icon}</span>
+                  <li key={g.label} className="flex items-center gap-3 text-xs" style={{ color: "var(--ink-stone)" }}>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>{g.icon}</span>
                     {g.label}
                   </li>
                 ))}
@@ -494,7 +494,7 @@ export function HairstyleCard({
           </div>
 
           {/* Centre: single full photo + face guide overlay (matches reference) */}
-          <div className="flex items-center justify-center p-6 min-h-[340px]" style={{ background: "#F5EFE7" }}>
+          <div className="flex items-center justify-center p-6 min-h-[340px]" style={{ background: "var(--infographic-frame)" }}>
             {heroImageUrl ? (
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ maxWidth: 300, aspectRatio: "3/4" }}>
                 <Image
@@ -535,30 +535,30 @@ export function HairstyleCard({
                 {bestPreview && (
                   <div
                     className="absolute left-3 top-3 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
-                    style={{ background: "rgba(61,43,31,0.75)", color: "#FDFAF6" }}
+                    style={{ background: "rgba(44,24,16,0.75)", color: "var(--color-surface)" }}
                   >
                     AI Best Match
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center justify-center rounded-2xl" style={{ width: 220, height: 280, background: "#EDE3D8", border: "2px dashed #C8B89A" }}>
-                <span style={{ color: "#9C7D5B", fontSize: 36 }}>&#128100;</span>
+              <div className="flex items-center justify-center rounded-2xl" style={{ width: 220, height: 280, background: "var(--report-photo-bg)", border: "2px dashed var(--report-placeholder-dash)" }}>
+                <span style={{ color: "var(--rose-gold)", fontSize: 36 }}>&#128100;</span>
               </div>
             )}
           </div>
 
           {/* Right */}
-          <div className="p-5 space-y-4" style={{ borderLeft: "1px solid #E8DDD0" }}>
+          <div className="p-5 space-y-4" style={{ borderLeft: "1px solid var(--color-border)" }}>
             {/* Best Features */}
-            <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>Best Features</p>
+            <div className="rounded-2xl p-4" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--rose-gold)" }}>Best Features</p>
               <ul className="space-y-3">
                 {resolvedFeatures.map((f, i) => {
                   const icon = i === 0 ? <IconEye /> : i === 1 ? <IconCheekbone /> : <IconLips />;
                   return (
-                    <li key={i} className="flex items-center gap-3 text-xs" style={{ color: "#6B5344" }}>
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+                    <li key={i} className="flex items-center gap-3 text-xs" style={{ color: "var(--ink-stone)" }}>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>
                         {icon}
                       </span>
                       {f}
@@ -568,12 +568,12 @@ export function HairstyleCard({
               </ul>
             </div>
             {/* Styling Tips */}
-            <div className="rounded-2xl p-4" style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}>
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C7D5B" }}>Styling Tips</p>
+            <div className="rounded-2xl p-4" style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: "var(--rose-gold)" }}>Styling Tips</p>
               <ul className="space-y-3">
                 {resolvedTips.map((t, i) => (
-                  <li key={i} className="flex items-start gap-3 text-xs" style={{ color: "#6B5344" }}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "#EDE3D8", color: "#9C7D5B" }}>
+                  <li key={i} className="flex items-start gap-3 text-xs" style={{ color: "var(--ink-stone)" }}>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)" }}>
                       {i === 0 ? <IconDryer /> : i === 1 ? <IconWave /> : <IconSpray />}
                     </span>
                     <span className="leading-tight">{t}</span>
@@ -586,11 +586,11 @@ export function HairstyleCard({
 
 
 
-        {/* ── Hair Type Match + Color Direction ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2" style={{ borderBottom: "1px solid #E8DDD0" }}>
+        {/* -- Hair Type Match + Color Direction -- */}
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ borderBottom: "1px solid var(--color-border)" }}>
 
           {/* Hair Type Match */}
-          <div className="px-6 py-6 flex flex-col gap-4" style={{ borderRight: "1px solid #E8DDD0" }}>
+          <div className="px-6 py-6 flex flex-col gap-4" style={{ borderRight: "1px solid var(--color-border)" }}>
             <p className={sectionTitle} style={sT}>Hair Type Match</p>
             {/* horizontal row: big wave icon + type label | benefit pills */}
             <div className="flex items-center gap-6">
@@ -598,11 +598,11 @@ export function HairstyleCard({
               <div className="flex flex-col items-center gap-1.5 shrink-0">
                 <span
                   className="flex h-20 w-20 items-center justify-center rounded-full text-3xl"
-                  style={{ background: "#EDE3D8", color: "#9C7D5B", lineHeight: 1 }}
+                  style={{ background: "var(--report-photo-bg)", color: "var(--rose-gold)", lineHeight: 1 }}
                 >
                   &#8779;
                 </span>
-                <p className="text-[11px] font-semibold text-center whitespace-nowrap" style={{ color: "#3D2B1F" }}>{resolvedHairType}</p>
+                <p className="text-[11px] font-semibold text-center whitespace-nowrap" style={{ color: "var(--ink)" }}>{resolvedHairType}</p>
               </div>
               {/* benefit pills in a row */}
               <div className="flex flex-col gap-2">
@@ -611,7 +611,7 @@ export function HairstyleCard({
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ background: "#7BA05B" }}>
                       <Check className="h-3 w-3 text-white" />
                     </span>
-                    <span className="text-[11px] font-medium" style={{ color: "#6B5344" }}>{b}</span>
+                    <span className="text-[11px] font-medium" style={{ color: "var(--ink-stone)" }}>{b}</span>
                   </div>
                 ))}
               </div>
@@ -645,7 +645,7 @@ export function HairstyleCard({
                       {/* subtle gloss highlight */}
                       <ellipse cx="20" cy="18" rx="7" ry="5" fill="rgba(255,255,255,0.18)" />
                     </svg>
-                    <p className="text-[10px] text-center leading-tight max-w-[56px]" style={{ color: "#6B5344" }}>{c.name}</p>
+                    <p className="text-[10px] text-center leading-tight max-w-[56px]" style={{ color: "var(--ink-stone)" }}>{c.name}</p>
                   </div>
                 );
               })}
@@ -653,8 +653,8 @@ export function HairstyleCard({
           </div>
         </div>
 
-        {/* ── Top Recommended Styles ── */}
-        <div className="px-6 py-6" style={{ borderBottom: "1px solid #E8DDD0", background: "#FDFAF6" }}>
+        {/* -- Top Recommended Styles -- */}
+        <div className="px-6 py-6" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
           <p className={sectionTitle} style={sT}>Top Recommended Styles</p>
 
           <div className="space-y-3">
@@ -667,7 +667,7 @@ export function HairstyleCard({
                 <div
                   key={`${style.name}-${index}`}
                   className="rounded-2xl p-4 flex items-start gap-3"
-                  style={{ background: "#F5EFE7", border: "1px solid #E8DDD0" }}
+                  style={{ background: "var(--infographic-frame)", border: "1px solid var(--color-border)" }}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -677,18 +677,18 @@ export function HairstyleCard({
                       >
                         {index + 1}
                       </span>
-                      <h4 className="font-sans text-sm truncate" style={{ color: "#3D2B1F" }}>
+                      <h4 className="font-display text-sm truncate" style={{ color: "var(--ink)" }}>
                         {style.name}
                       </h4>
                     </div>
 
-                    <p className="text-xs leading-relaxed" style={{ color: "#6B5344" }}>{style.description}</p>
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--ink-stone)" }}>{style.description}</p>
 
                     <div className="mt-2 flex items-center gap-2 text-[10px]">
                       <span className="rounded-full px-2 py-0.5" style={{ background: texture.bg, color: texture.color }}>
                         {texture.label}
                       </span>
-                      <span className="rounded-full px-2 py-0.5" style={{ background: "#EFE7DD", color: "#6B5344" }}>
+                      <span className="rounded-full px-2 py-0.5" style={{ background: "var(--report-warm-chip)", color: "var(--ink-stone)" }}>
                         {maintenance.label} maintenance
                       </span>
                     </div>
@@ -697,7 +697,7 @@ export function HairstyleCard({
                   {index === 0 && bestPreview?.signedUrl && (
                     <div
                       className="relative h-16 w-16 md:h-20 md:w-20 shrink-0 overflow-hidden rounded-xl"
-                      style={{ border: "1px solid #E8DDD0" }}
+                      style={{ border: "1px solid var(--color-border)" }}
                     >
                       <Image
                         src={bestPreview.signedUrl}
@@ -714,13 +714,13 @@ export function HairstyleCard({
           </div>
         </div>
 
-        {/* ── Footer tagline pill ── matches reference */}
-        <div className="flex justify-center py-5 px-6" style={{ background: "#FDFAF6" }}>
+        {/* -- Footer tagline pill -- matches reference */}
+        <div className="flex justify-center py-5 px-6" style={{ background: "var(--color-surface)" }}>
           <div
             className="px-6 py-2.5 rounded-full text-xs font-semibold tracking-[0.14em] uppercase text-center"
-            style={{ background: "#F0E4D2", color: "#9C7D5B", border: "1px solid #E0CEBC" }}
+            style={{ background: "var(--report-warm-banner)", color: "var(--rose-gold)", border: "1px solid var(--color-border)" }}
           >
-            &#9825;&nbsp;{data.styles[0]?.name ?? "Natural Layers"} · Your Personalised Style Guide&nbsp;&#10022;
+            &#9825;&nbsp;{data.styles[0]?.name ?? "Natural Layers"} � Your Personalised Style Guide&nbsp;&#10022;
           </div>
         </div>
       </div>
