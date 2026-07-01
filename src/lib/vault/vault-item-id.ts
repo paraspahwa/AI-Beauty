@@ -11,6 +11,38 @@ export function isVaultStoragePath(path: string | null | undefined): path is str
   return typeof path === "string" && path.length > 0 && !RESERVED_IMAGE_PATHS.has(path);
 }
 
+export function isReportSelfiePath(
+  path: string | null | undefined,
+  userId: string,
+  reportId: string,
+): path is string {
+  return path === `${userId}/${reportId}.jpg`;
+}
+
+export function isReportBodyImagePath(
+  path: string | null | undefined,
+  userId: string,
+  reportId: string,
+): path is string {
+  return path === `${userId}/${reportId}-body.jpg`;
+}
+
+export function isReportScopedStoragePath(
+  path: string | null | undefined,
+  userId: string,
+  reportId: string,
+): path is string {
+  if (!isVaultStoragePath(path)) return false;
+  const selfiePath = `${userId}/${reportId}.jpg`;
+  const bodyImagePath = `${userId}/${reportId}-body.jpg`;
+  return (
+    path === selfiePath ||
+    path === bodyImagePath ||
+    path.startsWith(`${userId}/${reportId}/`) ||
+    path.startsWith(`users/${userId}/reports/${reportId}/`)
+  );
+}
+
 export type ParsedVaultItemId =
   | { reportId: string; kind: "upload"; uploadType: "selfie" | "body" }
   | { reportId: string; kind: "analysis"; section: VaultAnalysisSection };

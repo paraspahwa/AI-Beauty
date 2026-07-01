@@ -11,6 +11,7 @@ import {
   generateHairstylePreviews,
 } from "@/lib/ai/visuals";
 import { generateHairColorPreviews } from "@/lib/ai/hair-color-preview";
+import { isReportSelfiePath } from "@/lib/vault/vault-item-id";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -54,6 +55,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     if (!hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email })) {
       return NextResponse.json({ error: "Report must be unlocked" }, { status: 403 });
+    }
+    if (!isReportSelfiePath(row.image_path, user.id, row.id)) {
+      return NextResponse.json({ error: "Image unavailable" }, { status: 500 });
     }
 
     const { data: imgData, error: imgErr } = await admin.storage

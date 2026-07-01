@@ -4,7 +4,9 @@ import type { createSupabaseAdminClient } from "@/lib/supabase/server";
 import {
   DELETED_SELFIE_PATH,
   clearAnalysisSection,
-  isVaultStoragePath,
+  isReportBodyImagePath,
+  isReportScopedStoragePath,
+  isReportSelfiePath,
   parseVaultItemId,
   removeStoragePaths,
   type ParsedVaultItemId,
@@ -69,7 +71,7 @@ async function deleteUploadItem(
   const bucket = env.supabase.bucket;
 
   if (parsed.uploadType === "selfie") {
-    if (!isVaultStoragePath(report.image_path)) {
+    if (!isReportSelfiePath(report.image_path, report.user_id, report.id)) {
       throw new Error("Selfie already removed");
     }
     await removeStoragePaths(admin, bucket, [report.image_path]);
@@ -82,7 +84,7 @@ async function deleteUploadItem(
     return;
   }
 
-  if (!report.body_image_path) {
+  if (!isReportBodyImagePath(report.body_image_path, report.user_id, report.id)) {
     throw new Error("Body photo already removed");
   }
   await removeStoragePaths(admin, bucket, [report.body_image_path]);
@@ -105,7 +107,7 @@ async function deleteAnalysisItem(
   }
 
   const storagePath = clearAnalysisSection(visualAssets, parsed.section);
-  if (!storagePath) {
+  if (!isReportScopedStoragePath(storagePath, report.user_id, report.id)) {
     throw new Error("Analysis asset not found");
   }
 

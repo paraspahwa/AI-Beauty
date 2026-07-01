@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess, hasStyleGuideAccess, isAdminUserEmail } from "@/lib/auth/access";
-import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
+import { isReportSelfiePath } from "@/lib/vault/vault-item-id";
 import {
   previewSummaryForUnpaid,
   redactColorAnalysisForPreview,
@@ -47,7 +47,7 @@ export default async function ReportPage({
   if (!row) notFound();
 
   let imageUrl = "";
-  if (isVaultStoragePath(row.image_path)) {
+  if (isReportSelfiePath(row.image_path, user.id, row.id)) {
     const { data: signed, error: signErr } = await admin.storage
       .from(env.supabase.bucket)
       .createSignedUrl(row.image_path, 60 * 30);

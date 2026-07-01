@@ -16,6 +16,7 @@ import {
   generateHairstylePreviews,
 } from "@/lib/ai/visuals";
 import { generateHairColorPreviews } from "@/lib/ai/hair-color-preview";
+import { isReportSelfiePath } from "@/lib/vault/vault-item-id";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -70,6 +71,9 @@ export async function POST(req: NextRequest) {
     }
     if (!row.is_paid) {
       return NextResponse.json({ skipped: true, reason: "not_paid" });
+    }
+    if (!isReportSelfiePath(row.image_path as string, row.user_id as string, row.id as string)) {
+      return NextResponse.json({ error: "Image unavailable" }, { status: 500 });
     }
 
     const existing = row.visual_assets as ReportVisualAssets | null;

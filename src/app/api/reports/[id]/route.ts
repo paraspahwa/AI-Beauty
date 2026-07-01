@@ -8,6 +8,7 @@ import {
   redactColorAnalysisForPreview,
   resolveReportVisualAssets,
 } from "@/lib/report-access";
+import { isReportSelfiePath } from "@/lib/vault/vault-item-id";
 import { extractFaceLandmarks } from "@/lib/ai/landmarks";
 import { normalizeRekognitionGender } from "@/lib/hair-options";
 import { fetchOwnedReportRow } from "@/lib/reports/fetch-report-row";
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   let imageUrl = "";
-  if (row.image_path && row.image_path !== "pending" && row.image_path !== "deleted") {
+  if (isReportSelfiePath(row.image_path, user.id, row.id)) {
     const { data: signed } = await admin.storage
       .from(env.supabase.bucket)
       .createSignedUrl(row.image_path, 60 * 30);
