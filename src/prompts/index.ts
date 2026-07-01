@@ -237,6 +237,43 @@ Return JSON:
 }`;
 }
 
+/** Vision prompt for Style Guide add-on — analyzes the attached full-body photo. */
+export function buildStyleGuideFromBodyPrompt(
+  faceShape: string,
+  season: string,
+  undertone: string,
+  context?: {
+    faceShape?: { shape: string; traits: string[] };
+    colorAnalysis?: { season: string; undertone: string };
+    features?: unknown;
+    summary?: string;
+  },
+): string {
+  const contextBlock = context
+    ? `\n\nSelfie analysis context (use for colour harmony; the attached image is the full-body photo):\n${JSON.stringify({
+        faceShape: context.faceShape,
+        colorSeason: context.colorAnalysis?.season,
+        undertone: context.colorAnalysis?.undertone,
+        features: context.features,
+        summary: context.summary,
+      })}`
+    : "";
+
+  return `Analyze the attached FULL-BODY photo and create a personalized style guide for a client with a ${faceShape} face and ${season} coloring (${undertone} undertone).
+Observe body proportions, current outfit silhouette, and styling cues from the photo. Be specific, practical, and luxury-consultant in tone.${contextBlock}
+Return JSON:
+{
+  "primaryStyle": string,
+  "secondaryStyles": string[4],
+  "vibeTraits": string[4..6],
+  "wardrobeEssentials": string[6..10],
+  "silhouettes": string[4..6],
+  "colorDirection": { "neutrals": string[3..5], "accents": string[3..5] },
+  "styleNotes": string[4..6],
+  "identitySummary": string
+}`;
+}
+
 // ── Ingredient Analysis ────────────────────────────────────────────────────────
 
 /**

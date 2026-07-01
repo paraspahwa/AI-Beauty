@@ -4,7 +4,7 @@ import { PAYMENT_PRODUCTS } from "@/lib/payments/products";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import {
-  kickOffInfographicsInBackground,
+  kickOffInfographicSectionInBackground,
   kickOffStyleGuideInfographicInBackground,
 } from "@/lib/ai/kickoff-infographics";
 import { scheduleInternalPost } from "@/lib/internal/schedule-job";
@@ -145,9 +145,9 @@ export async function POST(req: NextRequest) {
 
     if (row.report_id) {
       if (product === PAYMENT_PRODUCTS.styleGuideAddon) {
-        kickOffStyleGuideInfographicInBackground(row.report_id, true);
+        kickOffStyleGuideInfographicInBackground(row.report_id);
       } else {
-        kickOffInfographicsInBackground(row.report_id, { force: true });
+        kickOffInfographicSectionInBackground(row.report_id, "faceFeatures");
         scheduleInternalPost("/api/internal/trigger-previews", { reportId: row.report_id });
       }
     }

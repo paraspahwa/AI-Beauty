@@ -54,6 +54,7 @@ export interface GenerateInfographicInput {
 
 export interface GenerateInfographicResult {
   buffer: Buffer;
+  mime: "image/png" | "image/jpeg";
   promptVersion: string;
   width: number;
   height: number;
@@ -156,17 +157,18 @@ export async function generateAnalysisInfographic(
       throw new Error(`No generator implemented for section "${input.section}"`);
   }
 
-  const buffer = await generateGptImageEdit({
+  const generated = await generateGptImageEdit({
     prompt,
     imageBuffer: sourceBuffer,
-    quality: input.quality ?? "medium",
+    quality: input.quality ?? "high",
   });
 
   const { default: sharp } = await import("sharp");
-  const metaImg = await sharp(buffer).metadata();
+  const metaImg = await sharp(generated.buffer).metadata();
 
   return {
-    buffer,
+    buffer: generated.buffer,
+    mime: generated.mime,
     promptVersion,
     width: metaImg.width ?? 0,
     height: metaImg.height ?? 0,

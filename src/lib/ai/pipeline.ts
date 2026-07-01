@@ -8,7 +8,6 @@ import {
   normalizeGlasses,
   normalizeHairstyle,
   normalizeSkinAnalysis,
-  normalizeStyleGuide,
   normalizeSummary,
 } from "./contracts";
 import { GENERIC_FACE_SHAPE_LABEL, shouldUseShapeConditioning, blendConfidence } from "./confidence";
@@ -22,7 +21,6 @@ import {
   buildColorAnalysisPrompt,
   buildFeaturesPrompt,
   buildGlassesPrompt,
-  buildStyleGuidePrompt,
   SKIN_VISION_PROMPT,
   buildSkinRoutinePrompt,
   HAIRSTYLE_PROMPT,
@@ -34,7 +32,6 @@ import type {
   GlassesResult,
   HairstyleResult,
   SkinAnalysisResult,
-  StyleGuideResult,
 } from "@/types/report";
 
 export interface PipelineStageMeta {
@@ -68,7 +65,7 @@ export interface PipelineResult {
   features: FeatureBreakdown;
   glasses: GlassesResult;
   hairstyle: HairstyleResult;
-  styleGuide: StyleGuideResult;
+  styleGuide: null;
   summary: string;
   meta: PipelineMeta;
 }
@@ -83,8 +80,8 @@ export interface PipelineResult {
  *  5. gpt-4o-mini  → eyes/nose/lips/cheeks (parallel-ready, single call here)
  *  6. gpt-4o-mini  → glasses (uses face shape)
  *  7. gpt-4o-mini  → hairstyle (uses face shape)
- *  8. gpt-4o-mini  → style guide (text, uses prior stages)
- *  9. gpt-4o-mini  → compile final summary
+ *  8. gpt-4o-mini  → compile final summary
+ *  (Style Guide runs post-pay on full-body photo — see run-style-guide-analysis.ts)
  *
  * @param rawImage - raw image buffer (JPEG/PNG/WEBP)
  * @param userId   - optional Supabase user id; when provided the pipeline
@@ -395,24 +392,7 @@ export async function runAnalysisPipeline(
     ),
   ]);
 
-  const styleGuide = await runNormalizedStage(
-    "style_guide",
-    () =>
-      chatJSON<unknown>({
-        model: env.openai.miniModel,
-        system: effectiveSystemBase,
-        user: `${buildStyleGuidePrompt(shapeForStyling, colorAnalysis.season, colorAnalysis.undertone)}\n\nAnalysis context:\n${JSON.stringify({
-          faceShape,
-          colorAnalysis,
-          features,
-          hairstyle,
-        })}`,
-      }),
-    normalizeStyleGuide,
-    {},
-  );
-
-  // 9) Compile summary (Mini, no image)
+  // 8) Compile summary (Mini, no image)
   let summary: string;
   const summaryT0 = Date.now();
   onStage?.({ stage: "summary", status: "started" });
@@ -430,7 +410,6 @@ export async function runAnalysisPipeline(
             features,
             glasses,
             hairstyle,
-            styleGuide,
           })}`,
         }),
       2,
@@ -479,7 +458,7 @@ export async function runAnalysisPipeline(
     features,
     glasses,
     hairstyle,
-    styleGuide,
+    styleGuide: null,
     summary,
     meta: {
       totalDurationMs,

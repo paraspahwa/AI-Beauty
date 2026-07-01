@@ -89,6 +89,62 @@ async function downloadSelfie(
   return Buffer.from(await imgData.arrayBuffer());
 }
 
+async function claimSectionGeneration(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  reportId: string,
+  userId: string,
+  section: AnalysisInfographicSectionId,
+  force: boolean,
+): Promise<
+  | { claimed: true; visualAssets: ReportVisualAssets; storagePath: string; label: string }
+  | { claimed: false; status: string }
+> {
+  const { data: fresh } = await admin
+    .from("reports")
+    .select("visual_assets")
+    .eq("id", reportId)
+    .single();
+
+  if (!fresh) return { claimed: false, status: "failed" };
+
+  const meta = getBlueprintSection(section);
+  if (!meta?.generatable) return { claimed: false, status: "unsupported" };
+
+  let visualAssets = ensureVisualAssetsShell(
+    parseVisualAssets(fresh.visual_assets),
+    userId,
+    reportId,
+    env.supabase.bucket,
+  );
+  const existing = getAnalysisInfographicAsset(visualAssets, section);
+
+  if (!force) {
+    if (existing?.status === "ready" || existing?.status === "pending") {
+      return { claimed: false, status: existing.status };
+    }
+  } else if (existing?.status === "pending") {
+    return { claimed: false, status: "pending" };
+  }
+
+  const storagePath = analysisInfographicStoragePath(userId, reportId, section);
+  visualAssets = setAnalysisInfographicAsset(visualAssets, section, {
+    path: storagePath,
+    status: "pending",
+    mime: "image/png",
+    error: null,
+    styleName: meta.label,
+  });
+
+  const { error } = await admin
+    .from("reports")
+    .update({ visual_assets: visualAssets })
+    .eq("id", reportId);
+
+  if (error) return { claimed: false, status: "failed" };
+
+  return { claimed: true, visualAssets, storagePath, label: meta.label };
+}
+
 async function generateOneSection(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   row: InfographicReportRow,
@@ -106,32 +162,13 @@ async function generateOneSection(
     return { status: "failed", error: dataErr };
   }
 
-  let visualAssets = ensureVisualAssetsShell(
-    parseVisualAssets(row.visual_assets),
-    row.user_id,
-    row.id,
-    env.supabase.bucket,
-  );
-
-  const existing = getAnalysisInfographicAsset(visualAssets, section);
-  if (!force && existing?.status === "ready") {
-    return { status: "ready", skipped: true };
-  }
-  if (!force && existing?.status === "pending") {
-    return { status: "pending", skipped: true };
+  const claim = await claimSectionGeneration(admin, row.id, row.user_id, section, force);
+  if (!claim.claimed) {
+    return { status: claim.status, skipped: true };
   }
 
-  const storagePath = analysisInfographicStoragePath(row.user_id, row.id, section);
-
-  visualAssets = setAnalysisInfographicAsset(visualAssets, section, {
-    path: storagePath,
-    status: "pending",
-    mime: "image/jpeg",
-    error: null,
-    styleName: meta.label,
-  });
-
-  await admin.from("reports").update({ visual_assets: visualAssets }).eq("id", row.id);
+  let visualAssets = claim.visualAssets;
+  const storagePath = claim.storagePath;
   row.visual_assets = visualAssets;
 
   try {
@@ -149,16 +186,16 @@ async function generateOneSection(
 
     const { error: upErr } = await admin.storage
       .from(env.supabase.bucket)
-      .upload(storagePath, generated.buffer, { contentType: "image/jpeg", upsert: true });
+      .upload(storagePath, generated.buffer, { contentType: generated.mime, upsert: true });
 
     if (upErr) throw new Error(upErr.message);
 
     visualAssets = setAnalysisInfographicAsset(visualAssets, section, {
       path: storagePath,
       status: "ready",
-      mime: "image/jpeg",
+      mime: generated.mime,
       error: null,
-      styleName: `${meta.label} (${generated.promptVersion})`,
+      styleName: `${claim.label} (${generated.promptVersion})`,
       width: generated.width,
       height: generated.height,
     });
@@ -171,9 +208,9 @@ async function generateOneSection(
     visualAssets = setAnalysisInfographicAsset(visualAssets, section, {
       path: storagePath,
       status: "failed",
-      mime: "image/jpeg",
+      mime: "image/png",
       error: message,
-      styleName: meta.label,
+      styleName: claim.label,
     });
     await admin.from("reports").update({ visual_assets: visualAssets }).eq("id", row.id);
     row.visual_assets = visualAssets;
@@ -251,30 +288,50 @@ export function sectionsNeedingGeneration(
   row: InfographicReportRow,
   force?: boolean,
 ): AnalysisInfographicSectionId[] {
-  const visualAssets = parseVisualAssets(row.visual_assets);
-  const paidSections: AnalysisInfographicSectionId[] = [
-    "faceFeatures",
-    "skin",
-    "color",
-    "hairstyle",
-    "spectacles",
-    "hairColor",
-  ];
+  return MANUAL_PAID_INFOGRAPHIC_SECTIONS.filter((section) =>
+    sectionNeedsGeneration(row, section, force),
+  );
+}
 
-  return paidSections.filter((section) => {
-    if (sectionDataReady(section, row)) return false;
-    const existing = getAnalysisInfographicAsset(visualAssets, section);
-    if (force) return true;
-    if (!existing || existing.status === "missing") return true;
-    // pending = in-flight; ready = done; failed = manual retry only (payment force)
-    return false;
-  });
+/** User-triggered paid sections (not auto-queued on unlock). */
+export const MANUAL_PAID_INFOGRAPHIC_SECTIONS = [
+  "skin",
+  "color",
+  "hairstyle",
+  "spectacles",
+  "hairColor",
+] as const satisfies readonly AnalysisInfographicSectionId[];
+
+export type ManualPaidInfographicSection = (typeof MANUAL_PAID_INFOGRAPHIC_SECTIONS)[number];
+
+export function isManualPaidInfographicSection(
+  section: string,
+): section is ManualPaidInfographicSection {
+  return (MANUAL_PAID_INFOGRAPHIC_SECTIONS as readonly string[]).includes(section);
+}
+
+function sectionNeedsGeneration(
+  row: InfographicReportRow,
+  section: AnalysisInfographicSectionId,
+  force?: boolean,
+): boolean {
+  if (sectionDataReady(section, row)) return false;
+  const visualAssets = parseVisualAssets(row.visual_assets);
+  const existing = getAnalysisInfographicAsset(visualAssets, section);
+  if (existing?.status === "pending") return false;
+  if (force) return true;
+  return !existing || existing.status === "missing";
+}
+
+export function faceFeaturesNeedsGeneration(row: InfographicReportRow, force?: boolean): boolean {
+  return sectionNeedsGeneration(row, "faceFeatures", force);
 }
 
 export function previewNeedsGeneration(row: InfographicReportRow, force?: boolean): boolean {
   if (sectionDataReady("faceFeaturesPreview", row)) return false;
   const visualAssets = parseVisualAssets(row.visual_assets);
   const existing = getAnalysisInfographicAsset(visualAssets, "faceFeaturesPreview");
+  if (existing?.status === "pending") return false;
   if (force) return true;
   return !existing || existing.status === "missing";
 }

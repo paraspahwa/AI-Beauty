@@ -5,18 +5,14 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Loader2, Lock, Sparkles } from "lucide-react";
 import { FaceFeaturesInfographic } from "./FaceFeaturesInfographic";
+import { AnalysisSectionCard } from "./AnalysisSectionCard";
 import { FreePreviewTeaser } from "./FreePreviewTeaser";
-import { SkinInfographic } from "./SkinInfographic";
-import { ColorInfographic } from "./ColorInfographic";
-import { HairstyleInfographic } from "./HairstyleInfographic";
-import { SpectaclesInfographic } from "./SpectaclesInfographic";
-import { HairColorInfographic } from "./HairColorInfographic";
 import { StyleGuideSection } from "./StyleGuideSection";
 import { PdfDownloadShare } from "./PdfDownloadShare";
 import { publicEnv } from "@/lib/public-env";
 import { Paywall } from "@/components/Paywall";
 import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
-import type { CompiledReport, ReportVisualAsset } from "@/types/report";
+import type { AnalysisInfographics, CompiledReport, ReportVisualAsset } from "@/types/report";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
 interface Props {
@@ -24,8 +20,25 @@ interface Props {
   initialPaywallOpen?: boolean;
 }
 
+function infographicAssetMissing(asset?: ReportVisualAsset): boolean {
+  return !asset || asset.status === "missing";
+}
+
 function infographicAssetPending(asset?: ReportVisualAsset): boolean {
-  return !asset || asset.status === "pending";
+  return !!asset && asset.status === "pending";
+}
+
+function pickFaceInfographic(
+  isPaid: boolean,
+  infographics?: AnalysisInfographics,
+): ReportVisualAsset | undefined {
+  const preview = infographics?.faceFeaturesPreview;
+  const full = infographics?.faceFeatures;
+  if (isPaid && full) {
+    if (full.status === "ready" || full.status === "pending") return full;
+    if (full.status === "failed" && preview) return preview;
+  }
+  return preview ?? full;
 }
 
 export function ReportLayout({ report: initial, initialPaywallOpen = false }: Props) {
@@ -34,17 +47,9 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   const [paymentInitiated, setPaymentInitiated] = React.useState(false);
 
   const isPaid = report.isPaid;
-  // #region agent log
-  React.useEffect(() => {
-    const ig = report.visualAssets?.assets?.analysisInfographics;
-    fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',location:'ReportLayout.tsx:mount',message:'client report state',data:{reportId:report.id,isPaid,status:report.status,previewStatus:ig?.faceFeaturesPreview?.status,fullFaceStatus:ig?.faceFeatures?.status,skinStatus:ig?.skin?.status},timestamp:Date.now(),hypothesisId:'H1-H2'})}).catch(()=>{});
-  }, [report.id, isPaid, report.status, report.visualAssets]);
-  // #endregion
   const isProcessing = report.status === "processing" || report.status === "pending";
   const infographics = report.visualAssets?.assets?.analysisInfographics;
-  const faceInfographic = isPaid
-    ? infographics?.faceFeatures
-    : infographics?.faceFeaturesPreview;
+  const faceInfographic = pickFaceInfographic(isPaid, infographics);
   const hairstyleInfographic = infographics?.hairstyle;
   const spectaclesInfographic = infographics?.spectacles;
   const colorInfographic = infographics?.color;
@@ -53,11 +58,14 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   const styleGuideInfographic = infographics?.styleGuide;
   const infographicPending =
     infographicAssetPending(faceInfographic) ||
-    (isPaid && !!report.skinAnalysis && infographicAssetPending(skinInfographic)) ||
-    (isPaid && !!report.colorAnalysis && infographicAssetPending(colorInfographic)) ||
-    (isPaid && !!report.hairstyle && infographicAssetPending(hairstyleInfographic)) ||
-    (isPaid && !!report.glasses && infographicAssetPending(spectaclesInfographic)) ||
-    (isPaid && !!report.hairstyle && !!report.colorAnalysis && infographicAssetPending(hairColorInfographic));
+    (isPaid && infographicAssetPending(infographics?.skin)) ||
+    (isPaid && infographicAssetPending(infographics?.color)) ||
+    (isPaid && infographicAssetPending(infographics?.hairstyle)) ||
+    (isPaid && infographicAssetPending(infographics?.spectacles)) ||
+    (isPaid && infographicAssetPending(infographics?.hairColor));
+  const infographicMissing =
+    infographicAssetMissing(infographics?.faceFeaturesPreview) ||
+    (isPaid && infographicAssetMissing(infographics?.faceFeatures));
   const styleGuidePending =
     report.isStyleGuidePaid && infographicAssetPending(styleGuideInfographic);
   const headerTitle = report.colorAnalysis?.season
@@ -78,13 +86,12 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   const ensureKickoffRef = React.useRef(false);
   React.useEffect(() => {
     if (isProcessing) return;
-    const needsGeneration = infographicPending || (!isPaid && infographicAssetPending(faceInfographic));
-    if (!needsGeneration || ensureKickoffRef.current) return;
+    if (!infographicMissing || ensureKickoffRef.current) return;
     ensureKickoffRef.current = true;
     void fetch(`/api/reports/${report.id}/ensure-infographics`, { method: "POST" }).catch(() => {
       ensureKickoffRef.current = false;
     });
-  }, [isProcessing, infographicPending, isPaid, faceInfographic, report.id]);
+  }, [isProcessing, infographicMissing, report.id]);
 
   return (
     <div className="min-h-app-viewport bg-[var(--color-background)]">
@@ -160,19 +167,59 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
           {isPaid ? (
             <>
               {report.skinAnalysis && (
-                <SkinInfographic asset={skinInfographic} />
+                <AnalysisSectionCard
+                  reportId={report.id}
+                  section="skin"
+                  chapterLabel="Chapter II"
+                  title="Skin Analysis"
+                  description="Your skin type, zones, and AM/PM routine — illustrated as a consultant-style board."
+                  asset={skinInfographic}
+                  onRefresh={refresh}
+                />
               )}
               {report.colorAnalysis && (
-                <ColorInfographic asset={colorInfographic} />
+                <AnalysisSectionCard
+                  reportId={report.id}
+                  section="color"
+                  chapterLabel="Chapter III"
+                  title="Color Analysis"
+                  description="Seasonal palette, best colours, and metals matched to your undertone."
+                  asset={colorInfographic}
+                  onRefresh={refresh}
+                />
               )}
               {report.hairstyle && (
-                <HairstyleInfographic asset={hairstyleInfographic} />
+                <AnalysisSectionCard
+                  reportId={report.id}
+                  section="hairstyle"
+                  chapterLabel="Chapter IV"
+                  title="Hairstyle Analysis"
+                  description="Flattering cuts, lengths, and styling direction for your face shape."
+                  asset={hairstyleInfographic}
+                  onRefresh={refresh}
+                />
               )}
               {report.hairstyle && report.colorAnalysis && (
-                <HairColorInfographic asset={hairColorInfographic} />
+                <AnalysisSectionCard
+                  reportId={report.id}
+                  section="hairColor"
+                  chapterLabel="Chapter V"
+                  title="Hair Color Analysis"
+                  description="Shades that harmonise with your complexion — and tones to approach with care."
+                  asset={hairColorInfographic}
+                  onRefresh={refresh}
+                />
               )}
               {report.glasses && (
-                <SpectaclesInfographic asset={spectaclesInfographic} />
+                <AnalysisSectionCard
+                  reportId={report.id}
+                  section="spectacles"
+                  chapterLabel="Chapter VI"
+                  title="Spectacles Guide"
+                  description="Frame shapes, colours, and fits that balance your features."
+                  asset={spectaclesInfographic}
+                  onRefresh={refresh}
+                />
               )}
               <StyleGuideSection report={report} onRefresh={refresh} />
             </>

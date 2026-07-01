@@ -1,10 +1,10 @@
 import {
   kickOffFaceFeaturesPreviewInBackground,
-  kickOffInfographicsInBackground,
+  kickOffInfographicSectionInBackground,
 } from "@/lib/ai/kickoff-infographics";
 import {
+  faceFeaturesNeedsGeneration,
   previewNeedsGeneration,
-  sectionsNeedingGeneration,
   type InfographicReportRow,
 } from "@/lib/ai/run-analysis-infographics";
 
@@ -15,7 +15,7 @@ export type EnsureInfographicsResult = {
   reason?: string;
 };
 
-/** Idempotent: queue missing infographic background jobs (never blocks on FAL). */
+/** Idempotent: auto-queue preview + full face features only (manual sections are user-triggered). */
 export function ensureReportInfographicsQueued(
   reportId: string,
   row: InfographicReportRow,
@@ -25,19 +25,24 @@ export function ensureReportInfographicsQueued(
     return { mode: "skipped", queued: 0, reason: "not_ready" };
   }
 
+  let queued = 0;
+  const sections: string[] = [];
+
+  if (previewNeedsGeneration(row)) {
+    kickOffFaceFeaturesPreviewInBackground(reportId);
+    queued += 1;
+    sections.push("faceFeaturesPreview");
+  }
+
   if (!hasPremium) {
-    if (previewNeedsGeneration(row)) {
-      kickOffFaceFeaturesPreviewInBackground(reportId);
-      return { mode: "preview", queued: 1 };
-    }
-    return { mode: "preview", queued: 0 };
+    return { mode: "preview", queued, sections };
   }
 
-  const sections = sectionsNeedingGeneration(row);
-  if (sections.length > 0) {
-    kickOffInfographicsInBackground(reportId, { sections });
-    return { mode: "full", queued: sections.length, sections };
+  if (faceFeaturesNeedsGeneration(row)) {
+    kickOffInfographicSectionInBackground(reportId, "faceFeatures");
+    queued += 1;
+    sections.push("faceFeatures");
   }
 
-  return { mode: "full", queued: 0, sections: [] };
+  return { mode: "full", queued, sections };
 }

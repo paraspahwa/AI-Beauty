@@ -9,6 +9,8 @@ interface Props {
   title: string;
   loadingMessage: string;
   aspectRatio?: string;
+  /** auto: missing shows spinner (background job). manual: use AnalysisSectionCard instead. */
+  generationMode?: "auto" | "manual";
 }
 
 const frameStyle = { background: "var(--infographic-frame)" } as const;
@@ -18,8 +20,9 @@ export function AnalysisInfographicImage({
   title,
   loadingMessage,
   aspectRatio = "4/5",
+  generationMode = "auto",
 }: Props) {
-  const status = asset?.status ?? "pending";
+  const status = asset?.status ?? (generationMode === "auto" ? "pending" : "missing");
   const imageUrl = asset?.signedUrl;
 
   if (status === "ready" && imageUrl) {

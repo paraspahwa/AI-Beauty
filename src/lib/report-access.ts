@@ -55,10 +55,11 @@ function filterInfographicsForAccess(
   const infographics = visualAssets.assets.analysisInfographics;
   if (!infographics) return visualAssets;
 
-  const { faceFeaturesPreview: _preview, styleGuide: styleGuideAsset, ...rest } = infographics;
+  const { faceFeaturesPreview: preview, styleGuide: styleGuideAsset, ...rest } = infographics;
 
   if (hasPremium) {
     const paid: typeof infographics = { ...rest };
+    if (preview) paid.faceFeaturesPreview = preview;
     if (hasStyleGuide && styleGuideAsset) {
       paid.styleGuide = styleGuideAsset;
     }
@@ -71,7 +72,6 @@ function filterInfographicsForAccess(
     };
   }
 
-  const preview = infographics.faceFeaturesPreview;
   return {
     ...visualAssets,
     assets: {

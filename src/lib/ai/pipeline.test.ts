@@ -34,12 +34,11 @@ describe("pipeline confidence gating", () => {
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ summary: "ok" });
 
     await runAnalysisPipeline(Buffer.from("raw-image"));
 
-    expect(chatJSONMock).toHaveBeenCalledTimes(9);
+    expect(chatJSONMock).toHaveBeenCalledTimes(8);
 
     const glassesUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
     const hairstyleUserPrompt = chatJSONMock.mock.calls[6]?.[0]?.user;
@@ -61,6 +60,8 @@ describe("pipeline confidence gating", () => {
       .mockResolvedValueOnce({ summary: "ok" });
 
     await runAnalysisPipeline(Buffer.from("raw-image"));
+
+    expect(chatJSONMock).toHaveBeenCalledTimes(8);
 
     const glassesUserPrompt = chatJSONMock.mock.calls[5]?.[0]?.user;
     const hairstyleUserPrompt = chatJSONMock.mock.calls[6]?.[0]?.user;

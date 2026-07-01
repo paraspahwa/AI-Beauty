@@ -22,6 +22,7 @@ export interface GenerateStyleGuideInfographicInput {
 
 export interface GenerateStyleGuideInfographicResult {
   buffer: Buffer;
+  mime: "image/png" | "image/jpeg";
   promptVersion: string;
   width: number;
   height: number;
@@ -38,17 +39,18 @@ export async function generateStyleGuideInfographic(
     input.summary,
   );
 
-  const buffer = await generateGptImageEdit({
+  const generated = await generateGptImageEdit({
     prompt,
     imageBuffer: input.imageBuffer,
-    quality: input.quality ?? "medium",
+    quality: input.quality ?? "high",
   });
 
   const { default: sharp } = await import("sharp");
-  const metaImg = await sharp(buffer).metadata();
+  const metaImg = await sharp(generated.buffer).metadata();
 
   return {
-    buffer,
+    buffer: generated.buffer,
+    mime: generated.mime,
     promptVersion: STYLE_GUIDE_PROMPT_VERSION,
     width: metaImg.width ?? 0,
     height: metaImg.height ?? 0,

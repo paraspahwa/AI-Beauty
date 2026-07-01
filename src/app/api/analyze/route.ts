@@ -463,7 +463,7 @@ export async function POST(req: NextRequest) {
                 features: result.features,
                 glasses: result.glasses,
                 hairstyle: result.hairstyle,
-                style_guide: result.styleGuide,
+                style_guide: null,
                 summary: result.summary,
                 pipeline_meta: result.meta,
               };
@@ -506,7 +506,6 @@ export async function POST(req: NextRequest) {
                 { report_id: report.id, category: "color", title: result.colorAnalysis.season, description: result.colorAnalysis.description, data: result.colorAnalysis },
                 { report_id: report.id, category: "glasses", title: "Spectacles guide", data: result.glasses },
                 { report_id: report.id, category: "hair", title: "Hairstyle guide", data: result.hairstyle },
-                { report_id: report.id, category: "style", title: "Style guide", data: result.styleGuide },
               ]);
 
               persistStylePrefs(user.id, result.faceShape, result.colorAnalysis, result.skinAnalysis).catch(() => {
@@ -756,7 +755,7 @@ export async function POST(req: NextRequest) {
         features: result.features,
         glasses: result.glasses,
         hairstyle: result.hairstyle,
-        style_guide: result.styleGuide,
+        style_guide: null,
         summary: result.summary,
         pipeline_meta: result.meta,
       };
@@ -800,7 +799,6 @@ export async function POST(req: NextRequest) {
         { report_id: report.id, category: "color", title: result.colorAnalysis.season, description: result.colorAnalysis.description, data: result.colorAnalysis },
         { report_id: report.id, category: "glasses", title: "Spectacles guide", data: result.glasses },
         { report_id: report.id, category: "hair", title: "Hairstyle guide", data: result.hairstyle },
-        { report_id: report.id, category: "style", title: "Style guide", data: result.styleGuide },
       ]);
 
       // 4) Persist style prefs for memory loop (fire-and-forget — never blocks response)

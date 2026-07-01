@@ -5,7 +5,7 @@ import { PAYMENT_PRODUCTS } from "@/lib/payments/products";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { getRequestUser } from "@/lib/auth/request-user";
 import { env } from "@/lib/env";
-import { kickOffInfographicsInBackground, kickOffStyleGuideInfographicInBackground } from "@/lib/ai/kickoff-infographics";
+import { kickOffInfographicSectionInBackground, kickOffStyleGuideInfographicInBackground } from "@/lib/ai/kickoff-infographics";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
           p_provider_signature: body.razorpay_signature,
         });
         if (rpcErr) throw rpcErr;
-        kickOffStyleGuideInfographicInBackground(body.reportId, true);
+        kickOffStyleGuideInfographicInBackground(body.reportId);
       } else {
         const { error: rpcErr } = await admin.rpc("complete_payment", {
           p_payment_row_id: payment.id,
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           p_provider_signature: body.razorpay_signature,
         });
         if (rpcErr) throw rpcErr;
-        kickOffInfographicsInBackground(body.reportId, { force: true });
+        kickOffInfographicSectionInBackground(body.reportId, "faceFeatures");
       }
     }
 

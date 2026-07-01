@@ -14,6 +14,7 @@ import type {
   StyleGuideResult,
 } from "@/types/report";
 import type { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { runStyleGuideAnalysis } from "./run-style-guide-analysis";
 
 export interface StyleGuideReportRow {
   id: string;
@@ -57,12 +58,14 @@ export function styleGuideNeedsGeneration(
   row: StyleGuideReportRow,
   force?: boolean,
 ): boolean {
-  if (!row.is_style_guide_paid || !row.body_image_path || !row.style_guide) return false;
+  if (!row.is_style_guide_paid || !row.body_image_path) return false;
   if (!row.face_shape || !row.color_analysis || !row.features) return false;
 
   const visualAssets = parseVisualAssets(row.visual_assets);
   const existing = getStyleGuideInfographicAsset(visualAssets);
+  if (existing?.status === "pending") return false;
   if (force) return true;
+  if (!row.style_guide) return true;
   return !existing || existing.status === "missing" || existing.status === "failed";
 }
 
@@ -83,11 +86,39 @@ export async function runStyleGuideInfographic(
   if (!row.body_image_path) {
     return { status: "failed", error: "Full-body photo required" };
   }
-  if (!row.style_guide || !row.face_shape || !row.color_analysis || !row.features) {
-    return { status: "failed", error: "Style analysis data required" };
+  if (!row.face_shape || !row.color_analysis || !row.features) {
+    return { status: "failed", error: "Main report analysis required" };
   }
 
   const force = opts?.force === true;
+  let bodyImageBuffer: Buffer | null = null;
+  const getBodyImage = async () => {
+    if (!bodyImageBuffer) {
+      bodyImageBuffer = await downloadBodyImage(admin, row.body_image_path!);
+    }
+    return bodyImageBuffer;
+  };
+
+  if (force || !row.style_guide) {
+    try {
+      const imageBuffer = await getBodyImage();
+      const styleGuide = await runStyleGuideAnalysis({
+        imageBuffer,
+        faceShape: row.face_shape,
+        colorAnalysis: row.color_analysis,
+        features: row.features,
+        summary: row.summary,
+        userId: row.user_id,
+      });
+      await admin.from("reports").update({ style_guide: styleGuide }).eq("id", row.id);
+      row.style_guide = styleGuide;
+    } catch (err) {
+      const message = (err as Error).message;
+      console.warn(`[style-guide-infographic] body analysis failed for ${row.id}:`, message);
+      return { status: "failed", error: `Style analysis failed: ${message}` };
+    }
+  }
+
   let visualAssets = ensureVisualAssetsShell(
     parseVisualAssets(row.visual_assets),
     row.user_id,
@@ -117,10 +148,10 @@ export async function runStyleGuideInfographic(
   row.visual_assets = visualAssets;
 
   try {
-    const imageBuffer = await downloadBodyImage(admin, row.body_image_path);
+    const imageBuffer = await getBodyImage();
     const generated = await generateStyleGuideInfographic({
       imageBuffer,
-      styleGuide: row.style_guide,
+      styleGuide: row.style_guide!,
       colorAnalysis: row.color_analysis,
       faceShape: row.face_shape,
       features: row.features,
@@ -129,14 +160,14 @@ export async function runStyleGuideInfographic(
 
     const { error: upErr } = await admin.storage
       .from(env.supabase.bucket)
-      .upload(storagePath, generated.buffer, { contentType: "image/jpeg", upsert: true });
+      .upload(storagePath, generated.buffer, { contentType: generated.mime, upsert: true });
 
     if (upErr) throw new Error(upErr.message);
 
     visualAssets = setStyleGuideInfographicAsset(visualAssets, {
       path: storagePath,
       status: "ready",
-      mime: "image/jpeg",
+      mime: generated.mime,
       error: null,
       styleName: `Style Guide (${generated.promptVersion})`,
       width: generated.width,

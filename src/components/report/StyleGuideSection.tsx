@@ -13,6 +13,22 @@ interface Props {
   onRefresh: () => void;
 }
 
+function GeneratingPanel({ message }: { message: string }) {
+  return (
+    <section>
+      <p className="foil-label mb-2 border-none p-0">Style Guide</p>
+      <h2 className="font-display mb-4 text-2xl text-ink">Your Personal Style Board</h2>
+      <div
+        className="report-surface-panel flex flex-col items-center justify-center gap-4 rounded-3xl px-6 py-16"
+        style={{ background: "var(--infographic-frame)", aspectRatio: "3/4" }}
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-terracotta" />
+        <p className="text-center text-base font-medium text-ink">{message}</p>
+      </div>
+    </section>
+  );
+}
+
 export function StyleGuideSection({ report, onRefresh }: Props) {
   const [uploading, setUploading] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
@@ -23,13 +39,16 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
     report.visualAssets?.assets?.analysisInfographics?.styleGuide;
   const isPaid = report.isStyleGuidePaid;
   const bodyUploaded = report.bodyImageUploaded;
-  const pending = isPaid && (!asset || asset.status === "pending");
+  const creating =
+    isPaid &&
+    bodyUploaded &&
+    (!asset || asset.status === "pending");
 
   React.useEffect(() => {
-    if (!pending) return;
+    if (!creating && !(paymentInitiated && !isPaid)) return;
     const interval = setInterval(onRefresh, 5000);
     return () => clearInterval(interval);
-  }, [pending, onRefresh]);
+  }, [creating, paymentInitiated, isPaid, onRefresh]);
 
   async function handleUpload(file: File) {
     setUploading(true);
@@ -88,34 +107,26 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
     );
   }
 
-  if (isPaid || paymentInitiated) {
+  if (paymentInitiated && !isPaid) {
     return (
-      <section>
-        <p className="foil-label mb-2 border-none p-0">Style Guide</p>
-        <h2 className="font-display mb-4 text-2xl text-ink">Your Personal Style Board</h2>
-        <div
-          className="report-surface-panel flex flex-col items-center justify-center gap-4 rounded-3xl px-6 py-16"
-          style={{ background: "var(--infographic-frame)", aspectRatio: "3/4" }}
-        >
-          <Loader2 className="h-8 w-8 animate-spin text-terracotta" />
-          <p className="text-center text-base font-medium text-ink">
-            {paymentInitiated && !isPaid
-              ? "Payment received — starting your Style Guide…"
-              : "Generating your personal style guide…"}
-          </p>
-        </div>
-      </section>
+      <GeneratingPanel message="Payment received — starting your Style Guide…" />
     );
   }
 
-  if (bodyUploaded) {
+  if (creating) {
+    return (
+      <GeneratingPanel message="Analyzing your full-body photo and creating your style board…" />
+    );
+  }
+
+  if (bodyUploaded && !isPaid) {
     return (
       <section className="report-surface-panel rounded-3xl p-6 sm:p-8">
-        <p className="foil-label mb-2 border-none p-0">Style Guide Add-on</p>
-        <h2 className="font-display mb-3 text-2xl text-ink">Your full-body style board</h2>
+        <p className="foil-label mb-2 border-none p-0">Step 2 of 3</p>
+        <h2 className="font-display mb-3 text-2xl text-ink">Unlock your Style Board</h2>
         <p className="mb-6 text-sm text-ink-stone">
-          Full-body photo uploaded. Unlock your AI-generated style infographic with wardrobe essentials,
-          flattering silhouettes, and outfit inspiration tailored to you.
+          Full-body photo uploaded. Pay to unlock — we&apos;ll analyze your photo and generate a
+          personalised wardrobe infographic with essentials, silhouettes, and accent colours.
         </p>
         <StyleGuidePaywall
           reportId={report.id}
@@ -130,11 +141,11 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
 
   return (
     <section className="report-surface-panel rounded-3xl p-6 sm:p-8">
-      <p className="foil-label mb-2 border-none p-0">Style Guide Add-on</p>
+      <p className="foil-label mb-2 border-none p-0">Step 1 of 3</p>
       <h2 className="font-display mb-3 text-2xl text-ink">Upload a full-body photo</h2>
       <p className="mb-4 text-sm text-ink-stone">
-        Your Style Guide uses a full-body photo to create a personalised fashion infographic —
-        separate from your face selfie analysis.
+        Your Style Board uses a separate full-body photo — not your face selfie. After upload,
+        unlock the add-on and we&apos;ll analyze your silhouette to build your board.
       </p>
       <ul className="mb-6 space-y-1 text-sm text-ink-stone">
         <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0 text-terracotta" /> Head-to-toe visible, good lighting</li>

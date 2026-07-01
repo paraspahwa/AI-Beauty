@@ -1,18 +1,12 @@
 import { getGeneratableSectionIds } from "@/lib/ai/infographic-sections";
 import { scheduleInternalPost } from "@/lib/internal/schedule-job";
-import { isAdminUserEmail } from "@/lib/auth/access";
 import type { AnalysisInfographicSectionId } from "@/types/report";
 
-/** After analysis: admins get all sections; everyone else gets the free face-shape preview. */
+/** After analysis: free face-shape preview only (paid sections queue on unlock). */
 export function kickOffPostAnalysisInfographics(
   reportId: string,
-  userEmail: string | null | undefined,
+  _userEmail: string | null | undefined,
 ): void {
-  if (isAdminUserEmail(userEmail)) {
-    kickOffInfographicsInBackground(reportId);
-    console.info(`[kickoff-infographics] admin full queue report=${reportId}`);
-    return;
-  }
   kickOffFaceFeaturesPreviewInBackground(reportId);
 }
 

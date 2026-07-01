@@ -215,7 +215,7 @@ export async function compileVaultForUser(
     const infographics = visualAssets?.assets?.analysisInfographics;
 
     if (infographics) {
-      if (!hasPremium && infographics.faceFeaturesPreview?.status === "ready") {
+      if (infographics.faceFeaturesPreview?.status === "ready") {
         const asset = infographics.faceFeaturesPreview;
         if (asset.path) {
           pathsToSign.push(asset.path);
@@ -223,7 +223,7 @@ export async function compileVaultForUser(
             report: row,
             sectionKey: "faceFeaturesPreview",
             asset,
-            label: getBlueprintSection("faceFeaturesPreview")?.label ?? "Face Features Preview",
+            label: getBlueprintSection("faceFeaturesPreview")?.label ?? "Face Shape Preview",
             path: asset.path,
           });
         }
