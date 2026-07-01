@@ -26,12 +26,13 @@ function initials(name: string): string {
 
 export function TestimonialsSection({ items }: TestimonialsSectionProps) {
   return (
-    <section className="container max-w-6xl py-16">
+    <section className="container max-w-6xl py-16 sm:py-20">
       <div className="mb-2 flex flex-col items-center gap-2 text-center">
-        <h2 className="text-3xl text-ink sm:text-4xl">Loved by thousands</h2>
-        <div className="flex items-center gap-3 mt-3">
-          <p className="text-5xl font-semibold text-ink">4.9</p>
-          <div className="flex flex-col gap-1 items-start">
+        <span className="foil-label">Voices</span>
+        <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">Loved by thousands</h2>
+        <div className="mt-4 flex items-center gap-3">
+          <p className="font-display text-5xl text-ink">4.9</p>
+          <div className="flex flex-col items-start gap-1">
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
                 <motion.div
@@ -49,18 +50,26 @@ export function TestimonialsSection({ items }: TestimonialsSectionProps) {
           </div>
         </div>
       </div>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => (
           <motion.article
             key={item.id}
-            className="card-soft"
+            className="dossier-card relative pt-8"
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.25 }}
             transition={{ duration: 0.35, delay: index * 0.08 }}
           >
+            <span
+              className="pointer-events-none absolute left-4 top-2 font-display text-5xl leading-none text-terracotta/25"
+              aria-hidden
+            >
+              &ldquo;
+            </span>
+
             <div className="mb-4 flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-terracotta/35 bg-[linear-gradient(135deg,rgba(17,24,39,0.16),rgba(17,24,39,0.22))] text-xs font-semibold text-ink">
+              <div className="grid h-10 w-10 place-items-center rounded-full border border-terracotta/30 bg-blush text-xs font-semibold text-terracotta">
                 {initials(item.name)}
               </div>
               <div>
@@ -69,13 +78,7 @@ export function TestimonialsSection({ items }: TestimonialsSectionProps) {
               </div>
             </div>
 
-            <div className="mb-3 flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-terracotta text-terracotta" />
-              ))}
-            </div>
-
-            <p className="text-sm leading-relaxed text-ink-stone">&ldquo;{item.quote}&rdquo;</p>
+            <p className="text-sm leading-relaxed text-ink-stone italic">{item.quote}</p>
           </motion.article>
         ))}
       </div>

@@ -13,7 +13,8 @@ import { PRODUCT_COPY } from "@/lib/product-copy";
 
 const NAV_LINKS = [
   { href: "/#how", label: "How it works" },
-  { href: "/#features", label: "Features" },
+  { href: "/#samples", label: "Report" },
+  { href: "/#features", label: "Chapters" },
   { href: "/#pricing", label: "Pricing" },
 ];
 
@@ -88,7 +89,7 @@ export function Navbar() {
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled || !isHome
-          ? "glass border-b border-[var(--color-border)] shadow-sm"
+          ? "border-b border-terracotta/15 bg-[var(--parchment)]/90 shadow-sm backdrop-blur-md"
           : "bg-transparent",
       )}
     >
@@ -111,7 +112,7 @@ export function Navbar() {
           >
             <Sparkles className="h-4 w-4 text-[var(--btn-fg)]" />
           </motion.div>
-          <span className="font-semibold text-lg text-ink group-hover:opacity-80 transition-opacity duration-200">
+          <span className="font-display font-semibold text-lg text-ink group-hover:opacity-80 transition-opacity duration-200">
             Renovaara
           </span>
         </Link>

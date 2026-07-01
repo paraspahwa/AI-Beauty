@@ -22,7 +22,7 @@ export function FAQAccordion({ items }: FAQAccordionProps) {
       {items.map((item) => {
         const open = openId === item.id;
         return (
-          <article key={item.id} className="card-soft">
+          <article key={item.id} className="dossier-card">
             <button
               type="button"
               className="flex w-full items-center justify-between text-left"

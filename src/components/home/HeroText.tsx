@@ -9,9 +9,7 @@ import { HOME_CONTENT } from "@/lib/home-content";
 const containerVariants = {
   hidden: {},
   visible: {
-    transition: {
-      staggerChildren: 0.08,
-    },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
@@ -33,21 +31,21 @@ export function HeroText() {
       initial={reduced ? false : "hidden"}
       animate="visible"
     >
-      <motion.span variants={itemVariants} className="section-label">
+      <motion.span variants={itemVariants} className="foil-label">
         {HOME_CONTENT.hero.badge}
       </motion.span>
 
       <motion.h1
         variants={itemVariants}
-        className="mt-4 text-4xl sm:text-5xl lg:text-7xl text-ink leading-[1.05] tracking-tight"
+        className="mt-5 font-display text-4xl text-ink leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl"
       >
         {HOME_CONTENT.hero.title}{" "}
-        <span className="gradient-text font-bold" style={{ filter: "drop-shadow(0 0 28px rgba(17,24,39,0.50))" }}>{HOME_CONTENT.hero.titleAccent}</span>
+        <span className="gradient-text italic">{HOME_CONTENT.hero.titleAccent}</span>
       </motion.h1>
 
       <motion.p
         variants={itemVariants}
-        className="mt-6 max-w-xl text-base sm:text-lg text-ink-stone leading-relaxed"
+        className="mt-6 max-w-lg text-base text-ink-stone leading-relaxed sm:text-lg"
       >
         {HOME_CONTENT.hero.description}
       </motion.p>
@@ -57,7 +55,7 @@ export function HeroText() {
           <Link href={HOME_CONTENT.hero.primaryCta.href}>
             <Camera className="h-4 w-4" />
             {HOME_CONTENT.hero.primaryCta.label}
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1" />
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </Button>
         <Button asChild size="lg" variant="outline">
@@ -69,23 +67,14 @@ export function HeroText() {
 
       <motion.div
         variants={itemVariants}
-        className="mt-8 flex flex-wrap items-center gap-4 text-sm text-ink-stone"
+        className="mt-8 flex flex-wrap items-center gap-3 text-sm text-ink-stone"
       >
-        <div className="flex -space-x-2">
-          {["#111827", "#111827", "#fffafc", "#fffafc", "#fffafc"].map((c, i) => (
-            <div
-              key={i}
-              className="h-8 w-8 rounded-full border-2 border-white ring-1 ring-terracotta/20"
-              style={{ background: `radial-gradient(circle at 35% 35%, ${c}55, ${c}cc)` }}
-            />
-          ))}
-        </div>
         <span className="font-medium text-ink">50,000+ analyses</span>
-        <span className="text-ink-stone/40">·</span>
+        <span className="text-ink-mist/50">·</span>
         <span className="inline-flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5" /> ~60 second results
+          <Clock className="h-3.5 w-3.5 text-terracotta" /> ~60 second results
         </span>
-        <span className="text-ink-stone/40">·</span>
+        <span className="text-ink-mist/50">·</span>
         <span>No card required</span>
       </motion.div>
     </motion.div>

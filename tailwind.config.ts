@@ -43,10 +43,14 @@ const config: Config = {
           300: "var(--surface-muted)",
         },
         terracotta: {
-          DEFAULT: "var(--ink)",
-          light: "var(--color-border)",
-          dark: "var(--btn-bg)",
+          DEFAULT: "var(--terracotta)",
+          light: "var(--terracotta-light)",
+          dark: "var(--terracotta-dark)",
         },
+        parchment: "var(--parchment)",
+        espresso: "var(--espresso)",
+        blush: "var(--blush)",
+        "rose-gold": "var(--rose-gold)",
         olive: {
           DEFAULT: "var(--iris)",
           light: "var(--iris-light)",
@@ -58,9 +62,9 @@ const config: Config = {
           dark: "var(--color-border-hover)",
         },
         sage: {
-          DEFAULT: "var(--ink)",
-          light: "var(--ink-mist)",
-          dark: "var(--btn-bg)",
+          DEFAULT: "var(--sage)",
+          light: "var(--sage-light)",
+          dark: "var(--sage-dark)",
         },
         accent: {
           DEFAULT: "var(--btn-bg)",
@@ -71,8 +75,9 @@ const config: Config = {
         danger: "#b91c1c",
       },
       fontFamily: {
-        serif: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
-        sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+        serif: ["var(--font-display)", "Georgia", "serif"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "0.5rem",

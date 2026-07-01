@@ -26,12 +26,12 @@ export function StickyMobileCta() {
 
   return (
     <motion.div
-      className="fixed bottom-0 inset-x-0 z-50 sm:hidden border-t border-terracotta/20 bg-obsidian/90 backdrop-blur-md p-3"
+      className="fixed bottom-0 inset-x-0 z-50 sm:hidden border-t border-terracotta/25 bg-[var(--parchment)]/95 backdrop-blur-md p-3"
       initial={{ y: 80 }}
       animate={{ y: hidden ? 80 : 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <Button asChild size="lg" variant="accent" className="w-full cta-shimmer">
+      <Button asChild size="lg" variant="accent" className="w-full cta-shimmer cta-glow">
         <Link href="/upload" className="flex items-center justify-center gap-2">
           <Camera className="h-4 w-4" />
           Start free analysis
