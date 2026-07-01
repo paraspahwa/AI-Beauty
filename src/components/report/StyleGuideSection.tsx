@@ -15,7 +15,7 @@ interface Props {
 
 function GeneratingPanel({ message }: { message: string }) {
   return (
-    <section>
+    <section id="report-section-style-guide" className="scroll-mt-24">
       <p className="foil-label mb-2 border-none p-0">Style Guide</p>
       <h2 className="font-display mb-4 text-2xl text-ink">Your Personal Style Board</h2>
       <div
@@ -77,8 +77,8 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
 
   if (isPaid && asset?.status === "ready") {
     return (
-      <section>
-        <StyleGuideInfographic asset={asset} />
+      <section id="report-section-style-guide" className="scroll-mt-24">
+        <StyleGuideInfographic asset={asset} createdAt={report.createdAt} />
         <div className="mt-4">
           <PdfDownloadShare
             reportId={report.id}
@@ -93,7 +93,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
 
   if (isPaid && asset?.status === "failed") {
     return (
-      <section className="report-surface-panel rounded-3xl p-6 text-center sm:p-8">
+      <section id="report-section-style-guide" className="report-surface-panel scroll-mt-24 rounded-3xl p-6 text-center sm:p-8">
         <p className="mb-2 text-sm font-medium text-ink">Style Guide generation failed</p>
         <p className="mb-4 text-xs text-ink-stone">{asset.error ?? "Please try again."}</p>
         <button
@@ -121,7 +121,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
 
   if (bodyUploaded && !isPaid) {
     return (
-      <section className="report-surface-panel rounded-3xl p-6 sm:p-8">
+      <section id="report-section-style-guide" className="report-surface-panel scroll-mt-24 rounded-3xl p-6 sm:p-8">
         <p className="foil-label mb-2 border-none p-0">Step 2 of 3</p>
         <h2 className="font-display mb-3 text-2xl text-ink">Unlock your Style Board</h2>
         <p className="mb-6 text-sm text-ink-stone">
@@ -140,7 +140,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
   }
 
   return (
-    <section className="report-surface-panel rounded-3xl p-6 sm:p-8">
+    <section id="report-section-style-guide" className="report-surface-panel scroll-mt-24 rounded-3xl p-6 sm:p-8">
       <p className="foil-label mb-2 border-none p-0">Step 1 of 3</p>
       <h2 className="font-display mb-3 text-2xl text-ink">Upload a full-body photo</h2>
       <p className="mb-4 text-sm text-ink-stone">

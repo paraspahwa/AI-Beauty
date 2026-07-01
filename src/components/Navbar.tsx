@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient, isSupabaseBrowserConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { PRODUCT_COPY } from "@/lib/product-copy";
+import { useJourneySnapshot } from "@/hooks/use-journey-snapshot";
+import { getNavJourneyHint, shouldShowNavJourneyHint } from "@/lib/report/journey-hints";
+import { NavJourneyPill } from "@/components/ui/NavJourneyPill";
 
 const NAV_LINKS = [
   { href: "/#how", label: "How it works" },
@@ -29,6 +32,11 @@ export function Navbar() {
   const [themeMounted, setThemeMounted] = React.useState(false);
   const dashRef = React.useRef<HTMLDivElement>(null);
   const isHome = pathname === "/";
+  const journeySnapshot = useJourneySnapshot();
+  const navJourneyHint = !journeySnapshot.loading
+    ? getNavJourneyHint(journeySnapshot)
+    : null;
+  const showNavHint = shouldShowNavJourneyHint(pathname, navJourneyHint, journeySnapshot.authenticated);
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -141,6 +149,9 @@ export function Navbar() {
 
         {/* Right side CTA */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
+          {showNavHint && navJourneyHint && (
+            <NavJourneyPill hint={navJourneyHint} className="hidden md:inline-flex" />
+          )}
           <Button variant="outline" size="sm" onClick={toggleTheme} aria-label="Toggle dark mode" suppressHydrationWarning>
             {themeMounted && theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
             <span suppressHydrationWarning>{themeMounted ? (theme === "dark" ? "Light" : "Dark") : "Theme"}</span>
@@ -238,6 +249,11 @@ export function Navbar() {
             id="mobile-nav"
           >
             <div className="container py-4 space-y-1">
+              {showNavHint && navJourneyHint && (
+                <div className="mb-3 px-2">
+                  <NavJourneyPill hint={navJourneyHint} className="w-full max-w-none justify-between" />
+                </div>
+              )}
               {isHome &&
                 NAV_LINKS.map((link) => (
                   <Link

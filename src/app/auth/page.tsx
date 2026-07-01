@@ -9,6 +9,18 @@ import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient, isSupabaseBrowserConfigured } from "@/lib/supabase/client";
 import { staggerContainer, fadeUp } from "@/lib/animations";
 import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
+import { NextStepHint } from "@/components/ui/NextStepHint";
+import type { JourneyHint } from "@/lib/report/journey-hints";
+
+const POST_AUTH_HINT: JourneyHint = {
+  id: "auth-upload-next",
+  step: "After sign-in",
+  title: "Next: upload your selfie",
+  body: "One clear photo in natural light — we'll analyse your face shape and start your free preview board automatically.",
+  tone: "action",
+  ctaLabel: "See the upload guide",
+  href: "/upload",
+};
 
 function resolvePostAuthPath(searchParams: URLSearchParams): string {
   const redirect = searchParams.get("redirect") ?? searchParams.get("next");
@@ -464,6 +476,7 @@ function AuthContent() {
                     {cooldown > 0 ? `try again in ${cooldown}s` : "try again"}
                   </button>.
                 </p>
+                <NextStepHint hint={POST_AUTH_HINT} className="text-left" />
               </motion.div>
 
             ) : tab === "email" && signupDone ? (
@@ -481,6 +494,7 @@ function AuthContent() {
                 >
                   Back to sign in
                 </button>
+                <NextStepHint hint={POST_AUTH_HINT} className="text-left" />
               </motion.div>
 
             ) : tab === "phone" && otpSent ? (

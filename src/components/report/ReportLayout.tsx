@@ -12,6 +12,8 @@ import { PdfDownloadShare } from "./PdfDownloadShare";
 import { publicEnv } from "@/lib/public-env";
 import { Paywall } from "@/components/Paywall";
 import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
+import { NextStepHint } from "@/components/ui/NextStepHint";
+import { getReportJourneyHint } from "@/lib/report/journey-hints";
 import type { AnalysisInfographics, CompiledReport, ReportVisualAsset } from "@/types/report";
 import { fadeUp, staggerContainer } from "@/lib/animations";
 
@@ -71,6 +73,9 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
   const headerTitle = report.colorAnalysis?.season
     ? `Your ${report.colorAnalysis.season} Beauty Profile`
     : "Personal Beauty Profile";
+
+  const journeyHint = React.useMemo(() => getReportJourneyHint(report), [report]);
+  const highlightSection = journeyHint?.scrollToId?.replace("report-section-", "");
 
   const refresh = React.useCallback(async () => {
     const res = await fetch(`/api/reports/${report.id}`, { cache: "no-store" });
@@ -145,9 +150,24 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
           </div>
         )}
 
+        {journeyHint && !paymentInitiated && (
+          <div className="mb-8">
+            <NextStepHint
+              hint={journeyHint}
+              onAction={() => setPaywallOpen(true)}
+            />
+          </div>
+        )}
+
         <div className="space-y-8">
           {report.faceShape ? (
-            <FaceFeaturesInfographic asset={faceInfographic} isPaid={isPaid} />
+            <FaceFeaturesInfographic
+              asset={faceInfographic}
+              isPaid={isPaid}
+              createdAt={report.createdAt}
+              downloadSectionKey={isPaid ? "faceFeatures" : "faceFeaturesPreview"}
+              highlighted={highlightSection === "face"}
+            />
           ) : (
             <ProcessingCard />
           )}
@@ -174,6 +194,8 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   title="Skin Analysis"
                   description="Your skin type, zones, and AM/PM routine — illustrated as a consultant-style board."
                   asset={skinInfographic}
+                  createdAt={report.createdAt}
+                  highlighted={highlightSection === "skin"}
                   onRefresh={refresh}
                 />
               )}
@@ -185,6 +207,8 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   title="Color Analysis"
                   description="Seasonal palette, best colours, and metals matched to your undertone."
                   asset={colorInfographic}
+                  createdAt={report.createdAt}
+                  highlighted={highlightSection === "color"}
                   onRefresh={refresh}
                 />
               )}
@@ -196,6 +220,8 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   title="Hairstyle Analysis"
                   description="Flattering cuts, lengths, and styling direction for your face shape."
                   asset={hairstyleInfographic}
+                  createdAt={report.createdAt}
+                  highlighted={highlightSection === "hairstyle"}
                   onRefresh={refresh}
                 />
               )}
@@ -207,6 +233,8 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   title="Hair Color Analysis"
                   description="Shades that harmonise with your complexion — and tones to approach with care."
                   asset={hairColorInfographic}
+                  createdAt={report.createdAt}
+                  highlighted={highlightSection === "hairColor"}
                   onRefresh={refresh}
                 />
               )}
@@ -218,13 +246,15 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   title="Spectacles Guide"
                   description="Frame shapes, colours, and fits that balance your features."
                   asset={spectaclesInfographic}
+                  createdAt={report.createdAt}
+                  highlighted={highlightSection === "spectacles"}
                   onRefresh={refresh}
                 />
               )}
               <StyleGuideSection report={report} onRefresh={refresh} />
             </>
           ) : (
-            <LockedSections reportId={report.id} onUnlocked={refresh} onOpenPaywall={() => setPaywallOpen(true)} />
+            <LockedSections onOpenPaywall={() => setPaywallOpen(true)} />
           )}
         </div>
 
@@ -257,34 +287,42 @@ function ProcessingCard() {
 }
 
 function LockedSections({
-  reportId,
-  onUnlocked,
   onOpenPaywall,
 }: {
-  reportId: string;
-  onUnlocked: () => void;
   onOpenPaywall: () => void;
 }) {
-  const sections = [
+  const chapters = [
     "Skin Analysis",
-    "Color Guide",
-    "Hairstyle Guide",
-    "Hair Color Guide",
+    "Color Analysis",
+    "Hairstyle Analysis",
+    "Hair Color Analysis",
     "Spectacles Guide",
   ];
   return (
-    <div className="space-y-4">
-      {sections.map((title) => (
-        <div
-          key={title}
-          className="dossier-card rounded-3xl p-8 text-center"
-        >
-          <Lock className="mx-auto mb-3 h-8 w-8 text-rose-gold" />
-          <p className="font-display font-semibold text-ink mb-2">{title}</p>
-          <p className="text-sm text-ink-stone mb-4">Unlock the full report to view this section.</p>
-          <Paywall reportId={reportId} onUnlocked={onUnlocked} />
-        </div>
-      ))}
+    <div className="report-surface-panel rounded-3xl border border-terracotta/10 p-6 sm:p-8">
+      <p className="foil-label mb-2 border-none p-0">Step 3 of 3 — after unlock</p>
+      <h3 className="font-display mb-3 text-xl text-ink">Six illustrated chapters await</h3>
+      <p className="mb-4 text-sm text-ink-stone">
+        Unlock once, then tap Generate on each chapter to create your boards — saved automatically to your Vault.
+      </p>
+      <ul className="mb-6 grid gap-2 sm:grid-cols-2">
+        {chapters.map((title) => (
+          <li
+            key={title}
+            className="flex items-center gap-2 rounded-xl border border-terracotta/10 bg-[var(--report-photo-bg)] px-3 py-2 text-sm text-ink-stone"
+          >
+            <Lock className="h-3.5 w-3.5 shrink-0 text-rose-gold" />
+            {title}
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        onClick={onOpenPaywall}
+        className="w-full rounded-full bg-espresso py-3 text-sm font-semibold text-[var(--btn-fg)] sm:w-auto sm:px-8"
+      >
+        Unlock to continue →
+      </button>
     </div>
   );
 }

@@ -7,6 +7,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sparkles, CheckCircle2, ArrowRight, FileText } from "lucide-react";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/animations";
+import { NextStepHint } from "@/components/ui/NextStepHint";
+import type { JourneyHint } from "@/lib/report/journey-hints";
+
+const UNLOCK_NEXT_HINT: JourneyHint = {
+  id: "success-next",
+  step: "Step 1 of 3",
+  title: "Next: generate your chapter boards",
+  body: "Your full face features board starts automatically. Tap Generate on Skin, Colour, Hairstyle, and the rest — each saves to your Vault.",
+  tone: "action",
+};
 
 const PERKS = [
   "Full color season report with custom palette",
@@ -89,6 +99,10 @@ function SuccessContent() {
             </motion.li>
           ))}
         </motion.ul>
+
+        <motion.div variants={fadeUp} className="mb-6 text-left">
+          <NextStepHint hint={UNLOCK_NEXT_HINT} />
+        </motion.div>
 
         <motion.div variants={fadeUp}>
           <Button asChild variant="accent" size="lg" className="group w-full cta-shimmer">

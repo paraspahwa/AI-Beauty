@@ -19,10 +19,10 @@ export function FreePreviewTeaser({ colorAnalysis, summary, teaserOnly = true }:
           {teaserOnly ? (
             <>
               <h3 className="font-display text-2xl text-ink">
-                ? season — try a look to reveal
+                Your colour season is locked
               </h3>
               <p className="mt-2 text-sm text-ink-stone">
-                Your undertone and palette unlock as you explore looks in Try &amp; Shop.
+                Unlock the full report to reveal your seasonal palette, undertone, and best colours — illustrated in your Colour chapter.
               </p>
             </>
           ) : (

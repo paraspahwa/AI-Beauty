@@ -6,6 +6,8 @@ import { Archive, Camera, Loader2, Sparkles } from "lucide-react";
 import type { VaultItem, VaultResponse } from "@/types/vault";
 import { VaultAssetCard } from "./VaultAssetCard";
 import { Button } from "@/components/ui/button";
+import { getVaultJourneyHint } from "@/lib/report/journey-hints";
+import { NextStepHint } from "@/components/ui/NextStepHint";
 import styles from "@/app/dashboard/dashboard.module.css";
 
 type Filter = "all" | "uploads" | "analysis";
@@ -52,8 +54,19 @@ export function VaultGallery({ initialData }: VaultGalleryProps) {
     { id: "analysis", label: "Analysis", count: data?.counts.analysis ?? 0 },
   ];
 
+  const vaultHint = React.useMemo(
+    () => (data ? getVaultJourneyHint(data.counts) : null),
+    [data],
+  );
+
   return (
     <div>
+      {!loading && !error && vaultHint && (
+        <div className="mb-8">
+          <NextStepHint hint={vaultHint} />
+        </div>
+      )}
+
       <div className="mb-8 flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <button

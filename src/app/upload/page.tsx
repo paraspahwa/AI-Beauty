@@ -14,6 +14,24 @@ const TIPS = [
   "One face per photo for the most accurate analysis",
 ];
 
+const JOURNEY_STEPS = [
+  {
+    step: "1",
+    title: "Upload & analyse",
+    body: "We read your face shape, colour season, skin, and styling profile — usually under a minute.",
+  },
+  {
+    step: "2",
+    title: "Free face-shape board",
+    body: "Your illustrated preview appears on the report and in your Vault — no payment needed.",
+  },
+  {
+    step: "3",
+    title: "Unlock & generate chapters",
+    body: "Unlock once, then tap Generate on each chapter. Boards save to your Vault as they finish.",
+  },
+];
+
 export default function UploadPage() {
   return (
     <Suspense>
@@ -63,6 +81,27 @@ function UploadPageContent() {
               }}
             />
           </motion.div>
+
+          <motion.aside
+            variants={fadeUp}
+            className="mx-auto mt-8 max-w-lg rounded-2xl border border-terracotta/20 bg-gradient-to-br from-terracotta/5 via-transparent to-rose-gold/5 px-5 py-5 sm:px-6"
+            aria-label="What happens next"
+          >
+            <p className="foil-label mb-4 border-none p-0 text-[10px] tracking-[0.2em]">What happens next</p>
+            <ol className="space-y-4">
+              {JOURNEY_STEPS.map((item) => (
+                <li key={item.step} className="flex gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-terracotta/25 bg-[var(--report-photo-bg)] font-display text-sm text-terracotta">
+                    {item.step}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{item.title}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-ink-stone">{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </motion.aside>
 
           <motion.div variants={fadeUp} className="mt-6 flex flex-wrap justify-center gap-6 text-xs text-ink-stone">
             <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-sage" /> Your photo is private, never sold</span>

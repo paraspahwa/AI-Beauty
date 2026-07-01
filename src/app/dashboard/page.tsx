@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { getDashboardReportHint } from "@/lib/report/journey-hints";
 import styles from "./dashboard.module.css";
 
 type ReportRow = {
@@ -84,6 +85,12 @@ export default async function DashboardPage() {
                   day: "numeric",
                 });
                 const shape = report.face_shape?.shape ?? null;
+                const hasPremium = report.is_paid || isAdminPremium;
+                const nextHint = getDashboardReportHint({
+                  status: report.status,
+                  is_paid: report.is_paid,
+                  hasPremium,
+                });
 
                 return (
                   <div
@@ -109,6 +116,9 @@ export default async function DashboardPage() {
                         {report.summary && (
                           <p className="mt-1 line-clamp-2 text-xs text-ink-stone">{report.summary}</p>
                         )}
+                        <p className="mt-2 text-xs font-medium text-terracotta">
+                          Next: {nextHint.detail ?? nextHint.label}
+                        </p>
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

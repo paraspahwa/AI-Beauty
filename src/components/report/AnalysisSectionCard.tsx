@@ -3,10 +3,12 @@
 import * as React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Check, Loader2, Sparkles, Vault } from "lucide-react";
+import { Check, Loader2, Sparkles } from "lucide-react";
 import type { ReportVisualAsset } from "@/types/report";
 import type { ManualPaidInfographicSection } from "@/lib/ai/run-analysis-infographics";
+import { sectionDomId } from "@/lib/report/journey-hints";
 import { fadeUp } from "@/lib/animations";
+import { InfographicReadyBar } from "./InfographicReadyBar";
 
 interface Props {
   reportId: string;
@@ -15,6 +17,8 @@ interface Props {
   title: string;
   description: string;
   asset?: ReportVisualAsset;
+  createdAt?: string;
+  highlighted?: boolean;
   onRefresh: () => void;
 }
 
@@ -27,6 +31,8 @@ export function AnalysisSectionCard({
   title,
   description,
   asset,
+  createdAt,
+  highlighted = false,
   onRefresh,
 }: Props) {
   const [starting, setStarting] = React.useState(false);
@@ -56,11 +62,16 @@ export function AnalysisSectionCard({
 
   return (
     <motion.section
+      id={sectionDomId(section)}
       variants={fadeUp}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-40px" }}
-      className="report-surface-panel overflow-hidden rounded-3xl border border-terracotta/10"
+      className={`report-surface-panel scroll-mt-24 overflow-hidden rounded-3xl border transition-shadow ${
+        highlighted
+          ? "border-terracotta/50 ring-2 ring-terracotta/25 shadow-[0_0_0_4px_rgba(180,83,9,0.06)]"
+          : "border-terracotta/10"
+      }`}
     >
       <div className="border-b border-terracotta/10 bg-[var(--report-icon-bg)]/40 px-6 py-5 sm:px-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -86,10 +97,13 @@ export function AnalysisSectionCard({
                 sizes="(max-width: 768px) 100vw, 900px"
               />
             </div>
-            <p className="flex items-center justify-center gap-2 border-t border-terracotta/10 py-3 text-xs text-ink-stone">
-              <Vault className="h-3.5 w-3.5 text-terracotta" />
-              Saved to your Vault
-            </p>
+            <InfographicReadyBar
+              signedUrl={asset.signedUrl}
+              sectionKey={section}
+              mime={asset.mime}
+              createdAt={createdAt}
+              label={title}
+            />
           </div>
         ) : status === "failed" ? (
           <ActionPanel
