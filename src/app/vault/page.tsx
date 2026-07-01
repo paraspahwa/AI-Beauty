@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
+import { compileVaultForUser } from "@/lib/vault/compile-vault";
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VaultGallery } from "@/components/vault/VaultGallery";
@@ -17,6 +18,9 @@ export default async function VaultPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/auth?redirect=/vault");
+
+  const admin = createSupabaseAdminClient();
+  const initialVault = await compileVaultForUser(admin, user.id, user.email);
 
   return (
     <main className={`min-h-app-viewport ${styles.pageBase}`}>
@@ -41,7 +45,7 @@ export default async function VaultPage() {
             }
           />
 
-          <VaultGallery />
+          <VaultGallery initialData={initialVault} />
         </div>
       </div>
     </main>

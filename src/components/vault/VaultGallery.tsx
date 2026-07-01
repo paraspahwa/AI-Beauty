@@ -10,9 +10,13 @@ import styles from "@/app/dashboard/dashboard.module.css";
 
 type Filter = "all" | "uploads" | "analysis";
 
-export function VaultGallery() {
-  const [data, setData] = React.useState<VaultResponse | null>(null);
-  const [loading, setLoading] = React.useState(true);
+interface VaultGalleryProps {
+  initialData?: VaultResponse;
+}
+
+export function VaultGallery({ initialData }: VaultGalleryProps) {
+  const [data, setData] = React.useState<VaultResponse | null>(initialData ?? null);
+  const [loading, setLoading] = React.useState(!initialData);
   const [error, setError] = React.useState<string | null>(null);
   const [filter, setFilter] = React.useState<Filter>("all");
 
@@ -31,8 +35,9 @@ export function VaultGallery() {
   }, []);
 
   React.useEffect(() => {
+    if (initialData) return;
     void load();
-  }, [load]);
+  }, [initialData, load]);
 
   const filtered: VaultItem[] = React.useMemo(() => {
     if (!data) return [];
