@@ -33,9 +33,11 @@ export function isReportScopedStoragePath(
   reportId: string,
 ): path is string {
   if (!isVaultStoragePath(path)) return false;
+  const selfiePath = `${userId}/${reportId}.jpg`;
+  const bodyImagePath = `${userId}/${reportId}-body.jpg`;
   return (
-    isReportSelfiePath(path, userId, reportId) ||
-    isReportBodyImagePath(path, userId, reportId) ||
+    path === selfiePath ||
+    path === bodyImagePath ||
     path.startsWith(`${userId}/${reportId}/`) ||
     path.startsWith(`users/${userId}/reports/${reportId}/`)
   );
