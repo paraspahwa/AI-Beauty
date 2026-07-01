@@ -22,6 +22,20 @@ export interface ShowcaseTuning {
   rowGapClass: string;
 }
 
+export interface ReportSampleConfig {
+  id: string;
+  label: string;
+  description: string;
+  imageFile?: string;
+  tag?: string;
+}
+
+export interface ReportSampleItem extends ReportSampleConfig {
+  imageSrc: string;
+  fallbackSrc: string;
+  imageAlt: string;
+}
+
 interface HomeContentConfig {
   hero: {
     badge: string;
@@ -42,6 +56,7 @@ interface HomeContentConfig {
     pairs: SamplePairConfig[];
     tuning: ShowcaseTuning;
   };
+  reportSamples: ReportSampleConfig[];
 }
 
 export const HOME_CONTENT = homeContent as HomeContentConfig;
@@ -96,4 +111,23 @@ export function toBeforeAfterItems(): BeforeAfterItem[] {
     beforeAlt: pair.beforeAlt ?? getDefaultAlt(pair.baseName, "before"),
     afterAlt: pair.afterAlt ?? getDefaultAlt(pair.baseName, "after"),
   }));
+}
+
+function reportSampleCanonicalPath(id: string): string {
+  return `/samples/report/${id}.jpg`;
+}
+
+/** Landing gallery items — canonical paths under /samples/report/ with legacy fallbacks. */
+export function toReportSampleItems(): ReportSampleItem[] {
+  return HOME_CONTENT.reportSamples.map((sample) => {
+    const fallbackSrc = sample.imageFile
+      ? normalizeSamplePath(sample.imageFile)
+      : `/samples/sample-1-after.jpg`;
+    return {
+      ...sample,
+      imageSrc: reportSampleCanonicalPath(sample.id),
+      fallbackSrc,
+      imageAlt: `Sample ${sample.label} infographic — Renovaara`,
+    };
+  });
 }

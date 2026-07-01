@@ -9,8 +9,8 @@
       "href": "/upload"
     },
     "secondaryCta": {
-      "label": "See what's included",
-      "href": "/#pricing"
+      "label": "See sample report",
+      "href": "/#samples"
     }
   },
   "ctaBanner": {
@@ -81,5 +81,49 @@
       "cardHeightClass": "h-64 sm:h-72",
       "rowGapClass": "gap-4"
     }
-  }
+  },
+  "reportSamples": [
+    {
+      "id": "faceFeaturesPreview",
+      "label": "Face Shape Preview",
+      "description": "Your free preview — face shape mapped in a luxury infographic before you unlock.",
+      "imageFile": "sample-1-after.jpg",
+      "tag": "Free"
+    },
+    {
+      "id": "skin",
+      "label": "Skin Analysis",
+      "description": "Skin type, concerns, and AM/PM routine guidance in one shareable graphic.",
+      "imageFile": "sample-4-after.jpg",
+      "tag": "Full report"
+    },
+    {
+      "id": "color",
+      "label": "Colour Analysis",
+      "description": "Your seasonal palette — best clothing, makeup, and metal tones for your undertone.",
+      "imageFile": "sample-4.jpg",
+      "tag": "Full report"
+    },
+    {
+      "id": "hairstyle",
+      "label": "Hairstyle Guide",
+      "description": "Cuts and lengths matched to your face shape — a reference card you can take to your stylist.",
+      "imageFile": "sample-2-after.jpg",
+      "tag": "Full report"
+    },
+    {
+      "id": "spectacles",
+      "label": "Spectacles Guide",
+      "description": "Frame shape, material, and colour recommendations tailored to your features.",
+      "imageFile": "sample-3-after.jpg",
+      "tag": "Full report"
+    },
+    {
+      "id": "hairColor",
+      "label": "Hair Colour",
+      "description": "Flattering shade directions and placement ideas for your complexion.",
+      "imageFile": "sample-2.jpg",
+      "tag": "Full report"
+    }
+  ]
 }

@@ -6,20 +6,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SampleShowcase } from "@/components/home/SampleShowcase";
 import { StatsCounters, type StatItem } from "@/components/home/StatsCounters";
+import { ReportSampleGallery } from "@/components/home/ReportSampleGallery";
 import { FAQAccordion } from "@/components/home/FAQAccordion";
 import { TestimonialsSection, type TestimonialItem } from "@/components/home/TestimonialsSection";
 import { ActivityTicker } from "@/components/home/ActivityTicker";
 import { HeroReportCard } from "@/components/home/HeroReportCard";
 import { StickyMobileCta } from "@/components/home/StickyMobileCta";
-import { HOME_CONTENT, toBeforeAfterItems } from "@/lib/home-content";
+import { HOME_CONTENT } from "@/lib/home-content";
 import { getLandingPlans, fmtInr } from "@/lib/landing-pricing";
 import { LANDING_FEATURES, LANDING_STEPS, getLandingFaqs } from "@/lib/landing-content";
 import { publicEnv } from "@/lib/public-env";
 import { HeroText } from "@/components/home/HeroText";
 import { RevealSection } from "@/components/home/RevealSection";
-import { AiStoryPanels } from "@/components/home/AiStoryPanels";
 import styles from "./home.module.css";
 
 const TESTIMONIALS: TestimonialItem[] = [
@@ -54,7 +53,6 @@ const STATS: StatItem[] = HOME_CONTENT.stats;
 const FAQS = getLandingFaqs();
 
 export default function HomePage() {
-  const showcaseItems = toBeforeAfterItems();
   const plans = getLandingPlans();
   const reportPriceLabel = fmtInr(publicEnv.razorpay.priceINR);
 
@@ -106,6 +104,10 @@ export default function HomePage() {
         <StatsCounters items={STATS} />
       </RevealSection>
 
+      <RevealSection>
+        <ReportSampleGallery />
+      </RevealSection>
+
       <section id="how" className="container max-w-6xl py-16 scroll-mt-20">
         <RevealSection>
           <div className="text-center">
@@ -155,10 +157,6 @@ export default function HomePage() {
           </div>
         </RevealSection>
       </section>
-
-      <RevealSection>
-        <AiStoryPanels />
-      </RevealSection>
 
       {/* Report showcase video — warm flatlay with Colour Season + Skin Routine + Style Guide */}
       <section className="container max-w-4xl py-8">
@@ -243,8 +241,6 @@ export default function HomePage() {
           </div>
         </RevealSection>
       </section>
-
-      <SampleShowcase items={showcaseItems} tuning={HOME_CONTENT.showcase.tuning} />
 
       {/* Report spotlight */}
       <section className="relative isolate overflow-hidden py-24 sm:py-32">
