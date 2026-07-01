@@ -953,9 +953,9 @@ export async function fetchStyleDnaSummary(): Promise<MobileStyleDnaSummary> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const latestPromise = supabase
+  const latestReportPromise = supabase
     .from("reports")
-    .select("id, created_at, color_analysis, face_shape, skin_analysis, hairstyle")
+    .select("id, created_at")
     .eq("user_id", user.id)
     .eq("status", "ready")
     .order("created_at", { ascending: false })
@@ -967,7 +967,11 @@ export async function fetchStyleDnaSummary(): Promise<MobileStyleDnaSummary> {
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id);
 
-  const [prefsResult, latestResult, countResult] = await Promise.allSettled([prefsPromise, latestPromise, countPromise]);
+  const [prefsResult, latestReportResult, countResult] = await Promise.allSettled([
+    prefsPromise,
+    latestReportPromise,
+    countPromise,
+  ]);
 
   const prefs = prefsResult.status === "fulfilled" && prefsResult.value.data
     ? {
@@ -985,16 +989,22 @@ export async function fetchStyleDnaSummary(): Promise<MobileStyleDnaSummary> {
       }
     : null;
 
-  const latest = latestResult.status === "fulfilled" && latestResult.value.data
-    ? {
-        id: latestResult.value.data.id as string,
-        createdAt: latestResult.value.data.created_at as string,
-        colorAnalysis: (latestResult.value.data.color_analysis as MobileColorAnalysis | null) ?? null,
-        faceShape: (latestResult.value.data.face_shape as MobileFaceShape | null) ?? null,
-        skinAnalysis: (latestResult.value.data.skin_analysis as MobileSkinAnalysis | null) ?? null,
-        hairstyle: (latestResult.value.data.hairstyle as MobileHairstyle | null) ?? null,
-      }
-    : null;
+  let latest: MobileStyleDnaSummary["latest"] = null;
+  if (latestReportResult.status === "fulfilled" && latestReportResult.value.data) {
+    try {
+      const report = await fetchReport(latestReportResult.value.data.id as string);
+      latest = {
+        id: report.id,
+        createdAt: report.createdAt,
+        colorAnalysis: report.colorAnalysis ?? null,
+        faceShape: report.faceShape ?? null,
+        skinAnalysis: report.skinAnalysis ?? null,
+        hairstyle: report.hairstyle ?? null,
+      };
+    } catch {
+      latest = null;
+    }
+  }
 
   const totalReports = countResult.status === "fulfilled" ? countResult.value.count ?? 0 : 0;
 
@@ -1008,22 +1018,33 @@ export async function fetchProgressReports(): Promise<MobileProgressReport[]> {
 
   const { data: rows, error } = await supabase
     .from("reports")
-    .select("id, created_at, color_analysis, face_shape, skin_analysis, is_paid, status")
+    .select("id, created_at, face_shape, is_paid, status")
     .eq("user_id", user.id)
     .eq("status", "ready")
     .order("created_at", { ascending: true });
 
   if (error) throw error;
 
-  return (rows ?? []).map((row) => ({
-    id: row.id as string,
-    createdAt: row.created_at as string,
-    colorAnalysis: (row.color_analysis as MobileColorAnalysis | null) ?? null,
-    faceShape: (row.face_shape as MobileFaceShape | null) ?? null,
-    skinAnalysis: (row.skin_analysis as MobileSkinAnalysis | null) ?? null,
-    isPaid: Boolean(row.is_paid),
-    status: row.status as string,
-  }));
+  return Promise.all(
+    (rows ?? []).map(async (row) => {
+      let report: MobileReport | null = null;
+      try {
+        report = await fetchReport(row.id as string);
+      } catch {
+        report = null;
+      }
+
+      return {
+        id: row.id as string,
+        createdAt: row.created_at as string,
+        colorAnalysis: report?.colorAnalysis ?? null,
+        faceShape: report?.faceShape ?? (row.face_shape as MobileFaceShape | null) ?? null,
+        skinAnalysis: report?.skinAnalysis ?? null,
+        isPaid: Boolean(row.is_paid),
+        status: row.status as string,
+      };
+    }),
+  );
 }
 
 const GUEST_STUDIO_STATE_KEY = "rv_guest_studio_state";

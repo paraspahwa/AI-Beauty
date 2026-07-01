@@ -9,7 +9,11 @@ import {
 import type { AnalysisInfographics, ReportVisualAsset, ReportVisualAssets } from "@/types/report";
 import type { VaultItem, VaultResponse } from "@/types/vault";
 import type { createSupabaseAdminClient } from "@/lib/supabase/server";
-import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
+import {
+  isReportBodyImagePath,
+  isReportScopedStoragePath,
+  isReportSelfiePath,
+} from "@/lib/vault/vault-item-id";
 
 const SIGNED_URL_TTL = 60 * 60;
 
@@ -140,7 +144,7 @@ export async function compileVaultForUser(
     const date = new Date(row.created_at).toISOString().slice(0, 10);
     const shape = row.face_shape?.shape;
 
-    if (isVaultStoragePath(row.image_path)) {
+    if (isReportSelfiePath(row.image_path, userId, row.id)) {
       const signedUrl = await signPath(admin, bucket, row.image_path);
       if (signedUrl) {
         items.push({
@@ -161,7 +165,7 @@ export async function compileVaultForUser(
       }
     }
 
-    if (row.body_image_path) {
+    if (isReportBodyImagePath(row.body_image_path, userId, row.id)) {
       const signedUrl = await signPath(admin, bucket, row.body_image_path);
       if (signedUrl) {
         items.push({
@@ -186,7 +190,8 @@ export async function compileVaultForUser(
     const infographics = visualAssets?.assets?.analysisInfographics;
 
     if (infographics) {
-      const signAsset = async (path: string) => signPath(admin, bucket, path);
+      const signAsset = async (path: string) =>
+        isReportScopedStoragePath(path, userId, row.id) ? signPath(admin, bucket, path) : undefined;
 
       if (!hasPremium && infographics.faceFeaturesPreview?.status === "ready") {
         const asset = infographics.faceFeaturesPreview;
@@ -246,7 +251,7 @@ export async function compileVaultForUser(
 
     if (hasPremium) {
       const visualForPdf = parseReportVisualAssets(row.visual_assets);
-      if (collectReportAnalysisSlides(visualForPdf).length > 0) {
+      if (collectReportAnalysisSlides(visualForPdf, userId, row.id).length > 0) {
         items.push({
           id: `${row.id}:pdf:report`,
           reportId: row.id,
@@ -268,7 +273,7 @@ export async function compileVaultForUser(
 
     if (hasStyleGuide) {
       const visualForPdf = parseReportVisualAssets(row.visual_assets);
-      if (collectStyleGuideSlides(visualForPdf).length > 0) {
+      if (collectStyleGuideSlides(visualForPdf, userId, row.id).length > 0) {
         items.push({
           id: `${row.id}:pdf:style-guide`,
           reportId: row.id,

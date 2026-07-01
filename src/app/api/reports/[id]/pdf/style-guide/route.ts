@@ -47,7 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const visualAssets = parseReportVisualAssets(row.visual_assets);
-  const slides = collectStyleGuideSlides(visualAssets);
+  const slides = collectStyleGuideSlides(visualAssets, row.user_id, row.id);
 
   if (slides.length === 0) {
     return NextResponse.json(

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasPremiumAccess } from "@/lib/auth/access";
+import { previewSummaryForUnpaid } from "@/lib/report-access";
 import { Camera, FileText, Clock, CheckCircle2, AlertCircle, Lock, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,14 +31,21 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/auth?redirect=/dashboard");
 
-  const { data: reports } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: reports } = await admin
     .from("reports")
     .select("id, status, is_paid, created_at, summary, face_shape")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const rows = (reports ?? []) as ReportRow[];
   const isAdminPremium = hasPremiumAccess({ isPaid: false, userEmail: user.email });
+  const rows = ((reports ?? []) as ReportRow[]).map((report) => {
+    const hasPremium = hasPremiumAccess({ isPaid: !!report.is_paid, userEmail: user.email });
+    return {
+      ...report,
+      summary: hasPremium ? report.summary : previewSummaryForUnpaid(report.summary) ?? null,
+    };
+  });
 
   return (
     <main className={`min-h-app-viewport ${styles.pageBase}`}>

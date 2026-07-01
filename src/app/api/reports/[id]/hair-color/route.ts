@@ -6,6 +6,7 @@ import { env } from "@/lib/env";
 import Replicate from "replicate";
 import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
 import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
+import { isReportSelfiePath } from "@/lib/vault/vault-item-id";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -111,6 +112,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const hasPremium = hasPremiumAccess({ isPaid: !!row.is_paid, userEmail: user.email });
     if (!hasPremium) {
       return NextResponse.json({ error: "Report not unlocked" }, { status: 402 });
+    }
+    if (!isReportSelfiePath(row.image_path, user.id, row.id)) {
+      return NextResponse.json({ error: "Image unavailable" }, { status: 422 });
     }
 
     const detectedGender = normalizeRekognitionGender(row.rekognition);

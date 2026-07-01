@@ -8,7 +8,7 @@ import {
   setAnalysisInfographicAsset,
 } from "@/lib/ai/analysis-infographics";
 import { getBlueprintSection } from "@/lib/ai/infographic-sections";
-import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
+import { isReportSelfiePath } from "@/lib/vault/vault-item-id";
 import type {
   AnalysisInfographicSectionId,
   ColorAnalysisResult,
@@ -76,8 +76,10 @@ function sectionDataReady(section: AnalysisInfographicSectionId, row: Infographi
 async function downloadSelfie(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   imagePath: string,
+  userId: string,
+  reportId: string,
 ): Promise<Buffer> {
-  if (!isVaultStoragePath(imagePath)) {
+  if (!isReportSelfiePath(imagePath, userId, reportId)) {
     throw new Error("Selfie image was removed");
   }
   const { data: imgData, error: imgErr } = await admin.storage
@@ -194,7 +196,7 @@ export async function runFaceFeaturesPreviewInfographic(
     throw new Error("Report is not ready yet");
   }
 
-  const imageBuffer = await downloadSelfie(admin, row.image_path);
+  const imageBuffer = await downloadSelfie(admin, row.image_path, row.user_id, row.id);
   return generateOneSection(admin, row, "faceFeaturesPreview", imageBuffer, opts?.force === true);
 }
 
@@ -215,7 +217,7 @@ export async function runSinglePaidInfographic(
     throw new Error("Report must be unlocked");
   }
 
-  const imageBuffer = await downloadSelfie(admin, row.image_path);
+  const imageBuffer = await downloadSelfie(admin, row.image_path, row.user_id, row.id);
   return generateOneSection(admin, row, section, imageBuffer, opts?.force === true);
 }
 
@@ -236,7 +238,7 @@ export async function runAnalysisInfographics(
     throw new Error("Report must be unlocked");
   }
 
-  const imageBuffer = await downloadSelfie(admin, row.image_path);
+  const imageBuffer = await downloadSelfie(admin, row.image_path, row.user_id, row.id);
   const force = opts?.force === true;
   const results: Record<string, InfographicSectionResult> = {};
 

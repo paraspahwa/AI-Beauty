@@ -5,6 +5,7 @@ import type {
   ReportVisualAssets,
 } from "@/types/report";
 import { createVisualAssetsSkeleton } from "@/lib/ai/visuals";
+import { isReportScopedStoragePath } from "@/lib/vault/vault-item-id";
 
 export function analysisInfographicStoragePath(
   userId: string,
@@ -87,6 +88,8 @@ export function setAnalysisInfographicAsset(
 export async function signAnalysisInfographicAssets(
   visualAssets: ReportVisualAssets,
   admin: { storage: { from: (bucket: string) => { createSignedUrl: (path: string, ttl: number) => Promise<{ data: { signedUrl?: string } | null }> } } },
+  userId: string,
+  reportId: string,
 ): Promise<ReportVisualAssets> {
   const infographics = visualAssets.assets.analysisInfographics;
   if (!infographics) return visualAssets;
@@ -95,6 +98,7 @@ export async function signAnalysisInfographicAssets(
     (Object.entries(infographics) as [keyof AnalysisInfographics, ReportVisualAsset | undefined][]).map(
       async ([key, asset]) => {
         if (!asset?.path || asset.status !== "ready") return [key, asset] as const;
+        if (!isReportScopedStoragePath(asset.path, userId, reportId)) return [key, asset] as const;
         const { data } = await admin.storage.from(visualAssets.bucket).createSignedUrl(asset.path, 60 * 30);
         return [key, { ...asset, signedUrl: data?.signedUrl }] as const;
       },

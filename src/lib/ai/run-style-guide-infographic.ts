@@ -6,6 +6,7 @@ import {
   setStyleGuideInfographicAsset,
   styleGuideInfographicStoragePath,
 } from "@/lib/ai/analysis-infographics";
+import { isReportBodyImagePath } from "@/lib/vault/vault-item-id";
 import type {
   ColorAnalysisResult,
   FaceShapeResult,
@@ -43,7 +44,12 @@ function parseVisualAssets(value: unknown): ReportVisualAssets | undefined {
 async function downloadBodyImage(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   imagePath: string,
+  userId: string,
+  reportId: string,
 ): Promise<Buffer> {
+  if (!isReportBodyImagePath(imagePath, userId, reportId)) {
+    throw new Error("Body image unavailable");
+  }
   const { data: imgData, error: imgErr } = await admin.storage
     .from(env.supabase.bucket)
     .download(imagePath);
@@ -117,7 +123,7 @@ export async function runStyleGuideInfographic(
   row.visual_assets = visualAssets;
 
   try {
-    const imageBuffer = await downloadBodyImage(admin, row.body_image_path);
+    const imageBuffer = await downloadBodyImage(admin, row.body_image_path, row.user_id, row.id);
     const generated = await generateStyleGuideInfographic({
       imageBuffer,
       styleGuide: row.style_guide,

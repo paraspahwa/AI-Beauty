@@ -1,5 +1,6 @@
 import type { ColorAnalysisResult } from "@/types/report";
 import { signAnalysisInfographicAssets } from "@/lib/ai/analysis-infographics";
+import { isReportScopedStoragePath } from "@/lib/vault/vault-item-id";
 
 export function redactColorAnalysisForPreview(
   color: ColorAnalysisResult | null | undefined,
@@ -22,12 +23,14 @@ export function previewSummaryForUnpaid(summary: string | null | undefined): str
 async function signPreviewAssets(
   visualAssets: import("@/types/report").ReportVisualAssets,
   admin: ReturnType<typeof import("@/lib/supabase/server").createSupabaseAdminClient>,
+  userId: string,
+  reportId: string,
 ) {
   const signList = async (list?: import("@/types/report").ReportVisualAsset[]) => {
     if (!list) return list;
     return Promise.all(
       list.map(async (asset) => {
-        if (asset.path && asset.status === "ready") {
+        if (asset.path && asset.status === "ready" && isReportScopedStoragePath(asset.path, userId, reportId)) {
           const { data } = await admin.storage.from(visualAssets.bucket).createSignedUrl(asset.path, 60 * 30);
           return { ...asset, signedUrl: data?.signedUrl };
         }
@@ -107,7 +110,8 @@ export async function resolveReportVisualAssets(
   }
 
   if (!visualAssets) return undefined;
-  const signed = await signPreviewAssets(visualAssets, admin);
-  const withInfographics = await signAnalysisInfographicAssets(signed, admin);
+  const userId = typeof row.user_id === "string" ? row.user_id : "";
+  const signed = await signPreviewAssets(visualAssets, admin, userId, reportId);
+  const withInfographics = await signAnalysisInfographicAssets(signed, admin, userId, reportId);
   return filterInfographicsForAccess(withInfographics, hasPremium, hasStyleGuide);
 }
