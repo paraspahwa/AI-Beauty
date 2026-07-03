@@ -69,6 +69,77 @@ export const carouselSlideUp = {
   },
 } as const;
 
+export type DeckCardRole = "active" | "peekNext" | "peekPrev" | "hidden";
+
+export type DeckLayout = {
+  role: DeckCardRole;
+  x: string;
+  y: number;
+  scale: number;
+  rotate: number;
+  zIndex: number;
+  opacity: number;
+};
+
+/** Positions for the 3-card dossier deck hero carousel. */
+export function getDeckLayout(
+  index: number,
+  activeIndex: number,
+  total: number,
+  reducedMotion = false,
+): DeckLayout {
+  if (reducedMotion) {
+    if (index === activeIndex) {
+      return { role: "active", x: "-50%", y: 0, scale: 1, rotate: 0, zIndex: 30, opacity: 1 };
+    }
+    return { role: "hidden", x: "-50%", y: 0, scale: 1, rotate: 0, zIndex: 0, opacity: 0 };
+  }
+
+  if (index === activeIndex) {
+    return { role: "active", x: "-50%", y: 0, scale: 1, rotate: 0, zIndex: 30, opacity: 1 };
+  }
+
+  const nextIndex = (activeIndex + 1) % total;
+  const prevIndex = (activeIndex - 1 + total) % total;
+
+  if (index === nextIndex) {
+    return {
+      role: "peekNext",
+      x: "calc(-50% + 48px)",
+      y: 14,
+      scale: 0.9,
+      rotate: 5,
+      zIndex: 20,
+      opacity: 0.92,
+    };
+  }
+
+  if (index === prevIndex) {
+    return {
+      role: "peekPrev",
+      x: "calc(-50% - 42px)",
+      y: 18,
+      scale: 0.88,
+      rotate: -7,
+      zIndex: 10,
+      opacity: 0.88,
+    };
+  }
+
+  return { role: "hidden", x: "-50%", y: 0, scale: 0.85, rotate: 0, zIndex: 0, opacity: 0 };
+}
+
+export const carouselDeckSpring = {
+  type: "spring" as const,
+  stiffness: 260,
+  damping: 26,
+};
+
+export const carouselDeckExitEase = {
+  duration: 0.48,
+  ease: CAROUSEL_EASE,
+};
+
 export const slideIn = (direction: "left" | "right" | "up" | "down" = "left"): Variants => {
   const isX = direction === "left" || direction === "right";
   const distance = direction === "left" || direction === "up" ? -30 : 30;

@@ -3,6 +3,7 @@
 import { ActivityTicker } from "@/components/home/ActivityTicker";
 import { HeroText } from "@/components/home/HeroText";
 import { HeroReportCard } from "@/components/home/HeroReportCard";
+import { HeroVideoPortal } from "@/components/home/HeroVideoPortal";
 import { LandingJourneyBanner } from "@/components/home/LandingJourneyBanner";
 import styles from "@/app/home.module.css";
 
@@ -10,8 +11,10 @@ export function LandingHero() {
   return (
     <div className={`relative isolate overflow-hidden min-h-app-viewport flex flex-col ${styles.heroSurface}`}>
       <ActivityTicker />
+      <HeroVideoPortal />
+      <div className={`pointer-events-none absolute inset-0 z-[1] ${styles.heroScrim}`} aria-hidden />
       <div
-        className={`pointer-events-none absolute inset-0 -z-10 ${styles.heroBackdrop}`}
+        className={`pointer-events-none absolute inset-0 z-[1] ${styles.heroBackdrop}`}
         aria-hidden
       />
       <div className="page-bleed-x relative z-10 flex flex-1 flex-col pb-10 pt-6 sm:pb-14 sm:pt-8">
