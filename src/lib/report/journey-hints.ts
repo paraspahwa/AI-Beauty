@@ -1,5 +1,5 @@
 import { getBlueprintSection } from "@/lib/ai/infographic-sections";
-import type { ManualPaidInfographicSection } from "@/lib/ai/run-analysis-infographics";
+import type { ManualPaidInfographicSection } from "@/lib/ai/infographic-sections";
 import type { CompiledReport, ReportVisualAsset } from "@/types/report";
 
 export type JourneyHintTone = "info" | "action" | "success" | "waiting";

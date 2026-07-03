@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { getRequestUser } from "@/lib/auth/request-user";
 import { hasPremiumAccess } from "@/lib/auth/access";
 import { env } from "@/lib/env";
+import { consumeIdentityWindow } from "@/lib/rate-limit";
 import Replicate from "replicate";
 import { isHairStyleAllowedForGender, normalizeRekognitionGender } from "@/lib/hair-options";
 import { fetchRemoteImageBuffer } from "@/lib/security/remote-image";
@@ -13,6 +15,23 @@ export const maxDuration = 120;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CHANGE_HAIRCUT_MODEL = "flux-kontext-apps/change-haircut" as const;
 const FAL_HAIR_MODEL = "fal-ai/image-apps-v2/hair-change" as const;
+
+const HAIR_COLOR_POLICY = {
+  action: "hair_color_preview_1h",
+  windowSeconds: 3600,
+  caps: {
+    free: 0,
+    report: 12,
+    studio_pro: 30,
+  },
+} as const;
+
+const Body = z
+  .object({
+    colorName: z.string().min(1).max(60),
+    styleName: z.string().max(60).optional(),
+  })
+  .strict();
 
 const REPLICATE_STYLE_MAP: Record<string, string> = {
   short_hair: "Straight",
@@ -86,8 +105,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const user = await getRequestUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = (await req.json()) as { colorName?: string; styleName?: string };
-    const colorName = (body.colorName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E]/g, "");
+    let body: z.infer<typeof Body>;
+    try {
+      body = Body.parse(await req.json());
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const colorName = body.colorName.trim().slice(0, 60).replace(/[^\x20-\x7E]/g, "");
     const styleName = (body.styleName ?? "").trim().slice(0, 60).replace(/[^\x20-\x7E_]/g, "");
     if (!colorName) {
       return NextResponse.json({ error: "colorName is required" }, { status: 400 });
@@ -98,6 +123,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const admin = createSupabaseAdminClient();
+
+    const rateDecision = await consumeIdentityWindow(admin, user.id, HAIR_COLOR_POLICY);
+    if (!rateDecision.allowed) {
+      return NextResponse.json(
+        {
+          error: "Too many hair color previews. Try again later.",
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rateDecision.retryAfterSeconds,
+        },
+        { status: 429 },
+      );
+    }
     const { data: row, error: rowErr } = await admin
       .from("reports")
       .select("id, user_id, status, image_path, rekognition, is_paid")

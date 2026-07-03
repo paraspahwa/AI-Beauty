@@ -7,7 +7,7 @@ import {
   getAnalysisInfographicAsset,
   setAnalysisInfographicAsset,
 } from "@/lib/ai/analysis-infographics";
-import { getBlueprintSection } from "@/lib/ai/infographic-sections";
+import { getBlueprintSection, MANUAL_PAID_INFOGRAPHIC_SECTIONS, type ManualPaidInfographicSection } from "@/lib/ai/infographic-sections";
 import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 import type {
   AnalysisInfographicSectionId,
@@ -293,22 +293,7 @@ export function sectionsNeedingGeneration(
   );
 }
 
-/** User-triggered paid sections (not auto-queued on unlock). */
-export const MANUAL_PAID_INFOGRAPHIC_SECTIONS = [
-  "skin",
-  "color",
-  "hairstyle",
-  "spectacles",
-  "hairColor",
-] as const satisfies readonly AnalysisInfographicSectionId[];
-
-export type ManualPaidInfographicSection = (typeof MANUAL_PAID_INFOGRAPHIC_SECTIONS)[number];
-
-export function isManualPaidInfographicSection(
-  section: string,
-): section is ManualPaidInfographicSection {
-  return (MANUAL_PAID_INFOGRAPHIC_SECTIONS as readonly string[]).includes(section);
-}
+export { MANUAL_PAID_INFOGRAPHIC_SECTIONS, type ManualPaidInfographicSection, isManualPaidInfographicSection } from "@/lib/ai/infographic-sections";
 
 function sectionNeedsGeneration(
   row: InfographicReportRow,

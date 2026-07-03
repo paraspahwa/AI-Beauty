@@ -21,6 +21,42 @@ export type IdentityWindowDecision = {
 
 const FALLBACK_TIER: PlanTier = "free";
 
+type FallbackEntry = { count: number; resetAt: number };
+const fallbackWindows = new Map<string, FallbackEntry>();
+const FALLBACK_MAP_MAX = 8192;
+
+function consumeInMemoryWindow(
+  userId: string,
+  action: string,
+  cap: number,
+  windowSeconds: number,
+): boolean {
+  const now = Date.now();
+  const key = `${userId}:${action}`;
+  let entry = fallbackWindows.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    if (!entry && fallbackWindows.size >= FALLBACK_MAP_MAX) {
+      const firstKey = fallbackWindows.keys().next().value;
+      if (firstKey !== undefined) fallbackWindows.delete(firstKey);
+    }
+    fallbackWindows.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
+    return true;
+  }
+
+  if (entry.count >= cap) {
+    return false;
+  }
+
+  entry.count += 1;
+  return true;
+}
+
+/** Test-only reset for in-memory fallback windows. */
+export function resetInMemoryRateLimitWindowsForTests(): void {
+  fallbackWindows.clear();
+}
+
 function normalizeTier(value: unknown): PlanTier {
   if (value === "studio_pro" || value === "report" || value === "free") {
     return value;
@@ -64,10 +100,11 @@ export async function consumeIdentityWindow(
   });
 
   if (error) {
-    // Fail open to avoid blocking production traffic if migration has not been applied yet.
-    console.warn("[rate-limit] try_consume_window failed", error.message);
+    // RPC unavailable — enforce cap via in-process fallback instead of failing open.
+    console.warn("[rate-limit] try_consume_window failed; using in-memory fallback", error.message);
+    const allowed = consumeInMemoryWindow(userId, policy.action, cap, policy.windowSeconds);
     return {
-      allowed: true,
+      allowed,
       action: policy.action,
       tier,
       cap,

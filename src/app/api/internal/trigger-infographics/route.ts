@@ -87,17 +87,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, skipped: true, reason: "already_complete" });
       }
       const result = await runFaceFeaturesPreviewInfographic(admin, reportRow, { force });
-      // #region agent log
-      fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',location:'trigger-infographics/route.ts:preview_done',message:'preview generated',data:{reportId,status:result.status,dbIsPaid:!!row.is_paid},timestamp:Date.now(),hypothesisId:'H4-H5'})}).catch(()=>{});
-      // #endregion
       console.info(`[trigger-infographics] preview report ${reportId}`, result);
       return NextResponse.json({ ok: true, mode: "preview", result });
     }
 
     if (!hasPremium) {
-      // #region agent log
-      fetch('http://127.0.0.1:7365/ingest/7666977d-9746-4afe-91bd-f61f1ea1abe3',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0dc1d3'},body:JSON.stringify({sessionId:'0dc1d3',runId:'post-fix',location:'trigger-infographics/route.ts:not_paid',message:'full mode skipped not_premium',data:{reportId,mode:resolvedMode,section:section??null,dbIsPaid:!!row.is_paid,hasPremium},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-      // #endregion
       console.info(`[trigger-infographics] skipped not_premium report=${reportId} section=${section ?? "n/a"}`);
       return NextResponse.json({ skipped: true, reason: "not_paid" });
     }

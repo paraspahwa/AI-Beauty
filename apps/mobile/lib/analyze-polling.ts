@@ -20,7 +20,7 @@ export async function pollReportUntilReady(reportId: string): Promise<PollResult
       return {
         id: result.id,
         status: result.status,
-        error: result.error,
+        error: result.status === "failed" ? "Analysis failed" : undefined,
       };
     }
 

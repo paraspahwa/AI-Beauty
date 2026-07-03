@@ -1,314 +1,16 @@
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
 import { supabase } from "@/lib/supabase";
+import type { CompiledReport } from "@web/types/report";
+import type { VaultResponse } from "@web/types/vault";
+import type { ManualPaidInfographicSection } from "@web/lib/ai/infographic-sections";
 
-export type MobileFaceShape = {
-  shape: string;
-  traits: string[];
-  confidence: number;
-};
-
-export type MobileColorAnalysis = {
-  season: string;
-  undertone: string;
-  description: string;
-  metals?: string[];
-  avoidColors?: { name: string; hex: string }[];
-  palette?: { name: string; hex: string }[];
-  clothingObservation?: {
-    color: string;
-    hex: string;
-    effect: "flattering" | "clashing" | "neutral";
-  };
-};
-
-export type MobileFaceLandmark = {
-  x: number;
-  y: number;
-};
-
-export type MobileFaceLandmarks = {
-  faceShape?: MobileFaceLandmark;
-  eyes?: MobileFaceLandmark;
-  nose?: MobileFaceLandmark;
-  eyebrows?: MobileFaceLandmark;
-  cheeks?: MobileFaceLandmark;
-  lips?: MobileFaceLandmark;
-};
-
-export type MobileSkinAnalysis = {
-  type: string;
-  imageConfidence?: number;
-  concerns?: { label: string; severity: string }[];
-  zones?: { zone: string; observation: string }[];
-  routine?:
-    | { am: { step: string; product: string }[]; pm: { step: string; product: string }[] }
-    | { step: string; product: string }[];
-};
-
-export type MobileGlasses = {
-  goals?: string[];
-  recommended?: { style: string; reason: string }[];
-  avoid?: { style: string; reason: string }[];
-  colors?: { name: string; hex: string }[];
-  fitTips?: string[];
-};
-
-export type MobileHairstyle = {
-  styles?: { name: string; description: string }[];
-  lengths?: { name: string; description: string }[];
-  colors?: { name: string; hex?: string; description: string }[];
-  avoid?: string[];
-  stylingTips?: string[];
-  hairType?: string;
-};
-
-export type MobileFeaturePart = {
-  shape: string;
-  notes: string;
-};
-
-export type MobileFeatures = {
-  eyes?: MobileFeaturePart;
-  eyebrows?: MobileFeaturePart;
-  nose?: MobileFeaturePart;
-  lips?: MobileFeaturePart;
-  cheeks?: MobileFeaturePart;
-};
-
-export type MobileVisualAssetStatus = "pending" | "ready" | "failed" | "missing";
-
-export type MobileVisualAsset = {
-  mime?: string;
-  width?: number;
-  height?: number;
-  label?: string;
-  styleName?: string;
-  error?: string | null;
-  path?: string;
-  signedUrl?: string;
-  status?: MobileVisualAssetStatus;
-  [key: string]: unknown;
-};
-
-export type MobilePipelineStage = {
-  stage: string;
-  durationMs: number;
-  degraded: boolean;
-  variantId?: string;
-};
-
-export type MobilePipelineMeta = {
-  totalDurationMs: number;
-  rekognitionAvailable: boolean;
-  blendedConfidence: number;
-  gptRawConfidence: number;
-  stages: MobilePipelineStage[];
-};
-
-export type MobileStyleGuide = {
-  primaryStyle: string;
-  secondaryStyles: string[];
-  vibeTraits: string[];
-  wardrobeEssentials: string[];
-  silhouettes: string[];
-  colorDirection: { neutrals: string[]; accents: string[] };
-  styleNotes: string[];
-  identitySummary: string;
-};
-
-export type MobileVisualAssets = {
-  version?: number;
-  bucket?: string;
-  basePath?: string;
-  assets?: {
-    glassesPreviews?: MobileVisualAsset[];
-    hairstylePreviews?: MobileVisualAsset[];
-    hairColorPreviews?: MobileVisualAsset[];
-  };
-  [key: string]: unknown;
-};
-
-export type MobileStudioEntitlement = {
-  tier: "free" | "report" | "studio_pro";
-  remainingGens: number | null;
-  usedGens: number | null;
-  cap: number | null;
-  periodResets: string | null;
-  subscriptionId: string | null;
-};
-
-export type MobileChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-export type MobileChatBookmark = {
-  id: string;
-  content: string;
-  createdAt: string;
-};
-
-export type MobileMakeupControls = {
-  style?: "natural" | "glamorous" | "smoky_eyes" | "bold_lips" | "professional" | "korean_style" | "bridal";
-  intensity?: "light" | "medium" | "heavy" | "dramatic";
-  lipColor?: string;
-  eyeshadow?: string;
-  blushColor?: string;
-  blushIntensity?: string;
-  eyeliner?: string;
-  contour?: boolean;
-};
-
-export type MobileHairColorControls = {
-  colorName: string;
-  colorHex?: string;
-  styleName?: string;
-};
-
-export type MobilePaletteColor = {
-  name: string;
-  hex: string;
-};
-
-export type MobileOutfitOccasion = "casual" | "work" | "date" | "wedding" | "travel";
-
-export type MobileOutfitVibe = "minimal" | "classic" | "bold" | "romantic" | "street";
-
-export type MobileOutfitLook = {
-  title: string;
-  occasion: MobileOutfitOccasion;
-  vibe: MobileOutfitVibe;
-  pieces: string[];
-  accentColors: MobilePaletteColor[];
-  metal: string;
-  whyItWorks: string;
-};
-
-export type MobileOutfitFeedback = {
-  liked: boolean;
-  saved: boolean;
-  worn: boolean;
-};
-
-export type MobileOutfitSession = {
-  id: string;
-  createdAt: string;
-  occasion: MobileOutfitOccasion;
-  vibe: MobileOutfitVibe;
-  season: string;
-  undertone: string;
-  looks: MobileOutfitLook[];
-  feedback?: MobileOutfitFeedback;
-};
-
-export type MobileCanvasColorScan = {
-  season?: string;
-  undertone?: string;
-  palette?: MobilePaletteColor[];
-  avoidColors?: MobilePaletteColor[];
-};
-
-export type MobileCanvasGenerateMode = "makeup" | "hair" | "outfit";
-
-export type MobileCanvasOutfitLook = {
-  title: string;
-  pieces: string[];
-  notes: string;
-  palette?: MobilePaletteColor[];
-};
-
-export type MobileCanvasOutfitResult = {
-  occasion: string;
-  vibe: string;
-  looks: MobileCanvasOutfitLook[];
-  summary: string;
-};
-
-export type MobileCanvasGenerateResponse = {
-  lowResUrl: string;
-  hdUrl: string;
-  asset?: { id: string; createdAt: string } | null;
-  outfit?: MobileCanvasOutfitResult;
-};
-
-export type MobileCanvasUploadResponse = {
-  canvasId: string;
-  photoUrl: string;
-  quota: {
-    remaining: number;
-    tier: string;
-    usedThisMonth: number;
-  };
-};
-
-export type MobileCanvasShareResponse = {
-  shareToken: string;
-  shareUrl: string;
-};
-
-export type MobileGlassesPreviewInput = {
-  clothImageUri: string;
-  clothImageName?: string;
-  clothImageMime?: string;
-  personImageUri?: string;
-  personImageName?: string;
-  personImageMime?: string;
-  sourceAssetId?: string;
-};
-
-export type MobileInspoImageInput = {
-  referenceImageUri: string;
-  referenceImageName?: string;
-  referenceImageMime?: string;
-  sourceAssetId?: string;
-};
-
-export type MobileHairTransferControls = {
-  styleName?: string;
-  colorName?: string;
-};
-
-export type MobileReport = {
-  id: string;
-  userId?: string;
-  status: "pending" | "processing" | "ready" | "failed";
-  isPaid: boolean;
-  imageUrl: string;
-  detectedGender?: "none" | "male" | "female";
-  summary?: string;
-  createdAt: string;
-  faceShape?: MobileFaceShape;
-  colorAnalysis?: MobileColorAnalysis;
-  skinAnalysis?: MobileSkinAnalysis;
-  features?: MobileFeatures;
-  glasses?: MobileGlasses;
-  hairstyle?: MobileHairstyle;
-  styleGuide?: MobileStyleGuide;
-  visualAssets?: MobileVisualAssets;
-  pipelineMeta?: MobilePipelineMeta;
-  faceLandmarks?: MobileFaceLandmarks;
-  error?: string | null;
-};
-
-export type AnalyzeIntent = "report";
+export type { CompiledReport as MobileReport };
 
 export type MobileReportListItem = {
   id: string;
-  status: "pending" | "processing" | "ready" | "failed";
+  status: CompiledReport["status"];
   isPaid: boolean;
   createdAt: string;
-};
-
-export type MobileVaultAsset = {
-  id: string;
-  sourceType: "canvas" | "report";
-  sourceId: string | null;
-  tool: string;
-  variant?: string | null;
-  hdUrl: string;
-  lowResUrl: string;
-  createdAt: string;
-  savedByUser?: boolean;
 };
 
 export type PaymentCreateResponse = {
@@ -318,85 +20,7 @@ export type PaymentCreateResponse = {
   amount: number;
   currency: "INR" | "USD";
   keyId: string | null;
-};
-
-export type ReportShareResponse = {
-  shareToken: string;
-  shareUrl: string;
-};
-
-export type MobileIngredientFlag = {
-  name: string;
-  verdict: "beneficial" | "neutral" | "caution" | "avoid";
-  reason: string;
-};
-
-export type MobileIngredientAnalysis = {
-  overallScore: number;
-  summary: string;
-  highlights: string[];
-  concerns: string[];
-  flags: MobileIngredientFlag[];
-};
-
-export type MobileProductComparisonSide = {
-  score: number;
-  highlights: string[];
-  concerns: string[];
-  flags: MobileIngredientFlag[];
-};
-
-export type MobileProductComparisonResult = {
-  winner: "A" | "B" | "tie";
-  winnerReason: string;
-  recommendation: string;
-  productA: MobileProductComparisonSide;
-  productB: MobileProductComparisonSide;
-};
-
-export type MobileStyleDnaPrefs = {
-  colorSeason: string | null;
-  undertone: string | null;
-  faceShape: string | null;
-  skinType: string | null;
-  metals: string[];
-  palette: string[];
-  updatedAt: string | null;
-};
-
-export type MobileStyleDnaLatest = {
-  id: string;
-  createdAt: string;
-  colorAnalysis?: MobileColorAnalysis | null;
-  faceShape?: MobileFaceShape | null;
-  skinAnalysis?: MobileSkinAnalysis | null;
-  hairstyle?: MobileHairstyle | null;
-};
-
-export type MobileStyleDnaSummary = {
-  totalReports: number;
-  prefs: MobileStyleDnaPrefs | null;
-  latest: MobileStyleDnaLatest | null;
-};
-
-export type MobileProgressReport = {
-  id: string;
-  createdAt: string;
-  colorAnalysis?: MobileColorAnalysis | null;
-  faceShape?: MobileFaceShape | null;
-  skinAnalysis?: MobileSkinAnalysis | null;
-  isPaid: boolean;
-  status: string;
-};
-
-export type MobileCloudDataRemovalResult = {
-  ok: boolean;
-  removed: {
-    canvases: number;
-    generatedAssets: number;
-    storageFiles: number;
-  };
-  storageCleanupFailed?: boolean;
+  product?: string;
 };
 
 type RequestOptions = {
@@ -408,8 +32,6 @@ type RequestOptions = {
 const MOBILE_API_TIMEOUT_MS = 30000;
 
 function sanitizeApiErrorText(raw: string): string {
-  // Remove control characters to keep alerts safe and readable.
-  // eslint-disable-next-line no-control-regex
   return raw.replace(/[\x00-\x1F\x7F]/g, " ").trim().slice(0, 320);
 }
 
@@ -453,11 +75,12 @@ export async function fetchWithAuth<T>(path: string, options: RequestOptions = {
   }
 }
 
-export async function analyzeSelfie(
-  imageUri: string,
-  intent?: AnalyzeIntent,
-): Promise<{ reportId: string; visualsPending: boolean }> {
-  return startAnalysisFromSelfie(imageUri, intent);
+export async function getAuthPdfUrl(reportId: string, variant: "report" | "styleGuide" = "report"): Promise<string> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  const base = getValidatedMobileApiBaseUrl();
+  const path = variant === "styleGuide" ? `/api/reports/${reportId}/pdf/style-guide` : `/api/reports/${reportId}/pdf`;
+  return token ? `${base}${path}?access_token=${encodeURIComponent(token)}` : `${base}${path}`;
 }
 
 const ANALYZE_ACCEPT_TIMEOUT_MS = 120000;
@@ -468,10 +91,8 @@ type AnalyzeStreamEvent =
   | { type: "completed"; reportId: string; visualsPending?: boolean }
   | { type: "failed"; message: string };
 
-/** Starts analysis via SSE and returns as soon as the report id is accepted (pipeline continues server-side). */
 export async function startAnalysisFromSelfie(
   imageUri: string,
-  intent?: AnalyzeIntent,
 ): Promise<{ reportId: string; visualsPending: boolean; cached?: boolean }> {
   const form = new FormData();
   form.append("image", {
@@ -479,15 +100,11 @@ export async function startAnalysisFromSelfie(
     name: "selfie.jpg",
     type: "image/jpeg",
   } as unknown as Blob);
-  if (intent) {
-    form.append("intent", intent);
-  }
+  form.append("intent", "report");
 
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  if (!token) {
-    throw new Error("Sign in required for full analysis");
-  }
+  if (!token) throw new Error("Sign in required for full analysis");
 
   const apiBaseUrl = getValidatedMobileApiBaseUrl();
   const controller = new AbortController();
@@ -536,14 +153,9 @@ export async function startAnalysisFromSelfie(
           };
         }
         if (event.type === "completed") {
-          return {
-            reportId: event.reportId,
-            visualsPending: event.visualsPending ?? false,
-          };
+          return { reportId: event.reportId, visualsPending: event.visualsPending ?? false };
         }
-        if (event.type === "failed") {
-          throw new Error(event.message);
-        }
+        if (event.type === "failed") throw new Error(event.message);
       }
     }
 
@@ -558,53 +170,8 @@ export async function startAnalysisFromSelfie(
   }
 }
 
-export async function createMomentShare(input: {
-  beforeUrl: string;
-  afterUrl: string;
-  caption?: string;
-  assetId?: string;
-}): Promise<{ shareUrl: string; ogImageUrl: string }> {
-  return fetchWithAuth<{ shareUrl: string; ogImageUrl: string }>("/api/studio/moment", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export async function createGuestMomentShare(input: {
-  beforeUrl: string;
-  afterUrl: string;
-  caption?: string;
-}): Promise<{ shareUrl: string; ogImageUrl: string }> {
-  return fetchGuestApi<{ shareUrl: string; ogImageUrl: string }>("/api/studio/moment", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export async function uploadStudioCanvas(
-  imageUri: string,
-  fileName = "canvas-selfie.jpg",
-  mimeType = "image/jpeg",
-): Promise<MobileCanvasUploadResponse> {
-  const form = new FormData();
-  form.append("file", {
-    uri: imageUri,
-    name: fileName,
-    type: mimeType,
-  } as unknown as Blob);
-
-  return fetchWithAuth<MobileCanvasUploadResponse>("/api/studio/upload", {
-    method: "POST",
-    body: form,
-  });
-}
-
-export async function fetchReport(reportId: string): Promise<MobileReport> {
-  return fetchWithAuth<MobileReport>(`/api/reports/${reportId}`);
-}
-
-export async function fetchSubscriptionStatus(): Promise<MobileStudioEntitlement> {
-  return fetchWithAuth<MobileStudioEntitlement>("/api/subscriptions/status");
+export async function fetchReport(reportId: string): Promise<CompiledReport> {
+  return fetchWithAuth<CompiledReport>(`/api/reports/${reportId}`);
 }
 
 export async function listReports(limit = 30): Promise<MobileReportListItem[]> {
@@ -624,32 +191,24 @@ export async function listReports(limit = 30): Promise<MobileReportListItem[]> {
   }));
 }
 
-export async function fetchStudioVault(params?: {
-  limit?: number;
-  offset?: number;
-  filter?: "all" | "canvas" | "report";
-}): Promise<{ assets: MobileVaultAsset[]; total: number; limit: number; offset: number }> {
-  const limit = params?.limit ?? 24;
-  const offset = params?.offset ?? 0;
-  const filter = params?.filter ?? "all";
-  const query = `/api/studio/vault?limit=${limit}&offset=${offset}&filter=${filter}`;
-  return fetchWithAuth<{ assets: MobileVaultAsset[]; total: number; limit: number; offset: number }>(query);
+export async function deleteReport(reportId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth<{ ok: boolean }>(`/api/reports/${reportId}/delete`, { method: "DELETE" });
 }
 
-export async function removeStudioVaultAsset(assetId: string): Promise<{ ok: boolean }> {
-  return fetchWithAuth<{ ok: boolean }>(`/api/studio/vault/${assetId}`, {
-    method: "DELETE",
-  });
-}
-
-export async function createPaymentOrder(reportId: string): Promise<PaymentCreateResponse> {
+export async function createPaymentOrder(
+  reportId: string,
+  product: "report_unlock" | "style_guide_addon" = "report_unlock",
+): Promise<PaymentCreateResponse> {
   return fetchWithAuth<PaymentCreateResponse>("/api/payments/create", {
     method: "POST",
-    body: JSON.stringify({ reportId }),
+    body: JSON.stringify({ reportId, product }),
   });
 }
 
-export async function verifyTestPayment(reportId: string, orderId: string): Promise<{ ok: boolean; awaitingWebhook: boolean; unlocked?: boolean }> {
+export async function verifyTestPayment(
+  reportId: string,
+  orderId: string,
+): Promise<{ ok: boolean; awaitingWebhook: boolean; unlocked?: boolean }> {
   return fetchWithAuth<{ ok: boolean; awaitingWebhook: boolean; unlocked?: boolean }>("/api/payments/verify", {
     method: "POST",
     body: JSON.stringify({
@@ -661,490 +220,60 @@ export async function verifyTestPayment(reportId: string, orderId: string): Prom
   });
 }
 
-export async function fetchChatHistory(reportId: string): Promise<MobileChatMessage[]> {
-  const response = await fetchWithAuth<{ messages?: MobileChatMessage[] }>(`/api/chat?reportId=${reportId}`);
-  return response.messages ?? [];
-}
-
-export async function fetchChatBookmarks(reportId: string): Promise<MobileChatBookmark[]> {
-  const response = await fetchWithAuth<{ bookmarks?: { id: string; content: string; created_at: string }[] }>(`/api/chat/bookmarks?reportId=${reportId}`);
-  return (response.bookmarks ?? []).map((item) => ({
-    id: item.id,
-    content: item.content,
-    createdAt: item.created_at,
-  }));
-}
-
-export async function saveChatBookmark(reportId: string, content: string): Promise<MobileChatBookmark> {
-  const response = await fetchWithAuth<{ bookmark: { id: string; content: string; created_at: string } }>("/api/chat/bookmarks", {
+export async function ensureInfographics(reportId: string): Promise<{ ok: boolean; skipped?: boolean }> {
+  return fetchWithAuth<{ ok: boolean; skipped?: boolean }>(`/api/reports/${reportId}/ensure-infographics`, {
     method: "POST",
-    body: JSON.stringify({ reportId, content }),
-  });
-
-  return {
-    id: response.bookmark.id,
-    content: response.bookmark.content,
-    createdAt: response.bookmark.created_at,
-  };
-}
-
-export async function deleteChatBookmark(bookmarkId: string): Promise<{ ok: boolean }> {
-  return fetchWithAuth<{ ok: boolean }>(`/api/chat/bookmarks/${bookmarkId}`, {
-    method: "DELETE",
   });
 }
 
-export async function sendChatMessage(reportId: string, messages: MobileChatMessage[]): Promise<{ reply: string }> {
-  return fetchWithAuth<{ reply: string }>("/api/chat", {
-    method: "POST",
-    body: JSON.stringify({ reportId, messages }),
-  });
-}
-
-export async function generateMakeupPreview(
+export async function generateInfographic(
   reportId: string,
-  controls: MobileMakeupControls,
-): Promise<{ lowResUrl: string; hdUrl: string; asset?: { id: string; createdAt: string } | null }> {
-  return fetchWithAuth<{ lowResUrl: string; hdUrl: string; asset?: { id: string; createdAt: string } | null }>(`/api/reports/${reportId}/makeup`, {
+  section: ManualPaidInfographicSection,
+): Promise<{ ok: boolean; generating?: boolean; error?: string }> {
+  return fetchWithAuth(`/api/reports/${reportId}/generate-infographic`, {
     method: "POST",
-    body: JSON.stringify(controls),
+    body: JSON.stringify({ section }),
   });
 }
 
-export async function generateMakeupTransferPreview(
+export async function retryInfographic(
   reportId: string,
-  input: MobileInspoImageInput,
-): Promise<{
-  lowResUrl: string;
-  hdUrl: string;
-  detectedLook?: string;
-  asset?: { id: string; createdAt: string } | null;
-}> {
+  section: ManualPaidInfographicSection,
+): Promise<{ ok: boolean }> {
+  return fetchWithAuth(`/api/reports/${reportId}/retry-infographic`, {
+    method: "POST",
+    body: JSON.stringify({ section }),
+  });
+}
+
+export async function retryStyleGuide(reportId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth(`/api/reports/${reportId}/retry-style-guide`, { method: "POST" });
+}
+
+export async function uploadBodyImage(reportId: string, imageUri: string): Promise<{ ok: boolean }> {
   const form = new FormData();
-  form.append("referenceImage", {
-    uri: input.referenceImageUri,
-    name: input.referenceImageName ?? "makeup-reference.jpg",
-    type: input.referenceImageMime ?? "image/jpeg",
-  } as unknown as Blob);
-
-  if (input.sourceAssetId) {
-    form.append("sourceAssetId", input.sourceAssetId);
-  }
-
-  return fetchWithAuth<{
-    lowResUrl: string;
-    hdUrl: string;
-    detectedLook?: string;
-    asset?: { id: string; createdAt: string } | null;
-  }>(`/api/reports/${reportId}/makeup-transfer`, {
-    method: "POST",
-    body: form,
-  });
-}
-
-export async function generateHairColorPreview(
-  reportId: string,
-  controls: MobileHairColorControls,
-): Promise<{ lowResUrl: string; hdUrl: string; asset?: { id: string; createdAt: string } | null }> {
-  return fetchWithAuth<{ lowResUrl: string; hdUrl: string; asset?: { id: string; createdAt: string } | null }>(`/api/reports/${reportId}/hair-color`, {
-    method: "POST",
-    body: JSON.stringify(controls),
-  });
-}
-
-export async function generateHairTransferPreview(
-  reportId: string,
-  input: MobileInspoImageInput,
-): Promise<{
-  lowResUrl: string;
-  hdUrl: string;
-  detectedLook?: string;
-  controls?: MobileHairTransferControls;
-  asset?: { id: string; createdAt: string } | null;
-}> {
-  const form = new FormData();
-  form.append("referenceImage", {
-    uri: input.referenceImageUri,
-    name: input.referenceImageName ?? "hair-reference.jpg",
-    type: input.referenceImageMime ?? "image/jpeg",
-  } as unknown as Blob);
-
-  if (input.sourceAssetId) {
-    form.append("sourceAssetId", input.sourceAssetId);
-  }
-
-  return fetchWithAuth<{
-    lowResUrl: string;
-    hdUrl: string;
-    detectedLook?: string;
-    controls?: MobileHairTransferControls;
-    asset?: { id: string; createdAt: string } | null;
-  }>(`/api/reports/${reportId}/hair-transfer`, {
-    method: "POST",
-    body: form,
-  });
-}
-
-export async function generateGlassesPreview(
-  reportId: string,
-  input: MobileGlassesPreviewInput,
-): Promise<{ lowResUrl: string; hdUrl: string; stored?: boolean; asset?: { id: string; createdAt: string } | null }> {
-  const form = new FormData();
-  form.append("clothImage", {
-    uri: input.clothImageUri,
-    name: input.clothImageName ?? "glasses-reference.jpg",
-    type: input.clothImageMime ?? "image/jpeg",
-  } as unknown as Blob);
-
-  if (input.personImageUri) {
-    form.append("personImage", {
-      uri: input.personImageUri,
-      name: input.personImageName ?? "person-image.jpg",
-      type: input.personImageMime ?? "image/jpeg",
-    } as unknown as Blob);
-  }
-
-  if (input.sourceAssetId) {
-    form.append("sourceAssetId", input.sourceAssetId);
-  }
-
-  return fetchWithAuth<{ lowResUrl: string; hdUrl: string; stored?: boolean; asset?: { id: string; createdAt: string } | null }>(`/api/reports/${reportId}/virtual-tryon`, {
-    method: "POST",
-    body: form,
-  });
-}
-
-export async function generateReportOutfits(
-  reportId: string,
-  payload: { occasion: MobileOutfitOccasion; vibe: MobileOutfitVibe },
-): Promise<{ looks: MobileOutfitLook[]; session?: MobileOutfitSession; history?: MobileOutfitSession[] }> {
-  return fetchWithAuth<{ looks: MobileOutfitLook[]; session?: MobileOutfitSession; history?: MobileOutfitSession[] }>(`/api/reports/${reportId}/outfit-generator`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function fetchReportOutfitHistory(reportId: string): Promise<MobileOutfitSession[]> {
-  const response = await fetchWithAuth<{ history?: MobileOutfitSession[] }>(`/api/reports/${reportId}/outfit-generator`);
-  return response.history ?? [];
-}
-
-export async function toggleReportOutfitFeedback(
-  reportId: string,
-  sessionId: string,
-  field: keyof MobileOutfitFeedback,
-  value?: boolean,
-): Promise<{ session: MobileOutfitSession; history: MobileOutfitSession[] }> {
-  return fetchWithAuth<{ session: MobileOutfitSession; history: MobileOutfitSession[] }>(`/api/reports/${reportId}/outfit-generator`, {
-    method: "PATCH",
-    body: JSON.stringify({ sessionId, field, value }),
-  });
-}
-
-export async function generateReportColorSwatchSlot(
-  reportId: string,
-  slot: number,
-): Promise<{ ok: boolean; slot: number; status?: MobileVisualAssetStatus; skipped?: boolean }> {
-  return fetchWithAuth<{ ok: boolean; slot: number; status?: MobileVisualAssetStatus; skipped?: boolean }>(`/api/reports/${reportId}/visuals/colors?slot=${slot}`, {
-    method: "POST",
-  });
-}
-
-export async function scanStudioCanvasColor(canvasId: string): Promise<MobileCanvasColorScan> {
-  const response = await fetchWithAuth<{ analysis?: MobileCanvasColorScan }>("/api/studio/scan-color", {
-    method: "POST",
-    body: JSON.stringify({ canvasId }),
-  });
-  return response.analysis ?? {};
-}
-
-export async function generateStudioCanvas(
-  canvasId: string,
-  mode: MobileCanvasGenerateMode,
-  options: Record<string, unknown>,
-): Promise<MobileCanvasGenerateResponse> {
-  return fetchWithAuth<MobileCanvasGenerateResponse>("/api/studio/generate", {
-    method: "POST",
-    body: JSON.stringify({
-      contextType: "canvas",
-      contextId: canvasId,
-      mode,
-      options,
-    }),
-  });
-}
-
-export async function createStudioCanvasShareLink(canvasId: string): Promise<MobileCanvasShareResponse> {
-  return fetchWithAuth<MobileCanvasShareResponse>("/api/studio/share", {
-    method: "POST",
-    body: JSON.stringify({ canvasId }),
-  });
-}
-
-export async function revokeStudioCanvasShareLink(canvasId: string): Promise<{ ok: boolean }> {
-  return fetchWithAuth<{ ok: boolean }>("/api/studio/share", {
-    method: "DELETE",
-    body: JSON.stringify({ canvasId }),
-  });
-}
-
-export async function cancelSubscription(subscriptionId: string): Promise<{ ok: boolean; cancelAtPeriodEnd?: boolean }> {
-  return fetchWithAuth<{ ok: boolean; cancelAtPeriodEnd?: boolean }>("/api/subscriptions/cancel", {
-    method: "POST",
-    body: JSON.stringify({ subscriptionId }),
-  });
-}
-
-export async function createReportShareLink(reportId: string): Promise<ReportShareResponse> {
-  return fetchWithAuth<ReportShareResponse>(`/api/reports/${reportId}/share`, {
-    method: "POST",
-  });
-}
-
-export async function revokeReportShareLink(reportId: string): Promise<{ ok: boolean }> {
-  return fetchWithAuth<{ ok: boolean }>(`/api/reports/${reportId}/share`, {
-    method: "DELETE",
-  });
-}
-
-export async function deleteReport(reportId: string): Promise<{ ok: boolean }> {
-  return fetchWithAuth<{ ok: boolean }>(`/api/reports/${reportId}/delete`, {
-    method: "DELETE",
-  });
-}
-
-export async function requestCloudDataRemoval(): Promise<MobileCloudDataRemovalResult> {
-  return fetchWithAuth<MobileCloudDataRemovalResult>("/api/privacy/cloud-data", {
-    method: "POST",
-  });
-}
-
-export async function analyzeIngredients(
-  ingredients: string,
-  skinContext?: { type: string; concerns: string[] },
-): Promise<MobileIngredientAnalysis> {
-  return fetchWithAuth<MobileIngredientAnalysis>("/api/ingredients/analyze", {
-    method: "POST",
-    body: JSON.stringify({ ingredients, skinContext }),
-  });
-}
-
-export async function compareIngredients(
-  productA: { name?: string; ingredients: string },
-  productB: { name?: string; ingredients: string },
-  skinContext?: { type: string; concerns: string[] },
-): Promise<MobileProductComparisonResult> {
-  return fetchWithAuth<MobileProductComparisonResult>("/api/ingredients/compare", {
-    method: "POST",
-    body: JSON.stringify({ productA, productB, skinContext }),
-  });
-}
-
-export async function fetchStyleDnaSummary(): Promise<MobileStyleDnaSummary> {
-  const { data } = await supabase.auth.getSession();
-  const user = data.session?.user;
-  if (!user) {
-    return { totalReports: 0, prefs: null, latest: null };
-  }
-
-  const prefsPromise = supabase
-    .from("user_style_prefs")
-    .select("color_season, undertone, face_shape, skin_type, prefs, updated_at")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  const latestPromise = supabase
-    .from("reports")
-    .select("id, created_at, color_analysis, face_shape, skin_analysis, hairstyle")
-    .eq("user_id", user.id)
-    .eq("status", "ready")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const countPromise = supabase
-    .from("reports")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id);
-
-  const [prefsResult, latestResult, countResult] = await Promise.allSettled([prefsPromise, latestPromise, countPromise]);
-
-  const prefs = prefsResult.status === "fulfilled" && prefsResult.value.data
-    ? {
-        colorSeason: (prefsResult.value.data.color_season as string | null) ?? null,
-        undertone: (prefsResult.value.data.undertone as string | null) ?? null,
-        faceShape: (prefsResult.value.data.face_shape as string | null) ?? null,
-        skinType: (prefsResult.value.data.skin_type as string | null) ?? null,
-        metals: Array.isArray((prefsResult.value.data.prefs as { metals?: string[] } | null)?.metals)
-          ? ((prefsResult.value.data.prefs as { metals?: string[] }).metals ?? [])
-          : [],
-        palette: Array.isArray((prefsResult.value.data.prefs as { palette?: string[] } | null)?.palette)
-          ? ((prefsResult.value.data.prefs as { palette?: string[] }).palette ?? [])
-          : [],
-        updatedAt: (prefsResult.value.data.updated_at as string | null) ?? null,
-      }
-    : null;
-
-  const latest = latestResult.status === "fulfilled" && latestResult.value.data
-    ? {
-        id: latestResult.value.data.id as string,
-        createdAt: latestResult.value.data.created_at as string,
-        colorAnalysis: (latestResult.value.data.color_analysis as MobileColorAnalysis | null) ?? null,
-        faceShape: (latestResult.value.data.face_shape as MobileFaceShape | null) ?? null,
-        skinAnalysis: (latestResult.value.data.skin_analysis as MobileSkinAnalysis | null) ?? null,
-        hairstyle: (latestResult.value.data.hairstyle as MobileHairstyle | null) ?? null,
-      }
-    : null;
-
-  const totalReports = countResult.status === "fulfilled" ? countResult.value.count ?? 0 : 0;
-
-  return { totalReports, prefs, latest };
-}
-
-export async function fetchProgressReports(): Promise<MobileProgressReport[]> {
-  const { data } = await supabase.auth.getSession();
-  const user = data.session?.user;
-  if (!user) return [];
-
-  const { data: rows, error } = await supabase
-    .from("reports")
-    .select("id, created_at, color_analysis, face_shape, skin_analysis, is_paid, status")
-    .eq("user_id", user.id)
-    .eq("status", "ready")
-    .order("created_at", { ascending: true });
-
-  if (error) throw error;
-
-  return (rows ?? []).map((row) => ({
-    id: row.id as string,
-    createdAt: row.created_at as string,
-    colorAnalysis: (row.color_analysis as MobileColorAnalysis | null) ?? null,
-    faceShape: (row.face_shape as MobileFaceShape | null) ?? null,
-    skinAnalysis: (row.skin_analysis as MobileSkinAnalysis | null) ?? null,
-    isPaid: Boolean(row.is_paid),
-    status: row.status as string,
-  }));
-}
-
-const GUEST_STUDIO_STATE_KEY = "rv_guest_studio_state";
-
-export type GuestStudioState = {
-  guestId: string;
-  tryOnCount: number;
-  photoUrl?: string;
-};
-
-export type UnlockTeaserResponse = {
-  type: "none" | "color_season" | "face_shape" | "unlock_analysis";
-  message?: string;
-  ctaLabel?: string;
-  ctaHref?: string;
-};
-
-async function getGuestStudioStateHeader(): Promise<string | null> {
-  const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
-  return AsyncStorage.getItem(GUEST_STUDIO_STATE_KEY);
-}
-
-async function saveGuestStudioState(state: string): Promise<void> {
-  const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
-  await AsyncStorage.setItem(GUEST_STUDIO_STATE_KEY, state);
-}
-
-async function fetchGuestApi<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const apiBaseUrl = getValidatedMobileApiBaseUrl();
-  const guestState = await getGuestStudioStateHeader();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
-  try {
-    const response = await fetch(`${apiBaseUrl}${path}`, {
-      method: options.method ?? "GET",
-      body: options.body,
-      signal: controller.signal,
-      headers: {
-        ...(options.body && !(options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
-        ...(guestState ? { "X-Guest-Studio-State": guestState } : {}),
-        ...options.headers,
-      },
-    });
-    if (!response.ok) {
-      const errText = sanitizeApiErrorText(await response.text());
-      throw new Error(`API ${response.status}: ${errText || "Request failed"}`);
-    }
-    return (await response.json()) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-export async function guestUpload(imageUri: string): Promise<{ photoUrl: string; remaining: number; guestState: string }> {
-  const form = new FormData();
-  form.append("file", {
+  form.append("image", {
     uri: imageUri,
-    name: "selfie.jpg",
+    name: "body.jpg",
     type: "image/jpeg",
   } as unknown as Blob);
-  const json = await fetchGuestApi<{ photoUrl: string; remaining: number; guestState: string }>("/api/studio/guest-upload", {
+
+  return fetchWithAuth(`/api/reports/${reportId}/body-image`, {
     method: "POST",
     body: form,
   });
-  if (json.guestState) await saveGuestStudioState(json.guestState);
-  return json;
 }
 
-export async function guestGenerate(body: {
-  mode: "makeup" | "hair";
-  makeupStyle?: string;
-  hairVariant?: string;
-}): Promise<{
-  lowResUrl: string;
-  remaining: number;
-  guestState: string;
-  teaser?: UnlockTeaserResponse;
-  progress?: Record<string, unknown>;
-}> {
-  const json = await fetchGuestApi<{
-    lowResUrl: string;
-    remaining: number;
-    guestState: string;
-    teaser?: UnlockTeaserResponse;
-    progress?: Record<string, unknown>;
-  }>("/api/studio/guest-generate", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-  if (json.guestState) await saveGuestStudioState(json.guestState);
-  if (json.progress) {
-    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
-    await AsyncStorage.setItem("rv_guest_progress", JSON.stringify(json.progress));
-  }
-  return json;
+export async function fetchVault(): Promise<VaultResponse> {
+  return fetchWithAuth<VaultResponse>("/api/vault");
 }
 
-export async function getStudioProgress(): Promise<{ teaser: UnlockTeaserResponse }> {
-  return fetchWithAuth<{ teaser: UnlockTeaserResponse }>("/api/studio/progress");
-}
-
-export async function postStudioProgress(
-  action: "try_on" | "share" | "dismiss" | "merge_guest",
-  extras?: Record<string, string | number>,
-): Promise<{ teaser: UnlockTeaserResponse }> {
-  return fetchWithAuth<{ teaser: UnlockTeaserResponse }>("/api/studio/progress", {
-    method: "POST",
-    body: JSON.stringify({ action, ...extras }),
+export async function deleteVaultItem(itemId: string): Promise<{ ok: boolean }> {
+  return fetchWithAuth("/api/vault/items", {
+    method: "DELETE",
+    body: JSON.stringify({ itemId }),
   });
 }
 
-/** Fire-and-forget try-on progress after a successful report studio generation. */
-export async function recordReportStudioTryOn(
-  report: Pick<MobileReport, "faceShape" | "colorAnalysis">,
-): Promise<void> {
-  try {
-    await postStudioProgress("try_on", {
-      season: report.colorAnalysis?.season ?? "",
-      faceShape: report.faceShape?.shape ?? "",
-    });
-  } catch {
-    // non-blocking
-  }
-}
+/** @deprecated use startAnalysisFromSelfie */
+export const analyzeSelfie = startAnalysisFromSelfie;

@@ -1,31 +1,41 @@
-# Renovaara Mobile (Phase 1)
+# Renovaara Mobile (Expo)
 
-This is the initial mobile foundation for Android + iOS using Expo.
+Report-only mobile client mirroring the web **Atelier Dossier** experience.
 
-## What is implemented
+## Flow
 
-- Expo Router app shell
-- Mobile Supabase auth client with secure session persistence
-- Authenticated API wrapper (Bearer token)
-- Analyze polling helper for mobile (SSE fallback)
-- Basic test screen for sign-in and protected API call
+1. **Home** — landing hero, samples, pricing, FAQ
+2. **Upload** — selfie → SSE analyze
+3. **Analysis** — poll until ready
+4. **Report** — infographic chapters, unlock (browser checkout), Style Guide add-on
+5. **Vault** — uploads, boards, PDFs
+6. **Reports** — dossier list
 
-## Setup on Windows + iPhone
+## Setup
 
-1. Install dependencies
-   - `cd apps/mobile`
-   - `npm install`
-2. Configure environment
-   - Copy `.env.example` to `.env`
-   - Set all `EXPO_PUBLIC_*` values
-3. Start dev server
-   - `npm run start`
-4. Test on iPhone
-   - Install Expo Go from App Store
-   - Scan the QR shown by Expo CLI
+```bash
+cd apps/mobile
+npm install
+```
 
-## Notes
+Set in `.env` or `app.config`:
 
-- iPhone development/testing works from Windows via Expo Go.
-- iOS App Store/TestFlight binary creation still needs Mac or cloud build later.
-- Android local build can be done on Windows.
+- `EXPO_PUBLIC_API_BASE_URL` — web app URL (https in production)
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+
+## Commands
+
+```bash
+npm run start      # Expo dev server
+npm run typecheck  # TypeScript
+npm run android    # Native Android build
+```
+
+## Shared code
+
+Business logic imports from monorepo `src/` via `@web/*` (journey hints, product copy, report types). Metro resolves `@web` and cross-package `@/` in `metro.config.js`.
+
+## Payments
+
+Production checkout opens the web paywall in the browser (`?paywall=open`). Test mode uses in-app verify.

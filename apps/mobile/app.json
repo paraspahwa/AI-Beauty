@@ -30,7 +30,8 @@
           "android": {
             "buildArchs": [
               "arm64-v8a"
-            ]
+            ],
+            "usesCleartextTraffic": false
           }
         }
       ],

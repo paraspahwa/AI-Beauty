@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { mobileTheme as t } from "@/lib/theme";
+import { atelier } from "@/lib/theme";
 import { supabase } from "@/lib/supabase";
 
 export default function TabsLayout() {
@@ -40,9 +40,9 @@ export default function TabsLayout() {
 
   if (!ready) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: t.color.bg }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: atelier.color.parchment }}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={t.color.text} />
+          <ActivityIndicator color={atelier.color.terracotta} />
         </View>
       </SafeAreaView>
     );
@@ -52,14 +52,15 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: t.color.text,
-        tabBarInactiveTintColor: t.color.textFaint,
+        tabBarActiveTintColor: atelier.color.espresso,
+        tabBarInactiveTintColor: atelier.color.inkMist,
+        tabBarStyle: { backgroundColor: atelier.color.surface, borderTopColor: atelier.color.border },
       }}
     >
       <Tabs.Screen name="home" options={{ title: "Home" }} />
       <Tabs.Screen name="reports" options={{ title: "Reports" }} />
+      <Tabs.Screen name="vault" options={{ title: "Vault" }} />
       <Tabs.Screen name="account" options={{ title: "Account" }} />
-      <Tabs.Screen name="studio" options={{ href: null }} />
     </Tabs>
   );
 }

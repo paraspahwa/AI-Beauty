@@ -1,89 +1,75 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { listReports } from "@/lib/api";
-import { mobileTheme as t } from "@/lib/theme";
+import { atelier } from "@/lib/theme";
+import { getHomeContent } from "@/lib/home-content";
+import { LandingHero } from "@/components/home/LandingHero";
+import { LandingJourneyBanner } from "@/components/home/LandingJourneyBanner";
+import { ReportSampleGallery } from "@/components/home/ReportSampleGallery";
+import { JourneyTimeline } from "@/components/home/JourneyTimeline";
+import { LandingPricing } from "@/components/home/LandingPricing";
+import { FAQAccordion } from "@/components/home/FAQAccordion";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { FoilLabel } from "@/components/ui/FoilLabel";
+import { Text } from "react-native";
+import { displayFont, bodyFont } from "@/lib/theme-provider";
 
 export default function HomeTabScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [latestReportId, setLatestReportId] = useState<string | null>(null);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const reports = await listReports(5);
-        const ready = reports.find((r) => r.status === "ready");
-        setLatestReportId(ready?.id ?? null);
-      } catch {
-        setLatestReportId(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const banner = getHomeContent().ctaBanner;
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.eyebrow}>Renovaara</Text>
-        <Text style={styles.title}>Your AI beauty report</Text>
-        <Text style={styles.subtitle}>
-          Upload a selfie for face-shape preview, then unlock skin, colour, hairstyle, spectacles, and style guidance.
-        </Text>
+        <LandingJourneyBanner />
+        <LandingHero
+          onPrimary={() => router.push("/upload")}
+          onSecondary={() => router.push("/upload")}
+        />
 
-        <Pressable style={styles.primaryButton} onPress={() => router.push("/upload")}>
-          <Text style={styles.primaryButtonLabel}>New analysis</Text>
-        </Pressable>
+        <View style={styles.statsRow}>
+          {getHomeContent().stats.map((stat) => (
+            <View key={stat.id} style={styles.stat}>
+              <Text style={styles.statValue}>
+                {stat.value.toLocaleString()}
+                {stat.suffix}
+              </Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
 
-        <Pressable style={styles.secondaryButton} onPress={() => router.push("/reports")}>
-          <Text style={styles.secondaryButtonLabel}>View all reports</Text>
-        </Pressable>
+        <ReportSampleGallery />
+        <JourneyTimeline />
+        <LandingPricing onUpload={() => router.push("/upload")} />
+        <FAQAccordion />
 
-        {loading ? (
-          <ActivityIndicator color={t.color.text} style={{ marginTop: 24 }} />
-        ) : latestReportId ? (
-          <Pressable style={styles.latestCard} onPress={() => router.push(`/report/${latestReportId}`)}>
-            <Text style={styles.latestLabel}>Latest report ready</Text>
-            <Text style={styles.latestCta}>Open report →</Text>
-          </Pressable>
-        ) : null}
+        <View style={styles.finalCta}>
+          <FoilLabel>Ready</FoilLabel>
+          <Text style={styles.finalTitle}>{banner.title}</Text>
+          <Text style={styles.finalBody}>{banner.description}</Text>
+          <PrimaryButton label={banner.buttonLabel} onPress={() => router.push("/upload")} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: t.color.bg },
-  container: { padding: 24, gap: 12 },
-  eyebrow: { color: t.color.textFaint, fontSize: 11, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
-  title: { color: t.color.text, fontSize: 28, fontWeight: "700" },
-  subtitle: { color: t.color.textSoft, fontSize: 15, lineHeight: 22, marginBottom: 8 },
-  primaryButton: {
-    backgroundColor: t.color.text,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  primaryButtonLabel: { color: t.color.surface, fontWeight: "700", fontSize: 16 },
-  secondaryButton: {
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
+  safe: { flex: 1, backgroundColor: atelier.color.parchment },
+  container: { padding: atelier.space.md, paddingBottom: 48 },
+  statsRow: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: atelier.space.lg },
+  stat: {
+    flex: 1,
+    minWidth: 100,
+    backgroundColor: atelier.color.surface,
+    borderRadius: atelier.radius.md,
     borderWidth: 1,
-    borderColor: t.color.border,
-    backgroundColor: t.color.surface,
+    borderColor: atelier.color.border,
+    padding: 12,
   },
-  secondaryButtonLabel: { color: t.color.text, fontWeight: "600", fontSize: 16 },
-  latestCard: {
-    marginTop: 16,
-    borderRadius: 16,
-    padding: 16,
-    backgroundColor: t.color.surface,
-    borderWidth: 1,
-    borderColor: t.color.border,
-  },
-  latestLabel: { color: t.color.textSoft, fontSize: 12, fontWeight: "600" },
-  latestCta: { color: t.color.text, fontSize: 16, fontWeight: "700", marginTop: 4 },
+  statValue: { ...displayFont(), fontSize: 20, color: atelier.color.terracotta },
+  statLabel: { ...bodyFont(), fontSize: 11, marginTop: 4 },
+  finalCta: { gap: atelier.space.sm, paddingTop: atelier.space.md },
+  finalTitle: { ...displayFont(), ...atelier.type.h2 },
+  finalBody: { ...bodyFont() },
 });

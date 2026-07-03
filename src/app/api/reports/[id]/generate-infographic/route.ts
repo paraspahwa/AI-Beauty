@@ -50,12 +50,15 @@ export async function POST(
     const admin = createSupabaseAdminClient();
     const { data: report } = await admin
       .from("reports")
-      .select("id,is_paid,visual_assets")
+      .select("id,status,is_paid,visual_assets")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
 
     if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (report.status !== "ready") {
+      return NextResponse.json({ error: "Report not ready" }, { status: 409 });
+    }
 
     const hasPremium = hasPremiumAccess({ isPaid: !!report.is_paid, userEmail: user.email });
     if (!hasPremium) {

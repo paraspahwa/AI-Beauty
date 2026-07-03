@@ -3,11 +3,25 @@ const INTERNAL_PATH_RE = /^\/[^/]/;
 
 const BLOCKED_PREFIXES = ["/auth", "/auth/"];
 
+function isSafeInternalPath(path: string): boolean {
+  if (!INTERNAL_PATH_RE.test(path)) return false;
+  if (path.includes("%") || path.includes("\\")) return false;
+
+  try {
+    const decoded = decodeURIComponent(path);
+    if (!INTERNAL_PATH_RE.test(decoded) || decoded.startsWith("//")) return false;
+  } catch {
+    return false;
+  }
+
+  return true;
+}
+
 export function sanitizePostAuthPath(
   rawPath: string | null | undefined,
   fallback = "/upload",
 ): string {
-  if (!rawPath || !INTERNAL_PATH_RE.test(rawPath)) {
+  if (!rawPath || !isSafeInternalPath(rawPath)) {
     return fallback;
   }
 

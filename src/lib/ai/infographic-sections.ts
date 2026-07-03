@@ -74,3 +74,20 @@ export function getGeneratableSectionIds(): AnalysisInfographicSectionId[] {
 export function isAnalysisInfographicSectionId(value: string): value is AnalysisInfographicSectionId {
   return BLUEPRINT_SECTIONS.some((s) => s.id === value);
 }
+
+/** User-triggered paid sections (not auto-queued on unlock). */
+export const MANUAL_PAID_INFOGRAPHIC_SECTIONS = [
+  "skin",
+  "color",
+  "hairstyle",
+  "spectacles",
+  "hairColor",
+] as const satisfies readonly AnalysisInfographicSectionId[];
+
+export type ManualPaidInfographicSection = (typeof MANUAL_PAID_INFOGRAPHIC_SECTIONS)[number];
+
+export function isManualPaidInfographicSection(
+  section: string,
+): section is ManualPaidInfographicSection {
+  return (MANUAL_PAID_INFOGRAPHIC_SECTIONS as readonly string[]).includes(section);
+}

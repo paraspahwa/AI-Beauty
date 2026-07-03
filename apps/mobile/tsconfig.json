@@ -2,15 +2,19 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "resolveJsonModule": true,
     "types": [
       "expo-router/types",
       "node"
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@web/*": ["../../src/*"],
+      "@/types/*": ["../../src/types/*"],
+      "@/lib/ai/infographic-sections": ["../../src/lib/ai/infographic-sections.ts"],
+      "@/lib/report/*": ["../../src/lib/report/*"],
+      "@/lib/product-copy": ["../../src/lib/product-copy.ts"]
     }
   },
   "include": [

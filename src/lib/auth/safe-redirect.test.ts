@@ -17,6 +17,8 @@ describe("sanitizePostAuthPath", () => {
     expect(sanitizePostAuthPath("//evil.com")).toBe("/upload");
     expect(sanitizePostAuthPath("https://evil.com")).toBe("/upload");
     expect(sanitizePostAuthPath(null)).toBe("/upload");
+    expect(sanitizePostAuthPath("/%2f%2fevil.com")).toBe("/upload");
+    expect(sanitizePostAuthPath("/vault\\@evil.com")).toBe("/upload");
   });
 
   it("uses custom fallback", () => {

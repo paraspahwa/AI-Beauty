@@ -70,6 +70,14 @@ jobs:
           NEXT_PUBLIC_PAID_PRICE_INR: "829"
           NEXT_PUBLIC_ENABLE_PDF: "true"
 
+      - name: Install mobile dependencies
+        working-directory: apps/mobile
+        run: npm ci
+
+      - name: Run mobile TypeScript type-check
+        working-directory: apps/mobile
+        run: npm run typecheck
+
   test:
     name: Unit Tests
     runs-on: ubuntu-latest

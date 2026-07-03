@@ -1,5 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
-import { mobileTheme as t } from "@/lib/theme";
+import { StyleSheet, Text } from "react-native";
+import { atelier } from "@/lib/theme";
+import { bodyFont } from "@/lib/theme-provider";
+import { DossierCard } from "@/components/ui/DossierCard";
 
 export function UnlockTeaserBanner({
   hints,
@@ -12,22 +14,16 @@ export function UnlockTeaserBanner({
     ? `Your ${season} palette and full styling guide are ready — unlock to see every section.`
     : shape
       ? `We mapped your ${shape} face shape — unlock for skin, colour, hair, spectacles, and style guidance.`
-      : "Unlock your complete beauty report — all seven sections in one purchase.";
+      : "Unlock your complete beauty report — six illustrated chapters in one purchase.";
 
   return (
-    <View style={styles.card}>
+    <DossierCard style={styles.card}>
       <Text style={styles.message}>{message}</Text>
-    </View>
+    </DossierCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: t.color.border,
-    backgroundColor: t.color.surface,
-    padding: 16,
-  },
-  message: { color: t.color.text, fontSize: 14, lineHeight: 20 },
+  card: { marginVertical: 8 },
+  message: { ...bodyFont(), ...atelier.type.body, color: atelier.color.espresso },
 });

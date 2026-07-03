@@ -4,7 +4,16 @@ const PRIVATE_HOST_PATTERNS: RegExp[] = [
   /^192\.168\./,
   /^169\.254\./,
   /^172\.(1[6-9]|2\d|3[0-1])\./,
+  /^0\./,
 ];
+
+const BLOCKED_HOSTS = new Set([
+  "localhost",
+  "::1",
+  "0.0.0.0",
+  "metadata.google.internal",
+  "metadata.goog",
+]);
 
 export function isSafeRemoteImageUrl(url: string): boolean {
   try {
@@ -12,7 +21,8 @@ export function isSafeRemoteImageUrl(url: string): boolean {
     if (parsed.protocol !== "https:") return false;
 
     const host = parsed.hostname.toLowerCase();
-    if (host === "localhost" || host === "::1") return false;
+    if (BLOCKED_HOSTS.has(host)) return false;
+    if (host.endsWith(".localhost") || host.endsWith(".local")) return false;
     if (PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
 
     return true;
