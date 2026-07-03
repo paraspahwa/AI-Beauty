@@ -49,7 +49,7 @@ function SampleCard({ item }: { item: ReportSampleItem }) {
           src={src}
           alt={item.imageAlt}
           fill
-          className="object-contain p-3"
+          className="object-cover object-top"
           sizes="280px"
           onError={() => {
             if (src !== item.fallbackSrc) setSrc(item.fallbackSrc);

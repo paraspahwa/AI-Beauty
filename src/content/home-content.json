@@ -84,24 +84,24 @@
   },
   "reportSamples": [
     {
-      "id": "faceFeaturesPreview",
-      "label": "Face Shape Preview",
-      "description": "Your free preview — face shape mapped in a luxury infographic before you unlock.",
-      "imageFile": "sample-1-after.jpg",
-      "tag": "Free"
+      "id": "faceFeatures",
+      "label": "Face Features Analysis",
+      "description": "Eyes, brows, nose, lips, and cheeks mapped to tailored styling advice in one illustrated board.",
+      "imageFile": "report/faceFeatures.jpg",
+      "tag": "Full report"
     },
     {
       "id": "skin",
       "label": "Skin Analysis",
       "description": "Skin type, concerns, and AM/PM routine guidance in one shareable graphic.",
-      "imageFile": "sample-4-after.jpg",
+      "imageFile": "report/skin.jpg",
       "tag": "Full report"
     },
     {
       "id": "color",
       "label": "Colour Analysis",
       "description": "Your seasonal palette — best clothing, makeup, and metal tones for your undertone.",
-      "imageFile": "sample-4.jpg",
+      "imageFile": "report/color.jpg",
       "tag": "Full report"
     },
     {

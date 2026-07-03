@@ -69,4 +69,27 @@ describe("pipeline confidence gating", () => {
     expect(glassesUserPrompt).toContain("Round face");
     expect(hairstyleUserPrompt).toContain("Round face");
   });
+
+  it("does not run style guide analysis during selfie pipeline", async () => {
+    chatJSONMock
+      .mockResolvedValueOnce({ shape: "Oval", traits: ["a", "b", "c"], confidence: 0.9 })
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ summary: "ok" });
+
+    const result = await runAnalysisPipeline(Buffer.from("raw-image"));
+
+    expect(chatJSONMock).toHaveBeenCalledTimes(8);
+    expect(result.styleGuide).toBeNull();
+    for (const call of chatJSONMock.mock.calls) {
+      const user = call[0]?.user ?? "";
+      expect(user.toLowerCase()).not.toContain("style guide");
+      expect(user).not.toContain("FULL-BODY");
+    }
+  });
 });

@@ -107,15 +107,15 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
     );
   }
 
-  if (paymentInitiated && !isPaid) {
+  if (paymentInitiated && !isPaid && bodyUploaded) {
     return (
-      <GeneratingPanel message="Payment received — starting your Style Guide…" />
+      <GeneratingPanel message="Payment received — starting your Personal Style Board…" />
     );
   }
 
   if (creating) {
     return (
-      <GeneratingPanel message="Analyzing your full-body photo and creating your style board…" />
+      <GeneratingPanel message="Creating your Personal Style Board…" />
     );
   }
 
@@ -123,7 +123,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
     return (
       <section id="report-section-style-guide" className="report-surface-panel scroll-mt-24 rounded-3xl p-6 sm:p-8">
         <p className="foil-label mb-2 border-none p-0">Step 2 of 3</p>
-        <h2 className="font-display mb-3 text-2xl text-ink">Unlock your Style Board</h2>
+        <h2 className="font-display mb-3 text-2xl text-ink">Your Personal Style Board</h2>
         <p className="mb-6 text-sm text-ink-stone">
           Full-body photo uploaded. Pay to unlock — we&apos;ll analyze your photo and generate a
           personalised wardrobe infographic with essentials, silhouettes, and accent colours.
@@ -142,10 +142,10 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
   return (
     <section id="report-section-style-guide" className="report-surface-panel scroll-mt-24 rounded-3xl p-6 sm:p-8">
       <p className="foil-label mb-2 border-none p-0">Step 1 of 3</p>
-      <h2 className="font-display mb-3 text-2xl text-ink">Upload a full-body photo</h2>
+      <h2 className="font-display mb-3 text-2xl text-ink">Your Personal Style Board</h2>
       <p className="mb-4 text-sm text-ink-stone">
-        Your Style Board uses a separate full-body photo — not your face selfie. After upload,
-        unlock the add-on and we&apos;ll analyze your silhouette to build your board.
+        Upload a separate full-body photo — not your face selfie. After upload, unlock the add-on
+        and we&apos;ll analyze your silhouette to build your board.
       </p>
       <ul className="mb-6 space-y-1 text-sm text-ink-stone">
         <li className="flex items-center gap-2"><Shirt className="h-4 w-4 shrink-0 text-terracotta" /> Head-to-toe visible, good lighting</li>

@@ -27,12 +27,12 @@ export function HeroReportCard() {
           className={`${styles.heroFanCard} ${FAN_POSITIONS[index] ?? styles.fanPos0}`}
           style={{ animationDelay: `${index * 1.5}s` }}
         >
-          <div className="relative aspect-[3/4] w-full">
+          <div className="relative aspect-[3/4] w-full bg-[var(--infographic-frame)]">
             <Image
               src={sources[index] ?? sample.imageSrc}
               alt={sample.imageAlt}
               fill
-              className="object-contain p-2"
+              className="object-cover object-top"
               sizes="(max-width: 768px) 40vw, 220px"
               priority={index === 0}
               onError={() => {
@@ -46,7 +46,7 @@ export function HeroReportCard() {
               }}
             />
           </div>
-          <p className="truncate px-2 pb-2 text-center text-[10px] font-medium text-ink-stone">
+          <p className="truncate px-2 pb-2.5 pt-1 text-center text-[11px] font-semibold text-ink">
             {sample.label}
           </p>
         </div>

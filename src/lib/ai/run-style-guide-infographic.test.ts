@@ -39,4 +39,53 @@ describe("styleGuideNeedsGeneration", () => {
   it("returns false when body photo is missing", () => {
     expect(styleGuideNeedsGeneration({ ...baseRow, body_image_path: null })).toBe(false);
   });
+
+  it("returns true on force even when infographic is ready", () => {
+    expect(
+      styleGuideNeedsGeneration(
+        {
+          ...baseRow,
+          style_guide: {
+            primaryStyle: "Classic",
+            secondaryStyles: [],
+            vibeTraits: [],
+            wardrobeEssentials: [],
+            silhouettes: [],
+            colorDirection: { neutrals: [], accents: [] },
+            styleNotes: [],
+            identitySummary: "Test",
+          },
+          visual_assets: {
+            version: 1,
+            bucket: "selfies",
+            basePath: "user-1/report-1/",
+            assets: {
+              analysisInfographics: {
+                styleGuide: { path: "x", status: "ready", mime: "image/jpeg" },
+              },
+            },
+          },
+        },
+        true,
+      ),
+    ).toBe(true);
+  });
+
+  it("returns false when infographic is pending", () => {
+    expect(
+      styleGuideNeedsGeneration({
+        ...baseRow,
+        visual_assets: {
+          version: 1,
+          bucket: "selfies",
+          basePath: "user-1/report-1/",
+          assets: {
+            analysisInfographics: {
+              styleGuide: { path: "x", status: "pending", mime: "image/jpeg" },
+            },
+          },
+        },
+      }),
+    ).toBe(false);
+  });
 });
