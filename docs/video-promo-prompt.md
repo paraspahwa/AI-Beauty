@@ -416,7 +416,7 @@ Run each prompt **3 times with different seeds** to get variation — Seedance h
 | Video | Where to use | Aspect ratio API param | Best for |
 |---|---|---|---|
 | Enhanced Prompt 3 v2 | Reels, TikTok, Shorts | `9:16` | Paid ads, organic reach |
-| Website Hero Background | Landing page hero, muted loop | `16:9` | Brand immersion |
+| Website Hero Background | Gallery embed (`ReportSampleGallery`) or ambient marketing | `16:9` | Brand immersion |
 | Watch It Work | Features section embed | `16:9` | Conversion / trust |
 | Hook A: Results in 3s | Instagram Reel, TikTok | `9:16` | Retention hook |
 | Hook B: Colour Reveal | Instagram Reel, Pinterest | `9:16` | Education + shares |
