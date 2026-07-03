@@ -1,4 +1,4 @@
-import { cacheDirectory, downloadAsync } from "expo-file-system/legacy";
+import { cacheDirectory, downloadAsync } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { supabase } from "@/lib/supabase";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
