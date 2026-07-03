@@ -48,9 +48,10 @@
         { "name": "AnalysisLoading", "file": "src/components/AnalysisLoading.tsx", "description": "Animated loading state during analysis" }
       ],
       "home_components": [
-        { "name": "LandingHero", "file": "src/components/home/LandingHero.tsx", "description": "Video hero with HeroText + HeroReportCard fan" },
+        { "name": "LandingHero", "file": "src/components/home/LandingHero.tsx", "description": "CSS gradient hero with LandingJourneyBanner, HeroText, and HeroReportCard carousel" },
+        { "name": "LandingJourneyBanner", "file": "src/components/home/LandingJourneyBanner.tsx", "description": "Returning-user NextStepHint on homepage when a report is in progress" },
         { "name": "HeroText", "file": "src/components/home/HeroText.tsx", "description": "Headline/CTAs from home-content.json" },
-        { "name": "HeroReportCard", "file": "src/components/home/HeroReportCard.tsx", "description": "Fanned stack of first 3 report sample infographics" },
+        { "name": "HeroReportCard", "file": "src/components/home/HeroReportCard.tsx", "description": "Autoplay carousel (first 3 report samples) with carouselSlideUp animation" },
         { "name": "ProofStrip", "file": "src/components/home/ProofStrip.tsx", "description": "Animated stat counters" },
         { "name": "ReportSampleGallery", "file": "src/components/home/ReportSampleGallery.tsx", "description": "Six infographic samples + promo video (#samples)" },
         { "name": "JourneyTimeline", "file": "src/components/home/JourneyTimeline.tsx", "description": "5-step product journey" },

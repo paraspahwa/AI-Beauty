@@ -337,13 +337,15 @@ Cinematic short video, energetic and premium. A large bold countdown "60" glows 
 
 ### Website Hero Background (16:9, Loopable)
 
-> ⚠️ Confirmed working — this prompt generated the hero video currently live on the website. For the landing page hero section — play muted behind the headline text. No people, no text in video.
+> **Status (Jul 2026):** The homepage hero (`LandingHero`) no longer mounts a background video — it uses a CSS gradient backdrop for faster LCP. This prompt still applies if you regenerate a **gallery or ambient** clip; embed via `ReportSampleGallery` (scroll-triggered) or a future hero variant. Legacy asset: `/Website%20Hero%20Background.mp4`.
+
+> ⚠️ Confirmed working — this prompt generated the original hero video. Play muted behind headline text. No people, no text in video.
 
 ```
 Cinematic abstract beauty brand video, seamless loop, soft luxury aesthetic. A flat lay of elegant beauty objects on a warm white marble surface — a glowing smartphone showing a pink app interface, terracotta and rust colour swatches fanned out, faceted gold jewellery, soft blush fabric draped gently. Warm golden-hour side lighting from the left. Pink and violet gradient light washes slowly across the composition from right to left. Soft bokeh depth of field. No text. No people. Objects rest still while the camera drifts on a slow ultra-smooth parallax — left to right, then gently down — ending in the exact starting composition for a seamless loop. Colours: pink #EC4899, violet #8B5CF6, warm white background.
 ```
 
-> **API settings:** `aspect_ratio: "16:9"`, `duration: 10`, play on loop muted in the website hero
+> **API settings:** `aspect_ratio: "16:9"`, `duration: 10`, loop muted — use in `ReportSampleGallery` or marketing embeds, not `LandingHero`
 
 ---
 

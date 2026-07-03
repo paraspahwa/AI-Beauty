@@ -8,7 +8,7 @@ The public homepage (`/`) is a server component that composes client-side sectio
 
 | Order | Component | Purpose |
 |-------|-----------|---------|
-| 1 | `LandingHero` | Video background, headline, hero fan of sample infographics |
+| 1 | `LandingHero` | CSS gradient hero, returning-user journey banner, headline, sample carousel |
 | 2 | `ProofStrip` | Animated stat counters from `HOME_CONTENT.stats` |
 | 3 | `ReportSampleGallery` | Horizontal scroll of six report samples (`#samples` anchor) |
 | 4 | `JourneyTimeline` | Five-step product journey |
@@ -61,15 +61,26 @@ public/samples/report/{sectionId}.jpg
 1. Export or generate the infographic at roughly **3:4 portrait** aspect ratio.
 2. Save to `public/samples/report/{sectionId}.jpg` (match the `id` in `home-content.json`).
 3. Optionally update `imageFile` in JSON if you want a different fallback.
-4. Run `npm run dev` and verify hero fan + `#samples` gallery — both use `object-cover object-top` on `--infographic-frame` background.
+4. Run `npm run dev` and verify hero carousel + `#samples` gallery — both use `object-cover object-top` on `--infographic-frame` background.
 
 ## Key components
 
 ### `LandingHero`
 
-- Background video: `/Website%20Hero%20Background.mp4` with poster `/1779024315.png`
-- `HeroText` reads hero copy from `HOME_CONTENT.hero`
-- `HeroReportCard` shows a fanned stack of the **first three** `reportSamples` entries
+- **Background:** CSS gradient surface (`home.module.css` → `.heroSurface`, `.heroBackdrop`) — no hero video above the fold (improves LCP vs the former `/Website%20Hero%20Background.mp4` loop).
+- `LandingJourneyBanner` — optional `NextStepHint` for signed-in users with an in-progress report (`useJourneySnapshot` + `getLandingJourneyHint`).
+- `HeroText` reads hero copy from `HOME_CONTENT.hero`.
+- `HeroReportCard` — autoplay carousel of the **first three** `reportSamples` entries (see below).
+
+### `HeroReportCard` (sample carousel)
+
+- Data: `toReportSampleItems().slice(0, 3)` — typically `faceFeatures`, `skin`, `color`.
+- **Autoplay:** advances every 4s (`AUTOPLAY_MS`); pauses on hover, focus, or `prefers-reduced-motion`.
+- **Animation:** `carouselSlideUp` from `src/lib/animations.ts` (`AnimatePresence mode="wait"`).
+- **Controls:** dot tablist (`role="tablist"`) — manual selection resets the autoplay timer.
+- **A11y:** `role="region"`, `aria-roledescription="carousel"`, active label in `aria-live="polite"`.
+- **Layout:** `.heroCarouselStage` / `.heroCarouselCard` in `home.module.css`; subtle `float-slow` on desktop (`lg+`).
+- **Images:** canonical `/samples/report/{id}.jpg` with `imageFile` fallback on `onError`.
 
 ### `ReportSampleGallery`
 
@@ -91,7 +102,7 @@ Landing uses the app-wide dossier theme in `src/app/globals.css`:
 - `.gradient-text` — accent headline spans
 - `font-display` — Lora headings; body uses Raleway via theme
 
-Hero-specific layout and fan animation live in `src/app/home.module.css`.
+Hero-specific layout and carousel styles live in `src/app/home.module.css` (`.heroSurface`, `.heroBackdrop`, `.heroCarouselStage`, `.heroCarouselCard`). Shared motion presets live in `src/lib/animations.ts` (`carouselSlideUp`, `fadeUp`, etc.).
 
 ## SEO
 
@@ -117,3 +128,5 @@ No env vars are required to render the landing page. Pricing labels read `NEXT_P
 - **Free vs paid samples:** The gallery tags all six entries as "Full report". Do not use `faceFeaturesPreview` as a landing sample ID unless intentionally showcasing the free tier.
 - **Hardcoded testimonials:** Quotes in `page.tsx` are not driven by JSON; update inline when refreshing social proof.
 - **Stale design-system MASTER:** `design-system/renovaara/MASTER.md` predates the Atelier Dossier refresh. Trust `globals.css` and live components over that file for landing work.
+- **Hero video location:** Promo video assets (`/e6672f79-…mp4`, legacy `/Website%20Hero%20Background.mp4`) are **not** mounted in `LandingHero`. The gallery section plays the promo clip on scroll-into-view only.
+- **Carousel sample count:** `HeroReportCard` hard-codes `.slice(0, 3)`. Reordering `reportSamples` in JSON changes which boards appear in the hero.
