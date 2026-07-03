@@ -157,6 +157,16 @@ See [docs/pending-manual-tasks.md](docs/pending-manual-tasks.md).
 
 ---
 
+## Developer docs
+
+| Doc | Covers |
+|-----|--------|
+| [docs/landing-page.md](docs/landing-page.md) | Homepage structure, `home-content.json`, hero video portal, dossier carousel, sample images |
+| [docs/architecture.json](docs/architecture.json) | Machine-readable route/component map (partially stale on legacy studio/chat) |
+| [docs/pending-manual-tasks.md](docs/pending-manual-tasks.md) | Env setup and manual ops checklist |
+
+---
+
 ## Database
 
 Schema: `supabase/migrations/` (26 migrations).  
@@ -170,7 +180,7 @@ Key RPCs: `complete_webhook_payment`, `complete_style_guide_webhook_payment`, `c
 
 ## Testing
 
-- Unit tests: `src/lib/ai/confidence.test.ts`, `contracts.test.ts`, `pipeline.test.ts`
+- Unit tests: `src/lib/ai/confidence.test.ts`, `contracts.test.ts`, `pipeline.test.ts`, `animations.deck.test.ts`
 - Vitest: `node` environment, `@` alias → `./src`
 
 ---
