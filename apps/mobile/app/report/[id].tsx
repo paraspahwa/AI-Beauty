@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 export default function ReportScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string; checkout?: string; paywall?: string }>();
+  const returnedFromCheckout = params.checkout === "report_return" || params.checkout === "style_guide_return";
   const isAuthed = useRequireMobileSession();
   const [report, setReport] = useState<CompiledReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,10 +35,10 @@ export default function ReportScreen() {
   }, [isAuthed, load]);
 
   useEffect(() => {
-    if (params.checkout !== "report_return" || !report) return;
+    if (!returnedFromCheckout || !report) return;
     const timer = setInterval(() => void load(), 3000);
     return () => clearInterval(timer);
-  }, [params.checkout, report, load]);
+  }, [returnedFromCheckout, report, load]);
 
   if (!isAuthed) {
     return (

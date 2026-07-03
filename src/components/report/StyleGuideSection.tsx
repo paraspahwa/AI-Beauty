@@ -11,6 +11,8 @@ import type { CompiledReport, ReportVisualAsset } from "@/types/report";
 interface Props {
   report: CompiledReport;
   onRefresh: () => void;
+  initialPaywallOpen?: boolean;
+  appReturnToUrl?: string;
 }
 
 function GeneratingPanel({ message }: { message: string }) {
@@ -29,7 +31,12 @@ function GeneratingPanel({ message }: { message: string }) {
   );
 }
 
-export function StyleGuideSection({ report, onRefresh }: Props) {
+export function StyleGuideSection({
+  report,
+  onRefresh,
+  initialPaywallOpen = false,
+  appReturnToUrl,
+}: Props) {
   const [uploading, setUploading] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [paymentInitiated, setPaymentInitiated] = React.useState(false);
@@ -130,6 +137,8 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
         </p>
         <StyleGuidePaywall
           reportId={report.id}
+          appReturnToUrl={appReturnToUrl}
+          externalOpen={initialPaywallOpen}
           onUnlocked={() => {
             setPaymentInitiated(true);
             onRefresh();

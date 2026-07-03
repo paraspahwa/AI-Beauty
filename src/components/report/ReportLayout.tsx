@@ -20,6 +20,8 @@ import { fadeUp, staggerContainer } from "@/lib/animations";
 interface Props {
   report: CompiledReport;
   initialPaywallOpen?: boolean;
+  initialStyleGuidePaywallOpen?: boolean;
+  appReturnToUrl?: string;
 }
 
 function infographicAssetMissing(asset?: ReportVisualAsset): boolean {
@@ -43,7 +45,12 @@ function pickFaceInfographic(
   return preview ?? full;
 }
 
-export function ReportLayout({ report: initial, initialPaywallOpen = false }: Props) {
+export function ReportLayout({
+  report: initial,
+  initialPaywallOpen = false,
+  initialStyleGuidePaywallOpen = false,
+  appReturnToUrl,
+}: Props) {
   const [report, setReport] = React.useState(initial);
   const [paywallOpen, setPaywallOpen] = React.useState(initialPaywallOpen);
   const [paymentInitiated, setPaymentInitiated] = React.useState(false);
@@ -131,6 +138,7 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
             ) : !isPaid ? (
               <Paywall
                 reportId={report.id}
+                appReturnToUrl={appReturnToUrl}
                 externalOpen={paywallOpen}
                 onExternalOpenChange={setPaywallOpen}
                 onUnlocked={() => {
@@ -251,7 +259,12 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   onRefresh={refresh}
                 />
               )}
-              <StyleGuideSection report={report} onRefresh={refresh} />
+              <StyleGuideSection
+                report={report}
+                onRefresh={refresh}
+                initialPaywallOpen={initialStyleGuidePaywallOpen}
+                appReturnToUrl={appReturnToUrl}
+              />
             </>
           ) : (
             <LockedSections onOpenPaywall={() => setPaywallOpen(true)} />

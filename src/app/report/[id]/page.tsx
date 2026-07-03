@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { hasPremiumAccess, hasStyleGuideAccess } from "@/lib/auth/access";
+import { sanitizeMobileAppReturnUrl } from "@/lib/auth/safe-redirect";
 import { isVaultStoragePath } from "@/lib/vault/vault-item-id";
 import {
   previewSummaryForUnpaid,
@@ -27,11 +28,14 @@ export default async function ReportPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ paywall?: string | string[] }>;
+  searchParams: Promise<{ paywall?: string | string[]; return_to?: string | string[] }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const initialPaywallOpen = (Array.isArray(query.paywall) ? query.paywall[0] : query.paywall) === "open";
+  const paywallParam = Array.isArray(query.paywall) ? query.paywall[0] : query.paywall;
+  const initialPaywallOpen = paywallParam === "open";
+  const initialStyleGuidePaywallOpen = paywallParam === "style-guide";
+  const appReturnToUrl = sanitizeMobileAppReturnUrl(query.return_to, id);
 
   if (!UUID_RE.test(id)) {
     notFound();
@@ -116,5 +120,12 @@ export default async function ReportPage({
     createdAt: row.created_at,
   };
 
-  return <ReportLayout report={report} initialPaywallOpen={initialPaywallOpen} />;
+  return (
+    <ReportLayout
+      report={report}
+      initialPaywallOpen={initialPaywallOpen}
+      initialStyleGuidePaywallOpen={initialStyleGuidePaywallOpen}
+      appReturnToUrl={appReturnToUrl}
+    />
+  );
 }

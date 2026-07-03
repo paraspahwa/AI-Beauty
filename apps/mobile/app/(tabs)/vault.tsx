@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Linking } from "react-native";
 import { deleteVaultItem, fetchVault } from "@/lib/api";
+import { downloadReportPdf } from "@/lib/pdf-download";
 import type { VaultItem } from "@web/types/vault";
 import { atelier } from "@/lib/theme";
 import { bodyFont, displayFont } from "@/lib/theme-provider";
@@ -55,7 +56,11 @@ export default function VaultTabScreen() {
 
   async function handleOpen(item: VaultItem) {
     if (item.pdfDownloadUrl) {
-      await Linking.openURL(item.pdfDownloadUrl);
+      try {
+        await downloadReportPdf(item.reportId, item.pdfVariant ?? "report");
+      } catch (e) {
+        Alert.alert("Download failed", (e as Error).message);
+      }
       return;
     }
     if (item.signedUrl) await Linking.openURL(item.signedUrl);
