@@ -4,6 +4,11 @@
     "tagline": "AI-Powered Beauty Analysis SaaS",
     "version": "2.0",
     "deploy": "Vercel Pro",
+    "engineering_docs": [
+      { "topic": "Agent instructions", "file": "AGENTS.md" },
+      { "topic": "Landing page", "file": "docs/landing-page.md" },
+      { "topic": "Infographic generation", "file": "docs/infographic-generation.md" }
+    ],
     "stack": {
       "framework": "Next.js 15 (App Router)",
       "runtime": "React 19",
@@ -20,7 +25,8 @@
 
     "frontend": {
       "pages": [
-        { "route": "/", "file": "src/app/page.tsx", "description": "Landing page — hero, stats, sample showcase, FAQ, testimonials", "auth": "public" },
+        { "route": "/", "file": "src/app/page.tsx", "description": "Landing page — hero, proof stats, report sample gallery (#samples), journey, pricing, FAQ, JSON-LD", "auth": "public" },
+        { "route": "/vault", "file": "src/app/vault/page.tsx", "description": "Gallery of uploads, infographics, and PDFs with signed URLs", "auth": "protected" },
         { "route": "/upload", "file": "src/app/upload/", "description": "Selfie upload with drag-and-drop ImageUploader", "auth": "protected" },
         { "route": "/report/[id]", "file": "src/app/report/", "description": "Full AI beauty report with paywall gate", "auth": "protected" },
         { "route": "/dashboard", "file": "src/app/dashboard/", "description": "User dashboard — report history, usage", "auth": "protected" },
@@ -42,18 +48,33 @@
         { "name": "AnalysisLoading", "file": "src/components/AnalysisLoading.tsx", "description": "Animated loading state during analysis" }
       ],
       "home_components": [
-        { "name": "HeroText", "file": "src/components/home/HeroText.tsx" },
-        { "name": "HeroReportCard", "file": "src/components/home/HeroReportCard.tsx" },
+        { "name": "LandingHero", "file": "src/components/home/LandingHero.tsx", "description": "Video hero with HeroText + HeroReportCard fan" },
+        { "name": "HeroText", "file": "src/components/home/HeroText.tsx", "description": "Headline/CTAs from home-content.json" },
+        { "name": "HeroReportCard", "file": "src/components/home/HeroReportCard.tsx", "description": "Fanned stack of first 3 report sample infographics" },
+        { "name": "ProofStrip", "file": "src/components/home/ProofStrip.tsx", "description": "Animated stat counters" },
+        { "name": "ReportSampleGallery", "file": "src/components/home/ReportSampleGallery.tsx", "description": "Six infographic samples + promo video (#samples)" },
+        { "name": "JourneyTimeline", "file": "src/components/home/JourneyTimeline.tsx", "description": "5-step product journey" },
+        { "name": "ChapterSpreads", "file": "src/components/home/ChapterSpreads.tsx", "description": "Feature chapter cards" },
+        { "name": "LandingPricing", "file": "src/components/home/LandingPricing.tsx", "description": "Unlock + Style Guide pricing cards" },
         { "name": "StatsCounters", "file": "src/components/home/StatsCounters.tsx" },
-        { "name": "SampleShowcase", "file": "src/components/home/SampleShowcase.tsx" },
+        { "name": "SampleShowcase", "file": "src/components/home/SampleShowcase.tsx", "description": "Before/after marquee pairs" },
         { "name": "TestimonialsSection", "file": "src/components/home/TestimonialsSection.tsx" },
         { "name": "FAQAccordion", "file": "src/components/home/FAQAccordion.tsx" },
+        { "name": "FinalCta", "file": "src/components/home/FinalCta.tsx" },
         { "name": "ActivityTicker", "file": "src/components/home/ActivityTicker.tsx" },
         { "name": "RevealSection", "file": "src/components/home/RevealSection.tsx" },
         { "name": "StickyMobileCta", "file": "src/components/home/StickyMobileCta.tsx" }
       ],
+      "home_content": [
+        { "name": "home-content.json", "file": "src/content/home-content.json", "description": "Hero, stats, showcase pairs, reportSamples metadata" },
+        { "name": "home-content", "file": "src/lib/home-content.ts", "description": "HOME_CONTENT loader, toReportSampleItems(), canonical /samples/report/{id}.jpg paths" },
+        { "name": "landing-content", "file": "src/lib/landing-content.ts", "description": "LANDING_FEATURES, LANDING_STEPS, getLandingFaqs()" }
+      ],
       "report_components": [
-        { "name": "ReportLayout", "file": "src/components/report/ReportLayout.tsx", "description": "Master layout for full report" },
+        { "name": "ReportLayout", "file": "src/components/report/ReportLayout.tsx", "description": "Master layout — paywall, face features, manual infographic sections, Style Guide" },
+        { "name": "AnalysisSectionCard", "file": "src/components/report/AnalysisSectionCard.tsx", "description": "User-triggered paid infographic generate/retry UI" },
+        { "name": "StyleGuideSection", "file": "src/components/report/StyleGuideSection.tsx", "description": "Style Guide add-on — upload, paywall, Personal Style Board" },
+        { "name": "FaceFeaturesInfographic", "file": "src/components/report/FaceFeaturesInfographic.tsx" },
         { "name": "ColorAnalysisCard", "file": "src/components/report/ColorAnalysisCard.tsx" },
         { "name": "SkinAnalysisCard", "file": "src/components/report/SkinAnalysisCard.tsx" },
         { "name": "FaceFeaturesCard", "file": "src/components/report/FaceFeaturesCard.tsx" },
@@ -365,7 +386,7 @@
         { "name": "jewellery-affiliates", "file": "src/lib/jewellery-affiliates.ts", "description": "Jewellery affiliate product links" },
         { "name": "amazon-pa-api", "file": "src/lib/amazon-pa-api.ts", "description": "Amazon Product Advertising API client" },
         { "name": "animations", "file": "src/lib/animations.ts", "description": "Framer Motion animation presets" },
-        { "name": "home-content", "file": "src/lib/home-content.ts", "description": "Structured homepage content loader" },
+        { "name": "home-content", "file": "src/lib/home-content.ts", "description": "HOME_CONTENT loader, toReportSampleItems() — see docs/landing-page.md" },
         { "name": "track", "file": "src/lib/track.ts", "description": "Analytics event tracking helpers" },
         { "name": "utils", "file": "src/lib/utils.ts", "description": "General utility functions (cn, clsx)" },
         { "name": "env", "file": "src/lib/env.ts", "description": "Centralized env var access with validation" },
