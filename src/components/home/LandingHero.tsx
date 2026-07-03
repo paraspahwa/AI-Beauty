@@ -8,21 +8,10 @@ import styles from "@/app/home.module.css";
 
 export function LandingHero() {
   return (
-    <div className="relative isolate overflow-hidden min-h-app-viewport flex flex-col grain-overlay">
+    <div className={`relative isolate overflow-hidden min-h-app-viewport flex flex-col ${styles.heroSurface}`}>
       <ActivityTicker />
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster="/1779024315.png"
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover"
-        src="/Website%20Hero%20Background.mp4"
-      />
       <div
-        className={`pointer-events-none absolute inset-0 -z-10 ${styles.heroOverlay}`}
+        className={`pointer-events-none absolute inset-0 -z-10 ${styles.heroBackdrop}`}
         aria-hidden
       />
       <div className="page-bleed-x relative z-10 flex flex-1 flex-col pb-10 pt-6 sm:pb-14 sm:pt-8">
@@ -40,7 +29,7 @@ export function LandingHero() {
             {["Private uploads", "Fast AI guidance", "Upload → analyze → unlock"].map((item) => (
               <span
                 key={item}
-                className="inline-flex items-center rounded-full border border-terracotta/25 bg-[var(--color-surface)]/80 px-3 py-1.5 backdrop-blur-sm"
+                className="inline-flex items-center rounded-full border border-terracotta/20 bg-[var(--color-surface)] px-3 py-1.5 shadow-sm"
               >
                 {item}
               </span>

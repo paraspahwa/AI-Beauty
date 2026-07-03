@@ -50,6 +50,25 @@ export const scaleIn: Variants = {
   },
 };
 
+const CAROUSEL_EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Hero sample carousel — dossier page-turn slide-up. */
+export const carouselSlideUp = {
+  initial: { opacity: 0, y: 28, scale: 0.98 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.55, ease: CAROUSEL_EASE },
+  },
+  exit: {
+    opacity: 0,
+    y: -16,
+    scale: 0.99,
+    transition: { duration: 0.45, ease: CAROUSEL_EASE },
+  },
+} as const;
+
 export const slideIn = (direction: "left" | "right" | "up" | "down" = "left"): Variants => {
   const isX = direction === "left" || direction === "right";
   const distance = direction === "left" || direction === "up" ? -30 : 30;

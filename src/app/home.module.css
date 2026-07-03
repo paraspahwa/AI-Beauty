@@ -1,58 +1,77 @@
-.heroOverlay {
-  background: linear-gradient(
-    135deg,
-    rgba(250, 246, 241, 0.82) 0%,
-    rgba(243, 232, 226, 0.75) 45%,
-    rgba(250, 246, 241, 0.88) 100%
-  );
+.heroSurface {
+  background-color: var(--color-background);
 }
 
-.heroFanCard {
+.heroBackdrop {
+  position: relative;
+  background:
+    radial-gradient(ellipse 90% 70% at 92% 8%, rgba(212, 165, 116, 0.14) 0%, transparent 58%),
+    radial-gradient(ellipse 75% 55% at 4% 92%, rgba(201, 168, 124, 0.12) 0%, transparent 52%),
+    linear-gradient(165deg, #fffcf8 0%, var(--parchment) 38%, #f8f0e8 72%, #f3e8e2 100%);
+}
+
+.heroBackdrop::before {
+  content: "";
   position: absolute;
-  width: 72%;
-  max-width: 220px;
+  inset: 0;
+  background-image: radial-gradient(rgba(184, 115, 74, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.heroBackdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-bottom: 1px solid rgba(232, 221, 212, 0.65);
+  pointer-events: none;
+}
+
+.heroCarouselStage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(420px, 78vw);
+}
+
+.heroCarouselCard {
+  width: 78%;
+  max-width: 260px;
+  margin-inline: auto;
   border-radius: 1rem;
   overflow: hidden;
   border: 1px solid rgba(232, 221, 212, 0.9);
   background: #f7f2ec;
   box-shadow:
-    0 12px 32px rgba(44, 24, 16, 0.12),
+    0 16px 40px rgba(44, 24, 16, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  transition: transform 0.4s ease;
 }
 
 @media (min-width: 1024px) {
-  .heroFanCard {
+  .heroCarouselCard {
     animation: float-slow 9s ease-in-out infinite;
   }
 }
 
-.fanPos0 {
-  top: 8%;
-  right: 18%;
-  transform: rotate(-8deg);
-  z-index: 3;
+:global(.dark) .heroBackdrop {
+  background:
+    radial-gradient(ellipse 90% 70% at 92% 8%, rgba(212, 165, 116, 0.08) 0%, transparent 58%),
+    radial-gradient(ellipse 75% 55% at 4% 92%, rgba(201, 168, 124, 0.06) 0%, transparent 52%),
+    linear-gradient(165deg, #0f1419 0%, var(--parchment) 45%, #121820 100%);
 }
 
-.fanPos1 {
-  top: 22%;
-  right: 4%;
-  transform: rotate(4deg);
-  z-index: 2;
+:global(.dark) .heroBackdrop::before {
+  background-image: radial-gradient(rgba(212, 165, 116, 0.06) 1px, transparent 1px);
+  opacity: 0.35;
 }
 
-.fanPos2 {
-  top: 38%;
-  right: 22%;
-  transform: rotate(-3deg);
-  z-index: 1;
+:global(.dark) .heroBackdrop::after {
+  border-bottom-color: rgba(232, 221, 212, 0.12);
 }
 
-:global(.dark) .heroOverlay {
-  background: linear-gradient(
-    135deg,
-    rgba(11, 15, 23, 0.85) 0%,
-    rgba(44, 24, 16, 0.75) 50%,
-    rgba(11, 15, 23, 0.9) 100%
-  );
+:global(.dark) .heroCarouselCard {
+  background: var(--color-surface);
+  border-color: rgba(232, 221, 212, 0.15);
 }
