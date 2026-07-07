@@ -42,17 +42,35 @@ declare global {
 interface Props {
   reportId: string;
   onUnlocked?: () => void;
+  appReturnToUrl?: string;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (v: boolean) => void;
 }
 
 function fmtINR(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-export function StyleGuidePaywall({ reportId, onUnlocked }: Props) {
+export function StyleGuidePaywall({
+  reportId,
+  onUnlocked,
+  appReturnToUrl,
+  externalOpen,
+  onExternalOpenChange,
+}: Props) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [currency, setCurrency] = React.useState<SupportedCurrency>("INR");
+
+  React.useEffect(() => {
+    if (externalOpen !== undefined) setOpen(externalOpen);
+  }, [externalOpen]);
+
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    onExternalOpenChange?.(v);
+  };
 
   React.useEffect(() => {
     setCurrency(detectCurrency());
@@ -105,6 +123,7 @@ export function StyleGuidePaywall({ reportId, onUnlocked }: Props) {
         setOpen(false);
         track("unlock_style_guide", { mode: "test" });
         onUnlocked?.();
+        if (appReturnToUrl) window.location.href = appReturnToUrl;
         return;
       }
 
@@ -133,6 +152,7 @@ export function StyleGuidePaywall({ reportId, onUnlocked }: Props) {
             setOpen(false);
             track("unlock_style_guide");
             onUnlocked?.();
+            if (appReturnToUrl) window.location.href = appReturnToUrl;
           } else {
             setError("Verification failed — contact support if amount was deducted.");
           }
@@ -149,7 +169,7 @@ export function StyleGuidePaywall({ reportId, onUnlocked }: Props) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button variant="accent" size="lg" className="w-full sm:w-auto">
             <Lock className="h-4 w-4 mr-2" />

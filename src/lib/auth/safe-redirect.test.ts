@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizePostAuthPath } from "./safe-redirect";
+import { sanitizeMobileAppReturnUrl, sanitizePostAuthPath } from "./safe-redirect";
 
 describe("sanitizePostAuthPath", () => {
   it("allows internal paths", () => {
@@ -23,5 +23,40 @@ describe("sanitizePostAuthPath", () => {
 
   it("uses custom fallback", () => {
     expect(sanitizePostAuthPath("/auth", "/dashboard")).toBe("/dashboard");
+  });
+});
+
+describe("sanitizeMobileAppReturnUrl", () => {
+  it("allows app deep links back to the same report checkout return state", () => {
+    expect(
+      sanitizeMobileAppReturnUrl("renovaara:///report/report-123?checkout=report_return", "report-123"),
+    ).toBe("renovaara:///report/report-123?checkout=report_return");
+    expect(
+      sanitizeMobileAppReturnUrl("renovaara://report/report-123?checkout=style_guide_return", "report-123"),
+    ).toBe("renovaara://report/report-123?checkout=style_guide_return");
+  });
+
+  it("rejects external URLs and unrelated app destinations", () => {
+    expect(
+      sanitizeMobileAppReturnUrl("https://evil.com/report/report-123?checkout=report_return", "report-123"),
+    ).toBeUndefined();
+    expect(
+      sanitizeMobileAppReturnUrl("renovaara:///report/other?checkout=report_return", "report-123"),
+    ).toBeUndefined();
+    expect(
+      sanitizeMobileAppReturnUrl("renovaara:///report/report-123?checkout=other", "report-123"),
+    ).toBeUndefined();
+    expect(
+      sanitizeMobileAppReturnUrl(
+        "renovaara:///report/report-123?checkout=report_return&next=https://evil.com",
+        "report-123",
+      ),
+    ).toBeUndefined();
+    expect(
+      sanitizeMobileAppReturnUrl(
+        "renovaara:///report/report-123?checkout=report_return&checkout=style_guide_return",
+        "report-123",
+      ),
+    ).toBeUndefined();
   });
 });

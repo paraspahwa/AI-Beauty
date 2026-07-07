@@ -1,4 +1,5 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import * as ExpoLinking from "expo-linking";
 import { Linking } from "react-native";
 import { createPaymentOrder, verifyTestPayment } from "@/lib/api";
 import { getValidatedMobileApiBaseUrl } from "@/lib/env";
@@ -27,7 +28,10 @@ export function StyleGuidePaywallSheet({ reportId, visible, onClose, onUnlocked 
     }
 
     const base = getValidatedMobileApiBaseUrl();
-    const payUrl = `${base}/report/${reportId}?paywall=style-guide`;
+    const returnUrl = ExpoLinking.createURL(`/report/${reportId}`, {
+      queryParams: { checkout: "style_guide_return" },
+    });
+    const payUrl = `${base}/report/${reportId}?paywall=style-guide&return_to=${encodeURIComponent(returnUrl)}`;
     await Linking.openURL(payUrl);
     onClose();
   }
