@@ -201,7 +201,7 @@ function AuthContent() {
   const supabaseConfigured = isSupabaseBrowserConfigured();
 
   // Persist referral code so it's available after session exchange
-  React.useEffect(() => {
+  useEffect(() => {
     if (refCode) localStorage.setItem("renovaara_ref", refCode);
   }, [refCode]);
 
