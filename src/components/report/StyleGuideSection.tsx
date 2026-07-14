@@ -78,7 +78,7 @@ export function StyleGuideSection({ report, onRefresh }: Props) {
   if (isPaid && asset?.status === "ready") {
     return (
       <section id="report-section-style-guide" className="scroll-mt-24">
-        <StyleGuideInfographic asset={asset} createdAt={report.createdAt} />
+        <StyleGuideInfographic asset={asset} createdAt={report.createdAt} reportId={report.id} />
         <div className="mt-4">
           <PdfDownloadShare
             reportId={report.id}

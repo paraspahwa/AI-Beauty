@@ -9,6 +9,8 @@ import { AnalysisSectionCard } from "./AnalysisSectionCard";
 import { FreePreviewTeaser } from "./FreePreviewTeaser";
 import { StyleGuideSection } from "./StyleGuideSection";
 import { PdfDownloadShare } from "./PdfDownloadShare";
+import { SeasonShareCard } from "./SeasonShareCard";
+import { ProductRecommendations } from "./ProductRecommendations";
 import { publicEnv } from "@/lib/public-env";
 import { Paywall } from "@/components/Paywall";
 import { UnlockTeaserBanner } from "@/components/UnlockTeaserBanner";
@@ -161,13 +163,31 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
 
         <div className="space-y-8">
           {report.faceShape ? (
-            <FaceFeaturesInfographic
-              asset={faceInfographic}
-              isPaid={isPaid}
-              createdAt={report.createdAt}
-              downloadSectionKey={isPaid ? "faceFeatures" : "faceFeaturesPreview"}
-              highlighted={highlightSection === "face"}
-            />
+            <>
+              <FaceFeaturesInfographic
+                asset={faceInfographic}
+                isPaid={isPaid}
+                createdAt={report.createdAt}
+                downloadSectionKey={isPaid ? "faceFeatures" : "faceFeaturesPreview"}
+                highlighted={highlightSection === "face"}
+                reportId={report.id}
+              />
+              <div className="report-surface-panel rounded-3xl border border-terracotta/10 p-6 sm:p-8">
+                <p className="foil-label mb-2 border-none p-0">Share Your Results</p>
+                <h3 className="font-display mb-2 text-xl text-ink">
+                  Your Beauty Profile
+                </h3>
+                <p className="mb-4 text-sm text-ink-stone">
+                  Generate a shareable card with your color season and face shape — post to
+                  Instagram, TikTok, or WhatsApp.
+                </p>
+                <SeasonShareCard
+                  faceShape={report.faceShape?.shape}
+                  colorSeason={report.colorAnalysis?.season}
+                  reportId={report.id}
+                />
+              </div>
+            </>
           ) : (
             <ProcessingCard />
           )}
@@ -251,6 +271,10 @@ export function ReportLayout({ report: initial, initialPaywallOpen = false }: Pr
                   onRefresh={refresh}
                 />
               )}
+              <ProductRecommendations
+                colorSeason={report.colorAnalysis?.season}
+                faceShape={report.faceShape?.shape}
+              />
               <StyleGuideSection report={report} onRefresh={refresh} />
             </>
           ) : (

@@ -93,6 +93,11 @@ export const env = {
   /**
    * Affiliate programme identifiers (legacy — unused in report-only product).
    */
+  analytics: {
+    plausibleDomain: optional(process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN),
+    posthogKey: optional(process.env.NEXT_PUBLIC_POSTHOG_KEY),
+    posthogHost: optional(process.env.NEXT_PUBLIC_POSTHOG_HOST, "https://app.posthog.com"),
+  },
   affiliate: {
     amazonTag: optional(process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_TAG, ""),
     myntraSid: optional(process.env.NEXT_PUBLIC_MYNTRA_AFFILIATE_SID, ""),

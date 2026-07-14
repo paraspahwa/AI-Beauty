@@ -21,6 +21,12 @@ export const publicEnv = {
     styleGuidePriceINR: Number(process.env.NEXT_PUBLIC_PRICE_STYLE_GUIDE_INR ?? "99"),
     styleGuidePriceUSD: Number(process.env.NEXT_PUBLIC_PRICE_STYLE_GUIDE_USD ?? "0.99"),
   },
+  analytics: {
+    plausibleDomain: optional(process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN),
+    posthogKey: optional(process.env.NEXT_PUBLIC_POSTHOG_KEY),
+    posthogHost: optional(process.env.NEXT_PUBLIC_POSTHOG_HOST, "https://app.posthog.com"),
+    isConfigured: Boolean(process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN) || Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY),
+  },
   flags: {
     pdfEnabled: optional(process.env.NEXT_PUBLIC_ENABLE_PDF, "true") === "true",
   },

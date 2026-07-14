@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { CouponInput } from "@/components/CouponInput";
 import { publicEnv } from "@/lib/public-env";
 import { formatCurrency } from "@/lib/utils";
 import { detectCurrency, type SupportedCurrency } from "@/lib/currency";
@@ -80,6 +81,7 @@ export function Paywall({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [currency, setCurrency] = React.useState<SupportedCurrency>("INR");
+  const [couponDiscount, setCouponDiscount] = React.useState<{ type: string; value: number } | null>(null);
 
   React.useEffect(() => {
     if (externalOpen !== undefined) setOpen(externalOpen);
@@ -231,12 +233,29 @@ export function Paywall({
                 <motion.div variants={fadeUp} className="mt-5 rounded-2xl border-2 border-terracotta/25 bg-blush/50 p-4">
                   <div className="mb-3 flex items-baseline gap-2">
                     <span className="font-display text-3xl leading-none text-terracotta">
-                      {reportLabel}
+                      {couponDiscount
+                        ? couponDiscount.value === 100
+                          ? "FREE"
+                          : formatCurrency(
+                              Math.round(reportPriceMinor * (1 - couponDiscount.value / 100)),
+                              currency
+                            )
+                        : reportLabel}
                     </span>
                     <span className="text-xs text-ink-mist line-through">
                       {reportStrike}
                     </span>
                   </div>
+                  {couponDiscount && couponDiscount.value > 0 && couponDiscount.value < 100 && (
+                    <p className="mb-2 text-[11px] font-medium text-emerald-600">
+                      {couponDiscount.value}% off — coupon applied
+                    </p>
+                  )}
+                  {couponDiscount?.value === 100 && (
+                    <p className="mb-2 text-[11px] font-medium text-emerald-600">
+                      Free — no payment needed!
+                    </p>
+                  )}
                   <ul className="space-y-1.5">
                     {REPORT_PERKS.map((p, i) => (
                       <li key={i} className="flex items-center gap-2 text-[11px] text-ink-stone">
@@ -253,6 +272,14 @@ export function Paywall({
                   >
                     {loading ? "Starting checkout…" : `Unlock — ${reportLabel}`}
                   </button>
+                </motion.div>
+
+                {/* Coupon code input */}
+                <motion.div variants={fadeUp}>
+                  <CouponInput
+                    onCouponApplied={(type, value) => setCouponDiscount({ type, value })}
+                    onCouponRemoved={() => setCouponDiscount(null)}
+                  />
                 </motion.div>
 
                 {error && (

@@ -34,6 +34,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
 
+    // ── Blog ──────────────────────────────────────────────────────────────
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/blog/what-is-my-face-shape`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+
+    // ── Product Hunt launch page ─────────────────────────────────────────
+    {
+      url: `${BASE_URL}/producthunt`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.8,
+    },
+
     // ── Auth ─────────────────────────────────────────────────────────────
     {
       url: `${BASE_URL}/auth`,
@@ -48,6 +70,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,
+    },
+
+    // ── Legal pages ───────────────────────────────────────────────────────
+    {
+      url: `${BASE_URL}/privacy`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      url: `${BASE_URL}/terms`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.4,
     },
 
     // NOTE: /report/[id], /r/[token], /dashboard/* and /admin are

@@ -196,8 +196,14 @@ function AuthContent() {
 
   const searchParams = useSearchParams();
   const nextPath = resolvePostAuthPath(searchParams);
+  const refCode = searchParams.get("ref");
   const phoneCountryLabel = useMemo(() => `${phoneCountry.iso} ${phoneCountry.dial}`, [phoneCountry]);
   const supabaseConfigured = isSupabaseBrowserConfigured();
+
+  // Persist referral code so it's available after session exchange
+  React.useEffect(() => {
+    if (refCode) localStorage.setItem("renovaara_ref", refCode);
+  }, [refCode]);
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -269,7 +275,14 @@ function AuthContent() {
         window.location.href = safe;
       }
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const refFromStorage = localStorage.getItem("renovaara_ref");
+      const ref = refCode || refFromStorage || undefined;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: ref ? { data: { ref } } : undefined,
+      });
+      if (ref) localStorage.removeItem("renovaara_ref");
       setLoading(false);
       if (error) {
         const msg = error.message.toLowerCase();

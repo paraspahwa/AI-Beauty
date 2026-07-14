@@ -5,6 +5,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ThemeScript } from "@/components/ThemeScript";
+import { AnalyticsScripts } from "@/components/AnalyticsScripts";
+import { PageViewTracker } from "@/components/PageViewTracker";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -92,6 +94,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning className={`${display.variable} ${body.variable}`}>
       <head>
         <ThemeScript />
+        <AnalyticsScripts />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -123,6 +126,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Skip to content
         </a>
+        <PageViewTracker />
         <Navbar />
         <div id="main-content" className="flex-1">{children}</div>
         <Footer />

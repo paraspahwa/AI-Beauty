@@ -103,6 +103,8 @@ export function AnalysisSectionCard({
               mime={asset.mime}
               createdAt={createdAt}
               label={title}
+              reportId={reportId}
+              shareText={`My ${title.toLowerCase()} analysis from Renovaara.`}
             />
           </div>
         ) : status === "failed" ? (

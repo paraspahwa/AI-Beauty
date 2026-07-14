@@ -10,6 +10,7 @@ interface Props {
   createdAt?: string;
   downloadSectionKey: "faceFeatures" | "faceFeaturesPreview";
   highlighted?: boolean;
+  reportId: string;
 }
 
 export function FaceFeaturesInfographic({
@@ -18,9 +19,13 @@ export function FaceFeaturesInfographic({
   createdAt,
   downloadSectionKey,
   highlighted = false,
+  reportId,
 }: Props) {
   const title = isPaid ? "Face Features Analysis" : "Face Shape Preview";
   const downloadLabel = isPaid ? "Face Features" : "Face Shape Preview";
+  const shareText = isPaid
+    ? "My complete face features analysis from Renovaara."
+    : "My AI face shape analysis from Renovaara.";
 
   return (
     <section
@@ -54,6 +59,8 @@ export function FaceFeaturesInfographic({
               mime={asset.mime}
               createdAt={createdAt}
               label={downloadLabel}
+              reportId={reportId}
+              shareText={shareText}
             />
           </div>
         )}

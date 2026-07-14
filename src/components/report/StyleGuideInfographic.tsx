@@ -7,9 +7,10 @@ import type { ReportVisualAsset } from "@/types/report";
 interface Props {
   asset?: ReportVisualAsset;
   createdAt?: string;
+  reportId: string;
 }
 
-export function StyleGuideInfographic({ asset, createdAt }: Props) {
+export function StyleGuideInfographic({ asset, createdAt, reportId }: Props) {
   return (
     <section className="report-surface-panel overflow-hidden rounded-3xl border border-terracotta/10">
       <div className="border-b border-terracotta/10 bg-[var(--report-icon-bg)]/40 px-6 py-5 sm:px-8">
@@ -32,6 +33,8 @@ export function StyleGuideInfographic({ asset, createdAt }: Props) {
               mime={asset.mime}
               createdAt={createdAt}
               label="Style Board"
+              reportId={reportId}
+              shareText="My personal style guide from Renovaara."
             />
           </div>
         )}

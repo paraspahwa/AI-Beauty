@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteReportButton } from "@/components/DeleteReportButton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { getDashboardReportHint } from "@/lib/report/journey-hints";
+import { ReferralProgram } from "@/components/referral/ReferralProgram";
 import styles from "./dashboard.module.css";
 
 type ReportRow = {
@@ -132,6 +133,22 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
+
+          {/* Referral Program */}
+          <div className="mt-12">
+            <ReferralProgram />
+          </div>
+
+          {/* Vault link */}
+          <div className="mt-8 text-center">
+            <Link
+              href="/vault"
+              className="inline-flex items-center gap-2 rounded-full border border-terracotta/20 bg-terracotta/10 px-6 py-3 text-sm font-semibold text-terracotta transition hover:bg-terracotta/20"
+            >
+              <Archive className="h-4 w-4" />
+              Browse your Vault — all saved infographics &amp; PDFs
+            </Link>
+          </div>
         </div>
       </div>
     </main>

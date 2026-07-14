@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { track } from "@/lib/track";
 
 interface Props {
   reportId: string;
@@ -72,6 +73,7 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
       a.click();
       a.remove();
       URL.revokeObjectURL(objectUrl);
+      track("download_pdf", { variant, reportId });
       setFeedback("Download started");
     } catch {
       setFeedback("PDF not ready yet — try again shortly");
@@ -83,6 +85,7 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
   async function handleCopyLink() {
     try {
       await copyVaultLink(reportUrl);
+      track("share_report", { platform: "copy", variant });
       setFeedback("Link copied");
     } catch {
       setFeedback("Could not copy link");
@@ -92,7 +95,10 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
   async function handleNativeShare() {
     try {
       const ok = await nativeShareVaultItem(vaultItem);
-      if (ok) setShareOpen(false);
+      if (ok) {
+        track("share_report", { platform: "native", variant });
+        setShareOpen(false);
+      }
     } catch {
       setFeedback("Share cancelled");
     }
@@ -102,7 +108,10 @@ export function PdfDownloadShare({ reportId, variant, reportUrl, faceShape, disa
     const target = SOCIAL_SHARE_TARGETS.find((t) => t.id === targetId);
     if (!target) return;
     const url = target.buildUrl({ url: reportUrl, title: shareTitle, text: shareText });
-    if (url) window.open(url, "_blank", "noopener,noreferrer,width=600,height=640");
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer,width=600,height=640");
+      track("share_report", { platform: targetId, variant });
+    }
     setShareOpen(false);
   }
 
