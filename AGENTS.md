@@ -38,9 +38,18 @@ apps/mobile/      — Expo app mirroring report-only flow
 
 ### Product flow
 
-`Upload selfie → POST /api/analyze → face-shape infographic preview → Razorpay ₹299 unlock → webhook → kickOffInfographicsInBackground (6 parallel jobs) → paid report`
+`Upload selfie → POST /api/analyze → face-shape infographic preview → Razorpay ₹299 unlock → webhook auto-queues faceFeatures → user taps Generate per section (skin, color, hairstyle, spectacles, hairColor) → paid report`
 
 `Style Guide add-on (optional): upload full-body → Razorpay ₹99 → webhook → trigger-style-guide → styleGuide infographic`
+
+See [docs/infographic-generation.md](docs/infographic-generation.md) for queueing rules, API routes, and Style Guide gates.
+
+### Landing page (`/`)
+
+- Page: `src/app/page.tsx` — composes `src/components/home/*`
+- Copy: `src/content/home-content.json` + `src/lib/landing-content.ts`
+- Sample images: canonical `public/samples/report/{sectionId}.jpg` via `toReportSampleItems()`
+- See [docs/landing-page.md](docs/landing-page.md)
 
 ### API Routes
 | Route | Purpose |
@@ -51,6 +60,8 @@ apps/mobile/      — Expo app mirroring report-only flow
 | `POST /api/payments/verify` | Verify checkout signature (test mode only) |
 | `POST /api/webhooks/razorpay` | Authoritative unlock; branches on `payments.product` |
 | `POST /api/reports/[id]/body-image` | Full-body upload for Style Guide add-on (requires main unlock) |
+| `POST /api/reports/[id]/ensure-infographics` | Idempotent queue for preview + `faceFeatures` only |
+| `POST /api/reports/[id]/generate-infographic` | User-triggered start for one manual paid section |
 | `POST /api/internal/trigger-infographics` | One section per request (`section` param); `maxDuration=300` |
 | `POST /api/internal/trigger-style-guide` | Style Guide infographic (`maxDuration=300`) |
 | `POST /api/reports/[id]/retry-infographic` | Re-fire failed paid infographic section |
@@ -91,12 +102,13 @@ apps/mobile/      — Expo app mirroring report-only flow
 - Validation: Zod + normalization in `lib/ai/contracts.ts`.
 
 ### Analysis infographics (fal `openai/gpt-image-2/edit`)
-- **Free preview** (after analyze): `faceFeaturesPreview` — face-shape-only
-- **Paid** (after unlock, **one parallel internal POST per section** via `kickOffInfographicsInBackground`): `faceFeatures`, `skin`, `color`, `hairstyle`, `spectacles`, `hairColor`
-- **Style Guide add-on** (separate ₹99 paywall, full-body image): `analysisInfographics.styleGuide` via `trigger-style-guide`
+- **Free preview** (after analyze): `faceFeaturesPreview` — auto-queued via `ensure-infographics`
+- **Paid — auto on unlock:** `faceFeatures` only (webhook + `ensure-infographics`)
+- **Paid — user-triggered** (`POST …/generate-infographic`): `skin`, `color`, `hairstyle`, `spectacles`, `hairColor` — UI in `AnalysisSectionCard`
+- **Style Guide add-on** (separate ₹99 paywall, full-body image): `analysisInfographics.styleGuide` via `trigger-style-guide`; UI in `StyleGuideSection`
 - Prompts: `skin_v3`, `color_v3`, `hairstyle_v3`, `spectacles_v3`, `hair_color_v3`, `face_features_v3`, `style_guide_v2`
 - Input: face crop for face features; **full portrait** for skin/color/hairstyle/spectacles/hair color; **full-body** for style guide
-- UI: `AnalysisInfographicImage.tsx` — image only, no HTML layout cards
+- UI: `AnalysisSectionCard` / `FaceFeaturesInfographic` — image boards with generate/retry actions
 
 ### Preview generation (paid, fire-and-forget via `trigger-previews`)
 - Hairstyle previews (up to 5): `generateHairstylePreviews` / FAL + Replicate
@@ -170,7 +182,7 @@ Key RPCs: `complete_webhook_payment`, `complete_style_guide_webhook_payment`, `c
 
 ## Testing
 
-- Unit tests: `src/lib/ai/confidence.test.ts`, `contracts.test.ts`, `pipeline.test.ts`
+- Unit tests: `src/lib/ai/confidence.test.ts`, `contracts.test.ts`, `pipeline.test.ts`, `run-analysis-infographics.test.ts`, `run-style-guide-infographic.test.ts`, `run-style-guide-analysis.test.ts`
 - Vitest: `node` environment, `@` alias → `./src`
 
 ---
