@@ -127,7 +127,7 @@ export function ReferralProgram({ className = "" }: { className?: string }) {
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? "Copied" : "Copy"}
           </button>
-          {typeof navigator !== "undefined" && navigator.share && (
+          {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
             <button
               type="button"
               onClick={handleShare}

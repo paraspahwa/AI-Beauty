@@ -215,7 +215,7 @@ export function SeasonShareCard({
           {shareCardBlob ? "Download card" : "Generate share card"}
         </button>
 
-        {typeof navigator !== "undefined" && navigator.canShare?.() && (
+        {typeof navigator !== "undefined" && typeof navigator.canShare === "function" && (
           <button
             type="button"
             onClick={() => void handleNativeShare()}
