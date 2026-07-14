@@ -34,7 +34,22 @@ src/types/        — Shared domain types (report.ts)
 src/middleware.ts — Edge middleware: session refresh + in-process IP rate limiter
 supabase/migrations/ — Sequential SQL migrations (source of truth for schema)
 apps/mobile/      — Expo app mirroring report-only flow
+src/content/      — Shared JSON content (e.g. home-content.json)
 ```
+
+### Landing page
+
+Marketing homepage at `/` and mobile **Home** tab share `src/content/home-content.json`. Section-specific copy and FAQs live in `src/lib/landing-content.ts`; pricing cards in `src/lib/landing-pricing.ts`. See [docs/landing-page.md](docs/landing-page.md).
+
+### Mobile app (`apps/mobile`)
+
+Report-only Expo client. Tabs: **Home** (landing), **Reports**, **Vault**, **Account**. Business types and helpers import from monorepo `src/` via Metro `@web/*` alias (see `apps/mobile/metro.config.js`).
+
+- `lib/api.ts` — thin wrapper; `MobileReport` is a type alias for `CompiledReport`.
+- `components/report/ReportLayout.tsx` — scrollable infographic chapters, paywall sheet, Style Guide section.
+- Production checkout opens web paywall in browser (`?paywall=open`); test mode uses in-app verify.
+
+See [apps/mobile/README.md](apps/mobile/README.md).
 
 ### Product flow
 
@@ -92,7 +107,8 @@ apps/mobile/      — Expo app mirroring report-only flow
 
 ### Analysis infographics (fal `openai/gpt-image-2/edit`)
 - **Free preview** (after analyze): `faceFeaturesPreview` — face-shape-only
-- **Paid** (after unlock, **one parallel internal POST per section** via `kickOffInfographicsInBackground`): `faceFeatures`, `skin`, `color`, `hairstyle`, `spectacles`, `hairColor`
+- **Paid** (after unlock, **one parallel internal POST per section** via `kickOffInfographicsInBackground`): `faceFeatures` auto-queued; `skin`, `color`, `hairstyle`, `spectacles`, `hairColor` are `MANUAL_PAID_INFOGRAPHIC_SECTIONS` (user-triggered via ensure/generate endpoints)
+- Section registry: `src/lib/ai/infographic-sections.ts` (`BLUEPRINT_SECTIONS`, `isManualPaidInfographicSection`)
 - **Style Guide add-on** (separate ₹99 paywall, full-body image): `analysisInfographics.styleGuide` via `trigger-style-guide`
 - Prompts: `skin_v3`, `color_v3`, `hairstyle_v3`, `spectacles_v3`, `hair_color_v3`, `face_features_v3`, `style_guide_v2`
 - Input: face crop for face features; **full portrait** for skin/color/hairstyle/spectacles/hair color; **full-body** for style guide
@@ -171,7 +187,9 @@ Key RPCs: `complete_webhook_payment`, `complete_style_guide_webhook_payment`, `c
 ## Testing
 
 - Unit tests: `src/lib/ai/confidence.test.ts`, `contracts.test.ts`, `pipeline.test.ts`
+- Security regression: `src/lib/security/security-audit.test.ts`, `rate-limit.test.ts`, `safe-redirect.test.ts`, `remote-image.test.ts`
 - Vitest: `node` environment, `@` alias → `./src`
+- CI also runs `apps/mobile` typecheck and `npm audit --audit-level=high`
 
 ---
 
@@ -190,3 +208,7 @@ Hard quota: `DAILY_ANALYSIS_QUOTA = 10` per user in analyze route handler.
 - Admin client bypasses RLS — always validate `user_id` ownership.
 - `selfies` bucket must remain **private**.
 - `INTERNAL_API_SECRET` ≥16 chars — `/api/internal/trigger-previews` returns 503 otherwise.
+- **Post-auth redirects:** `sanitizePostAuthPath()` rejects encoded paths, backslashes, and `//` prefixes (`src/lib/auth/safe-redirect.ts`).
+- **Remote image fetch:** `isSafeRemoteImageUrl()` allows HTTPS only; blocks private IPs, localhost, and cloud metadata hosts (`src/lib/security/remote-image.ts`).
+- **Identity rate limits:** `consumeIdentityWindow()` uses Supabase `try_consume_window` RPC; on RPC failure falls back to in-process cap (does not fail open).
+- **Mobile API base URL:** production builds require HTTPS and reject localhost (`apps/mobile/lib/env.ts`).

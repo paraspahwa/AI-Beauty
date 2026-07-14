@@ -1,39 +1,88 @@
 # Mobile Report Contract Map
 
-Date: 2026-06-03
+Date: 2026-07-03 (updated)
 
-Purpose: MP1-1 field audit between mobile types and `GET /api/reports/[id]` payload.
+Purpose: Document how the mobile app consumes the web report API after the report-only refactor.
 
-## Sources Audited
+## Type alignment
+
+`apps/mobile/lib/api.ts` exports:
+
+```ts
+export type { CompiledReport as MobileReport };
+```
+
+Mobile screens import `CompiledReport` from `@web/types/report` directly. There is **no** parallel `Mobile*` analysis schema — the server payload is used as-is.
+
+## Primary endpoints
+
+| Mobile function | Route | Auth |
+|---|---|---|
+| `fetchReport(id)` | `GET /api/reports/[id]` | Bearer (Supabase JWT) |
+| `listReports()` | Supabase `reports` select | Supabase client |
+| `ensureInfographics(id)` | `POST /api/reports/[id]/ensure-infographics` | Bearer |
+| `generateInfographic(id, section)` | `POST /api/reports/[id]/generate-infographic` | Bearer |
+| `retryInfographic(id, section)` | `POST /api/reports/[id]/retry-infographic` | Bearer |
+| `fetchVault()` | `GET /api/vault` | Bearer |
+
+## `CompiledReport` fields used by mobile
+
+### Core
+
+- `id`, `status`, `isPaid`, `isStyleGuidePaid`, `createdAt`, `imageUrl`, `summary`
+- `faceShape`, `colorAnalysis`, `skinAnalysis`, `features`, `glasses`, `hairstyle`, `styleGuide`
+
+### Visual assets
+
+Path: `report.visualAssets.assets.analysisInfographics`
+
+| Key | Tier | Notes |
+|---|---|---|
+| `faceFeaturesPreview` | Free | Shown before unlock |
+| `faceFeatures` | Paid | Full face infographic |
+| `skin`, `color`, `hairstyle`, `spectacles`, `hairColor` | Paid | Manual-trigger sections (`MANUAL_PAID_INFOGRAPHIC_SECTIONS`) |
+| `styleGuide` | Add-on | Requires `isStyleGuidePaid` + `body_image_path` |
+
+Each asset is a `ReportVisualAsset`: `{ status: "missing" \| "pending" \| "ready" \| "failed", url?, error? }`.
+
+`ReportLayout` polls `fetchReport` while any relevant asset is `pending`.
+
+### Skin routine union
+
+`skinAnalysis.routine` may be:
+
+- Legacy: `{ step, product }[]`
+- Current: `{ am: [...], pm: [...] }`
+
+Check `!Array.isArray(routine) && "am" in routine` before rendering AM/PM.
+
+## Infographic section IDs
+
+Canonical registry: `src/lib/ai/infographic-sections.ts`.
+
+Paid sections the user can manually generate (not auto-queued on unlock):
+
+`skin`, `color`, `hairstyle`, `spectacles`, `hairColor`
+
+`faceFeaturesPreview` is preview-tier only — `isManualPaidInfographicSection("faceFeaturesPreview")` returns false.
+
+## Backend changes required?
+
+No — mobile and web share `GET /api/reports/[id]` and the same `resolveVisualAssets()` signed-URL logic.
+
+## Removed / obsolete (pre–report-only)
+
+The following are **not** in the current mobile app or API contract:
+
+- `studioEntitlement`, makeup/hair studio previews, chat messages
+- `visualAssets.assets.landmarkOverlay`, `paletteBoard`, `makeupPreviews`
+- Subscription / Studio Pro billing surfaces
+
+If you encounter these in older docs (`docs/mobile-parity-plan.md`, gesture checklists), treat them as historical.
+
+## Sources
 
 - `src/app/api/reports/[id]/route.ts`
 - `src/types/report.ts`
-- `src/app/report/[id]/page.tsx`
 - `apps/mobile/lib/api.ts`
-
-## Verified Payload Coverage
-
-`MobileReport` now includes all Phase 1 report fields used by web and mobile parity screens:
-
-- Core: `id`, `userId`, `status`, `isPaid`, `imageUrl`, `createdAt`, `shareToken`, `summary`, `detectedGender`
-- Entitlement: `studioEntitlement`
-- Analysis sections: `faceShape`, `colorAnalysis`, `skinAnalysis`, `features`, `glasses`, `hairstyle`
-- Visuals: `visualAssets.assets.landmarkOverlay`, `paletteBoard`, `glassesPreviews`, `hairstylePreviews`, `colorSwatchPreviews`, `makeupPreviews`
-- Meta: `pipelineMeta`, `faceLandmarks`
-
-## Mobile Type Widening Applied
-
-Updated `apps/mobile/lib/api.ts` to avoid dropping server payload fields:
-
-- `MobileColorAnalysis`: added `clothingObservation`
-- `MobileSkinAnalysis`: added `imageConfidence` and `routine` union
-- `MobileGlasses`: added `avoid` and `colors`
-- `MobileHairstyle`: widened `colors` and added `stylingTips`, `hairType`
-- `MobileVisualAsset`: added optional `error`
-- `MobileReport`: added `userId`, `detectedGender`, `pipelineMeta`
-
-## Backend Follow-up Required?
-
-No backend schema/API change is required for MP1 visual rendering.
-
-Reason: web and mobile both consume the same report route, and visual assets are already resolved with signed URLs in `resolveVisualAssets()` in `src/app/api/reports/[id]/route.ts`.
+- `apps/mobile/components/report/ReportLayout.tsx`

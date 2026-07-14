@@ -1,5 +1,7 @@
 # Mobile Parity Plan
 
+> **Superseded (2026-07-03):** This plan predates the report-only product cut (migration 0025) and the July 2026 mobile landing/report refactor. For current architecture see [apps/mobile/README.md](../apps/mobile/README.md), [docs/landing-page.md](landing-page.md), and [docs/mobile-report-contract-map.md](mobile-report-contract-map.md). Kept for historical context only.
+
 Date: 2026-05-26
 Scope: Compare `apps/mobile` against the current web product and define an implementation plan for mobile parity.
 
