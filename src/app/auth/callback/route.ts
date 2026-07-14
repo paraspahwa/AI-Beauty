@@ -11,6 +11,7 @@ const ALLOWED_OTP_TYPES = new Set<EmailOtpType>([
 ]);
 
 import { sanitizePostAuthPath } from "@/lib/auth/safe-redirect";
+import { welcomeEmail } from "@/lib/email";
 
 function safeNextPath(rawPath: string | null): string {
   return sanitizePostAuthPath(rawPath, "/upload");
@@ -34,6 +35,10 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Fire welcome email in background — don't block redirect
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.email) welcomeEmail(user.email).catch(() => {});
+      });
       return NextResponse.redirect(`${origin}${next}`);
     }
     console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
@@ -45,6 +50,10 @@ export async function GET(request: NextRequest) {
       type: type as EmailOtpType,
     });
     if (!error) {
+      // Fire welcome email in background
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.email) welcomeEmail(user.email).catch(() => {});
+      });
       return NextResponse.redirect(`${origin}${next}`);
     }
     console.error("[auth/callback] verifyOtp failed:", error.message);

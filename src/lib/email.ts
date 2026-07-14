@@ -81,7 +81,7 @@ ${body}
 
 // ── Email sequences ──────────────────────────────────────────
 
-export function welcomeEmail(to: string): Promise<ReturnType<typeof sendEmail>> {
+export function welcomeEmail(to: string) {
   return sendEmail({
     to,
     subject: "Welcome to Renovaara — discover your beauty profile",
@@ -103,7 +103,7 @@ export function welcomeEmail(to: string): Promise<ReturnType<typeof sendEmail>> 
   });
 }
 
-export function reportReadyEmail(to: string, reportUrl: string, faceShape?: string): Promise<ReturnType<typeof sendEmail>> {
+export function reportReadyEmail(to: string, reportUrl: string, faceShape?: string) {
   return sendEmail({
     to,
     subject: "Your beauty report is ready!",

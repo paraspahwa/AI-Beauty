@@ -50,14 +50,12 @@ export function InfographicShareButton({
 
   async function handleNativeShare() {
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: label,
-          text: shareText,
-          url: reportUrl,
-        });
-        track("share_infographic", { platform: "native", section: sectionKey });
-      }
+      await navigator.share({
+        title: label,
+        text: shareText,
+        url: reportUrl,
+      });
+      track("share_infographic", { platform: "native", section: sectionKey });
       setOpen(false);
     } catch {
       // user cancelled

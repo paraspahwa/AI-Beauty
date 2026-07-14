@@ -804,6 +804,13 @@ export async function POST(req: NextRequest) {
 
       const { kickOffPostAnalysisInfographics } = await import("@/lib/ai/kickoff-infographics");
       kickOffPostAnalysisInfographics(report.id, user.email);
+
+      // Fire report-ready email in background
+      if (user.email) {
+        const reportUrl = `${env.app.url}/report/${report.id}`;
+        const { reportReadyEmail } = await import("@/lib/email");
+        reportReadyEmail(user.email, reportUrl, result.faceShape?.shape).catch(() => {});
+      }
     } catch (pipelineErr) {
       console.error("[analyze] pipeline failed:", pipelineErr);
       const pe = pipelineErr as { name?: string; stage?: string; kind?: string; message?: string };
