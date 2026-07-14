@@ -83,13 +83,14 @@ export function InfographicShareButton({
     try {
       const res = await fetch(imageUrl);
       const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
+      a.href = url;
       a.download = `Renovaara-${sectionKey}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(blob);
+      URL.revokeObjectURL(url);
       track("share_infographic", { platform: "download", section: sectionKey });
       setFeedback("Image saved!");
       setTimeout(() => setFeedback(null), 2000);
